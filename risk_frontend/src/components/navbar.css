@@ -1,0 +1,56 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 240px; /* adjust if sidebar width changes */
+  right: 0;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2000;
+}
+
+.navbar-notification {
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.navbar-notification img {
+  width: 26px;
+  height: 26px;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.navbar-user-info {
+  text-align: center;
+}
+
+.navbar-user-info .user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.navbar-user-info .user-role {
+  font-size: 12px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.navbar-user img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
