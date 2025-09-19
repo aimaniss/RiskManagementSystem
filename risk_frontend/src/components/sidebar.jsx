@@ -13,7 +13,7 @@ import LaporanIcon from "../assets/icons/icon_laporan.svg";
 import UrusPenggunaIcon from "../assets/icons/icons_manage_accounts.svg";
 import LogAktivitiIcon from "../assets/icons/icons_log_activity.svg";
 import LogoutIcon from "../assets/icons/icons_logout.svg";
-import LogoImage from "../assets/images/Light Background/UKMH_light.png"; // Sidebar Logo
+import LogoImage from "../assets/images/Light Background/UKMH_light.png"; // Logo UKM Holdings
 
 function Sidebar() {
   const location = useLocation();
