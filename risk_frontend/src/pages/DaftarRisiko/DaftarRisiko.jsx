@@ -1,40 +1,52 @@
 import { useState, useEffect } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import api from "../../api/api"; // Adjust path if needed
+import "./DaftarRisiko.css";
 
 function DaftarRisiko() {
   const [formData, setFormData] = useState({
     noRujukan: "",
     tahun: "",
     separuhTahun: "",
-    syarikat: "",
+    subsidiari: "",
     kategori: "",
     bahagian: "",
     risiko: "",
-    punca: "",
-    kesan: "",
     skorKebarangkalian: "",
     skorImpak: "",
     skorRisiko: "",
     statusRisiko: "",
   });
 
+  const [puncaList, setPuncaList] = useState([""]);
+  const [kesanList, setKesanList] = useState([""]);
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [riskLevel, setRiskLevel] = useState("");
+  const [subsidiariList, setSubsidiariList] = useState([]);
 
-  // Tentukan warna berdasarkan skor risiko
-  const getRiskColor = (score) => {
-    if (score <= 3) return "#22c55e"; // hijau
-    if (score <= 7) return "#eab308"; // kuning
-    if (score <= 12) return "#f97316"; // oren
-    return "#ef4444"; // merah
-  };
+  // Fetch subsidiari dengan token
+  useEffect(() => {
+    const fetchSubsidiari = async () => {
+      try {
+        const res = await api.get("/subsidiari");
+        const data = Array.isArray(res.data) ? res.data : res.data.subsidiari || [];
+        setSubsidiariList(data);
 
-  const getRiskLabel = (score) => {
-    if (score <= 3) return "Rendah";
-    if (score <= 7) return "Sederhana";
-    if (score <= 12) return "Tinggi";
-    return "Sangat Tinggi";
-  };
+        // auto pilih subsidiari kalau user role staff/ketua
+        const tokenUser = JSON.parse(localStorage.getItem("user"));
+        if (tokenUser?.peranan === "Staff" || tokenUser?.peranan === "Ketua Subsidiari") {
+          setFormData((prev) => ({ ...prev, subsidiari: tokenUser.subsidiari_id }));
+        }
+      } catch (err) {
+        console.error("❌ Error fetch subsidiari:", err);
+        alert("⚠️ Tidak dapat memuat subsidiari. Sila log masuk semula.");
+        window.location.href = "/login";
+      }
+    };
+    fetchSubsidiari();
+  }, []);
 
+  // Calculate risk score and color
   useEffect(() => {
     const k = parseInt(formData.skorKebarangkalian);
     const i = parseInt(formData.skorImpak);
@@ -50,248 +62,201 @@ function DaftarRisiko() {
     }
   }, [formData.skorKebarangkalian, formData.skorImpak]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const getRiskColor = (score) => {
+    if (score <= 3) return "#22c55e";
+    if (score <= 7) return "#eab308";
+    if (score <= 12) return "#f97316";
+    return "#ef4444";
   };
 
-  const handleSubmit = (e) => {
+  const getRiskLabel = (score) => {
+    if (score <= 3) return "Rendah";
+    if (score <= 7) return "Sederhana";
+    if (score <= 12) return "Tinggi";
+    return "Sangat Tinggi";
+  };
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const addPunca = () => setPuncaList([...puncaList, ""]);
+  const addKesan = () => setKesanList([...kesanList, ""]);
+  const updatePunca = (i, val) => { const newList = [...puncaList]; newList[i] = val; setPuncaList(newList); };
+  const updateKesan = (i, val) => { const newList = [...kesanList]; newList[i] = val; setKesanList(newList); };
+  const removePunca = (i) => { const newList = [...puncaList]; newList.splice(i, 1); setPuncaList(newList); };
+  const removeKesan = (i) => { const newList = [...kesanList]; newList.splice(i, 1); setKesanList(newList); };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.noRujukan || !formData.tahun || !formData.syarikat) {
-      alert("⚠️ Sila lengkapkan maklumat penting (No Rujukan, Tahun, Syarikat).");
+
+    if (!formData.noRujukan || !formData.tahun || !formData.subsidiari) {
+      alert("⚠️ Sila lengkapkan maklumat penting (No Rujukan, Tahun, Subsidiari).");
       return;
     }
-    alert("✅ Risiko berjaya didaftarkan!");
-    console.log("Data Risiko:", formData);
-  };
 
-  const boxStyle = {
-    borderRadius: "14px",
-    marginBottom: "22px",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
-    border: "1px solid rgba(255,255,255,0.2)",
-    background: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
-    backdropFilter: "blur(14px)",
-    transition: "0.3s",
-  };
+    const finalData = { 
+      ...formData, 
+      tahun: parseInt(formData.tahun), 
+      subsidiari: parseInt(formData.subsidiari), // ✅ guna ID, bukan nama
+      punca: puncaList, 
+      kesan: kesanList 
+    };
 
-  const headerStyle = {
-    background: "#0074c8", // blue
-    color: "white",
-    padding: "12px",
-    fontWeight: "600",
-    fontSize: "15px",
-    borderTopLeftRadius: "14px",
-    borderTopRightRadius: "14px",
-    boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.2)",
-    letterSpacing: "0.5px",
-  };
+    console.log("📦 Data dihantar ke backend:", finalData);
 
-  const inputStyle = {
-    flex: 1,
-    padding: "10px 12px",
-    borderRadius: "10px",
-    border: "1px solid rgba(148,163,184,0.4)",
-    background: "rgba(255,255,255,0.85)",
-    fontSize: "14px",
-    outline: "none",
-    transition: "0.3s",
-  };
+    try {
+      await api.post("/risiko", finalData);
+      alert("✅ Risiko berjaya didaftarkan!");
 
-  const labelStyle = {
-    fontSize: "13px",
-    fontWeight: "500",
-    color: "#0f172a",
-    minWidth: "120px",
-    display: "flex",
-    alignItems: "center",
+      // Reset form
+      setFormData({
+        noRujukan: "",
+        tahun: "",
+        separuhTahun: "",
+        subsidiari: "",
+        kategori: "",
+        bahagian: "",
+        risiko: "",
+        skorKebarangkalian: "",
+        skorImpak: "",
+        skorRisiko: "",
+        statusRisiko: "",
+      });
+      setPuncaList([""]);
+      setKesanList([""]);
+      setRiskColor("#f1f5f9");
+      setRiskLevel("");
+    } catch (err) {
+      console.error("❌ Error semasa submit:", err.response?.data || err.message);
+      if (err.response && err.response.status === 401) {
+        alert("⚠️ Sesi tamat. Sila log masuk semula.");
+        window.location.href = "/login";
+      } else {
+        alert("⚠️ Gagal mendaftar risiko. Sila cuba semula.");
+      }
+    }
   };
-
-  const getDropdownStyle = (value) => ({
-    ...inputStyle,
-    background: inputStyle.background,
-    color: "#0f172a",
-    fontWeight: "400",
-  });
 
   return (
-    <div style={{ padding: "22px", fontFamily: "Roboto, sans-serif" }}>
-      {/* Header */}
-      <h2
-        style={{
-          fontSize: "24px",
-          fontWeight: "700",
-          marginBottom: "18px",
-          color: "#0074c8", // blue
-        }}
-      >
-        Daftar Risiko
-      </h2>
-
+    <div className="daftar-risiko-container">
+      <h2>Daftar Risiko</h2>
       <form onSubmit={handleSubmit}>
         {/* Maklumat Risiko */}
-        <div style={boxStyle}>
-          <div style={headerStyle}>Maklumat Risiko</div>
+        <div className="box">
+          <div className="box-header">Maklumat Risiko</div>
           <div style={{ padding: "16px", display: "grid", gap: "14px" }}>
             <div style={{ display: "flex", gap: "12px" }}>
-              <label style={labelStyle}>No Rujukan:</label>
-              <input
-                name="noRujukan"
-                value={formData.noRujukan}
-                onChange={handleChange}
-                style={inputStyle}
-                placeholder="Contoh: RSK-001"
-              />
-              <label style={labelStyle}>Tahun:</label>
-              <input
-                name="tahun"
-                type="number"
-                value={formData.tahun}
-                onChange={handleChange}
-                style={inputStyle}
-                placeholder="2025"
-              />
-              <label style={labelStyle}>Separuh Tahun:</label>
-              <select
-                name="separuhTahun"
-                value={formData.separuhTahun}
-                onChange={handleChange}
-                style={getDropdownStyle(formData.separuhTahun)}
-              >
+              <label className="label">No Rujukan:</label>
+              <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" placeholder="Contoh: UKMH-001/2025" />
+              <label className="label">Tahun:</label>
+              <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" placeholder="2025" />
+              <label className="label">Separuh Tahun:</label>
+              <select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} className="input select-dropdown">
                 <option value="">-- Pilih --</option>
-                <option value="H1">H1</option>
-                <option value="H2">H2</option>
+                <option value="H1">Separuh Pertama</option>
+                <option value="H2">Separuh Kedua</option>
               </select>
             </div>
-
             <div style={{ display: "flex", gap: "12px" }}>
-              <label style={labelStyle}>Syarikat:</label>
-              <select
-                name="syarikat"
-                value={formData.syarikat}
-                onChange={handleChange}
-                style={getDropdownStyle(formData.syarikat)}
+              <label className="label">Subsidiari:</label>
+              <select 
+                name="subsidiari" 
+                value={formData.subsidiari} 
+                onChange={handleChange} 
+                className="input select-dropdown"
+                disabled={["Staff", "Ketua Subsidiari"].includes(JSON.parse(localStorage.getItem("user"))?.peranan)}
               >
                 <option value="">-- Pilih --</option>
-                <option>Subsidiari A</option>
-                <option>Subsidiari B</option>
+                {subsidiariList.length > 0
+                  ? subsidiariList.map((s) => (
+                      <option key={s.subsidiari_id} value={s.subsidiari_id}>
+                        {s.nama_subsidiari}
+                      </option>
+                    ))
+                  : <option disabled>Tiada subsidiari</option>}
               </select>
             </div>
           </div>
         </div>
 
         {/* Pengenalpastian Risiko */}
-        <div style={boxStyle}>
-          <div style={headerStyle}>Pengenalpastian Risiko</div>
-          <div style={{ padding: "16px", display: "grid", gap: "14px" }}>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <label style={labelStyle}>Kategori Risiko:</label>
-              <select
-                name="kategori"
-                value={formData.kategori}
-                onChange={handleChange}
-                style={getDropdownStyle(formData.kategori)}
-              >
-                <option value="">-- Pilih --</option>
-                <option>Operasi</option>
-                <option>Kewangan</option>
-                <option>Strategik</option>
-                <option>Pematuhan/Perundangan</option>
-              </select>
-
-              <label style={labelStyle}>Bahagian/Unit:</label>
-              <textarea
-                name="bahagian"
-                value={formData.bahagian}
-                onChange={handleChange}
-                style={{ ...inputStyle, flex: 1 }}
-                placeholder="Masukkan bahagian/unit"
-              />
+        <div className="box">
+          <div className="box-header">Pengenalpastian Risiko</div>
+          <div style={{ padding: "16px" }}>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: "200px", display: "flex", flexDirection: "column" }}>
+                <label className="label">Kategori Risiko:</label>
+                <select name="kategori" value={formData.kategori} onChange={handleChange} className="input select-dropdown">
+                  <option value="">-- Pilih --</option>
+                  <option>Operasi</option>
+                  <option>Kewangan</option>
+                  <option>Strategik</option>
+                  <option>Pematuhan/Perundangan</option>
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: "200px", display: "flex", flexDirection: "column" }}>
+                <label className="label">Bahagian/Unit:</label>
+                <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="input" placeholder="Masukkan bahagian/unit" />
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px" }}>
-              <label style={labelStyle}>Risiko:</label>
-              <textarea
-                name="risiko"
-                value={formData.risiko}
-                onChange={handleChange}
-                style={{ ...inputStyle, flex: 1 }}
-                placeholder="Huraikan risiko"
-              />
-              <label style={labelStyle}>Punca:</label>
-              <textarea
-                name="punca"
-                value={formData.punca}
-                onChange={handleChange}
-                style={{ ...inputStyle, flex: 1 }}
-                placeholder="Punca risiko"
-              />
+
+             {/* Risiko */}           
+            <label className="label">Risiko:</label>
+                <textarea 
+                  name="risiko" 
+                  value={formData.risiko} 
+                  onChange={handleChange} 
+                  className="textarea-risiko" 
+                  placeholder="Huraikan risiko" 
+      />
+
+
+            {/* Punca */}
+            <div style={{ marginTop: "12px" }}>
+              <label className="label">Punca:</label>
+              {puncaList.map((p, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: "6px" }}>
+                  <input value={p} onChange={(e) => updatePunca(idx, e.target.value)} placeholder={`Punca ${idx+1}`} className="input" />
+                  {idx !== 0 && <button type="button" onClick={() => removePunca(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
+                  {idx === puncaList.length-1 && <button type="button" onClick={addPunca} className="button-circle button-add"><Plus size={16}/></button>}
+                </div>
+              ))}
             </div>
 
-            <div>
-              <label style={labelStyle}>Kesan:</label>
-              <textarea
-                name="kesan"
-                value={formData.kesan}
-                onChange={handleChange}
-                style={{ ...inputStyle, width: "100%" }}
-                placeholder="Kesan risiko"
-              />
+            {/* Kesan */}
+            <div style={{ marginTop: "12px" }}>
+              <label className="label">Kesan:</label>
+              {kesanList.map((k, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: "6px" }}>
+                  <input value={k} onChange={(e) => updateKesan(idx, e.target.value)} placeholder={`Kesan ${idx+1}`} className="input" />
+                  {idx !== 0 && <button type="button" onClick={() => removeKesan(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
+                  {idx === kesanList.length-1 && <button type="button" onClick={addKesan} className="button-circle button-add"><Plus size={16}/></button>}
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Penilaian Risiko */}
-        <div style={boxStyle}>
-          <div style={headerStyle}>Penilaian Risiko</div>
+        <div className="box">
+          <div className="box-header">Penilaian Risiko</div>
           <div style={{ padding: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <label style={labelStyle}>Skor Kebarangkalian:</label>
-            <select
-              name="skorKebarangkalian"
-              value={formData.skorKebarangkalian}
-              onChange={handleChange}
-              style={getDropdownStyle(formData.skorKebarangkalian)}
-            >
+            <label className="label">Skor Kebarangkalian:</label>
+            <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
               <option value="">-- Pilih --</option>
-              {[1, 2, 3, 4, 5].map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
+              {[1,2,3,4,5].map((v)=> <option key={v} value={v}>{v}</option>)}
             </select>
 
-            <label style={labelStyle}>Skor Impak:</label>
-            <select
-              name="skorImpak"
-              value={formData.skorImpak}
-              onChange={handleChange}
-              style={getDropdownStyle(formData.skorImpak)}
-            >
+            <label className="label">Skor Impak:</label>
+            <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
               <option value="">-- Pilih --</option>
-              {[1, 2, 3, 4, 5].map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
+              {[1,2,3,4,5].map((v)=> <option key={v} value={v}>{v}</option>)}
             </select>
 
-            <label style={labelStyle}>Skor Risiko:</label>
-            <input
-              type="text"
-              value={formData.skorRisiko}
-              readOnly
-              style={{
-                ...inputStyle,
-                fontWeight: "600",
-                textAlign: "center",
-                color: "white",
-                background: riskColor,
-                minWidth: "80px",
-              }}
-            />
+            <label className="label">Skor Risiko:</label>
+            <input type="text" value={formData.skorRisiko} readOnly className="input risk-score" style={{ background: riskColor }} />
 
-            <label style={labelStyle}>Status Risiko:</label>
-            <select
-              name="statusRisiko"
-              value={formData.statusRisiko}
-              onChange={handleChange}
-              style={getDropdownStyle(formData.statusRisiko)}
-            >
+            <label className="label">Status Risiko:</label>
+            <select name="statusRisiko" value={formData.statusRisiko} onChange={handleChange} className="input select-dropdown">
               <option value="">-- Pilih --</option>
               <option>Ya</option>
               <option>Tidak</option>
@@ -299,45 +264,15 @@ function DaftarRisiko() {
           </div>
 
           {riskLevel && (
-            <div
-              style={{
-                marginTop: "12px",
-                fontWeight: "600",
-                color: riskColor,
-                fontSize: "16px",
-                textAlign: "center",
-              }}
-            >
+            <div style={{ marginTop: "12px", fontWeight: "600", color: riskColor, fontSize: "16px", textAlign: "center" }}>
               Tahap Risiko: {riskLevel}
             </div>
           )}
         </div>
 
-        {/* Submit button */}
+        {/* Submit */}
         <div style={{ textAlign: "center" }}>
-          <button
-            type="submit"
-            style={{
-              padding: "12px 30px",
-              background: "#0074c8",
-              color: "white",
-              border: "none",
-              borderRadius: "30px",
-              fontWeight: "600",
-              fontSize: "15px",
-              cursor: "pointer",
-              boxShadow: "0 6px 18px rgba(0,116,200,0.5)",
-              transition: "0.3s",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,116,200,0.6)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,116,200,0.5)")
-            }
-          >
-            🚀 Daftar Risiko
-          </button>
+          <button type="submit" className="submit-button">🚀 Daftar Risiko</button>
         </div>
       </form>
     </div>

@@ -17,8 +17,15 @@ import LogKeluar from "./pages/LogKeluar/LogKeluar";
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/AppLayout";
+import { useState } from "react";
+
+
 
 function App() {
+  const [refreshRisiko, setRefreshRisiko] = useState(0); // trigger untuk SenaraiRisiko
+
+  const handleRefreshRisiko = () => setRefreshRisiko(prev => prev + 1);
+
   return (
     <Router>
       <Routes>
@@ -34,8 +41,14 @@ function App() {
               <AppLayout>
                 <Routes>
                   <Route index element={<PaparanUtama />} />
-                  <Route path="SenaraiRisiko" element={<SenaraiRisiko />} />
-                  <Route path="DaftarRisiko" element={<DaftarRisiko />} />
+                  <Route 
+                    path="SenaraiRisiko" 
+                    element={<SenaraiRisiko refreshTrigger={refreshRisiko} />} 
+                  />
+                  <Route 
+                    path="DaftarRisiko" 
+                    element={<DaftarRisiko onSubmitSuccess={handleRefreshRisiko} />} 
+                  />
                   <Route path="RawatanRisiko" element={<RawatanRisiko />} />
                   <Route path="PemantauanRisiko" element={<PemantauanRisiko />} />
                   <Route path="Pindaan" element={<Pindaan />} />

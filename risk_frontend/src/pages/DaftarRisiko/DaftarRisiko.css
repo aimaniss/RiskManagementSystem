@@ -1,0 +1,134 @@
+/* Container */
+.daftar-risiko-container {
+  padding: 22px;
+  font-family: "Roboto", sans-serif;
+}
+
+/* Heading */
+.daftar-risiko-container h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #0074c8;
+}
+
+/* Box */
+.box {
+  border-radius: 14px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(14px);
+  transition: 0.3s;
+}
+
+/* Box header */
+.box-header {
+  background: #0074c8;
+  color: white;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.5px;
+}
+
+/* Form input & textarea */
+.input,
+textarea {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+  margin-bottom: 6px;
+}
+
+/* Dropdown style */
+.select-dropdown {
+  color: #0f172a;
+  font-weight: 400;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Label */
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+/* Punca & Kesan buttons */
+.button-circle {
+  margin-left: 8px;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.button-add {
+  background: rgba(0, 116, 200, 0.85);
+}
+
+.button-remove {
+  background: rgba(239, 68, 68, 0.85);
+}
+
+/* Submit button */
+.submit-button {
+  padding: 12px 30px;
+  background: #0074c8;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 116, 200, 0.5);
+  transition: 0.3s;
+}
+
+.submit-button:hover {
+  box-shadow: 0 8px 24px rgba(0, 116, 200, 0.6);
+}
+
+/* Skor Risiko */
+.risk-score {
+  font-weight: 600;
+  text-align: center;
+  color: white;
+  min-width: 80px;
+}
+
+.textarea-risiko {
+  width: 97%; /* full width of parent */
+  min-height: 40px; /* taller box */
+  resize: vertical; /* user can adjust height */
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+}

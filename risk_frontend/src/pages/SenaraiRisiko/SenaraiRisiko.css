@@ -1,0 +1,101 @@
+/* SenaraiRisiko.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+.senarai-risiko-container {
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.senarai-risiko-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #004071;
+  font-weight: 600;
+}
+
+.filter-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.filter-container select,
+.filter-container input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: 'Inter', sans-serif;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.risiko-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.risiko-table th,
+.risiko-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #d3d3d3; /* light grey line */
+  font-size: 14px;
+}
+
+.risiko-table th {
+  background-color: #0074c8;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+}
+
+.risiko-table td.center {
+  text-align: center;
+}
+
+.risiko-table td.justify {
+  text-align: justify;
+}
+
+.risiko-table tr:hover {
+  background-color: #e1f0ff;
+}
+
+.number-list {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.number-list li {
+  margin-bottom: 4px; /* jarak antara nombor */
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* Skor Risiko sudah inline style, tapi kita boleh tambah border-radius */
+.risiko-table td[style*="background-color"] {
+  border-radius: 4px;
+  min-width: 30px;
+  padding: 6px 0;
+}
