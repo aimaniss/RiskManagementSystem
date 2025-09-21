@@ -12,7 +12,7 @@ function DaftarRisiko() {
     kategori: "",
     bahagian: "",
     risiko: "",
-    skorKebarangkalian: "",
+    skorKebarangkalaian: "",
     skorImpak: "",
     skorRisiko: "",
     statusRisiko: "",
@@ -23,6 +23,52 @@ function DaftarRisiko() {
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [riskLevel, setRiskLevel] = useState("");
   const [subsidiariList, setSubsidiariList] = useState([]);
+
+  // --- Risiko Matrix (ikut jadual penuh 25 kombinasi) ---
+  const riskMatrix = {
+    1: {
+      1: { label: "Rendah", color: "#22c55e" },
+      2: { label: "Rendah", color: "#22c55e" },
+      3: { label: "Sederhana", color: "#eab308" },
+      4: { label: "Sederhana", color: "#eab308" },
+      5: { label: "Tinggi", color: "#f97316" },
+    },
+    2: {
+      1: { label: "Rendah", color: "#22c55e" },
+      2: { label: "Rendah", color: "#22c55e" },
+      3: { label: "Sederhana", color: "#eab308" },
+      4: { label: "Sederhana", color: "#eab308" },
+      5: { label: "Tinggi", color: "#f97316" },
+    },
+    3: {
+      1: { label: "Rendah", color: "#22c55e" },
+      2: { label: "Sederhana", color: "#eab308" },
+      3: { label: "Sederhana", color: "#eab308" },
+      4: { label: "Tinggi", color: "#f97316" },
+      5: { label: "Tinggi", color: "#f97316" },
+    },
+    4: {
+      1: { label: "Sederhana", color: "#eab308" },
+      2: { label: "Sederhana", color: "#eab308" },
+      3: { label: "Tinggi", color: "#f97316" },
+      4: { label: "Tinggi", color: "#f97316" },
+      5: { label: "Sangat Tinggi", color: "#ef4444" },
+    },
+    5: {
+      1: { label: "Sederhana", color: "#eab308" },
+      2: { label: "Tinggi", color: "#f97316" },
+      3: { label: "Tinggi", color: "#f97316" },
+      4: { label: "Sangat Tinggi", color: "#ef4444" },
+      5: { label: "Sangat Tinggi", color: "#ef4444" },
+    },
+  };
+
+  const getRiskMatrix = (k, i) => {
+    if (!riskMatrix[k] || !riskMatrix[k][i]) {
+      return { label: "", color: "#f1f5f9" };
+    }
+    return riskMatrix[k][i];
+  };
 
   // Fetch subsidiari dengan token
   useEffect(() => {
@@ -46,35 +92,22 @@ function DaftarRisiko() {
     fetchSubsidiari();
   }, []);
 
-  // Calculate risk score and color
+  // Calculate risk score using Matrix
   useEffect(() => {
-    const k = parseInt(formData.skorKebarangkalian);
+    const k = parseInt(formData.skorKebarangkalaian);
     const i = parseInt(formData.skorImpak);
     if (k && i) {
-      const total = k * i;
+      const total = k * i; // masih kira darab untuk nilai skor
+      const { label, color } = getRiskMatrix(k, i);
       setFormData((prev) => ({ ...prev, skorRisiko: total }));
-      setRiskColor(getRiskColor(total));
-      setRiskLevel(getRiskLabel(total));
+      setRiskColor(color);
+      setRiskLevel(label);
     } else {
       setFormData((prev) => ({ ...prev, skorRisiko: "" }));
       setRiskColor("#f1f5f9");
       setRiskLevel("");
     }
-  }, [formData.skorKebarangkalian, formData.skorImpak]);
-
-  const getRiskColor = (score) => {
-    if (score <= 3) return "#22c55e";
-    if (score <= 7) return "#eab308";
-    if (score <= 12) return "#f97316";
-    return "#ef4444";
-  };
-
-  const getRiskLabel = (score) => {
-    if (score <= 3) return "Rendah";
-    if (score <= 7) return "Sederhana";
-    if (score <= 12) return "Tinggi";
-    return "Sangat Tinggi";
-  };
+  }, [formData.skorKebarangkalaian, formData.skorImpak]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const addPunca = () => setPuncaList([...puncaList, ""]);
@@ -95,7 +128,7 @@ function DaftarRisiko() {
     const finalData = { 
       ...formData, 
       tahun: parseInt(formData.tahun), 
-      subsidiari: parseInt(formData.subsidiari), // ✅ guna ID, bukan nama
+      subsidiari: parseInt(formData.subsidiari), 
       punca: puncaList, 
       kesan: kesanList 
     };
@@ -115,7 +148,7 @@ function DaftarRisiko() {
         kategori: "",
         bahagian: "",
         risiko: "",
-        skorKebarangkalian: "",
+        skorKebarangkalaian: "",
         skorImpak: "",
         skorRisiko: "",
         statusRisiko: "",
@@ -198,17 +231,15 @@ function DaftarRisiko() {
               </div>
             </div>
 
-
-             {/* Risiko */}           
+            {/* Risiko */}
             <label className="label">Risiko:</label>
-                <textarea 
-                  name="risiko" 
-                  value={formData.risiko} 
-                  onChange={handleChange} 
-                  className="textarea-risiko" 
-                  placeholder="Huraikan risiko" 
-      />
-
+            <textarea 
+              name="risiko" 
+              value={formData.risiko} 
+              onChange={handleChange} 
+              className="textarea-risiko" 
+              placeholder="Huraikan risiko" 
+            />
 
             {/* Punca */}
             <div style={{ marginTop: "12px" }}>
@@ -240,8 +271,8 @@ function DaftarRisiko() {
         <div className="box">
           <div className="box-header">Penilaian Risiko</div>
           <div style={{ padding: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <label className="label">Skor Kebarangkalian:</label>
-            <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
+            <label className="label">Skor Kebarangkalaian:</label>
+            <select name="skorKebarangkalaian" value={formData.skorKebarangkalaian} onChange={handleChange} className="input select-dropdown">
               <option value="">-- Pilih --</option>
               {[1,2,3,4,5].map((v)=> <option key={v} value={v}>{v}</option>)}
             </select>
