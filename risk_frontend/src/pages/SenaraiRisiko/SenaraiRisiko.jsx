@@ -184,7 +184,7 @@ function SenaraiRisiko({ refreshTrigger }) {
               <tr><td colSpan="13" className="center">🚫 Tiada data risiko</td></tr>
             ) : filteredRisks.map(r => (
               <tr key={r.id}>
-                <td className="center">{r.no_rujukan}</td>
+                <td className="left">{r.no_rujukan}</td>
                 <td className="center">{r.tahun}</td>
                 <td className="center">{r.separuh_tahun}</td>
                 <td className="center">{r.subsidiari}</td>

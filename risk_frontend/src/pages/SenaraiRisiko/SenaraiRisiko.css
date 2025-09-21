@@ -40,36 +40,54 @@
   min-width: 1100px;
 }
 
-.risiko-table th,
-.risiko-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #d3d3d3;
-  font-size: 14px;
-}
-
+/* Header */
 .risiko-table th {
   background-color: #0074c8;
   color: white;
   font-weight: 600;
   text-align: center;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+
+/* Data rows */
+.risiko-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #d3d3d3;
+  font-size: 14px;
+  border-right: 1px solid #e5e7eb; /* garisan vertical */
+  background-color: #fff;
+}
+
+/* Buang border-right pada last column */
+.risiko-table td:last-child {
+  border-right: none;
+}
+
+/* Alternating row shading */
+.risiko-table tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+/* Hover effect */
+.risiko-table tr:hover td {
+  background-color: #e1f0ff;
 }
 
 .risiko-table td.center {
   text-align: center;
 }
-.risiko-table td.justify {
-  text-align: left;          /* bukan justify */
-  white-space: normal;       /* biar text boleh wrap */
-  word-wrap: break-word;     /* pecahkan perkataan panjang */
-  max-width: 400px;          /* control lebar supaya senang baca */
-  line-height: 1.5;          /* spacing elok */
+
+.risiko-table td.left {
+  text-align: left;
 }
 
-
-
-
-.risiko-table tr:hover {
-  background-color: #e1f0ff;
+.risiko-table td.justify {
+  text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 400px;
+  line-height: 1.5;
 }
 
 /* Action buttons horizontal */
