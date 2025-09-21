@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
 .senarai-risiko-container {
   padding: 20px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: #f9fafb;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .senarai-risiko-container h1 {
@@ -27,7 +27,7 @@
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .table-wrapper {
@@ -37,7 +37,7 @@
 .risiko-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1000px;
+  min-width: 1100px;
 }
 
 .risiko-table th,
@@ -54,13 +54,23 @@
   text-align: center;
 }
 
-.risiko-table td.center { text-align: center; }
-.risiko-table td.justify { text-align: justify; }
+.risiko-table td.center {
+  text-align: center;
+}
+.risiko-table td.justify {
+  text-align: left;          /* bukan justify */
+  white-space: normal;       /* biar text boleh wrap */
+  word-wrap: break-word;     /* pecahkan perkataan panjang */
+  max-width: 400px;          /* control lebar supaya senang baca */
+  line-height: 1.5;          /* spacing elok */
+}
 
-.risiko-table tr:hover { background-color: #e1f0ff; }
 
-.number-list { padding-left: 20px; margin: 0; }
-.number-list li { margin-bottom: 4px; }
+
+
+.risiko-table tr:hover {
+  background-color: #e1f0ff;
+}
 
 /* Action buttons horizontal */
 .action-buttons {
@@ -82,7 +92,9 @@
   justify-content: center;
 }
 
-.delete-btn:hover { color: #dc2626; }
+.delete-btn:hover {
+  color: #dc2626;
+}
 
 .edit-btn {
   background: none;
@@ -96,13 +108,23 @@
   justify-content: center;
 }
 
-.edit-btn:hover { color: #0369a1; }
+.edit-btn:hover {
+  color: #0369a1;
+}
 
-/* Skor Risiko */
-.risiko-table td[style*="background-color"] {
-  border-radius: 4px;
-  min-width: 30px;
-  padding: 6px 0;
+/* Skor Risiko Kotak Besar */
+.risiko-table td .risk-box {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #000;
+  text-align: center;
+  margin: 0 auto;
 }
 
 /* Loader shimmer row */
@@ -123,21 +145,32 @@
   left: -150px;
   width: 150px;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
   animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% { left: -150px; }
-  100% { left: 100%; }
+  0% {
+    left: -150px;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
-
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -150,7 +183,7 @@
   padding: 20px;
   width: 600px;
   max-width: 90%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
@@ -176,11 +209,12 @@
   font-weight: 600;
 }
 
-.modal-body input, .modal-body textarea {
+.modal-body input,
+.modal-body textarea {
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .modal-body textarea {

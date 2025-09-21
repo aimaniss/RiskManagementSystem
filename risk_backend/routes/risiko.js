@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../config/db.js"; // PostgreSQL pool
+import pool from "../config/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -15,13 +15,9 @@ router.post("/", verifyToken, async (req, res) => {
       statusRisiko, tahapRisiko, punca, kesan
     } = req.body;
 
-    if (!noRujukan || !tahun || !subsidiari) {
-      return res.status(400).json({ message: "Sila lengkapkan maklumat penting" });
-    }
-
     const allowedRoles = ["Admin", "Executive", "Staff", "Ketua Subsidiari"];
     if (!allowedRoles.includes(user.nama_peranan)) {
-      return res.status(403).json({ error: "No permission" });
+      return res.status(403).json({ error: "No permission to add risiko" });
     }
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
@@ -44,13 +40,19 @@ router.post("/", verifyToken, async (req, res) => {
 
     if (Array.isArray(punca)) {
       for (let p of punca) {
-        if (p) await pool.query(`INSERT INTO punca_risiko (risiko_id, punca) VALUES ($1,$2)`, [risikoId, p]);
+        if (p) await pool.query(
+          `INSERT INTO punca_risiko (risiko_id, punca) VALUES ($1,$2)`,
+          [risikoId, p]
+        );
       }
     }
 
     if (Array.isArray(kesan)) {
       for (let k of kesan) {
-        if (k) await pool.query(`INSERT INTO kesan_risiko (risiko_id, kesan) VALUES ($1,$2)`, [risikoId, k]);
+        if (k) await pool.query(
+          `INSERT INTO kesan_risiko (risiko_id, kesan) VALUES ($1,$2)`,
+          [risikoId, k]
+        );
       }
     }
 
@@ -78,13 +80,16 @@ router.get("/", verifyToken, async (req, res) => {
       LEFT JOIN subsidiari s ON s.subsidiari_id = d.subsidiari::integer
     `;
 
+    const params = [];
+    // Staff/Ketua Subsidiari hanya boleh lihat subsidiari mereka
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE d.subsidiari = ${user.subsidiari_id}`;
+      query += ` WHERE d.subsidiari::integer = $1`;
+      params.push(user.subsidiari_id);
     }
 
     query += " ORDER BY d.id DESC";
 
-    const { rows } = await pool.query(query);
+    const { rows } = await pool.query(query, params);
     res.json(rows);
 
   } catch (err) {
@@ -108,12 +113,19 @@ router.get("/tahun", verifyToken, async (req, res) => {
 router.put("/:id", verifyToken, async (req, res) => {
   try {
     const risikoId = req.params.id;
+    const user = req.user;
     const {
       noRujukan, tahun, separuhTahun, subsidiari,
       kategori, bahagian, risiko,
       skorKebarangkalian, skorImpak, skorRisiko,
       statusRisiko, tahapRisiko
     } = req.body;
+
+    if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
+      if (parseInt(subsidiari) !== user.subsidiari_id) {
+        return res.status(403).json({ error: "No permission to update other subsidiari" });
+      }
+    }
 
     await pool.query(
       `UPDATE risiko SET
@@ -137,6 +149,16 @@ router.put("/:id", verifyToken, async (req, res) => {
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const risikoId = req.params.id;
+    const user = req.user;
+
+    const { rows } = await pool.query(`SELECT subsidiari FROM risiko WHERE id=$1`, [risikoId]);
+    if (!rows[0]) return res.status(404).json({ error: "Risiko tidak ditemui" });
+
+    if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
+      if (parseInt(rows[0].subsidiari) !== user.subsidiari_id) {
+        return res.status(403).json({ error: "No permission to delete other subsidiari" });
+      }
+    }
 
     await pool.query("DELETE FROM punca_risiko WHERE risiko_id=$1", [risikoId]);
     await pool.query("DELETE FROM kesan_risiko WHERE risiko_id=$1", [risikoId]);

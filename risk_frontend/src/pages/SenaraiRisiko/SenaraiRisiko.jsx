@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Trash2, Edit } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import EditModalRisiko from "./EditModalRisiko";
 import "./SenaraiRisiko.css";
 
-function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
+function SenaraiRisiko({ refreshTrigger }) {
   const [risks, setRisks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [subsidiariFilter, setSubsidiariFilter] = useState(
-    ["Staff", "Ketua Subsidiari"].includes(userRole) ? userSubsidiariId : ""
-  );
+  const [search, setSearch] = useState("");
+  const [subsidiariFilter, setSubsidiariFilter] = useState("");
   const [tahunFilter, setTahunFilter] = useState("");
   const [separuhFilter, setSeparuhFilter] = useState("");
   const [subsidiariList, setSubsidiariList] = useState([]);
@@ -17,11 +17,58 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState(null);
 
+  // 🎯 Decode JWT untuk dapat role & subsidiari user
+  const token = localStorage.getItem("token");
+  let userRole = "";
+  let userSubsidiariId = "";
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      const roleMapping = {
+        1: "ADMIN",
+        2: "EXECUTIVE",
+        3: "KETUA SUBSIDIARI",
+        4: "STAFF",
+        5: "VIEWER",
+      };
+      userRole = roleMapping[decoded.peranan_id] || "";
+      userSubsidiariId = decoded.subsidiari_id || "";
+    } catch (err) {
+      console.error("❌ Invalid token", err);
+      localStorage.removeItem("token");
+    }
+  }
+
+  // Risiko matrix
+  const riskMatrix = {
+    1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+    2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+    3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
+    4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+    5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+  };
+
+  const getRiskData = (k, i) => {
+    if (!riskMatrix[k] || !riskMatrix[k][i]) return { label: "-", color: "#f1f5f9" };
+    return riskMatrix[k][i];
+  };
+
   const fetchRisks = async () => {
     try {
       setLoading(true);
       const res = await api.get("/risiko");
-      setRisks(res.data.map(r => ({ ...r, status_pemantauan: r.status_pemantauan || "" })));
+      const risksWithColor = res.data.map(r => {
+        const k = parseInt(r.skor_kebarangkalian) || 0;
+        const i = parseInt(r.skor_impak) || 0;
+        const { label, color } = getRiskData(k, i);
+        return { 
+          ...r, 
+          tahap_risiko: label, 
+          risk_color: color,
+          status_pemantauan: r.status_pemantauan || ""
+        };
+      });
+      setRisks(risksWithColor);
     } catch (err) {
       console.error(err);
       alert("⚠️ Gagal memuatkan data risiko. Sila log masuk semula.");
@@ -30,22 +77,23 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
   };
 
   const fetchSubsidiari = async () => {
-    try { 
-      const res = await api.get("/subsidiari"); 
-      setSubsidiariList(res.data); 
+    try {
+      const res = await api.get("/subsidiari");
+      setSubsidiariList(res.data);
     } catch (err) { console.error(err); }
   };
 
   useEffect(() => { fetchRisks(); fetchSubsidiari(); }, [refreshTrigger]);
 
-  const filteredRisks = risks.filter(r =>
-    (!subsidiariFilter || r.subsidiari_id === parseInt(subsidiariFilter)) &&
-    (!tahunFilter || r.tahun === parseInt(tahunFilter)) &&
-    (!separuhFilter || r.separuh_tahun === separuhFilter)
-  );
-
-  const getRiskColor = score => score <= 3 ? "#22c55e" : score <= 7 ? "#eab308" : score <= 12 ? "#f97316" : "#ef4444";
-  const getRiskLabelShort = score => score <= 3 ? "R" : score <= 7 ? "S" : score <= 12 ? "T" : "ST";
+  const filteredRisks = risks.filter(r => {
+    const matchSearch = (r.no_rujukan || "").toLowerCase().includes(search.toLowerCase());
+    const matchSubsidiari = ["STAFF","KETUA SUBSIDIARI"].includes(userRole)
+      ? r.subsidiari_id === userSubsidiariId
+      : !subsidiariFilter || r.subsidiari_id === parseInt(subsidiariFilter);
+    const matchTahun = !tahunFilter || r.tahun === parseInt(tahunFilter);
+    const matchSeparuh = !separuhFilter || r.separuh_tahun === separuhFilter;
+    return matchSearch && matchSubsidiari && matchTahun && matchSeparuh;
+  });
 
   const handleDelete = async id => {
     if (!window.confirm("Adakah anda pasti mahu padam risiko ini?")) return;
@@ -60,26 +108,53 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
     catch (err) { console.error(err); alert("⚠️ Gagal kemaskini risiko."); }
   };
 
+  const shortForm = label => {
+    if (label === "Rendah") return "R";
+    if (label === "Sederhana") return "S";
+    if (label === "Tinggi") return "T";
+    if (label === "Sangat Tinggi") return "ST";
+    return "-";
+  };
+
   return (
     <div className="senarai-risiko-container">
       <h1>Senarai Risiko</h1>
 
-      {/* Filter */}
       <div className="filter-container">
-        {["Admin","Executive"].includes(userRole) && (
-          <select value={subsidiariFilter} onChange={e => setSubsidiariFilter(e.target.value)}>
-            <option value="">-- Semua Subsidiari --</option>
-            {subsidiariList.map(s => <option key={s.subsidiari_id} value={s.subsidiari_id}>{s.nama_subsidiari}</option>)}
-          </select>
-        )}
+        <input 
+          type="text" 
+          placeholder="Cari No Rujukan..." 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+        />
+
+        {/* 🎯 Subsidiari filter ikut role */}
+        <select
+          value={
+            ["STAFF","KETUA SUBSIDIARI"].includes(userRole)
+              ? userSubsidiariId
+              : subsidiariFilter
+          }
+          onChange={e => setSubsidiariFilter(e.target.value)}
+          disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
+        >
+          <option value="">-- Semua Subsidiari --</option>
+          {subsidiariList.map(s => (
+            <option key={s.subsidiari_id} value={s.subsidiari_id}>
+              {s.nama_subsidiari}
+            </option>
+          ))}
+        </select>
+
         <select value={tahunFilter} onChange={e => setTahunFilter(e.target.value)}>
           <option value="">-- Semua Tahun --</option>
-          {[...new Set(risks.map(r => r.tahun))].sort((a,b)=>b-a).map(t=><option key={t} value={t}>{t}</option>)}
+          {[...new Set(risks.map(r => r.tahun))].sort((a,b)=>b-a).map(t=>(<option key={t} value={t}>{t}</option>))}
         </select>
+
         <select value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)}>
           <option value="">-- Semua Separuh Tahun --</option>
-          <option value="H1">H1</option>
-          <option value="H2">H2</option>
+          <option value="Pertama">Pertama</option>
+          <option value="Kedua">Kedua</option>
         </select>
       </div>
 
@@ -87,47 +162,73 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
         <table className="risiko-table">
           <thead>
             <tr>
-              <th>No Rujukan</th><th>Tahun</th><th>Separuh Tahun</th><th>Subsidiari</th>
-              <th>Bahagian</th><th>Kategori</th><th>Risiko</th><th>Skor Risiko</th>
-              <th>Status Risiko</th><th>Status Pemantauan</th><th>Tindakan</th>
+              <th>No Rujukan</th>
+              <th>Tahun</th>
+              <th>Separuh Tahun</th>
+              <th>Subsidiari</th>
+              <th>Bahagian</th>
+              <th>Kategori</th>
+              <th>Risiko</th>
+              <th>Skor Kebarangkalian</th>
+              <th>Skor Impak</th>
+              <th>Skor Risiko</th>
+              <th>Status Risiko</th>
+              <th>Status Pemantauan</th>
+              <th>Tindakan</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? <tr className="loader-row"><td colSpan="11" className="center">⏳ Sedang memuat data...</td></tr>
-            : filteredRisks.length === 0 ? <tr><td colSpan="11" className="center">🚫 Tiada data risiko</td></tr>
-            : filteredRisks.map(r => {
-              const color = getRiskColor(r.skor_risiko);
-              const shortLabel = getRiskLabelShort(r.skor_risiko);
-              return (
-                <tr key={r.id}>
-                  <td className="center">{r.no_rujukan}</td>
-                  <td className="center">{r.tahun}</td>
-                  <td className="center">{r.separuh_tahun}</td>
-                  <td className="center">{r.subsidiari}</td>
-                  <td className="center">{r.bahagian}</td>
-                  <td className="center">{r.kategori}</td>
-                  <td className="justify">{r.risiko}</td>
-                  <td className="center" style={{backgroundColor:color,color:"#000",fontWeight:600}}>{shortLabel}</td>
-                  <td className="center">{r.status_risiko}</td>
-                  <td className="center">{r.status_pemantauan||"—"}</td>
-                  <td className="center">
-                    <div className="action-buttons">
-                      <button onClick={()=>handleEdit(r)} className="edit-btn"><Edit size={16}/></button>
-                      <button onClick={()=>handleDelete(r.id)} className="delete-btn"><Trash2 size={16}/></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {loading ? (
+              <tr><td colSpan="13" className="center">⏳ Sedang memuat data...</td></tr>
+            ) : filteredRisks.length === 0 ? (
+              <tr><td colSpan="13" className="center">🚫 Tiada data risiko</td></tr>
+            ) : filteredRisks.map(r => (
+              <tr key={r.id}>
+                <td className="center">{r.no_rujukan}</td>
+                <td className="center">{r.tahun}</td>
+                <td className="center">{r.separuh_tahun}</td>
+                <td className="center">{r.subsidiari}</td>
+                <td className="center">{r.bahagian}</td>
+                <td className="center">{r.kategori}</td>
+                <td className="justify">{r.risiko}</td>
+                <td className="center">{r.skor_kebarangkalian || "-"}</td>
+                <td className="center">{r.skor_impak || "-"}</td>
+                <td className="center">
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "50px",
+                    height: "50px",
+                    backgroundColor: r.risk_color,
+                    borderRadius: "8px",
+                    fontWeight: 700,
+                    fontSize: "18px",
+                    textAlign: "center"
+                  }}>
+                    {shortForm(r.tahap_risiko)}
+                  </div>
+                </td>
+                <td className="center">{r.status_risiko}</td>
+                <td className="center">{r.status_pemantauan || "—"}</td>
+                <td className="center">
+                  <div className="action-buttons">
+                    <button onClick={()=>handleEdit(r)} className="edit-btn"><Edit size={16}/></button>
+                    <button onClick={()=>handleDelete(r.id)} className="delete-btn"><Trash2 size={16}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal */}
       {isModalOpen && selectedRisk && (
         <EditModalRisiko 
           risk={selectedRisk} 
           subsidiariList={subsidiariList} 
+          userRole={userRole}
+          userSubsidiariId={userSubsidiariId}
           onClose={handleCloseModal} 
           onSave={handleSaveModal} 
         />
