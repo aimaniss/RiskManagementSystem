@@ -14,7 +14,6 @@ body {
   background: #f8f6f6;
   border-radius: 14px;
   box-shadow: 0 6px 20px rgba(0, 64, 113, 0.1);
-  font-family: "Inter", sans-serif;
 }
 
 .urus-container h1 {
@@ -24,7 +23,6 @@ body {
   color: #004071;
 }
 
-/* Filter bar sebaris */
 .filter-add {
   display: flex;
   flex-wrap: nowrap;
@@ -33,18 +31,8 @@ body {
   align-items: center;
 }
 
-.search-input {
-  flex: 2 1 250px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 14px;
-  outline: none;
-  font-family: "Inter", sans-serif;
-}
-
+.search-input,
 .role-select {
-  flex: 1 1 150px;
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
@@ -60,7 +48,6 @@ body {
 }
 
 .add-btn {
-  flex: 0 0 auto;
   background: #004071;
   color: #fff;
   border: none;
@@ -68,16 +55,15 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-family: "Inter", sans-serif;
 }
 .add-btn:hover {
   background: #0074c8;
 }
 
-/* Table */
 .table-container {
   overflow-x: auto;
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -86,80 +72,67 @@ table {
   overflow: hidden;
   box-shadow: 0 2px 14px rgba(0, 64, 113, 0.08);
 }
+
 th,
 td {
   padding: 12px 15px;
   text-align: left;
   font-size: 14px;
-  font-family: "Inter", sans-serif;
-  vertical-align: middle; /* align tengah */
+  vertical-align: middle;
 }
+
 th {
   background: #004071;
   color: #fff;
   font-weight: 600;
 }
+
 tbody tr {
   border-bottom: 1px solid #e2e8f0;
   transition: 0.2s;
 }
+
 tbody tr:hover {
   background: #f1f7fc;
 }
 
-/* Kolum Nama */
 .nama-penuh-cell {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.nama-penuh-cell span {
-  display: flex;
-  align-items: center;
-  font-size: 15px;
-  font-weight: 500;
-  color: #111827;
-}
+
 .profile-icon {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   color: #4b5563;
 }
+
 .profile-pic {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-/* Kolum Peranan */
-td.peranan-cell,
-th.peranan-cell {
-  text-align: center;
-}
-
-/* Kolum Tindakan */
 .action-icons {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  height: 100%;
 }
+
 .edit-icon {
   color: #0074c8;
   cursor: pointer;
-  stroke-width: 1.5;
-  transition: 0.2s;
 }
 .edit-icon:hover {
   transform: scale(1.2);
 }
+
 .delete-icon {
   color: #ef4444;
   cursor: pointer;
-  stroke-width: 1.5;
-  transition: 0.2s;
 }
 .delete-icon:hover {
   transform: scale(1.2);
@@ -179,24 +152,18 @@ th.peranan-cell {
   align-items: center;
   z-index: 2000;
 }
+
 .filter-modal {
   background: #fff;
   border-radius: 12px;
   padding: 30px;
   width: 400px;
   max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
   display: flex;
   flex-direction: column;
   gap: 15px;
-  font-family: "Inter", sans-serif;
 }
-.filter-modal h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #004071;
-}
+
 .filter-modal input,
 .filter-modal select {
   padding: 10px 12px;
@@ -205,12 +172,6 @@ th.peranan-cell {
   font-size: 14px;
   outline: none;
   background: #f9fafb;
-  font-family: "Inter", sans-serif;
-}
-.filter-modal input:focus,
-.filter-modal select:focus {
-  border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
 }
 
 .filter-buttons {
@@ -219,25 +180,25 @@ th.peranan-cell {
   gap: 10px;
   margin-top: 10px;
 }
+
 .filter-buttons button {
   padding: 8px 14px;
   border-radius: 8px;
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.25s;
-  font-family: "Inter", sans-serif;
 }
+
 .filter-buttons button:first-child {
   background: #e5e7eb;
   color: #374151;
 }
-.filter-buttons button:first-child:hover {
-  background: #d1d5db;
-}
 .filter-buttons button:last-child {
   background: #004071;
   color: #fff;
+}
+.filter-buttons button:first-child:hover {
+  background: #d1d5db;
 }
 .filter-buttons button:last-child:hover {
   background: #0074c8;
@@ -249,24 +210,49 @@ th.peranan-cell {
   font-style: italic;
 }
 
-/* Upload Gambar Profile */
+/* Profile upload */
 .profile-upload {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 8px;
 }
+
+.profile-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .profile-preview {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #0074c8;
-  margin-bottom: 8px;
 }
+
 .profile-placeholder {
   width: 120px;
   height: 120px;
   color: #4b5563;
-  margin-bottom: 8px;
+}
+
+.remove-profile-icon {
+  position: absolute;
+  top: 50%;
+  right: -10px; /* icon berada di sebelah kanan gambar */
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  color: #ef4444; /* merah */
+  cursor: pointer;
+  stroke-width: 2;
+  background: #fff;
+  border-radius: 50%;
+  padding: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s;
+}
+.remove-profile-icon:hover {
+  transform: translateY(-50%) scale(1.2);
 }

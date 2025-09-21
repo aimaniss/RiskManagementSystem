@@ -1,63 +1,306 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* Navbar */
 .navbar {
   position: fixed;
   top: 0;
-  left: 240px; /* adjust if sidebar width changes */
+  left: 240px; /* sesuaikan dengan lebar sidebar */
   right: 0;
   height: 60px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   display: flex;
   justify-content: flex-end;
   align-items: center;
   padding: 0 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", sans-serif;
   z-index: 2000;
+  transition: filter 0.3s ease;
 }
 
-/* Bila modal buka */
-.navbar.modal-open {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.navbar.blurred {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
 }
 
+/* Notification */
 .navbar-notification {
   margin-right: 20px;
   cursor: pointer;
+  transition: transform 0.2s;
 }
-
+.navbar-notification:hover {
+  transform: scale(1.1);
+}
 .navbar-notification img {
   width: 26px;
   height: 26px;
 }
 
+/* User info */
 .navbar-user {
   display: flex;
   align-items: center;
+  gap: 12px;
   cursor: pointer;
-  gap: 10px;
+  position: relative;
 }
-
 .navbar-user-info {
   text-align: center;
+  line-height: 1.2;
 }
-
-.navbar-user-info .user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #000000;
-}
-
-.navbar-user-info .user-role {
-  font-size: 12px;
+.user-subsidiari-bold {
+  font-size: 18px;
   font-weight: 700;
-  color: #000000;
+  color: #007bff;
+  margin-bottom: 2px;
+}
+.user-role-small {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  margin: 0;
 }
 
-.navbar-user img {
-  width: 40px;
-  height: 40px;
+/* Profile */
+.navbar-user img,
+.profile-icon {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #ddd;
+  background: #f5f5f5;
+  transition: 0.2s;
+}
+.navbar-user img:hover,
+.profile-icon:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+}
+
+/* Dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 300px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 3000;
+  font-family: "Inter", sans-serif;
+}
+.profile-dropdown .profile-big {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.profile-dropdown .profile-big img,
+.profile-dropdown .dropdown-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #007bff;
+  background: #f0f0f0;
+}
+.dropdown-fullname,
+.dropdown-subsidiari,
+.dropdown-staffid {
+  text-align: center;
+  margin: 4px 0;
+}
+.dropdown-fullname {
+  font-weight: 600;
+  color: #222;
+}
+.dropdown-subsidiari {
+  font-weight: 700;
+  color: #002766;
+}
+.dropdown-staffid {
+  font-weight: 500;
+  color: #333;
+}
+.edit-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: #007bff;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.edit-btn:hover {
+  background: #0056b3;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 4000;
+}
+
+/* Modal Container */
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-family: "Inter", sans-serif;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h2 {
+  margin: 0;
+  font-weight: 600;
+  color: #004071;
+}
+.close-icon {
+  cursor: pointer;
+}
+
+/* Modal Form */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modal-form label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+}
+.modal-form input[type="text"],
+.modal-form input[type="password"],
+.modal-form input[type="file"] {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+}
+.modal-form input:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+}
+.modal-form input[readonly] {
+  background: #f5f5f5;
+  cursor: default;
+}
+
+/* Buttons */
+.filter-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+.filter-buttons button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+  font-family: "Inter", sans-serif;
+}
+.filter-buttons button:first-child {
+  background: #e5e7eb;
+  color: #374151;
+}
+.filter-buttons button:first-child:hover {
+  background: #d1d5db;
+}
+.filter-buttons button:last-child {
+  background: #004071;
+  color: #fff;
+}
+.filter-buttons button:last-child:hover {
+  background: #0074c8;
+}
+
+/* Profile Upload */
+.profile-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.profile-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #0074c8;
+  margin-bottom: 8px;
+}
+.profile-placeholder {
+  width: 120px;
+  height: 120px;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+.profile-input {
+  font-size: 14px;
+}
+.profile-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+.profile-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #0074c8;
+  margin-bottom: 8px;
+}
+.profile-placeholder {
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+.profile-input {
+  margin-top: 8px;
+}
+.remove-profile-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.remove-profile-btn:hover {
+  background: #dc2626;
 }

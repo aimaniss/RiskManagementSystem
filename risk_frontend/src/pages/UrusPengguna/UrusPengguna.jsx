@@ -29,6 +29,7 @@ function UrusPengguna() {
   });
   const [preview, setPreview] = useState("");
   const [subsidiaryLocked, setSubsidiaryLocked] = useState(false);
+  const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -78,7 +79,9 @@ function UrusPengguna() {
       u.staff_id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole = filterRoleId ? u.peranan_id === parseInt(filterRoleId) : true;
-    const matchesSubsidiary = filterSubsidiaryId ? u.subsidiari_id === parseInt(filterSubsidiaryId) : true;
+    const matchesSubsidiary = filterSubsidiaryId
+      ? u.subsidiari_id === parseInt(filterSubsidiaryId)
+      : true;
 
     return matchesSearch && matchesRole && matchesSubsidiary;
   });
@@ -106,6 +109,7 @@ function UrusPengguna() {
     if (type === "edit" && user) {
       setFormData({ ...user, profile_pic: null });
       setPreview(user.profile_pic ? `data:image/png;base64,${user.profile_pic}` : "");
+      setRemoveProfileFlag(false);
 
       const role = roles.find((r) => r.peranan_id === user.peranan_id);
       if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
@@ -116,7 +120,6 @@ function UrusPengguna() {
         setSubsidiaryLocked(false);
       }
     } else {
-      // Tambah pengguna baru
       setFormData({
         staff_id: "",
         nama_penuh: "",
@@ -126,6 +129,7 @@ function UrusPengguna() {
         profile_pic: null,
       });
       setPreview("");
+      setRemoveProfileFlag(false);
       setSubsidiaryLocked(false);
     }
 
@@ -137,6 +141,8 @@ function UrusPengguna() {
     setSelectedUser(null);
     setModalType("");
     setSubsidiaryLocked(false);
+    setRemoveProfileFlag(false);
+    setPreview("");
   };
 
   const handleFileChange = (e) => {
@@ -144,6 +150,7 @@ function UrusPengguna() {
     if (file) {
       setFormData({ ...formData, profile_pic: file });
       setPreview(URL.createObjectURL(file));
+      setRemoveProfileFlag(false);
     }
   };
 
@@ -170,6 +177,7 @@ function UrusPengguna() {
       data.append("peranan_id", formData.peranan_id);
       data.append("subsidiari_id", formData.subsidiari_id);
       if (formData.profile_pic) data.append("gambar_profil", formData.profile_pic);
+      if (removeProfileFlag) data.append("hapus_gambar", "true");
 
       let res;
       if (selectedUser) {
@@ -183,7 +191,9 @@ function UrusPengguna() {
             },
           }
         );
-        setUsers(users.map((u) => (u.pengguna_id === selectedUser.pengguna_id ? res.data : u)));
+        setUsers(
+          users.map((u) => (u.pengguna_id === selectedUser.pengguna_id ? res.data : u))
+        );
       } else {
         res = await axios.post("http://localhost:5000/api/users", data, {
           headers: {
@@ -229,7 +239,11 @@ function UrusPengguna() {
           className="search-input"
         />
 
-        <select value={filterRoleId} onChange={(e) => handleFilterRoleChange(e.target.value)} className="role-select">
+        <select
+          value={filterRoleId}
+          onChange={(e) => handleFilterRoleChange(e.target.value)}
+          className="role-select"
+        >
           <option value="">Pilih Peranan</option>
           {roles.map((r) => (
             <option key={r.peranan_id} value={r.peranan_id}>
@@ -280,8 +294,12 @@ function UrusPengguna() {
               </tr>
             ) : (
               filteredUsers.map((u, i) => {
-                const subsidiary = subsidiaries.find((s) => s.subsidiari_id === u.subsidiari_id);
-                const profileSrc = u.profile_pic ? `data:image/png;base64,${u.profile_pic}` : null;
+                const subsidiary = subsidiaries.find(
+                  (s) => s.subsidiari_id === u.subsidiari_id
+                );
+                const profileSrc = u.profile_pic
+                  ? `data:image/png;base64,${u.profile_pic}`
+                  : null;
                 return (
                   <tr key={i}>
                     <td>{i + 1}</td>
@@ -296,12 +314,17 @@ function UrusPengguna() {
                     <td>{u.nama_peranan}</td>
                     <td>{subsidiary ? subsidiary.nama_subsidiari : "-"}</td>
                     <td>{u.staff_id}</td>
-                    <td>{u.katalaluan}</td>
-
+                    <td>{u.katalaluan || "-"}</td>
                     <td>
                       <div className="action-icons">
-                        <Edit className="edit-icon" onClick={() => openModal("edit", u)} />
-                        <Trash2 className="delete-icon" onClick={() => openModal("delete", u)} />
+                        <Edit
+                          className="edit-icon"
+                          onClick={() => openModal("edit", u)}
+                        />
+                        <Trash2
+                          className="delete-icon"
+                          onClick={() => openModal("delete", u)}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -317,47 +340,87 @@ function UrusPengguna() {
         <div className="filter-modal-backdrop">
           <div className="filter-modal">
             {modalType === "delete" ? (
-  <>
-    <h2>Pengesahan Padam</h2>
-    <p>
-      Adakah anda pasti mahu memadam{" "}
-      <strong>{selectedUser?.nama_penuh}</strong>?
-    </p>
-    <div className="filter-buttons">
-      <button onClick={closeModal}>Batal</button>
-      <button onClick={handleDelete}>Padam</button>
-    </div>
-  </>
-) : (
+              <>
+                <h2>Pengesahan Padam</h2>
+                <p>
+                  Adakah anda pasti mahu memadam{" "}
+                  <strong>{selectedUser?.nama_penuh}</strong>?
+                </p>
+                <div className="filter-buttons">
+                  <button onClick={closeModal}>Batal</button>
+                  <button onClick={handleDelete}>Padam</button>
+                </div>
+              </>
+            ) : (
               <>
                 <h2>{selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}</h2>
 
-                <div className="profile-upload">
-                  {preview ? (
-                    <img src={preview} alt="preview" className="profile-preview" />
-                  ) : (
-                    <UserCircle className="profile-placeholder" />
-                  )}
-                  <input type="file" accept="image/*" onChange={handleFileChange} />
-                </div>
+                {/* Profile Upload */}
+<div className="profile-upload">
+  <div className="profile-wrapper">
+    {preview || (formData.profile_pic && !removeProfileFlag) ? (
+      <img
+        src={
+          preview
+            ? preview
+            : formData.profile_pic instanceof File
+            ? URL.createObjectURL(formData.profile_pic)
+            : `data:image/png;base64,${formData.profile_pic}`
+        }
+        alt="preview"
+        className="profile-preview"
+      />
+    ) : (
+      <UserCircle className="profile-placeholder" />
+    )}
+
+    {(preview || (formData.profile_pic && !removeProfileFlag)) && (
+      <Trash2
+        className="remove-profile-icon"
+        onClick={() => {
+          setFormData({ ...formData, profile_pic: null });
+          setPreview("");
+          setRemoveProfileFlag(true);
+        }}
+      />
+    )}
+  </div>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleFileChange}
+    className="profile-input"
+  />
+</div>
+
 
                 <input
                   placeholder="Staff ID"
                   value={formData.staff_id}
-                  onChange={(e) => setFormData({ ...formData, staff_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, staff_id: e.target.value })
+                  }
                 />
                 <input
                   placeholder="Nama Penuh"
                   value={formData.nama_penuh}
-                  onChange={(e) => setFormData({ ...formData, nama_penuh: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nama_penuh: e.target.value })
+                  }
                 />
                 <input
                   placeholder="Kata Laluan"
                   value={formData.katalaluan}
-                  onChange={(e) => setFormData({ ...formData, katalaluan: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, katalaluan: e.target.value })
+                  }
                 />
 
-                <select value={formData.peranan_id} onChange={(e) => handleRoleChange(e.target.value)}>
+                <select
+                  value={formData.peranan_id}
+                  onChange={(e) => handleRoleChange(e.target.value)}
+                >
                   <option value="">Pilih Peranan</option>
                   {roles.map((r) => (
                     <option key={r.peranan_id} value={r.peranan_id}>
@@ -368,7 +431,9 @@ function UrusPengguna() {
 
                 <select
                   value={formData.subsidiari_id}
-                  onChange={(e) => setFormData({ ...formData, subsidiari_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subsidiari_id: e.target.value })
+                  }
                   disabled={subsidiaryLocked}
                 >
                   <option value="">Pilih Subsidiari</option>
