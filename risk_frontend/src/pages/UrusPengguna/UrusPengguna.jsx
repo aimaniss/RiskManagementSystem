@@ -1,58 +1,144 @@
 import { useState, useEffect } from "react";
-import { FaUserCircle } from "react-icons/fa";
-import api from "../../api/api";
+import axios from "axios";
+import { UserCircle, Edit, Trash2 } from "lucide-react";
 import "./UrusPengguna.css";
 
 function UrusPengguna() {
-  const [pengguna, setPengguna] = useState([]);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [subsidiaries, setSubsidiaries] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter states
+  const [filterRoleId, setFilterRoleId] = useState("");
+  const [filterSubsidiaryId, setFilterSubsidiaryId] = useState("");
+  const [filterSubsidiaryLocked, setFilterSubsidiaryLocked] = useState(false);
+
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const [formData, setFormData] = useState({
-    nama_penuh: "",
-    subsidiari: "",
     staff_id: "",
-    kata_laluan: "",
-    peranan: "",
-    profile_pic: "",
+    nama_penuh: "",
+    katalaluan: "",
+    peranan_id: "",
+    subsidiari_id: "",
+    profile_pic: null,
   });
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [subsidiaryLocked, setSubsidiaryLocked] = useState(false);
 
-  // Fetch pengguna
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
-    const fetchPengguna = async () => {
-      try {
-        const res = await api.get("/pengguna");
-        setPengguna(res.data);
-      } catch (err) {
-        console.error("❌ Error fetch pengguna:", err);
-      }
-    };
-    fetchPengguna();
-  }, []);
+    fetchRoles();
+    fetchSubsidiaries();
+    fetchUsers();
+  }, [token]);
 
-  // Filter data
-  const filteredPengguna = pengguna.filter((p) => {
-    return (
-      (p.nama_penuh?.toLowerCase().includes(search.toLowerCase()) ||
-        p.staff_id?.toLowerCase().includes(search.toLowerCase()) ||
-        p.subsidiari?.toLowerCase().includes(search.toLowerCase())) &&
-      (roleFilter ? p.peranan === roleFilter : true)
-    );
-  });
-
-  // Hapus pengguna
-  const handleDelete = async (id) => {
-    if (!window.confirm("Padam pengguna ini?")) return;
+  const fetchRoles = async () => {
     try {
-      await api.delete(`/pengguna/${id}`);
-      setPengguna((prev) => prev.filter((p) => p.pengguna_id !== id));
+      const res = await axios.get("http://localhost:5000/api/roles", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRoles(res.data);
     } catch (err) {
-      console.error("❌ Error delete pengguna:", err);
+      console.error(err);
     }
   };
 
-  // Upload & preview gambar
+  const fetchSubsidiaries = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/subsidiari", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSubsidiaries(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Table filter
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      u.nama_penuh.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.staff_id.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesRole = filterRoleId ? u.peranan_id === parseInt(filterRoleId) : true;
+    const matchesSubsidiary = filterSubsidiaryId ? u.subsidiari_id === parseInt(filterSubsidiaryId) : true;
+
+    return matchesSearch && matchesRole && matchesSubsidiary;
+  });
+
+  // Filter dropdown change
+  const handleFilterRoleChange = (roleId) => {
+    setFilterRoleId(roleId);
+    const role = roles.find((r) => r.peranan_id === parseInt(roleId));
+
+    if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
+      const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
+      if (ukm) setFilterSubsidiaryId(ukm.subsidiari_id.toString());
+      setFilterSubsidiaryLocked(true);
+    } else {
+      setFilterSubsidiaryId("");
+      setFilterSubsidiaryLocked(false);
+    }
+  };
+
+  // Modal open
+  const openModal = (type, user) => {
+    setModalType(type);
+    setSelectedUser(user);
+
+    if (type === "edit" && user) {
+      setFormData({ ...user, profile_pic: null });
+      setPreview(user.profile_pic ? `data:image/png;base64,${user.profile_pic}` : "");
+
+      const role = roles.find((r) => r.peranan_id === user.peranan_id);
+      if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
+        const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
+        if (ukm) setFormData((f) => ({ ...f, subsidiari_id: ukm.subsidiari_id }));
+        setSubsidiaryLocked(true);
+      } else {
+        setSubsidiaryLocked(false);
+      }
+    } else {
+      // Tambah pengguna baru
+      setFormData({
+        staff_id: "",
+        nama_penuh: "",
+        katalaluan: "",
+        peranan_id: "",
+        subsidiari_id: "",
+        profile_pic: null,
+      });
+      setPreview("");
+      setSubsidiaryLocked(false);
+    }
+
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
+    setModalType("");
+    setSubsidiaryLocked(false);
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -61,47 +147,112 @@ function UrusPengguna() {
     }
   };
 
-  // Simpan pengguna baru (demo)
-  const handleSave = () => {
-    console.log("Simpan pengguna:", formData);
-    setIsModalOpen(false);
-    setPreview(null);
-    setFormData({
-      nama_penuh: "",
-      subsidiari: "",
-      staff_id: "",
-      kata_laluan: "",
-      peranan: "",
-      profile_pic: "",
-    });
+  const handleRoleChange = (roleId) => {
+    const role = roles.find((r) => r.peranan_id === parseInt(roleId));
+    setFormData((f) => ({ ...f, peranan_id: parseInt(roleId) }));
+
+    if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
+      const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
+      if (ukm) setFormData((f) => ({ ...f, subsidiari_id: ukm.subsidiari_id }));
+      setSubsidiaryLocked(true);
+    } else {
+      setFormData((f) => ({ ...f, subsidiari_id: "" }));
+      setSubsidiaryLocked(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const data = new FormData();
+      data.append("staff_id", formData.staff_id);
+      data.append("nama_penuh", formData.nama_penuh);
+      data.append("katalaluan", formData.katalaluan);
+      data.append("peranan_id", formData.peranan_id);
+      data.append("subsidiari_id", formData.subsidiari_id);
+      if (formData.profile_pic) data.append("gambar_profil", formData.profile_pic);
+
+      let res;
+      if (selectedUser) {
+        res = await axios.put(
+          `http://localhost:5000/api/users/${selectedUser.pengguna_id}`,
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setUsers(users.map((u) => (u.pengguna_id === selectedUser.pengguna_id ? res.data : u)));
+      } else {
+        res = await axios.post("http://localhost:5000/api/users", data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsers([...users, res.data]);
+      }
+
+      closeModal();
+      alert("Pengguna berjaya disimpan ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan pengguna ❌");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${selectedUser.pengguna_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(users.filter((u) => u.pengguna_id !== selectedUser.pengguna_id));
+      closeModal();
+      alert("Pengguna berjaya dipadam ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memadam pengguna ❌");
+    }
   };
 
   return (
     <div className="urus-container">
       <h1>Urus Pengguna</h1>
 
-      {/* Filter + Add */}
+      {/* Filter bar */}
       <div className="filter-add">
         <input
-          type="text"
-          placeholder="Cari nama / staff ID / subsidiari..."
+          placeholder="Carian Nama Penuh atau Staff ID"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
         />
 
-        <select
-          className="role-select"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="">Semua Peranan</option>
-          <option value="Admin">Admin</option>
-          <option value="Executive">Executive</option>
-          <option value="Viewer">Viewer</option>
+        <select value={filterRoleId} onChange={(e) => handleFilterRoleChange(e.target.value)} className="role-select">
+          <option value="">Pilih Peranan</option>
+          {roles.map((r) => (
+            <option key={r.peranan_id} value={r.peranan_id}>
+              {r.nama_peranan}
+            </option>
+          ))}
         </select>
 
-        <button className="add-btn" onClick={() => setIsModalOpen(true)}>
+        <select
+          value={filterSubsidiaryId}
+          onChange={(e) => setFilterSubsidiaryId(e.target.value)}
+          className="role-select"
+          disabled={filterSubsidiaryLocked}
+        >
+          <option value="">Pilih Subsidiari</option>
+          {subsidiaries.map((s) => (
+            <option key={s.subsidiari_id} value={s.subsidiari_id}>
+              {s.nama_subsidiari}
+            </option>
+          ))}
+        </select>
+
+        <button className="add-btn" onClick={() => openModal("edit", null)}>
           + Tambah Pengguna
         </button>
       </div>
@@ -113,126 +264,127 @@ function UrusPengguna() {
             <tr>
               <th>Bil</th>
               <th>Nama Penuh</th>
+              <th>Peranan</th>
               <th>Subsidiari</th>
               <th>Staff ID</th>
               <th>Kata Laluan</th>
-              <th>Peranan</th>
               <th>Tindakan</th>
             </tr>
           </thead>
           <tbody>
-            {filteredPengguna.length > 0 ? (
-              filteredPengguna.map((p, index) => (
-                <tr key={p.pengguna_id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    <div className="nama-penuh-cell">
-                      {p.profile_pic ? (
-                        <img
-                          src={p.profile_pic}
-                          alt="profile"
-                          className="profile-pic"
-                        />
-                      ) : (
-                        <FaUserCircle className="profile-icon" />
-                      )}
-                      <span className="nama-text">{p.nama_penuh}</span>
-                    </div>
-                  </td>
-                  <td>{p.subsidiari}</td>
-                  <td>{p.staff_id}</td>
-                  <td>{p.kata_laluan}</td>
-                  <td>{p.peranan}</td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(p.pengguna_id)}
-                    >
-                      Padam
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+            {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan="7" className="no-data">
-                  Tiada pengguna ditemui
+                  🚫 Tiada pengguna dijumpai
                 </td>
               </tr>
+            ) : (
+              filteredUsers.map((u, i) => {
+                const subsidiary = subsidiaries.find((s) => s.subsidiari_id === u.subsidiari_id);
+                const profileSrc = u.profile_pic ? `data:image/png;base64,${u.profile_pic}` : null;
+                return (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td className="nama-penuh-cell">
+                      {profileSrc ? (
+                        <img src={profileSrc} alt="profile" className="profile-pic" />
+                      ) : (
+                        <UserCircle className="profile-icon" />
+                      )}
+                      <span>{u.nama_penuh}</span>
+                    </td>
+                    <td>{u.nama_peranan}</td>
+                    <td>{subsidiary ? subsidiary.nama_subsidiari : "-"}</td>
+                    <td>{u.staff_id}</td>
+                    <td>{u.katalaluan}</td>
+
+                    <td>
+                      <div className="action-icons">
+                        <Edit className="edit-icon" onClick={() => openModal("edit", u)} />
+                        <Trash2 className="delete-icon" onClick={() => openModal("delete", u)} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Modal Tambah */}
-      {isModalOpen && (
+      {/* Modal */}
+      {modalOpen && (
         <div className="filter-modal-backdrop">
           <div className="filter-modal">
-            <h2>Tambah Pengguna</h2>
+            {modalType === "delete" ? (
+  <>
+    <h2>Pengesahan Padam</h2>
+    <p>
+      Adakah anda pasti mahu memadam{" "}
+      <strong>{selectedUser?.nama_penuh}</strong>?
+    </p>
+    <div className="filter-buttons">
+      <button onClick={closeModal}>Batal</button>
+      <button onClick={handleDelete}>Padam</button>
+    </div>
+  </>
+) : (
+              <>
+                <h2>{selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}</h2>
 
-            {/* Gambar Profil */}
-            <div className="profile-upload">
-              {preview ? (
-                <img src={preview} alt="preview" className="profile-preview" />
-              ) : (
-                <FaUserCircle className="profile-placeholder" />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </div>
+                <div className="profile-upload">
+                  {preview ? (
+                    <img src={preview} alt="preview" className="profile-preview" />
+                  ) : (
+                    <UserCircle className="profile-placeholder" />
+                  )}
+                  <input type="file" accept="image/*" onChange={handleFileChange} />
+                </div>
 
-            <input
-              type="text"
-              placeholder="Nama penuh"
-              value={formData.nama_penuh}
-              onChange={(e) =>
-                setFormData({ ...formData, nama_penuh: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Subsidiari"
-              value={formData.subsidiari}
-              onChange={(e) =>
-                setFormData({ ...formData, subsidiari: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Staff ID"
-              value={formData.staff_id}
-              onChange={(e) =>
-                setFormData({ ...formData, staff_id: e.target.value })
-              }
-            />
-            <input
-              type="password"
-              placeholder="Kata Laluan"
-              value={formData.kata_laluan}
-              onChange={(e) =>
-                setFormData({ ...formData, kata_laluan: e.target.value })
-              }
-            />
-            <select
-              value={formData.peranan}
-              onChange={(e) =>
-                setFormData({ ...formData, peranan: e.target.value })
-              }
-            >
-              <option value="">Pilih Peranan</option>
-              <option value="Admin">Admin</option>
-              <option value="Executive">Executive</option>
-              <option value="Viewer">Viewer</option>
-            </select>
+                <input
+                  placeholder="Staff ID"
+                  value={formData.staff_id}
+                  onChange={(e) => setFormData({ ...formData, staff_id: e.target.value })}
+                />
+                <input
+                  placeholder="Nama Penuh"
+                  value={formData.nama_penuh}
+                  onChange={(e) => setFormData({ ...formData, nama_penuh: e.target.value })}
+                />
+                <input
+                  placeholder="Kata Laluan"
+                  value={formData.katalaluan}
+                  onChange={(e) => setFormData({ ...formData, katalaluan: e.target.value })}
+                />
 
-            <div className="filter-buttons">
-              <button onClick={() => setIsModalOpen(false)}>Batal</button>
-              <button onClick={handleSave}>Simpan</button>
-            </div>
+                <select value={formData.peranan_id} onChange={(e) => handleRoleChange(e.target.value)}>
+                  <option value="">Pilih Peranan</option>
+                  {roles.map((r) => (
+                    <option key={r.peranan_id} value={r.peranan_id}>
+                      {r.nama_peranan}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={formData.subsidiari_id}
+                  onChange={(e) => setFormData({ ...formData, subsidiari_id: e.target.value })}
+                  disabled={subsidiaryLocked}
+                >
+                  <option value="">Pilih Subsidiari</option>
+                  {subsidiaries.map((s) => (
+                    <option key={s.subsidiari_id} value={s.subsidiari_id}>
+                      {s.nama_subsidiari}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="filter-buttons">
+                  <button onClick={closeModal}>Batal</button>
+                  <button onClick={handleSave}>Simpan</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

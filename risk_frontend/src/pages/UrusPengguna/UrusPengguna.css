@@ -1,46 +1,272 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #eef0f3;
+}
+
+.urus-container {
+  max-width: 95vw;
+  margin: 20px auto;
+  padding: 20px;
+  background: #f8f6f6;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 64, 113, 0.1);
+  font-family: "Inter", sans-serif;
+}
+
+.urus-container h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #004071;
+}
+
+/* Filter bar sebaris */
+.filter-add {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 2 1 250px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  font-family: "Inter", sans-serif;
+}
+
+.role-select {
+  flex: 1 1 150px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  font-family: "Inter", sans-serif;
+}
+
+.search-input:focus,
+.role-select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+}
+
+.add-btn {
+  flex: 0 0 auto;
+  background: #004071;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+}
+.add-btn:hover {
+  background: #0074c8;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0, 64, 113, 0.08);
+}
+th,
+td {
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  vertical-align: middle; /* align tengah */
+}
+th {
+  background: #004071;
+  color: #fff;
+  font-weight: 600;
+}
+tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: 0.2s;
+}
+tbody tr:hover {
+  background: #f1f7fc;
+}
+
+/* Kolum Nama */
 .nama-penuh-cell {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
+.nama-penuh-cell span {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
+.profile-icon {
+  width: 60px;
+  height: 60px;
+  color: #4b5563;
+}
 .profile-pic {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.profile-icon {
-  font-size: 42px;
-  color: #6c757d;
+/* Kolum Peranan */
+td.peranan-cell,
+th.peranan-cell {
+  text-align: center;
 }
 
-.nama-text {
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
+/* Kolum Tindakan */
+.action-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+}
+.edit-icon {
+  color: #0074c8;
+  cursor: pointer;
+  stroke-width: 1.5;
+  transition: 0.2s;
+}
+.edit-icon:hover {
+  transform: scale(1.2);
+}
+.delete-icon {
+  color: #ef4444;
+  cursor: pointer;
+  stroke-width: 1.5;
+  transition: 0.2s;
+}
+.delete-icon:hover {
+  transform: scale(1.2);
 }
 
-/* Modal Upload */
+/* Modal */
+.filter-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.filter-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  font-family: "Inter", sans-serif;
+}
+.filter-modal h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #004071;
+}
+.filter-modal input,
+.filter-modal select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+  font-family: "Inter", sans-serif;
+}
+.filter-modal input:focus,
+.filter-modal select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+}
+
+.filter-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+.filter-buttons button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+  font-family: "Inter", sans-serif;
+}
+.filter-buttons button:first-child {
+  background: #e5e7eb;
+  color: #374151;
+}
+.filter-buttons button:first-child:hover {
+  background: #d1d5db;
+}
+.filter-buttons button:last-child {
+  background: #004071;
+  color: #fff;
+}
+.filter-buttons button:last-child:hover {
+  background: #0074c8;
+}
+
+.no-data {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Upload Gambar Profile */
 .profile-upload {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
-
-.profile-preview,
-.profile-placeholder {
-  width: 150px;
-  height: 150px;
+.profile-preview {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #ccc;
-  margin-bottom: 10px;
+  border: 3px solid #0074c8;
+  margin-bottom: 8px;
 }
-
 .profile-placeholder {
-  font-size: 150px;
-  color: #aaa;
+  width: 120px;
+  height: 120px;
+  color: #4b5563;
+  margin-bottom: 8px;
 }
