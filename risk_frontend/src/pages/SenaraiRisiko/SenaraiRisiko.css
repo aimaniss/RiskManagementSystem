@@ -1,5 +1,3 @@
-/* SenaraiRisiko.css */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
 .senarai-risiko-container {
@@ -45,7 +43,7 @@
 .risiko-table th,
 .risiko-table td {
   padding: 12px 10px;
-  border-bottom: 1px solid #d3d3d3; /* light grey line */
+  border-bottom: 1px solid #d3d3d3;
   font-size: 14px;
 }
 
@@ -56,46 +54,80 @@
   text-align: center;
 }
 
-.risiko-table td.center {
-  text-align: center;
-}
+.risiko-table td.center { text-align: center; }
+.risiko-table td.justify { text-align: justify; }
 
-.risiko-table td.justify {
-  text-align: justify;
-}
+.risiko-table tr:hover { background-color: #e1f0ff; }
 
-.risiko-table tr:hover {
-  background-color: #e1f0ff;
-}
+.number-list { padding-left: 20px; margin: 0; }
+.number-list li { margin-bottom: 4px; }
 
-.number-list {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.number-list li {
-  margin-bottom: 4px; /* jarak antara nombor */
+/* Action buttons horizontal */
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
 }
 
 .delete-btn {
-  background-color: #ef4444;
+  background: none;
   border: none;
+  cursor: pointer;
+  color: red;
   padding: 6px;
   border-radius: 4px;
-  cursor: pointer;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.delete-btn:hover {
-  background-color: #dc2626;
+.delete-btn:hover { color: #dc2626; }
+
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #0284c7;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Skor Risiko sudah inline style, tapi kita boleh tambah border-radius */
+.edit-btn:hover { color: #0369a1; }
+
+/* Skor Risiko */
 .risiko-table td[style*="background-color"] {
   border-radius: 4px;
   min-width: 30px;
   padding: 6px 0;
+}
+
+/* Loader shimmer row */
+.loader-row td {
+  position: relative;
+  overflow: hidden;
+  background: #f0f0f0;
+  color: #555;
+  font-weight: 500;
+  text-align: center;
+  height: 40px;
+}
+
+.loader-row td::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  width: 150px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -150px; }
+  100% { left: 100%; }
 }

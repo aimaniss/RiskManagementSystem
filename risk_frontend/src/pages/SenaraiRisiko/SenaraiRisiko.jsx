@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import api from "../../api/api";
 import "./SenaraiRisiko.css";
 
@@ -17,7 +17,11 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
     try {
       setLoading(true);
       const res = await api.get("/risiko");
-      setRisks(res.data);
+      const risksWithMonitoring = res.data.map(r => ({
+        ...r,
+        status_pemantauan: r.status_pemantauan || ""
+      }));
+      setRisks(risksWithMonitoring);
     } catch (err) {
       console.error("❌ Error fetch risiko:", err.response?.data || err.message);
       alert("⚠️ Gagal memuatkan data risiko. Sila log masuk semula.");
@@ -48,10 +52,10 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
   );
 
   const getRiskColor = (score) => {
-    if (score <= 3) return "#22c55e"; // R - hijau
-    if (score <= 7) return "#eab308"; // S - kuning
-    if (score <= 12) return "#f97316"; // T - oren
-    return "#ef4444"; // ST - merah
+    if (score <= 3) return "#22c55e";
+    if (score <= 7) return "#eab308";
+    if (score <= 12) return "#f97316";
+    return "#ef4444";
   };
 
   const getRiskLabelShort = (score) => {
@@ -72,13 +76,16 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
     }
   };
 
+  const handleEdit = (id) => {
+    window.location.href = `/risiko/edit/${id}`;
+  };
+
   return (
     <div className="senarai-risiko-container">
       <h1>Senarai Risiko</h1>
 
       {/* Filter */}
       <div className="filter-container">
-        {/* Hanya paparkan dropdown Subsidiari untuk Admin/Executive */}
         {["Admin", "Executive"].includes(userRole) && (
           <select value={subsidiariFilter} onChange={(e) => setSubsidiariFilter(e.target.value)}>
             <option value="">-- Semua Subsidiari --</option>
@@ -102,31 +109,34 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
         </select>
       </div>
 
-      {loading ? (
-        <p>⏳ Memuatkan data...</p>
-      ) : filteredRisks.length === 0 ? (
-        <p>🚫 Tiada data risiko</p>
-      ) : (
-        <div className="table-wrapper">
-          <table className="risiko-table">
-            <thead>
-              <tr>
-                <th>No Rujukan</th>
-                <th>Tahun</th>
-                <th>Separuh Tahun</th>
-                <th>Subsidiari</th>
-                <th>Bahagian</th>
-                <th>Kategori</th>
-                <th>Risiko</th>
-                <th>Punca</th>
-                <th>Kesan</th>
-                <th>Skor Risiko</th>
-                <th>Status Risiko</th>
-                <th>Tindakan</th>
+      <div className="table-wrapper">
+        <table className="risiko-table">
+          <thead>
+            <tr>
+              <th>No Rujukan</th>
+              <th>Tahun</th>
+              <th>Separuh Tahun</th>
+              <th>Subsidiari</th>
+              <th>Bahagian</th>
+              <th>Kategori</th>
+              <th>Risiko</th>
+              <th>Skor Risiko</th>
+              <th>Status Risiko</th>
+              <th>Status Pemantauan</th>
+              <th>Tindakan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr className="loader-row">
+                <td colSpan="11" className="center">⏳ Sedang memuat data...</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredRisks.map((r) => {
+            ) : filteredRisks.length === 0 ? (
+              <tr>
+                <td colSpan="11" className="center">🚫 Tiada data risiko</td>
+              </tr>
+            ) : (
+              filteredRisks.map((r) => {
                 const color = getRiskColor(r.skor_risiko);
                 const shortLabel = getRiskLabelShort(r.skor_risiko);
 
@@ -139,35 +149,28 @@ function SenaraiRisiko({ refreshTrigger, userRole, userSubsidiariId }) {
                     <td className="center">{r.bahagian}</td>
                     <td className="center">{r.kategori}</td>
                     <td className="justify">{r.risiko}</td>
-
-                    <td className="justify">
-                      <ol className="number-list">
-                        {r.punca?.map((p, idx) => <li key={idx}>{p}</li>)}
-                      </ol>
-                    </td>
-
-                    <td className="justify">
-                      <ol className="number-list">
-                        {r.kesan?.map((k, idx) => <li key={idx}>{k}</li>)}
-                      </ol>
-                    </td>
-
                     <td className="center" style={{ backgroundColor: color, color: "#000", fontWeight: 600 }}>
                       {shortLabel}
                     </td>
                     <td className="center">{r.status_risiko}</td>
+                    <td className="center">{r.status_pemantauan || "—"}</td>
                     <td className="center">
-                      <button onClick={() => handleDelete(r.id)} className="delete-btn">
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="action-buttons">
+                        <button onClick={() => handleEdit(r.id)} className="edit-btn">
+                          <Edit size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(r.id)} className="delete-btn">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
