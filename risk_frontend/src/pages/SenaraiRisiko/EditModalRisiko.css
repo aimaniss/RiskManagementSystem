@@ -1,148 +1,121 @@
-/* Blur background sama mcm UrusPengguna */
-.modal-overlay {
+.modal-overlay-fullscreen {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(6px);
   display: flex;
-  justify-content: center; /* Tengah secara melintang */
-  align-items: center; /* Tengah secara menegak */
-  z-index: 99999;
-}
-
-/* Kotak modal */
-.modal {
-  background: #fff;
-  border-radius: 12px;
-  width: 650px;
-  max-height: 90vh;
+  justify-content: center;
+  align-items: flex-start;
   overflow-y: auto;
-  padding: 25px;
-  position: relative;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
-  animation: fadeIn 0.2s ease-in-out;
+  z-index: 999;
+  padding-top: 20px;
 }
 
-/* Tutup modal */
-.modal-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #555;
-  transition: color 0.2s;
-}
-.modal-close:hover {
-  color: #000;
-}
-
-/* Isi dalam */
-.modal-content {
-  margin-top: 15px;
-}
-
-.box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Input + select */
-.input,
-.textarea-risiko,
-select {
+.modal-fullscreen {
   width: 100%;
+  height: 100%;
+  background: #ffffff;
+  padding: 20px 30px;
+  position: relative;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.modal-close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* Box & Inputs sama seperti sebelum ini */
+
+.modal-close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.daftar-risiko-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Box styling */
+.box {
+  border-radius: 14px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #f8f9fa;
+}
+.box-header {
+  background: #0074c8;
+  color: white;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+/* Inputs */
+.input,
+textarea {
+  flex: 1;
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.85);
   font-size: 14px;
   outline: none;
+  margin-bottom: 6px;
 }
-.input:focus,
-.textarea-risiko:focus,
-select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+.select-dropdown {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
 }
-
-/* Textarea risiko */
-.textarea-risiko {
-  min-height: 80px;
+.textarea-risiko,
+.textarea-bahagian {
+  width: 100%;
   resize: vertical;
+  min-height: 60px;
 }
-
-/* Label */
-.label {
-  font-weight: 600;
-  margin-bottom: -6px;
-  font-size: 14px;
-  color: #374151;
-}
-
-/* Punca & Kesan input group */
-.input-group {
+.button-circle {
+  margin-left: 6px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-.button-add,
-.button-remove {
-  border: none;
-  background: #2563eb;
-  color: white;
-  border-radius: 6px;
-  padding: 4px 10px;
+  justify-content: center;
   cursor: pointer;
+  color: white;
+}
+.button-add {
+  background: #0074c8;
 }
 .button-remove {
   background: #ef4444;
 }
-.button-add:hover {
-  background: #1d4ed8;
-}
-.button-remove:hover {
-  background: #dc2626;
-}
-
-/* Risk level text */
-.risk-level {
-  margin-top: 8px;
+.submit-button {
+  padding: 12px 30px;
+  background: #0074c8;
+  color: white;
+  border: none;
+  border-radius: 30px;
   font-weight: 600;
   font-size: 15px;
-}
-
-/* Submit button */
-.submit-wrapper {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-.submit-button {
-  background: #2563eb;
-  color: #fff;
-  font-weight: 600;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
   cursor: pointer;
 }
-.submit-button:hover {
-  background: #1d4ed8;
-}
-
-/* Animasi */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.risk-score {
+  font-weight: 600;
+  text-align: center;
+  color: white;
 }

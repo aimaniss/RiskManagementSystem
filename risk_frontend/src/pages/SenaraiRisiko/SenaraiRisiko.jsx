@@ -13,11 +13,10 @@ function SenaraiRisiko({ refreshTrigger }) {
   const [tahunFilter, setTahunFilter] = useState("");
   const [separuhFilter, setSeparuhFilter] = useState("");
   const [subsidiariList, setSubsidiariList] = useState([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState(null);
 
-  // 🎯 Decode JWT untuk dapat role & subsidiari user
+  // Decode JWT
   const token = localStorage.getItem("token");
   let userRole = "";
   let userSubsidiariId = "";
@@ -128,13 +127,8 @@ function SenaraiRisiko({ refreshTrigger }) {
           onChange={e => setSearch(e.target.value)} 
         />
 
-        {/* 🎯 Subsidiari filter ikut role */}
         <select
-          value={
-            ["STAFF","KETUA SUBSIDIARI"].includes(userRole)
-              ? userSubsidiariId
-              : subsidiariFilter
-          }
+          value={["STAFF","KETUA SUBSIDIARI"].includes(userRole) ? userSubsidiariId : subsidiariFilter}
           onChange={e => setSubsidiariFilter(e.target.value)}
           disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
         >
@@ -162,6 +156,7 @@ function SenaraiRisiko({ refreshTrigger }) {
         <table className="risiko-table">
           <thead>
             <tr>
+              <th>No.</th>
               <th>No Rujukan</th>
               <th>Tahun</th>
               <th>Separuh Tahun</th>
@@ -179,11 +174,12 @@ function SenaraiRisiko({ refreshTrigger }) {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="13" className="center">⏳ Sedang memuat data...</td></tr>
+              <tr><td colSpan="14" className="center">⏳ Sedang memuat data...</td></tr>
             ) : filteredRisks.length === 0 ? (
-              <tr><td colSpan="13" className="center">🚫 Tiada data risiko</td></tr>
-            ) : filteredRisks.map(r => (
+              <tr><td colSpan="14" className="center">🚫 Tiada data risiko</td></tr>
+            ) : filteredRisks.map((r,index) => (
               <tr key={r.id}>
+                <td className="center no-bil">{index + 1}</td>
                 <td className="left">{r.no_rujukan}</td>
                 <td className="center">{r.tahun}</td>
                 <td className="center">{r.separuh_tahun}</td>
@@ -194,18 +190,7 @@ function SenaraiRisiko({ refreshTrigger }) {
                 <td className="center">{r.skor_kebarangkalian || "-"}</td>
                 <td className="center">{r.skor_impak || "-"}</td>
                 <td className="center">
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "50px",
-                    height: "50px",
-                    backgroundColor: r.risk_color,
-                    borderRadius: "8px",
-                    fontWeight: 700,
-                    fontSize: "18px",
-                    textAlign: "center"
-                  }}>
+                  <div className="risk-box" style={{backgroundColor: r.risk_color}}>
                     {shortForm(r.tahap_risiko)}
                   </div>
                 </td>

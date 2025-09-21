@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import api from "../../api/api";
 import "./EditModalRisiko.css";
 
-function EditModalRisiko({ risk, subsidiariList = [], onClose, onSave, setModalOpen }) {
+function EditModalDaftarRisiko({ riskData = {}, onClose }) {
   const [formData, setFormData] = useState({
     noRujukan: "",
     tahun: "",
@@ -15,210 +17,188 @@ function EditModalRisiko({ risk, subsidiariList = [], onClose, onSave, setModalO
     skorImpak: "",
     skorRisiko: "",
     statusRisiko: "",
+    tahapRisiko: ""
   });
 
   const [puncaList, setPuncaList] = useState([""]);
   const [kesanList, setKesanList] = useState([""]);
   const [riskColor, setRiskColor] = useState("#f1f5f9");
-  const [riskLevel, setRiskLevel] = useState("");
+  const [subsidiariList, setSubsidiariList] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Trigger modalOpen state supaya AppLayout tahu bila modal dibuka
-  useEffect(() => {
-    if (setModalOpen) setModalOpen(true);
-    return () => {
-      if (setModalOpen) setModalOpen(false);
-    };
-  }, [setModalOpen]);
+  // Ambil userRole dari JWT token
+  const token = localStorage.getItem("token");
+  let userRole = "";
+  let subsidiariId = "";
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      const roleMapping = { 1:"ADMIN", 2:"EXECUTIVE",3:"KETUA SUBSIDIARI",4:"STAFF",5:"VIEWER"};
+      userRole = roleMapping[decoded.peranan_id] || "";
+      subsidiariId = decoded.subsidiari_id || "";
+    } catch (err) {
+      console.error("❌ Invalid token", err);
+      localStorage.removeItem("token");
+    }
+  }
 
-  // Load data risiko bila prop "risk" berubah
-  useEffect(() => {
-    if (risk) {
+  const canEditPenilaian = ["ADMIN","EXECUTIVE"].includes(userRole);
+
+  const riskMatrix = {
+    1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
+    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
+    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
+    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
+    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
+  };
+
+  const getRiskMatrix = (k,i)=>riskMatrix[k]?.[i]||{label:"", color:"#f1f5f9"};
+
+  useEffect(()=>{
+    if(riskData && Object.keys(riskData).length){
       setFormData({
-        noRujukan: risk.no_rujukan || "",
-        tahun: risk.tahun || "",
-        separuhTahun: risk.separuh_tahun || "",
-        subsidiari: risk.subsidiari_id || "",
-        kategori: risk.kategori || "",
-        bahagian: risk.bahagian || "",
-        risiko: risk.risiko || "",
-        skorKebarangkalian: risk.skor_kebarangkalian || "",
-        skorImpak: risk.skor_impak || "",
-        skorRisiko: risk.skor_risiko || "",
-        statusRisiko: risk.status_risiko || "",
+        noRujukan:riskData.no_rujukan||"",
+        tahun:riskData.tahun||"",
+        separuhTahun:riskData.separuh_tahun||"",
+        subsidiari:riskData.subsidiari||"",
+        kategori:riskData.kategori||"",
+        bahagian:riskData.bahagian||"",
+        risiko:riskData.risiko||"",
+        skorKebarangkalian:riskData.skor_kebarangkalian||"",
+        skorImpak:riskData.skor_impak||"",
+        skorRisiko:riskData.skor_risiko||"",
+        statusRisiko:riskData.status_risiko||"",
+        tahapRisiko:riskData.tahap_risiko||""
       });
-      setPuncaList(risk.punca && risk.punca.length ? risk.punca : [""]);
-      setKesanList(risk.kesan && risk.kesan.length ? risk.kesan : [""]);
+      setPuncaList(riskData.punca?.length?riskData.punca:[""]);
+      setKesanList(riskData.kesan?.length?riskData.kesan:[""]);
     }
-  }, [risk]);
+  },[riskData]);
 
-  // Kira skor risiko secara automatik
-  useEffect(() => {
-    const k = parseInt(formData.skorKebarangkalian);
-    const i = parseInt(formData.skorImpak);
-    if (k && i) {
-      const total = k * i;
-      setFormData((prev) => ({ ...prev, skorRisiko: total }));
-      setRiskColor(getRiskColor(total));
-      setRiskLevel(getRiskLabel(total));
-    } else {
-      setFormData((prev) => ({ ...prev, skorRisiko: "" }));
+  useEffect(()=>{
+    const k=parseInt(formData.skorKebarangkalian);
+    const i=parseInt(formData.skorImpak);
+    if(k && i){
+      const total=k*i;
+      const {label,color}=getRiskMatrix(k,i);
+      setFormData(prev=>({...prev, skorRisiko:total, tahapRisiko:label, statusRisiko:label==="Rendah"?"Tidak":"Ya"}));
+      setRiskColor(color);
+    }else{
+      setFormData(prev=>({...prev, skorRisiko:"", tahapRisiko:"", statusRisiko:""}));
       setRiskColor("#f1f5f9");
-      setRiskLevel("");
     }
-  }, [formData.skorKebarangkalian, formData.skorImpak]);
+  },[formData.skorKebarangkalian, formData.skorImpak]);
 
-  // Warna ikut tahap risiko
-  const getRiskColor = (score) => {
-    if (score <= 3) return "#22c55e";   // hijau
-    if (score <= 7) return "#eab308";   // kuning
-    if (score <= 12) return "#f97316";  // oren
-    return "#ef4444";                   // merah
-  };
+  const handleChange = e=>setFormData({...formData, [e.target.name]: e.target.value});
+  const addPunca=()=>setPuncaList([...puncaList,""]);
+  const addKesan=()=>setKesanList([...kesanList,""]);
+  const updatePunca=(i,val)=>{const tmp=[...puncaList];tmp[i]=val;setPuncaList(tmp);}
+  const updateKesan=(i,val)=>{const tmp=[...kesanList];tmp[i]=val;setKesanList(tmp);}
+  const removePunca=i=>{const tmp=[...puncaList];tmp.splice(i,1);setPuncaList(tmp);}
+  const removeKesan=i=>{const tmp=[...kesanList];tmp.splice(i,1);setKesanList(tmp);}
 
-  // Label ikut tahap risiko
-  const getRiskLabel = (score) => {
-    if (score <= 3) return "Rendah";
-    if (score <= 7) return "Sederhana";
-    if (score <= 12) return "Tinggi";
-    return "Sangat Tinggi";
-  };
-
-  // Handle input
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  // Manage list Punca & Kesan
-  const addPunca = () => setPuncaList([...puncaList, ""]);
-  const addKesan = () => setKesanList([...kesanList, ""]);
-  const updatePunca = (i, val) => { const arr = [...puncaList]; arr[i] = val; setPuncaList(arr); };
-  const updateKesan = (i, val) => { const arr = [...kesanList]; arr[i] = val; setKesanList(arr); };
-  const removePunca = (i) => { const arr = [...puncaList]; arr.splice(i, 1); setPuncaList(arr); };
-  const removeKesan = (i) => { const arr = [...kesanList]; arr.splice(i, 1); setKesanList(arr); };
-
-  // Submit data ke parent
-  const handleSubmit = (e) => {
+  const handleSubmit=e=>{
     e.preventDefault();
-    if (onSave) onSave({ ...formData, punca: puncaList, kesan: kesanList });
-  };
+    // panggil API update atau callback parent
+    alert("✅ Risiko dikemaskini! (Simulasi)");
+    if(onClose) onClose();
+  }
 
-  // Tutup modal
-  const handleClose = () => {
-    if (onClose) onClose();
-    if (setModalOpen) setModalOpen(false);
-  };
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <button className="modal-close" onClick={handleClose}><X size={20} /></button>
-        <div className="modal-content">
-          <h2>Edit Risiko</h2>
+  return(
+    <div className="modal-overlay-fullscreen">
+      <div className="modal-fullscreen">
+        <button className="modal-close" onClick={onClose}><X size={24}/></button>
+        <div className="daftar-risiko-container">
+          <h2>Kemaskini Risiko (Full Screen)</h2>
           <form onSubmit={handleSubmit}>
+
+            {/* Maklumat Risiko */}
             <div className="box">
-              <label className="label">No Rujukan:</label>
-              <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" />
-
-              <label className="label">Tahun:</label>
-              <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" />
-
-              <label className="label">Separuh Tahun:</label>
-              <select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                <option value="H1">H1</option>
-                <option value="H2">H2</option>
-              </select>
-
-              <label className="label">Subsidiari:</label>
-              <select name="subsidiari" value={formData.subsidiari} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                {subsidiariList.map((s) => (
-                  <option key={s.subsidiari_id} value={s.subsidiari_id}>
-                    {s.nama_subsidiari}
-                  </option>
-                ))}
-              </select>
-
-              <label className="label">Kategori Risiko:</label>
-              <select name="kategori" value={formData.kategori} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                <option>Operasi</option>
-                <option>Kewangan</option>
-                <option>Strategik</option>
-                <option>Pematuhan/Perundangan</option>
-              </select>
-
-              <label className="label">Bahagian/Unit:</label>
-              <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="textarea-risiko" />
-
-              <label className="label">Risiko:</label>
-              <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="textarea-risiko" />
-
-              <label className="label">Punca:</label>
-              {puncaList.map((p, idx) => (
-                <div key={idx} className="input-group">
-                  <input value={p} onChange={(e) => updatePunca(idx, e.target.value)} className="input" placeholder={`Punca ${idx + 1}`} />
-                  {idx !== 0 && (
-                    <button type="button" className="button-remove" onClick={() => removePunca(idx)}>✕</button>
-                  )}
-                  {idx === puncaList.length - 1 && (
-                    <button type="button" className="button-add" onClick={addPunca}>+</button>
-                  )}
+              <div className="box-header">Maklumat Risiko</div>
+              <div style={{padding:"16px"}}>
+                <div style={{display:"flex", gap:"12px"}}>
+                  <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" placeholder="No Rujukan"/>
+                  <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" placeholder="Tahun"/>
+                  <select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} className="input select-dropdown">
+                    <option value="">-- Pilih --</option>
+                    <option value="Pertama">Pertama</option>
+                    <option value="Kedua">Kedua</option>
+                  </select>
                 </div>
-              ))}
-
-              <label className="label">Kesan:</label>
-              {kesanList.map((k, idx) => (
-                <div key={idx} className="input-group">
-                  <input value={k} onChange={(e) => updateKesan(idx, e.target.value)} className="input" placeholder={`Kesan ${idx + 1}`} />
-                  {idx !== 0 && (
-                    <button type="button" className="button-remove" onClick={() => removeKesan(idx)}>✕</button>
-                  )}
-                  {idx === kesanList.length - 1 && (
-                    <button type="button" className="button-add" onClick={addKesan}>+</button>
-                  )}
+                <div style={{marginTop:"12px"}}>
+                  <select name="subsidiari" value={formData.subsidiari} onChange={handleChange} className="input select-dropdown">
+                    <option value="">-- Pilih Subsidiari --</option>
+                    {subsidiariList.map(s=>(<option key={s.subsidiari_id} value={s.subsidiari_id}>{s.nama_subsidiari}</option>))}
+                  </select>
                 </div>
-              ))}
-
-              <label className="label">Skor Kebarangkalian:</label>
-              <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                {[1, 2, 3, 4, 5].map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-
-              <label className="label">Skor Impak:</label>
-              <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                {[1, 2, 3, 4, 5].map((v) => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-
-              <label className="label">Skor Risiko:</label>
-              <input value={formData.skorRisiko} readOnly className="input" style={{ background: riskColor, fontWeight: 600 }} />
-
-              <label className="label">Status Risiko:</label>
-              <select name="statusRisiko" value={formData.statusRisiko} onChange={handleChange} className="input">
-                <option value="">-- Pilih --</option>
-                <option>Ya</option>
-                <option>Tidak</option>
-              </select>
-
-              {riskLevel && (
-                <div className="risk-level" style={{ color: riskColor }}>
-                  Tahap Risiko: {riskLevel}
-                </div>
-              )}
+              </div>
             </div>
 
-            <div className="submit-wrapper">
-              <button type="submit" className="submit-button">💾 Simpan</button>
+            {/* Pengenalpastian Risiko */}
+            <div className="box">
+              <div className="box-header">Pengenalpastian Risiko</div>
+              <div style={{padding:"16px"}}>
+                <div style={{display:"flex", gap:"12px"}}>
+                  <select name="kategori" value={formData.kategori} onChange={handleChange} className="input select-dropdown">
+                    <option value="">-- Kategori Risiko --</option>
+                    <option>Operasi</option>
+                    <option>Kewangan</option>
+                    <option>Strategik</option>
+                    <option>Pematuhan/Perundangan</option>
+                  </select>
+                  <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="textarea-bahagian" placeholder="Bahagian/Unit"/>
+                </div>
+                <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="textarea-risiko" placeholder="Risiko"/>
+                
+                <label>Punca:</label>
+                {puncaList.map((p,idx)=>(
+                  <div key={idx} style={{display:"flex", alignItems:"center", marginBottom:"6px"}}>
+                    <input value={p} onChange={e=>updatePunca(idx,e.target.value)} className="input"/>
+                    {idx!==0 && <button type="button" onClick={()=>removePunca(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
+                    {idx===puncaList.length-1 && <button type="button" onClick={addPunca} className="button-circle button-add"><Plus size={16}/></button>}
+                  </div>
+                ))}
+
+                <label>Kesan:</label>
+                {kesanList.map((k,idx)=>(
+                  <div key={idx} style={{display:"flex", alignItems:"center", marginBottom:"6px"}}>
+                    <input value={k} onChange={e=>updateKesan(idx,e.target.value)} className="input"/>
+                    {idx!==0 && <button type="button" onClick={()=>removeKesan(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
+                    {idx===kesanList.length-1 && <button type="button" onClick={addKesan} className="button-circle button-add"><Plus size={16}/></button>}
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Penilaian Risiko */}
+            {canEditPenilaian && (
+              <div className="box">
+                <div className="box-header">Penilaian Risiko</div>
+                <div style={{padding:"16px", display:"flex", gap:"12px", flexWrap:"wrap"}}>
+                  <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
+                    <option value="">-- Skor Kebarangkalian --</option>
+                    {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
+                  </select>
+                  <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
+                    <option value="">-- Skor Impak --</option>
+                    {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
+                  </select>
+                  <input value={formData.skorRisiko} readOnly className="input risk-score" style={{background:riskColor}}/>
+                  <input value={formData.statusRisiko} readOnly className="input" placeholder="Status Risiko"/>
+                </div>
+                {formData.tahapRisiko && <div style={{textAlign:"center", fontWeight:"600", color:riskColor, marginTop:"6px"}}>{formData.tahapRisiko}</div>}
+              </div>
+            )}
+
+            <div style={{textAlign:"center", marginTop:"12px"}}>
+              <button type="submit" className="submit-button">💾 Kemaskini Risiko</button>
+            </div>
+
           </form>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default EditModalRisiko;
+export default EditModalDaftarRisiko;
