@@ -6,10 +6,11 @@
 
 /* Heading */
 .daftar-risiko-container h2 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 18px;
-  color: #0074c8;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  margin-top: 10px;
+  color: #004071;
 }
 
 /* Box */
@@ -131,4 +132,13 @@ textarea {
   font-size: 14px;
   outline: none;
   transition: 0.3s;
+}
+
+.textarea-bahagian {
+  height: 120px; /* Custom height */
+  min-height: 30px;
+  width: 95%;
+  resize: vertical; /* User can resize vertically */
+  padding: 8px;
+  font-size: 14px;
 }
