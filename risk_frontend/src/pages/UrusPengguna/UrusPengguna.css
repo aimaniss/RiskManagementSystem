@@ -10,33 +10,33 @@ body {
 .urus-container {
   max-width: 95vw;
   margin: 20px auto;
-  padding: 20px;
+  padding: 18px; /* kecilkan 10% */
   background: #f8f6f6;
   border-radius: 14px;
   box-shadow: 0 6px 20px rgba(0, 64, 113, 0.1);
 }
 
 .urus-container h1 {
-  font-size: 28px;
+  font-size: 25px; /* asal 28px */
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   color: #004071;
 }
 
 .filter-add {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px; /* asal 10px */
+  margin-bottom: 18px;
   align-items: center;
 }
 
 .search-input,
 .role-select {
-  padding: 10px 14px;
+  padding: 8px 12px; /* asal 10px 14px */
   border-radius: 8px;
   border: 1px solid #cbd5e1;
-  font-size: 14px;
+  font-size: 13px; /* asal 14px */
   outline: none;
   font-family: "Inter", sans-serif;
 }
@@ -51,10 +51,11 @@ body {
   background: #004071;
   color: #fff;
   border: none;
-  padding: 10px 16px;
+  padding: 8px 14px; /* asal 10px 16px */
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 13px;
 }
 .add-btn:hover {
   background: #0074c8;
@@ -75,9 +76,9 @@ table {
 
 th,
 td {
-  padding: 12px 15px;
+  padding: 10px 12px; /* asal 12px 15px */
   text-align: left;
-  font-size: 14px;
+  font-size: 13px; /* asal 14px */
   vertical-align: middle;
 }
 
@@ -99,18 +100,18 @@ tbody tr:hover {
 .nama-penuh-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px; /* asal 12px */
 }
 
 .profile-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px; /* asal 40px */
+  height: 36px;
   color: #4b5563;
 }
 
 .profile-pic {
-  width: 40px;
-  height: 40px;
+  width: 36px; /* asal 40px */
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -119,7 +120,7 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px; /* asal 12px */
 }
 
 .edit-icon {
@@ -156,20 +157,20 @@ tbody tr:hover {
 .filter-modal {
   background: #fff;
   border-radius: 12px;
-  padding: 30px;
-  width: 400px;
+  padding: 24px; /* asal 30px */
+  width: 380px; /* asal 400px */
   max-width: 90%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px; /* asal 15px */
 }
 
 .filter-modal input,
 .filter-modal select {
-  padding: 10px 12px;
+  padding: 8px 10px; /* asal 10px 12px */
   border-radius: 8px;
   border: 1px solid #cbd5e1;
-  font-size: 14px;
+  font-size: 13px; /* asal 14px */
   outline: none;
   background: #f9fafb;
 }
@@ -177,16 +178,17 @@ tbody tr:hover {
 .filter-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px; /* asal 10px */
   margin-top: 10px;
 }
 
 .filter-buttons button {
-  padding: 8px 14px;
+  padding: 7px 12px; /* asal 8px 14px */
   border-radius: 8px;
   border: none;
   font-weight: 600;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .filter-buttons button:first-child {
@@ -215,7 +217,7 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px; /* asal 8px */
 }
 
 .profile-wrapper {
@@ -224,27 +226,27 @@ tbody tr:hover {
 }
 
 .profile-preview {
-  width: 120px;
-  height: 120px;
+  width: 110px; /* asal 120px */
+  height: 110px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #0074c8;
 }
 
 .profile-placeholder {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   color: #4b5563;
 }
 
 .remove-profile-icon {
   position: absolute;
   top: 50%;
-  right: -10px; /* icon berada di sebelah kanan gambar */
+  right: -10px;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  color: #ef4444; /* merah */
+  width: 22px; /* asal 24px */
+  height: 22px;
+  color: #ef4444;
   cursor: pointer;
   stroke-width: 2;
   background: #fff;
@@ -255,4 +257,24 @@ tbody tr:hover {
 }
 .remove-profile-icon:hover {
   transform: translateY(-50%) scale(1.2);
+}
+
+/* Responsive tweak untuk laptop kecil */
+@media (max-width: 1366px) {
+  .urus-container h1 {
+    font-size: 22px;
+  }
+
+  th,
+  td {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .add-btn,
+  .search-input,
+  .role-select {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
 }

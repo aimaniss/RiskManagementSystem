@@ -277,3 +277,53 @@
 .cancel-btn:hover {
   background-color: #d1d5db;
 }
+
+/* ===================== Responsive Scaling ===================== */
+
+/* Laptop skrin kecil (≤1400px) → kecilkan 10% */
+@media (max-width: 1400px) {
+  .senarai-risiko-container h1 {
+    font-size: 1.25rem; /* asal 1.4rem */
+  }
+  .risiko-table {
+    min-width: 680px; /* asal 750px */
+  }
+  .risiko-table td {
+    font-size: 0.78rem; /* asal 0.85rem */
+    padding: 7px 5px;
+  }
+  .risiko-table th {
+    font-size: 0.78rem; /* asal 0.85rem */
+    padding: 7px 5px;
+  }
+  .risk-box {
+    width: 2rem; /* asal 2.2rem */
+    height: 2rem;
+    font-size: 0.75rem; /* asal 0.8rem */
+  }
+}
+
+/* Tablet (≤1024px) */
+@media (max-width: 1024px) {
+  .risiko-table {
+    min-width: 600px; /* asal 650px */
+  }
+  .modal {
+    width: 78vw; /* asal 80vw */
+    max-width: 470px; /* asal 500px */
+  }
+}
+
+/* Phone (≤768px) */
+@media (max-width: 768px) {
+  .senarai-risiko-container {
+    padding: 12px; /* asal 15px */
+  }
+  .risiko-table {
+    font-size: 0.75rem; /* asal 0.8rem */
+  }
+  .modal {
+    width: 88vw; /* asal 90vw */
+    padding: 12px; /* asal 15px */
+  }
+}
