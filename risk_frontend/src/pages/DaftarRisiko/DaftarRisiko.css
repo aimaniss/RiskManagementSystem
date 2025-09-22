@@ -6,7 +6,8 @@
   font-family: "Inter", sans-serif;
   max-width: 95vw;
   margin: auto;
-  background: #ffffff;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f8fa, #e9edf2);
 }
 
 /* Heading */
@@ -14,7 +15,7 @@
   font-size: 26px;
   font-weight: 700;
   margin: 16px 0 20px 0;
-  color: #004071; /* Biru gelap */
+  color: #004071;
   text-align: center;
   letter-spacing: -0.3px;
 }
@@ -24,19 +25,19 @@
   border-radius: 14px;
   margin-bottom: 22px;
   background: #ffffff;
-  border: 1px solid #d1d2d4;
-  box-shadow: 0 4px 14px rgba(0, 64, 113, 0.08);
+  border: 1px solid #e0e3e7;
+  box-shadow: 0 6px 18px rgba(0, 64, 113, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .box:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 64, 113, 0.12);
+  box-shadow: 0 8px 22px rgba(0, 64, 113, 0.12);
 }
 
 /* Box header */
 .box-header {
-  background: #0074c8;
+  background: linear-gradient(135deg, #004071, #0066a1);
   color: #ffffff;
   padding: 12px 16px;
   font-weight: 600;
@@ -55,7 +56,7 @@ textarea {
   flex: 1;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #d1d2d4; /* Kelabu */
+  border: 1px solid #d1d2d4;
   background: #f9fafb;
   font-size: 14px;
   outline: none;
@@ -123,7 +124,7 @@ textarea:focus {
 /* Submit button */
 .submit-button {
   padding: 12px 28px;
-  background: #004071; /* Biru gelap */
+  background: #004071;
   color: #ffffff;
   border: none;
   border-radius: 26px;
@@ -135,22 +136,59 @@ textarea:focus {
 }
 
 .submit-button:hover {
-  background: #0074c8; /* Hover tukar biru terang */
+  background: #0074c8;
   box-shadow: 0 6px 18px rgba(0, 116, 200, 0.4);
   transform: translateY(-1px);
 }
 
-/* Skor Risiko */
-.risk-score {
+/* Risk section - wrapper sebaris */
+.risk-score-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  align-items: center;
+}
+
+/* Skor Risiko / Status / Tahap Risiko */
+.risk-score,
+.status-risk,
+.level-risk {
   font-weight: 600;
   text-align: center;
-  color: #ffffff;
-  min-width: 70px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  min-width: 100px;
+  flex: 1;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.risk-score {
   background: #0074c8;
 }
+
+.status-risk {
+  background: #004071;
+}
+
+.level-risk {
+  background: #22c55e; /* default Rendah */
+}
+
+/* Level Risiko dynamic colors */
+.level-risk.rendah {
+  background: #22c55e;
+} /* Hijau */
+.level-risk.sederhana {
+  background: #eab308;
+} /* Kuning */
+.level-risk.tinggi {
+  background: #f97316;
+} /* Oren */
+.level-risk.sangat-tinggi {
+  background: #ef4444;
+} /* Merah */
 
 /* Textarea panjang */
 .textarea-risiko {
@@ -199,16 +237,18 @@ textarea:focus {
   .daftar-risiko-container h2 {
     font-size: 22px;
   }
-
   .input,
   textarea,
   .select-dropdown {
     font-size: 12px;
     padding: 7px 10px;
   }
-
   .submit-button {
     font-size: 13px;
     padding: 8px 20px;
+  }
+  .risk-score-wrapper {
+    flex-direction: column;
+    gap: 10px;
   }
 }
