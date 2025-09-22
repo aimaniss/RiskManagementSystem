@@ -1,18 +1,19 @@
+// src/components/Sidebar.jsx
 import { Link, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import {
+  LayoutDashboard,
+  ListChecks,
+  FilePlus2,
+  Stethoscope,
+  Activity,
+  FileEdit,
+  BarChart3,
+  Users,
+  ClipboardList,
+  LogOut,
+} from "lucide-react";
 import "./Sidebar.css";
-
-// Import icons
-import PaparanUtamaIcon from "../assets/icons/icons_dashboard.svg";
-import SenaraiIcon from "../assets/icons/icons_senarai.svg";
-import DaftarRisikoIcon from "../assets/icons/icons_daftar_risiko.svg";
-import RawatanIcon from "../assets/icons/icon_rawatan.svg";
-import PemantauanIcon from "../assets/icons/icons_pemantauan.svg";
-import PindaanIcon from "../assets/icons/icons_pindaan.svg";
-import LaporanIcon from "../assets/icons/icon_laporan.svg";
-import UrusPenggunaIcon from "../assets/icons/icons_manage_accounts.svg";
-import LogAktivitiIcon from "../assets/icons/icons_log_activity.svg";
-import LogoutIcon from "../assets/icons/icons_logout.svg";
 import LogoImage from "../assets/images/Light Background/UKMH_light.png"; // Logo UKM Holdings
 
 function Sidebar() {
@@ -46,49 +47,69 @@ function Sidebar() {
       <div className="sidebar-menu">
         <ul>
           <li>
-            <Link to="/" className={`sidebar-link ${location.pathname === "/" ? "active" : ""}`}>
-              <img src={PaparanUtamaIcon} alt="Dashboard" className="sidebar-icon" />
+            <Link
+              to="/"
+              className={`sidebar-link ${location.pathname === "/" ? "active" : ""}`}
+            >
+              <LayoutDashboard className="sidebar-icon" />
               Paparan Utama
             </Link>
           </li>
           <li>
             <Link
               to="/SenaraiRisiko"
-              className={`sidebar-link ${location.pathname === "/SenaraiRisiko" ? "active" : ""}`}
+              className={`sidebar-link ${
+                location.pathname === "/SenaraiRisiko" ? "active" : ""
+              }`}
             >
-              <img src={SenaraiIcon} alt="Senarai Risiko" className="sidebar-icon" />
+              <ListChecks className="sidebar-icon" />
               Senarai Risiko
             </Link>
           </li>
-          {(role === "Admin" || role === "Executive" || role === "Ketua Subsidiari" || role === "Staff") && (
+          {(role === "Admin" ||
+            role === "Executive" ||
+            role === "Ketua Subsidiari" ||
+            role === "Staff") && (
             <li>
               <Link
                 to="/DaftarRisiko"
-                className={`sidebar-link ${location.pathname === "/DaftarRisiko" ? "active" : ""}`}
+                className={`sidebar-link ${
+                  location.pathname === "/DaftarRisiko" ? "active" : ""
+                }`}
               >
-                <img src={DaftarRisikoIcon} alt="Daftar Risiko" className="sidebar-icon" />
+                <FilePlus2 className="sidebar-icon" />
                 Daftar Risiko
               </Link>
             </li>
           )}
-          {(role === "Admin" || role === "Executive" || role === "Ketua Subsidiari" || role === "Viewer") && (
+          {(role === "Admin" ||
+            role === "Executive" ||
+            role === "Ketua Subsidiari" ||
+            role === "Viewer") && (
             <li>
               <Link
                 to="/RawatanRisiko"
-                className={`sidebar-link ${location.pathname === "/RawatanRisiko" ? "active" : ""}`}
+                className={`sidebar-link ${
+                  location.pathname === "/RawatanRisiko" ? "active" : ""
+                }`}
               >
-                <img src={RawatanIcon} alt="Rawatan Risiko" className="sidebar-icon" />
+                <Stethoscope className="sidebar-icon" />
                 Rawatan Risiko
               </Link>
             </li>
           )}
-          {(role === "Admin" || role === "Executive" || role === "Staff" || role === "Viewer") && (
+          {(role === "Admin" ||
+            role === "Executive" ||
+            role === "Staff" ||
+            role === "Viewer") && (
             <li>
               <Link
                 to="/PemantauanRisiko"
-                className={`sidebar-link ${location.pathname === "/PemantauanRisiko" ? "active" : ""}`}
+                className={`sidebar-link ${
+                  location.pathname === "/PemantauanRisiko" ? "active" : ""
+                }`}
               >
-                <img src={PemantauanIcon} alt="Pemantauan Risiko" className="sidebar-icon" />
+                <Activity className="sidebar-icon" />
                 Pemantauan Risiko
               </Link>
             </li>
@@ -98,36 +119,44 @@ function Sidebar() {
               <li>
                 <Link
                   to="/Pindaan"
-                  className={`sidebar-link ${location.pathname === "/Pindaan" ? "active" : ""}`}
+                  className={`sidebar-link ${
+                    location.pathname === "/Pindaan" ? "active" : ""
+                  }`}
                 >
-                  <img src={PindaanIcon} alt="Pindaan" className="sidebar-icon" />
+                  <FileEdit className="sidebar-icon" />
                   Pindaan
                 </Link>
               </li>
               <li>
                 <Link
                   to="/Laporan"
-                  className={`sidebar-link ${location.pathname === "/Laporan" ? "active" : ""}`}
+                  className={`sidebar-link ${
+                    location.pathname === "/Laporan" ? "active" : ""
+                  }`}
                 >
-                  <img src={LaporanIcon} alt="Laporan" className="sidebar-icon" />
+                  <BarChart3 className="sidebar-icon" />
                   Laporan
                 </Link>
               </li>
               <li>
                 <Link
                   to="/UrusPengguna"
-                  className={`sidebar-link ${location.pathname === "/UrusPengguna" ? "active" : ""}`}
+                  className={`sidebar-link ${
+                    location.pathname === "/UrusPengguna" ? "active" : ""
+                  }`}
                 >
-                  <img src={UrusPenggunaIcon} alt="Urus Pengguna" className="sidebar-icon" />
+                  <Users className="sidebar-icon" />
                   Urus Pengguna
                 </Link>
               </li>
               <li>
                 <Link
                   to="/LogAktiviti"
-                  className={`sidebar-link ${location.pathname === "/LogAktiviti" ? "active" : ""}`}
+                  className={`sidebar-link ${
+                    location.pathname === "/LogAktiviti" ? "active" : ""
+                  }`}
                 >
-                  <img src={LogAktivitiIcon} alt="Log Aktiviti" className="sidebar-icon" />
+                  <ClipboardList className="sidebar-icon" />
                   Log Aktiviti
                 </Link>
               </li>
@@ -142,7 +171,7 @@ function Sidebar() {
         className="sidebar-logout"
         onClick={() => localStorage.removeItem("token")}
       >
-        <img src={LogoutIcon} alt="Log Keluar" className="sidebar-icon" />
+        <LogOut className="sidebar-icon" />
         Log Keluar
       </Link>
     </div>

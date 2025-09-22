@@ -1,43 +1,57 @@
 /* src/components/Sidebar.css */
 
+/* Sidebar container */
 .sidebar {
-  width: 240px;
-  background: #ffffff;
-  color: #334155;
+  width: 220px;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   position: fixed;
   top: 0;
   left: 0;
-  box-shadow: 2px 0 8px rgba(0, 116, 200, 0.2); /* shadow color matching #0074c8 */
+
+  display: flex;
+  flex-direction: column;
+
+  /* glassmorphism effect */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* rectangle penuh */
+  border-radius: 0;
+  margin: 0;
+
+  /* shadow tepi kanan */
+  box-shadow: 4px 0 24px rgba(0, 64, 113, 0.15);
+
   font-family: "Roboto", sans-serif;
+  overflow: hidden; /* pastikan header ngam */
 }
 
-/* Bila modal buka */
-.sidebar.modal-open {
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
+/* Header sidebar (kurangkan tinggi sikit) */
 .sidebar-header {
-  padding: 12px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 14px 12px; /* asal 20px → kecikkan */
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   text-align: center;
+}
+
+.sidebar-header img {
+  max-width: 140px; /* kecik sikit dari 160px */
+  height: auto;
+  margin-bottom: 4px;
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px; /* asal 15px */
   font-weight: 800;
-  color: #004071; /* updated header color */
+  color: #004071;
 }
 
+/* Menu */
 .sidebar-menu {
   flex: 1;
-  padding: 20px 10px;
+  padding: 16px 12px; /* asal 20px */
 }
 
 .sidebar-menu ul {
@@ -47,25 +61,30 @@
 }
 
 .sidebar-menu li {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.25s ease-in-out;
   color: #334155;
 }
 
+.sidebar-link:hover {
+  background: rgba(0, 116, 200, 0.08);
+  transform: translateX(5px);
+}
+
 .sidebar-link.active {
+  background: #0074c8;
   color: #fff;
-  background: #0074c8; /* updated active link color */
 }
 
 .sidebar-icon {
@@ -73,45 +92,37 @@
   height: 18px;
 }
 
+/* Logout button */
 .sidebar-logout {
-  padding: 20px;
-  border-top: 1px solid #e2e8f0;
-  text-align: center;
-  cursor: pointer;
+  margin: 12px 16px 20px 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: #fca5a5;
+  border: none;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  text-decoration: none;
+
+  margin-top: auto;
+}
+
+.sidebar-logout svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 .sidebar-logout:hover {
-  background: #f3f4f6;
-  border-radius: 6px;
-}
-
-.sidebar-link,
-.sidebar-logout {
-  text-decoration: none; /* removes underline */
-  color: #334155; /* normal text color */
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: "Roboto", sans-serif;
-  transition: all 0.2s ease-in-out;
-}
-
-.sidebar-link.active,
-.sidebar-logout:hover {
-  background: #0074c8;
+  background: #ef4444;
+  transform: scale(0.97);
   color: #fff;
 }
-.sidebar-logo {
-  width: 200px;        /* max width for sidebar */
-  height: auto;       /* maintain aspect ratio */
-  object-fit: contain;
-}
-

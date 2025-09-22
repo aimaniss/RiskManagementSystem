@@ -1,42 +1,46 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Navbar */
+:root {
+  --sidebar-width: 220px;
+  --navbar-height: 52px;
+  --sidebar-blue: #007bff; /* warna sidebar */
+}
+
+/* Navbar dengan glassmorphism */
 .navbar {
   position: fixed;
   top: 0;
-  left: 240px; /* sesuaikan dengan lebar sidebar */
+  left: var(--sidebar-width);
   right: 0;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
+  height: var(--navbar-height);
+  background: rgba(255, 255, 255, 0.85); /* putih sama tone sidebar */
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: flex-end;
   align-items: center;
   padding: 0 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-family: "Inter", sans-serif;
   z-index: 2000;
-  transition: filter 0.3s ease;
+  transition: left 0.3s ease, width 0.3s ease;
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
 }
 
-.navbar.blurred {
-  filter: blur(6px);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Notification */
+/* Notification icon */
 .navbar-notification {
   margin-right: 20px;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
 }
 .navbar-notification:hover {
   transform: scale(1.1);
 }
 .navbar-notification img {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 /* User info */
@@ -52,23 +56,22 @@
   line-height: 1.2;
 }
 .user-subsidiari-bold {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
-  color: #007bff;
+  color: var(--sidebar-blue); /* biru sidebar */
   margin-bottom: 2px;
 }
 .user-role-small {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: #555;
-  margin: 0;
+  color: #333; /* grey gelap */
 }
 
-/* Profile */
+/* Profile image */
 .navbar-user img,
 .profile-icon {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #ddd;
@@ -78,229 +81,73 @@
 .navbar-user img:hover,
 .profile-icon:hover {
   transform: scale(1.05);
-  border-color: #007bff;
+  border-color: var(--sidebar-blue);
 }
 
 /* Dropdown */
 .profile-dropdown {
   position: absolute;
-  top: 55px;
+  top: calc(var(--navbar-height) + 4px);
   right: 0;
-  width: 300px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
+  width: 240px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 3000;
   font-family: "Inter", sans-serif;
 }
+
+/* Profile besar dropdown */
 .profile-dropdown .profile-big {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .profile-dropdown .profile-big img,
 .profile-dropdown .dropdown-icon {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #007bff;
+  border: 3px solid var(--sidebar-blue);
   background: #f0f0f0;
+  object-fit: cover;
 }
-.dropdown-fullname,
-.dropdown-subsidiari,
-.dropdown-staffid {
-  text-align: center;
-  margin: 4px 0;
-}
+
 .dropdown-fullname {
+  text-align: center;
   font-weight: 600;
+  font-size: 14px;
   color: #222;
 }
 .dropdown-subsidiari {
+  text-align: center;
   font-weight: 700;
-  color: #002766;
+  font-size: 13px;
+  color: var(--sidebar-blue);
 }
 .dropdown-staffid {
+  text-align: center;
   font-weight: 500;
+  font-size: 12px;
   color: #333;
 }
+
+/* Button dalam dropdown */
 .edit-btn {
   margin-top: 10px;
   width: 100%;
   padding: 8px 12px;
-  background: #007bff;
+  background: var(--sidebar-blue);
   color: #fff;
   font-weight: 500;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 13px;
+  transition: background 0.25s;
 }
 .edit-btn:hover {
   background: #0056b3;
-}
-
-/* Modal Overlay */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 4000;
-}
-
-/* Modal Container */
-.modal {
-  background: #fff;
-  border-radius: 12px;
-  padding: 30px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  font-family: "Inter", sans-serif;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.modal-header h2 {
-  margin: 0;
-  font-weight: 600;
-  color: #004071;
-}
-.close-icon {
-  cursor: pointer;
-}
-
-/* Modal Form */
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.modal-form label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #555;
-}
-.modal-form input[type="text"],
-.modal-form input[type="password"],
-.modal-form input[type="file"] {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 14px;
-  outline: none;
-  background: #f9fafb;
-}
-.modal-form input:focus {
-  border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
-}
-.modal-form input[readonly] {
-  background: #f5f5f5;
-  cursor: default;
-}
-
-/* Buttons */
-.filter-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-.filter-buttons button {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.25s;
-  font-family: "Inter", sans-serif;
-}
-.filter-buttons button:first-child {
-  background: #e5e7eb;
-  color: #374151;
-}
-.filter-buttons button:first-child:hover {
-  background: #d1d5db;
-}
-.filter-buttons button:last-child {
-  background: #004071;
-  color: #fff;
-}
-.filter-buttons button:last-child:hover {
-  background: #0074c8;
-}
-
-/* Profile Upload */
-.profile-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.profile-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #0074c8;
-  margin-bottom: 8px;
-}
-.profile-placeholder {
-  width: 120px;
-  height: 120px;
-  color: #4b5563;
-  margin-bottom: 8px;
-}
-.profile-input {
-  font-size: 14px;
-}
-.profile-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 16px;
-  position: relative;
-}
-.profile-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #0074c8;
-  margin-bottom: 8px;
-}
-.profile-placeholder {
-  color: #4b5563;
-  margin-bottom: 8px;
-}
-.profile-input {
-  margin-top: 8px;
-}
-.remove-profile-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 8px;
-  cursor: pointer;
-}
-.remove-profile-btn:hover {
-  background: #dc2626;
 }
