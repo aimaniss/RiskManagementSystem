@@ -172,4 +172,28 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
+// ------------------- GET: Check No Rujukan sahaja -------------------
+router.get("/check-no-rujukan/:noRujukan", verifyToken, async (req, res) => {
+  try {
+    const { noRujukan } = req.params;
+
+    const { rows } = await pool.query(
+      `SELECT * FROM risiko WHERE no_rujukan=$1`,
+      [noRujukan]
+    );
+
+    if (rows.length > 0) {
+      return res.json({ exists: true, data: rows[0] });
+    } else {
+      return res.json({ exists: false });
+    }
+  } catch (err) {
+    console.error("Ralat GET /risiko/check-no-rujukan:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+
 export default router;

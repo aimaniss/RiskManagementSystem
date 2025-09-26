@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { jwtDecode } from "jwt-decode"; // ikut format ni
+import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./DaftarRisiko.css";
 
@@ -33,13 +33,7 @@ function DaftarRisiko() {
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      const roleMapping = {
-        1: "ADMIN",
-        2: "EXECUTIVE",
-        3: "KETUA SUBSIDIARI",
-        4: "STAFF",
-        5: "VIEWER",
-      };
+      const roleMapping = { 1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER" };
       userRole = roleMapping[decoded.peranan_id] || "";
       subsidiariId = decoded.subsidiari_id || "";
     } catch (err) {
@@ -59,6 +53,17 @@ function DaftarRisiko() {
   };
 
   const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
+
+  // Helper untuk singkatan R/S/T/ST
+  const getRiskAbbreviation = (label) => {
+    switch(label) {
+      case "Rendah": return "R";
+      case "Sederhana": return "S";
+      case "Tinggi": return "T";
+      case "Sangat Tinggi": return "ST";
+      default: return "";
+    }
+  };
 
   useEffect(() => {
     const fetchSubsidiari = async () => {
@@ -85,7 +90,12 @@ function DaftarRisiko() {
     if (k && i) {
       const total = k * i;
       const { label, color } = getRiskMatrix(k, i);
-      setFormData(prev => ({ ...prev, skorRisiko: total, tahapRisiko: label, statusRisiko: label==="Rendah"?"Tidak":"Ya" }));
+      setFormData(prev => ({ 
+        ...prev, 
+        skorRisiko: total, 
+        tahapRisiko: label, 
+        statusRisiko: label==="Rendah"?"Tidak":"Ya" 
+      }));
       setRiskColor(color);
     } else {
       setFormData(prev => ({ ...prev, skorRisiko: "", tahapRisiko: "", statusRisiko: "" }));
@@ -104,9 +114,12 @@ function DaftarRisiko() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-
-    if (!formData.noRujukan || !formData.tahun) 
-      return alert("⚠️ Sila lengkapkan maklumat penting.");
+    if (!formData.noRujukan || !formData.tahun || !formData.separuhTahun || !formData.subsidiari) {
+    return alert("⚠️ Sila lengkapkan semua maklumat dalam Maklumat Risiko.");
+  }
+  if (!formData.kategori || !formData.bahagian || !formData.risiko || puncaList.every(p => p.trim() === "") || kesanList.every(k => k.trim() === "")) {
+    return alert("⚠️ Sila lengkapkan semua maklumat dalam Pengenalpastian Risiko.");
+  }
 
     const finalSubsidiari = formData.subsidiari
       ? parseInt(formData.subsidiari)
@@ -116,22 +129,50 @@ function DaftarRisiko() {
 
     if (!finalSubsidiari) return alert("⚠️ Subsidiari tidak sah.");
 
-    const finalData = { 
-      ...formData,
-      tahun: formData.tahun !== "" ? parseInt(formData.tahun) : null,
-      subsidiari: finalSubsidiari,
-      skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
-      skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
-      skorRisiko: formData.skorRisiko !== "" ? parseInt(formData.skorRisiko) : null,
-      punca: puncaList.filter(p => p.trim() !== ""),
-      kesan: kesanList.filter(k => k.trim() !== "")
+          const noRujukanTrimmed = formData.noRujukan.trim();
+      const tahunInt = formData.tahun !== "" ? parseInt(formData.tahun) : null;
+
+      if (!noRujukanTrimmed) return alert("⚠️ Sila masukkan No Rujukan.");
+      if (!tahunInt) return alert("⚠️ Sila masukkan Tahun yang sah.");
+
+      const finalData = { 
+        ...formData,
+        noRujukan: noRujukanTrimmed,
+        tahun: tahunInt,
+        separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
+        subsidiari: finalSubsidiari,
+        skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
+        skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
+        skorRisiko: formData.skorRisiko !== "" ? parseInt(formData.skorRisiko) : null,
+        punca: puncaList.filter(p => p.trim() !== ""),
+        kesan: kesanList.filter(k => k.trim() !== "")
+
+
     };
 
     setIsSubmitting(true);
     try {
+
+      //Check NoRujukan unik sebelum digunakan
+      // ✅ Semak NoRujukan unik
+try {
+  const encodedNoRujukan = encodeURIComponent(noRujukanTrimmed);
+  const check = await api.get(`/risiko/check-no-rujukan/${encodedNoRujukan}`);
+
+  if (check.data.exists) {
+    alert("⚠️ No Rujukan ini telah digunakan. Sila masukkan yang lain.");
+    setIsSubmitting(false);
+    return;
+  }
+} catch(err) {
+  console.error("❌ Error semak No Rujukan:", err.response?.data || err.message);
+  alert("⚠️ Gagal semak No Rujukan. Sila cuba lagi.");
+  setIsSubmitting(false);
+  return;
+}
+
       await api.post("/risiko", finalData);
       alert("✅ Risiko berjaya didaftarkan!");
-
       setFormData({
         noRujukan:"", tahun:"", separuhTahun:"", subsidiari: canEditPenilaian ? "" : subsidiariId,
         kategori:"", bahagian:"", risiko:"", skorKebarangkalian:"",
@@ -159,11 +200,16 @@ function DaftarRisiko() {
               <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" placeholder="Contoh: UKMH-001/2025" />
               <label className="label">Tahun:</label>
               <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" placeholder="Masukkan Tahun" />
-              <label className="label">Separuh Tahun:</label>
-              <select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} className="input select-dropdown">
+               <label className="label">Separuh Tahun:</label>
+              <select
+                name="separuhTahun"
+                value={formData.separuhTahun}
+                onChange={handleChange}
+                className="input select-dropdown"
+              >
                 <option value="">-- Pilih --</option>
-                <option value="Pertama">Pertama</option>
-                <option value="Kedua">Kedua</option>
+                <option value="1">Pertama</option> {/* Display: Pertama, Value: 1 */}
+                <option value="2">Kedua</option>   {/* Display: Kedua, Value: 2 */}
               </select>
             </div>
             <div style={{ display:"flex", gap:"12px" }}>
@@ -252,17 +298,19 @@ function DaftarRisiko() {
               </select>
 
               <label className="label">Skor Risiko:</label>
-              <input type="text" value={formData.skorRisiko} readOnly className="input risk-score" style={{ background: riskColor }} />
+              <input 
+                type="text" 
+                value={getRiskAbbreviation(formData.tahapRisiko)} 
+                readOnly 
+                className="input risk-score" 
+                style={{ background: riskColor, textAlign:"center" }} 
+              />
 
               <label className="label">Status Risiko:</label>
-              <input type="text" value={formData.statusRisiko} readOnly className="input" />
+              <input type="text" value={formData.statusRisiko} readOnly className="input" style={{ textAlign:"center" }} />
             </div>
 
-            {formData.tahapRisiko && (
-              <div style={{ marginTop:"12px", fontWeight:"600", color:riskColor, fontSize:"16px", textAlign:"center" }}>
-                Tahap Risiko: {formData.tahapRisiko}
-              </div>
-            )}
+           
           </div>
         )}
 
