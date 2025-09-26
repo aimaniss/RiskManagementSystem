@@ -170,22 +170,31 @@
 .modal {
   background: #fff;
   border-radius: 12px;
-  padding: 30px;
-  width: 400px;
+  width: 340px;
   max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0, 64, 113, 0.25);
   font-family: "Inter", sans-serif;
+  overflow: hidden; /* control overflow dalam body/footer */
 }
+
+/* Modal Header */
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 .modal-header h2 {
   margin: 0;
+  font-size: 15px;
   font-weight: 600;
   color: #004071;
 }
@@ -193,24 +202,31 @@
   cursor: pointer;
 }
 
+/* Modal Body */
+.modal-body {
+  flex: 1;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
 /* Modal Form */
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 .modal-form label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #555;
 }
 .modal-form input[type="text"],
 .modal-form input[type="password"],
 .modal-form input[type="file"] {
-  padding: 10px 12px;
+  padding: 7px 9px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
-  font-size: 14px;
+  font-size: 12px;
   outline: none;
   background: #f9fafb;
 }
@@ -223,34 +239,38 @@
   cursor: default;
 }
 
-/* Buttons */
-.filter-buttons {
+/* Modal Footer */
+.modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 6px;
+  padding: 10px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  position: sticky; /* sentiasa nampak */
+  bottom: 0;
+  z-index: 5;
 }
-.filter-buttons button {
-  padding: 8px 14px;
+.modal-footer button {
+  padding: 6px 10px;
   border-radius: 8px;
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.25s;
-  font-family: "Inter", sans-serif;
+  font-size: 12px;
 }
-.filter-buttons button:first-child {
+.modal-footer button:first-child {
   background: #e5e7eb;
   color: #374151;
 }
-.filter-buttons button:first-child:hover {
+.modal-footer button:first-child:hover {
   background: #d1d5db;
 }
-.filter-buttons button:last-child {
+.modal-footer button:last-child {
   background: #004071;
   color: #fff;
 }
-.filter-buttons button:last-child:hover {
+.modal-footer button:last-child:hover {
   background: #0074c8;
 }
 
@@ -259,46 +279,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 16px;
-}
-.profile-preview {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #0074c8;
-  margin-bottom: 8px;
-}
-.profile-placeholder {
-  width: 120px;
-  height: 120px;
-  color: #4b5563;
-  margin-bottom: 8px;
-}
-.profile-input {
-  font-size: 14px;
-}
-.profile-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   position: relative;
 }
-.profile-preview {
-  width: 120px;
-  height: 120px;
+.profile-preview,
+.profile-placeholder {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #0074c8;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+.profile-preview {
+  border: 2px solid #0074c8;
 }
 .profile-placeholder {
   color: #4b5563;
-  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .profile-input {
-  margin-top: 8px;
+  font-size: 11px;
+  margin-top: 6px;
 }
 .remove-profile-btn {
   position: absolute;
@@ -308,9 +311,41 @@
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 2px 5px;
+  font-size: 11px;
   cursor: pointer;
 }
 .remove-profile-btn:hover {
   background: #dc2626;
+}
+
+/* Responsive tweak utk ≤1366px (15 inch) */
+@media (max-width: 1366px) {
+  .modal {
+    width: 320px;
+    max-height: 68vh;
+    padding: 14px;
+  }
+
+  .modal-header h2 {
+    font-size: 14px;
+  }
+
+  .modal-form input {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .filter-buttons button {
+    font-size: 11px;
+    padding: 5px 9px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .modal {
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 }
