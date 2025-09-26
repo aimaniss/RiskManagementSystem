@@ -56,7 +56,7 @@ export default function EditModalRisiko({ isOpen, risk, subsidiariList, userRole
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="box-header" style={{ justifyContent:"space-between" }}>
-          <span>Edit Risiko</span>
+          <span>Kemaskini Risiko</span>
           <button onClick={onClose} style={{ background:"none", border:"none", color:"#fff", cursor:"pointer" }}><X /></button>
         </div>
 

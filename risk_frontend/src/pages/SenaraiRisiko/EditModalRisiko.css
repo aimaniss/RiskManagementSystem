@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"); /* Modal overlay */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+/* Modal overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -9,78 +11,96 @@
   z-index: 999;
   overflow-y: auto;
   padding: 10px;
-} /* Modal container */
+}
+
+/* Modal container */
 .modal-container {
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e0e3e7;
   box-shadow: 0 6px 18px rgba(0, 64, 113, 0.08);
-  max-width: 900px;
+  max-width: 900px; /* tidak ubah modal width */
   width: 100%;
   height: 100%;
   overflow-y: auto;
   font-family: "Inter", sans-serif;
-} /* Form padding */
+}
+
+/* Form padding */
 .modal-container form {
-  padding: 12px 16px 24px 16px;
-} /* Box */
+  padding: 11px 14px 22px 14px; /* -10% */
+}
+
+/* Box */
 .box {
-  border-radius: 14px;
-  margin-bottom: 22px;
+  border-radius: 12.6px; /* -10% */
+  margin-bottom: 19.8px; /* -10% */
   background: #ffffff;
   border: 1px solid #e0e3e7;
-  box-shadow: 0 6px 18px rgba(0, 64, 113, 0.08);
+  box-shadow: 0 5.4px 16.2px rgba(0, 64, 113, 0.08); /* -10% */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 64, 113, 0.12);
-} /* Box header */
+  transform: translateY(-1.8px); /* -10% */
+  box-shadow: 0 7.2px 19.8px rgba(0, 64, 113, 0.12); /* -10% */
+}
+
+/* Box header */
 .box-header {
   background: linear-gradient(135deg, #004071, #0066a1);
   color: #fff;
-  padding-top: 10px;
+  padding-top: 9px; /* -10% */
+  padding-left: 14.4px;
+  padding-right: 14.4px;
   font-weight: 600;
-  font-size: 15px;
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
+  font-size: 13.5px; /* -10% */
+  border-top-left-radius: 12.6px; /* -10% */
+  border-top-right-radius: 12.6px; /* -10% */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  letter-spacing: 0.3px;
-} /* Wrapper 3 container (risk fields) */
+  letter-spacing: 0.27px; /* -10% */
+}
+
+/* Wrapper 3 container (risk fields) */
 .risk-wrapper {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  padding-top: 12px;
-  padding-left: 10px;
-  padding-right: 10px;
-} /* Risk field style */
+  gap: 10.8px; /* -10% */
+  padding-top: 10.8px; /* -10% */
+  padding-left: 9px;
+  padding-right: 9px;
+}
+
+/* Risk field style */
 .risk-field {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 135px; /* -10% */
   flex: 1;
-  margin-bottom: 8px;
-} /* Labels */
+  margin-bottom: 7.2px; /* -10% */
+}
+
+/* Labels */
 .label {
-  font-size: 13px;
+  font-size: 11.7px; /* -10% */
   font-weight: 600;
   color: #004071;
-  margin-bottom: 6px;
+  margin-bottom: 5.4px; /* -10% */
   display: flex;
   align-items: center;
-} /* Inputs, textarea, dropdowns */
+}
+
+/* Inputs, textarea, dropdowns */
 .input,
 textarea,
 .select-dropdown {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 9px 10.8px; /* -10% */
+  border-radius: 9px; /* -10% */
   border: 1px solid #d1d2d4;
   background: #f9fafb;
-  font-size: 14px;
+  font-size: 12.6px; /* -10% */
   outline: none;
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
@@ -88,41 +108,55 @@ textarea,
 textarea:focus,
 .select-dropdown:focus {
   border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.15);
-} /* Submit button */
+  box-shadow: 0 0 0 1.8px rgba(0, 116, 200, 0.15); /* -10% */
+}
+
+/* Circle buttons (Add / Remove) */
+.button-circle {
+  margin-left: 5.4px; /* -10% */
+  width: 25.2px; /* -10% */
+  height: 25.2px; /* -10% */
+  font-size: 13.5px; /* -10% */
+}
+
+/* Submit button */
 .submit-button {
-  padding: 12px 28px;
+  padding: 10.8px 25.2px; /* -10% */
   background: #004071;
   color: #ffffff;
   border: none;
-  border-radius: 26px;
+  border-radius: 23.4px; /* -10% */
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12.6px; /* -10% */
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 64, 113, 0.3);
+  box-shadow: 0 3.6px 12.6px rgba(0, 64, 113, 0.3); /* -10% */
   transition: 0.3s;
-  margin-top: 16px;
+  margin-top: 14.4px; /* -10% */
+  margin-bottom: 18px;
 }
 .submit-button:hover {
   background: #0074c8;
-  box-shadow: 0 6px 18px rgba(0, 116, 200, 0.4);
-  transform: translateY(-1px);
-} /* Responsive tweaks */
+  box-shadow: 0 5.4px 16.2px rgba(0, 116, 200, 0.4);
+  transform: translateY(-0.9px); /* -10% */
+}
+
+/* Responsive tweaks */
 @media (max-width: 1366px) {
   .risk-field {
-    min-width: 120px;
+    min-width: 108px; /* -10% dari 120px */
   }
   .input,
   textarea,
   .select-dropdown {
-    font-size: 12px;
-    padding: 7px 10px;
+    font-size: 10.8px;
+    padding: 5.4px 7.2px;
   }
   .submit-button {
-    font-size: 13px;
-    padding: 8px 20px;
+    font-size: 11.7px;
+    padding: 7.2px 18px;
   }
 }
+
 @media (max-width: 1024px) {
   .risk-wrapper {
     flex-direction: column;
