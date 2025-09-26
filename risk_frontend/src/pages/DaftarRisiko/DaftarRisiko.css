@@ -264,14 +264,14 @@ textarea:focus {
 .risk-field {
   display: flex;
   flex-direction: column;
-  min-width: 150px; /* boleh adjust ikut ruang */
-  flex: 1; /* kotak share ruang sama rata */
+  min-width: 150px;
+  flex: 1;
 }
 
 /* Responsive untuk laptop / skrin kecil */
 @media (max-width: 1366px) {
   .risk-field {
-    min-width: 120px; /* kalau masih sempit */
+    min-width: 120px;
   }
 }
 
