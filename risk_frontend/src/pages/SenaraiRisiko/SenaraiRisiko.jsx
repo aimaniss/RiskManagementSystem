@@ -208,16 +208,18 @@ function SenaraiRisiko({ refreshTrigger }) {
         </table>
       </div>
 
-      {isModalOpen && selectedRisk && (
-        <EditModalRisiko 
-          risk={selectedRisk} 
-          subsidiariList={subsidiariList} 
-          userRole={userRole}
-          userSubsidiariId={userSubsidiariId}
-          onClose={handleCloseModal} 
-          onSave={handleSaveModal} 
-        />
-      )}
+     {selectedRisk && (
+  <EditModalRisiko 
+    isOpen={isModalOpen}          // <--- tambah ni
+    risk={selectedRisk} 
+    subsidiariList={subsidiariList} 
+    userRole={userRole}
+    userSubsidiariId={userSubsidiariId}
+    onClose={handleCloseModal} 
+    onSave={handleSaveModal} 
+  />
+)}
+
     </div>
   );
 }
