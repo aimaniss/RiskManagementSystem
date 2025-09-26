@@ -64,8 +64,8 @@ export default function EditModalRisiko({ isOpen, risk, subsidiariList, userRole
           {/* Maklumat Risiko */}
           <div className="box">
             <div className="box-header">Maklumat Risiko</div>
-            <div style={{ padding:"16px", display:"grid", gap:"14px" }}>
-              <div style={{ display:"flex", gap:"12px" }}>
+            <div style={{ padding:"10px", display:"grid", gap:"8px", }}>
+              <div style={{ display:"flex", gap:"8px" }}>
                 <label className="label">No Rujukan:</label>
                 <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" />
                 <label className="label">Tahun:</label>
