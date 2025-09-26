@@ -252,3 +252,31 @@ textarea:focus {
     gap: 10px;
   }
 }
+.risk-wrapper {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
+  flex-wrap: wrap;
+}
+
+.risk-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px; /* boleh adjust ikut ruang */
+  flex: 1; /* kotak share ruang sama rata */
+}
+
+/* Responsive untuk laptop / skrin kecil */
+@media (max-width: 1366px) {
+  .risk-field {
+    min-width: 120px; /* kalau masih sempit */
+  }
+}
+
+@media (max-width: 1024px) {
+  .risk-wrapper {
+    flex-direction: column;
+  }
+}

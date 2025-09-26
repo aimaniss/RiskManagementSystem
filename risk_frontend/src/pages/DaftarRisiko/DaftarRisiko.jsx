@@ -280,39 +280,57 @@ try {
           </div>
         </div>
 
-        {/* Penilaian Risiko */}
         {canEditPenilaian && (
-          <div className="box">
-            <div className="box-header">Penilaian Risiko</div>
-            <div style={{ padding:"16px", display:"flex", gap:"12px", flexWrap:"wrap" }}>
-              <label className="label">Skor Kebarangkalian:</label>
-              <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
-                <option value="">-- Pilih --</option>
-                {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
-              </select>
+  <div className="box">
+    <div className="box-header">Penilaian Risiko</div>
+    <div className="risk-wrapper">
+      <div className="risk-field">
+        <label className="label">Skor Kebarangkalian:</label>
+        <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
+          <option value="">-- Pilih --</option>
+          {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
+        </select>
+      </div>
 
-              <label className="label">Skor Impak:</label>
-              <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
-                <option value="">-- Pilih --</option>
-                {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
-              </select>
+      <div className="risk-field">
+        <label className="label">Skor Impak:</label>
+        <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
+          <option value="">-- Pilih --</option>
+          {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
+        </select>
+      </div>
 
-              <label className="label">Skor Risiko:</label>
-              <input 
-                type="text" 
-                value={getRiskAbbreviation(formData.tahapRisiko)} 
-                readOnly 
-                className="input risk-score" 
-                style={{ background: riskColor, textAlign:"center" }} 
-              />
+      <div className="risk-field">
+        <label className="label">Skor Risiko:</label>
+        <input 
+          type="text" 
+          value={getRiskAbbreviation(formData.tahapRisiko)} 
+          readOnly 
+          className="input risk-score" 
+          style={{ background: riskColor, textAlign:"center" }} 
+        />
+      </div>
 
-              <label className="label">Status Risiko:</label>
-              <input type="text" value={formData.statusRisiko} readOnly className="input" style={{ textAlign:"center" }} />
-            </div>
+      <div className="risk-field">
+        <label className="label">Status Risiko:</label>
+<input
+  type="text"
+  readOnly
+  value={
+    formData.statusRisiko === "Ya"
+      ? "Ya (Risiko memerlukan tindakan)"
+      : formData.statusRisiko === "Tidak"
+      ? "Tidak (Risiko rendah-tiada tindakan)"
+      : ""
+  }
+  className="input status-risk"
+  style={{ textAlign: "center", backgroundColor: "#f1f5f9", color: "#004071" }}
+/>
 
-           
-          </div>
-        )}
+      </div>
+    </div>
+  </div>
+)}
 
         <div style={{ textAlign:"center" }}>
           <button type="submit" className="submit-button" disabled={isSubmitting}>
