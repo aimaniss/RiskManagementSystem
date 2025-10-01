@@ -113,17 +113,17 @@ function RawatanRisiko() {
         <table className="risiko-table">
           <thead>
             <tr>
-              <th>No.</th>
+              <th>Bil.</th>
               <th>No Rujukan</th>
               <th>Tahun</th>
               <th>Separuh Tahun Didaftarkan</th>
-              <th>Nama Syarikat</th>
+              <th>Nama Subsidiari</th>
               <th>Kategori Risiko</th>
               <th>Risiko</th>
               <th>Skor Risiko</th>
               <th>Plan Tindakan</th>
               <th>Jenis Kawalan</th>
-              <th>Tempoh Jangkaan Siap</th>
+              <th>Tempoh Jangkaan Siap Tindakan</th>
               <th>Kakitangan Bertanggungjawab</th>
               <th>Tindakan</th>
             </tr>
