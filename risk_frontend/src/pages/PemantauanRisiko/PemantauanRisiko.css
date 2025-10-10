@@ -1,0 +1,187 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+
+/* Container utama */
+.senarai-risiko-container {
+  padding: 20px;
+  font-family: "Inter", sans-serif;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.senarai-risiko-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #004071;
+  font-weight: 600;
+}
+
+/* Cards container */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Card style */
+.info-card {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.info-card h3 {
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.info-card p {
+  font-size: 28px;
+  font-weight: bold;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Filter container bawah card */
+.filter-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+  overflow-x: auto;
+  justify-content: center;
+}
+
+.filter-container select,
+.filter-container input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.filter-input {
+  flex: 1 0 200px;
+}
+
+.filter-select {
+  flex: 0 0 160px;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.1);
+  outline: none;
+}
+
+/* Table wrapper */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+/* Table */
+.risiko-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+/* Header */
+.risiko-table th {
+  background-color: #0074c8;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+
+/* Data rows */
+.risiko-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #d3d3d3;
+  font-size: 14px;
+  border-right: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+/* Buang border-right pada last column */
+.risiko-table td:last-child {
+  border-right: none;
+}
+
+/* Alternating row shading */
+.risiko-table tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+/* Hover effect */
+.risiko-table tr:hover td {
+  background-color: #e1f0ff;
+}
+
+/* Center alignment */
+.risiko-table td.center {
+  text-align: center;
+}
+
+/* Risk box untuk tahap risiko */
+.risk-box {
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  min-width: 32px;
+}
+
+/* Responsive Scaling */
+@media (max-width: 1400px) {
+  .senarai-risiko-container h1 {
+    font-size: 1.25rem;
+  }
+  .risiko-table {
+    min-width: 680px;
+  }
+  .risiko-table td,
+  .risiko-table th {
+    font-size: 0.78rem;
+    padding: 7px 5px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .risiko-table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .senarai-risiko-container {
+    padding: 12px;
+  }
+  .risiko-table {
+    font-size: 0.75rem;
+  }
+  .filter-input,
+  .filter-select {
+    width: 100%;
+  }
+}

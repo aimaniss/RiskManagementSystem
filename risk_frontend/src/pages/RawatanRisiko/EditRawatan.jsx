@@ -12,24 +12,30 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isOpen && risk?.risiko_id) {
-      api
-        .get(`/rawatan/${risk.risiko_id}`)
-        .then(({ data }) => {
-          setFormData({
-            ...data,
-            planTindakan: data.plan_tindakan || [""],
-            jenisKawalan: data.jenis_kawalan || "",
-            tempohSiap: data.tempoh_jangkaan_siap || "",
-            kakitanganBertanggungjawab: data.kakitangan_bertanggungjawab || [""],
-            skor_kebarangkalian: data.skor_kebarangkalian,
-            skor_impak: data.skor_impak,
-          });
-          setRiskColor(data.risk_color || "#f1f5f9");
-        })
-        .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
-    }
-  }, [isOpen, risk]);
+  if (isOpen && risk?.risiko_id) {
+    api
+      .get(`/rawatan/${risk.risiko_id}`)
+      .then(({ data }) => {
+        setFormData({
+          ...data,
+          planTindakan: Array.isArray(data.plan_tindakan)
+            ? data.plan_tindakan
+            : [""],
+          jenisKawalan: data.jenis_kawalan || "",
+          tempohSiap: data.tempoh_jangkaan_siap || "",
+          kakitanganBertanggungjawab: Array.isArray(data.kakitangan_bertanggungjawab)
+            ? data.kakitangan_bertanggungjawab
+            : [""],
+          skor_kebarangkalian: data.skor_kebarangkalian,
+          skor_impak: data.skor_impak,
+        });
+
+        setRiskColor(data.risk_color || "#f1f5f9");
+      })
+      .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
+  }
+}, [isOpen, risk]);
+
 
   const riskMatrix = {
     1: {

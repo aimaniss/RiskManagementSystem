@@ -56,6 +56,7 @@
   border-radius: 12px;
   margin-bottom: 18px;
   background: #fff;
+  overflow: visible;
   border: 1px solid #e0e3e7;
   box-shadow: 0 5px 16px rgba(0, 64, 113, 0.06);
 }

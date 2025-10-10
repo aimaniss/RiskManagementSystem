@@ -1,252 +1,160 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../api/api";
+import "./PemantauanRisiko.css";
 
 function PemantauanRisiko() {
-  const [selectedCompany, setSelectedCompany] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedHalf, setSelectedHalf] = useState("");
+  const [data, setData] = useState([]);
+  const [subsidiariFilter, setSubsidiariFilter] = useState("");
+  const [tahunFilter, setTahunFilter] = useState("");
+  const [separuhFilter, setSeparuhFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [subsidiariList, setSubsidiariList] = useState([]);
 
-  const companies = ["UKMH Holdings", "Subsidiari A", "Subsidiari B"];
-  const years = ["2023", "2024", "2025"];
-  const halves = ["Separuh Tahun 1", "Separuh Tahun 2"];
+  const riskMatrix = {
+    1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+    2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+    3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
+    4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+    5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+  };
 
-  const risks = []; // nanti fetch dari DB
+  const getRiskData = (k,i) => riskMatrix[k]?.[i] || {label:"-", color:"#f1f5f9"};
+  const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
+
+  // Fetch subsidiari dropdown
+  const fetchSubsidiariList = async () => {
+    try {
+      const res = await api.get("/subsidiari");
+      setSubsidiariList(res.data);
+    } catch(err){ console.error(err); }
+  };
+
+  // Fetch pemantauan risiko
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/pemantauan-risiko");
+      const dataWithScore = res.data.map(d=>{
+        const {label,color} = getRiskData(parseInt(d.skor_kebarangkalian)||0, parseInt(d.skor_impak)||0);
+        return {...d, tahap_risiko:label, risk_color:color};
+      });
+      setData(dataWithScore);
+    } catch(err){ console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(()=>{
+    fetchSubsidiariList();
+    fetchData();
+  }, []);
+
+  // Cards summary
+  const totalRisiko = data.length;
+  const tindakanSelesai = data.filter(d=>d.status_pemantauan==="Selesai").length;
+  const tindakanTertunggak = data.filter(d=>d.status_pemantauan==="Tertunggak").length;
+
+  // Filtered data
+  const filteredData = data.filter(d=>{
+    const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari===subsidiariFilter;
+    const matchTahun = !tahunFilter || String(d.tahun)===tahunFilter;
+    const matchSeparuh = !separuhFilter || String(d.separuh_tahun)===separuhFilter;
+    const matchStatus = !statusFilter || d.status_pemantauan===statusFilter;
+    return matchSubsidiari && matchTahun && matchSeparuh && matchStatus;
+  });
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Roboto, sans-serif" }}>
-      {/* Page Title */}
-      <h1
-        style={{
-          fontSize: "24px",
-          fontWeight: "700",
-          color: "#0f172a",
-          marginBottom: "16px",
-        }}
-      >
-        Pemantauan Risiko
-      </h1>
-
-      {/* Filter Section */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-          marginBottom: "20px",
-        }}
-      >
-        <select
-          value={selectedCompany}
-          onChange={(e) => setSelectedCompany(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Syarikat</option>
-          {companies.map((c, i) => (
-            <option key={i}>{c}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Tahun</option>
-          {years.map((y, i) => (
-            <option key={i}>{y}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedHalf}
-          onChange={(e) => setSelectedHalf(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Separuh Tahun</option>
-          {halves.map((h, i) => (
-            <option key={i}>{h}</option>
-          ))}
-        </select>
-      </div>
+    <div className="senarai-risiko-container">
+      <h1>Pemantauan Risiko</h1>
 
       {/* Summary Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "16px",
-          marginBottom: "20px",
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#2563eb" }}>5</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Jumlah Risiko Dipantau</p>
+      <div className="cards-container">
+        <div className="info-card">
+          <h3>Jumlah Risiko Dipantau</h3>
+          <p>{totalRisiko}</p>
         </div>
-
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#7c3aed" }}>3</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Tindakan Selesai</p>
+        <div className="info-card">
+          <h3>Tindakan Selesai</h3>
+          <p>{tindakanSelesai}</p>
         </div>
-
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#f97316" }}>2</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Tindakan Tertunggak</p>
+        <div className="info-card">
+          <h3>Tindakan Tertunggak</h3>
+          <p>{tindakanTertunggak}</p>
         </div>
       </div>
 
-      {/* Table Section */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "separate",
-            borderSpacing: "0",
-            fontSize: "14px",
-            background: "#ffffff",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}
-        >
-          <thead
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #7c3aed)",
-              color: "white",
-            }}
-          >
+      {/* Filters */}
+      <div className="filter-container">
+        <select className="filter-select" value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
+          <option value="">-- Semua Subsidiari --</option>
+          {subsidiariList.map(s=>(
+            <option key={s.subsidiari_id} value={s.nama_subsidiari}>{s.nama_subsidiari}</option>
+          ))}
+        </select>
+
+        <select className="filter-select" value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
+          <option value="">-- Semua Tahun --</option>
+          {[...new Set(data.map(d=>d.tahun))].sort((a,b)=>b-a).map(t=>(
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+
+        <select className="filter-select" value={separuhFilter} onChange={e=>setSeparuhFilter(e.target.value)}>
+          <option value="">-- Semua Separuh Tahun --</option>
+          <option value="1">Pertama</option>
+          <option value="2">Kedua</option>
+        </select>
+
+        <select className="filter-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+          <option value="">-- Semua Status --</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Tertunggak">Tertunggak</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="table-wrapper">
+        <table className="risiko-table">
+          <thead>
             <tr>
-              {[
-                "No Rujukan",
-                "Tahun",
-                "Separuh Tahun",
-                "Nama Syarikat",
-                "Risiko",
-                "Pelan Tindakan",
-                "Status Pemantauan",
-                "Tarikh Pemantauan",
-                "Catatan",
-              ].map((col, idx) => (
-                <th
-                  key={idx}
-                  style={{
-                    padding: "12px",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    borderBottom: "1px solid rgba(255,255,255,0.2)",
-                  }}
-                >
-                  {col}
-                </th>
-              ))}
+              <th>Bil.</th>
+              <th>No Rujukan</th>
+              <th>Tahun</th>
+              <th>Separuh Tahun</th>
+              <th>Nama Subsidiari</th>
+              <th>Risiko</th>
+              <th>Skor Risiko</th>
+              <th>Pelan Tindakan</th>
+              <th>Status Pemantauan</th>
+              <th>Tarikh Pemantauan</th>
+              <th>Catatan</th>
             </tr>
           </thead>
-          <tbody style={{ background: "#ffffff", color: "#334155" }}>
-            {risks.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="9"
-                  style={{
-                    textAlign: "center",
-                    padding: "24px",
-                    background: "#ffffff",
-                    color: "#94a3b8",
-                    borderTop: "1px solid #e2e8f0",
-                    fontSize: "15px",
-                    fontWeight: "500",
-                  }}
-                >
-                  🚫 Tiada data pemantauan risiko
-                </td>
-              </tr>
-            ) : (
-              risks.map((risk, i) => (
-                <tr
-                  key={i}
-                  style={{
-                    background: i % 2 === 0 ? "#ffffff" : "#f8fafc",
-                    transition: "0.2s",
-                  }}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.background = "#f1f5f9")
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.background =
-                      i % 2 === 0 ? "#ffffff" : "#f8fafc")
-                  }
-                >
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.noRujukan}
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="11" className="loading">Loading...</td></tr>
+            ) : filteredData.length>0 ? (
+              filteredData.map((d,i)=>(
+                <tr key={d.id}>
+                  <td>{i+1}</td>
+                  <td>{d.no_rujukan}</td>
+                  <td>{d.tahun}</td>
+                  <td>{d.separuh_tahun===1?"Pertama":"Kedua"}</td>
+                  <td>{d.nama_subsidiari}</td>
+                  <td>{d.risiko}</td>
+                  <td className="center">
+                    <div className="risk-box" style={{backgroundColor:d.risk_color}}>
+                      {shortForm(d.tahap_risiko)}
+                    </div>
                   </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.tahun}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.separuhTahun}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.namaSyarikat}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.risiko}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.pelanTindakan}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.statusPemantauan}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.tarikhPemantauan}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {risk.catatan}
-                  </td>
+                  <td>{d.pelan_tindakan}</td>
+                  <td>{d.status_pemantauan}</td>
+                  <td>{d.tarikh_pemantauan}</td>
+                  <td>{d.catatan}</td>
                 </tr>
               ))
+            ) : (
+              <tr><td colSpan="11" className="no-data">Tiada data dijumpai</td></tr>
             )}
           </tbody>
         </table>
