@@ -1,55 +1,70 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
-/* Modal overlay */
+/* 🌫️ Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(40px);
+  background: rgba(60, 60, 60, 0.7);
+  backdrop-filter: blur(18px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 999;
   overflow-y: auto;
-  padding: 10px;
+  padding: 20px;
 }
 
-/* Modal container */
+/* 📦 Modal Container */
 .modal-container {
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid #e0e3e7;
-  box-shadow: 0 6px 18px rgba(0,64,113,0.08);
-  max-width: 850px;
+  box-shadow: 0 8px 28px rgba(0, 64, 113, 0.12);
+  max-width: 900px;
   width: 100%;
   font-family: "Inter", sans-serif;
   overflow-y: auto;
+  font-size: 13px;
+  padding: 18px;
 }
 
-/* Close button */
+/* ❌ Close Button */
 .close-btn {
-  background: none;
+  background: #f1f5f9;
   border: none;
-  color: #fff;
-  cursor: pointer;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: #004071;
+  font-weight: 600;
+  font-size: 16px;
   display: flex;
+  justify-content: center;
   align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.close-btn:hover {
+  background: #004071;
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 14px rgba(0, 64, 113, 0.3);
 }
 
-/* Box wrapper */
+/* 📘 Box Wrapper */
 .box {
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   background: #fff;
   border: 1px solid #e0e3e7;
-  box-shadow: 0 5px 15px rgba(0,64,113,0.08);
+  box-shadow: 0 5px 16px rgba(0, 64, 113, 0.06);
 }
 
-/* Box header */
+/* 📗 Header Box */
 .box-header {
   background: linear-gradient(135deg, #004071, #0066a1);
   color: #fff;
-  padding: 10px 16px;
+  padding: 10px 14px;
   font-weight: 600;
   font-size: 14px;
   border-top-left-radius: 12px;
@@ -59,91 +74,183 @@
   align-items: center;
 }
 
-/* Box content */
-.box-content {
-  padding: 14px 16px;
-  display: grid;
-  gap: 12px;
+/* 🌟 Warna khusus untuk seksyen utama */
+.box-header.maklumat-risiko,
+.box-header.pengenalpastian-risiko,
+.box-header.penilaian-risiko,
+.box-header.rawatan-risiko {
+  background: #0284c7 !important;
 }
 
-/* Labels */
-.label {
-  font-size: 13px;
+/* 🧩 Susunan fleksibel */
+.flex-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.flex-item {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+/* 🏷️ Label & Data */
+.label-inline {
   font-weight: 600;
   color: #004071;
-  margin-bottom: 4px;
-  display: block;
+  margin-right: 6px;
+  display: inline-block;
+  min-width: 130px;
+  font-size: 12px;
 }
 
-/* Details text */
-.detail-text {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 13px;
+.data-inline {
+  display: inline-block;
   color: #334155;
+  font-weight: 500;
+  font-size: 12px;
 }
 
-/* Input & textarea */
+/* ✏️ Input & Textarea */
 .input,
-textarea,
-select {
+textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #d1d2d4;
   background: #f9fafb;
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  transition: border 0.2s, box-shadow 0.2s;
 }
 .input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0,116,200,0.1);
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.15);
+}
+.textarea-risiko {
+  min-height: 60px;
+  resize: vertical;
 }
 
-/* Submit button */
+/* ✅ Butang Simpan */
 .submit-button {
-  padding: 10px 25px;
+  padding: 10px 26px;
   background: #004071;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 25px;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0,64,113,0.3);
+  box-shadow: 0 3px 10px rgba(0, 64, 113, 0.25);
   transition: all 0.3s;
 }
 .submit-button:hover {
   background: #0074c8;
   transform: translateY(-1px);
-  box-shadow: 0 5px 15px rgba(0,116,200,0.4);
+  box-shadow: 0 5px 16px rgba(0, 116, 200, 0.35);
 }
 
-/* Risk score highlight */
+/* 🎯 Risk score */
 .risk-score-text {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 6px;
   font-weight: 600;
   color: #fff;
+  font-size: 12px;
   text-align: center;
 }
 
-/* Grid layout */
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+/* 🔢 Senarai bernombor */
+.numbered-list {
+  padding-left: 18px;
+  margin: 4px 0;
+  list-style-type: decimal;
+}
+.numbered-list li {
+  margin-bottom: 2px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .details-grid {
-    grid-template-columns: 1fr;
+/* 📱 Responsif */
+@media (max-width: 1024px) {
+  .flex-item {
+    flex: 1 1 140px;
   }
+  .label-inline,
+  .data-inline {
+    font-size: 11px;
+  }
+  .input,
+  textarea {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .box-header {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  .submit-button {
+    font-size: 12px;
+    padding: 6px 18px;
+  }
+}
+@media (max-width: 768px) {
+  .flex-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .flex-item {
+    min-width: 100%;
+  }
+}
+
+/* 🔘 Butang Tambah & Padam */
+.button-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* ➕ Tambah */
+.button-add {
+  background-color: #0284c7;
+  color: #fff;
+}
+.button-add:hover {
+  background-color: #0369a1;
+  transform: scale(1.1);
+}
+
+/* 🗑️ Padam */
+.button-remove {
+  background-color: #dc2626;
+  color: #fff;
+}
+.button-remove:hover {
+  background-color: #b91c1c;
+  transform: scale(1.1);
+}
+
+/* 🧱 Susun input + butang selari */
+.input + .button-circle {
+  margin-left: 6px;
+}
+
+/* Pastikan baris input & butang sejajar */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
 }

@@ -5,7 +5,7 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 /* =======================================================
-    🟢 GET: Semua Rawatan Risiko (sorted ikut tahun & separuh_tahun)
+   🟢 GET: Semua Rawatan Risiko (sorted ikut tahun & separuh_tahun)
    ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
   try {
@@ -24,14 +24,21 @@ router.get("/", verifyToken, async (req, res) => {
         r.skor_kebarangkalian,
         r.skor_impak,
         r.skor_risiko,
-        p.pelan_tindakan AS plan_tindakan,
+        rr.rawatan_id,
         rr.jenis_kawalan,
         rr.tempoh_siap AS tempoh_jangkaan_siap,
-        k.nama_kakitangan AS kakitangan_bertanggungjawab
+        ARRAY(
+          SELECT pelan_tindakan 
+          FROM pelan_tindakan_rawatan 
+          WHERE rawatan_id = rr.rawatan_id
+        ) AS plan_tindakan,
+        ARRAY(
+          SELECT nama_kakitangan 
+          FROM kakitangan_rawatan 
+          WHERE rawatan_id = rr.rawatan_id
+        ) AS kakitangan_bertanggungjawab
       FROM risiko r
       LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-      LEFT JOIN pelan_tindakan_rawatan p ON p.pelan_id = rr.pelan_id
-      LEFT JOIN kakitangan_rawatan k ON k.kakitangan_id = rr.kakitangan_id
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
     `;
 
@@ -43,7 +50,6 @@ router.get("/", verifyToken, async (req, res) => {
       params.push(user.subsidiari_id);
     }
 
-    // 📅 Sorting: Tahun DESC → Separuh Tahun DESC → No Rujukan ASC
     query += `
       ORDER BY 
         r.tahun DESC,
@@ -63,57 +69,121 @@ router.get("/", verifyToken, async (req, res) => {
    🟢 POST: Tambah Rawatan Risiko
    ======================================================= */
 router.post("/", verifyToken, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { risiko_id, jenis_kawalan, tempoh_siap, pelan_id, kakitangan_id } = req.body;
+    const { risiko_id, jenis_kawalan, tempoh_siap, plan_tindakan, kakitangan_bertanggungjawab } = req.body;
 
     if (!risiko_id || !jenis_kawalan) {
       return res.status(400).json({ message: "Maklumat tidak lengkap." });
     }
 
-    const result = await pool.query(
-      `INSERT INTO rawatan_risiko (risiko_id, jenis_kawalan, tempoh_siap, pelan_id, kakitangan_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING rawatan_id`,
-      [risiko_id, jenis_kawalan, tempoh_siap || null, pelan_id || null, kakitangan_id || null]
-    );
+    await client.query("BEGIN");
 
-    res.status(201).json({
-      message: "Rawatan risiko berjaya ditambah",
-      rawatan_id: result.rows[0].rawatan_id,
-    });
+    // 1️⃣ Tambah rawatan utama
+    const result = await client.query(
+      `INSERT INTO rawatan_risiko (risiko_id, jenis_kawalan, tempoh_siap)
+       VALUES ($1, $2, $3)
+       RETURNING rawatan_id`,
+      [risiko_id, jenis_kawalan, tempoh_siap || null]
+    );
+    const rawatan_id = result.rows[0].rawatan_id;
+
+    // 2️⃣ Masukkan pelan tindakan
+    if (Array.isArray(plan_tindakan)) {
+      for (const pelan of plan_tindakan) {
+        if (pelan.trim() !== "") {
+          await client.query(
+            `INSERT INTO pelan_tindakan_rawatan (rawatan_id, pelan_tindakan)
+             VALUES ($1, $2)`,
+            [rawatan_id, pelan]
+          );
+        }
+      }
+    }
+
+    // 3️⃣ Masukkan kakitangan bertanggungjawab
+    if (Array.isArray(kakitangan_bertanggungjawab)) {
+      for (const kakitangan of kakitangan_bertanggungjawab) {
+        if (kakitangan.trim() !== "") {
+          await client.query(
+            `INSERT INTO kakitangan_rawatan (rawatan_id, nama_kakitangan)
+             VALUES ($1, $2)`,
+            [rawatan_id, kakitangan]
+          );
+        }
+      }
+    }
+
+    await client.query("COMMIT");
+    res.status(201).json({ message: "Rawatan risiko berjaya ditambah", rawatan_id });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("❌ Ralat POST /rawatan:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 });
 
 /* =======================================================
-   🟡 PUT: Kemas Kini Rawatan Risiko
+   🟡 PUT: Kemas Kini Rawatan Risiko (multi-plan & kakitangan)
    ======================================================= */
 router.put("/:rawatan_id", verifyToken, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { rawatan_id } = req.params;
-    const { jenis_kawalan, tempoh_siap, pelan_id, kakitangan_id } = req.body;
+    const { plan_tindakan, jenis_kawalan, tempoh_jangkaan_siap, kakitangan_bertanggungjawab } = req.body;
 
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // 1️⃣ Padam data lama pelan & kakitangan
+    await client.query(`DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
+    await client.query(`DELETE FROM kakitangan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
+
+    // 2️⃣ Masukkan semula pelan tindakan
+    if (Array.isArray(plan_tindakan)) {
+      for (const pelan of plan_tindakan) {
+        if (pelan.trim() !== "") {
+          await client.query(
+            `INSERT INTO pelan_tindakan_rawatan (rawatan_id, pelan_tindakan)
+             VALUES ($1, $2)`,
+            [rawatan_id, pelan]
+          );
+        }
+      }
+    }
+
+    // 3️⃣ Masukkan semula kakitangan
+    if (Array.isArray(kakitangan_bertanggungjawab)) {
+      for (const kakitangan of kakitangan_bertanggungjawab) {
+        if (kakitangan.trim() !== "") {
+          await client.query(
+            `INSERT INTO kakitangan_rawatan (rawatan_id, nama_kakitangan)
+             VALUES ($1, $2)`,
+            [rawatan_id, kakitangan]
+          );
+        }
+      }
+    }
+
+    // 4️⃣ Kemas kini rawatan_risiko utama
+    await client.query(
       `UPDATE rawatan_risiko
        SET jenis_kawalan = $1,
            tempoh_siap = $2,
-           pelan_id = $3,
-           kakitangan_id = $4,
            updated_at = CURRENT_TIMESTAMP
-       WHERE rawatan_id = $5`,
-      [jenis_kawalan, tempoh_siap || null, pelan_id || null, kakitangan_id || null, rawatan_id]
+       WHERE rawatan_id = $3`,
+      [jenis_kawalan, tempoh_jangkaan_siap || null, rawatan_id]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
-    }
-
+    await client.query("COMMIT");
     res.json({ message: "Rawatan risiko berjaya dikemaskini" });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("❌ Ralat PUT /rawatan/:rawatan_id:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -123,16 +193,10 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
 router.delete("/:rawatan_id", verifyToken, async (req, res) => {
   try {
     const { rawatan_id } = req.params;
-
-    const result = await pool.query(
-      `DELETE FROM rawatan_risiko WHERE rawatan_id = $1`,
-      [rawatan_id]
-    );
-
+    const result = await pool.query(`DELETE FROM rawatan_risiko WHERE rawatan_id = $1`, [rawatan_id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
     }
-
     res.json({ message: "Rawatan risiko berjaya dipadam" });
   } catch (err) {
     console.error("❌ Ralat DELETE /rawatan/:rawatan_id:", err);
@@ -140,8 +204,9 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
   }
 });
 
-
-// GET /rawatan/:risiko_id
+/* =======================================================
+   🟢 GET: Dapatkan Rawatan Risiko Mengikut risiko_id
+   ======================================================= */
 router.get("/:risiko_id", verifyToken, async (req, res) => {
   try {
     const { risiko_id } = req.params;
@@ -152,6 +217,7 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.tahun,
         r.separuh_tahun,
+        r.subsidiari::integer AS subsidiari_id,
         s.nama_subsidiari AS nama_subsidiari,
         r.kategori,
         r.bahagian,
@@ -159,16 +225,25 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
         r.skor_kebarangkalian,
         r.skor_impak,
         r.skor_risiko,
+        r.status_risiko,
+        r.tahap_risiko,
+        rr.rawatan_id,
         rr.jenis_kawalan,
         rr.tempoh_siap AS tempoh_jangkaan_siap,
-        p.pelan_tindakan AS plan_tindakan,
-        k.nama_kakitangan AS kakitangan_bertanggungjawab,
-        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id) AS punca,
-        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan
+        ARRAY(
+          SELECT pelan_tindakan 
+          FROM pelan_tindakan_rawatan 
+          WHERE rawatan_id = rr.rawatan_id
+        ) AS plan_tindakan,
+        ARRAY(
+          SELECT nama_kakitangan 
+          FROM kakitangan_rawatan 
+          WHERE rawatan_id = rr.rawatan_id
+        ) AS kakitangan_bertanggungjawab,
+        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id = r.risiko_id) AS punca,
+        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id) AS kesan
       FROM risiko r
       LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-      LEFT JOIN pelan_tindakan_rawatan p ON p.pelan_id = rr.pelan_id
-      LEFT JOIN kakitangan_rawatan k ON k.kakitangan_id = rr.kakitangan_id
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
       WHERE r.risiko_id = $1
     `, [risiko_id]);
@@ -181,6 +256,5 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 export default router;
