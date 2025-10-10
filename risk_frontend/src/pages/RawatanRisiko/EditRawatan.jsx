@@ -11,72 +11,41 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [saving, setSaving] = useState(false);
 
+  // Fetch data when modal opens
   useEffect(() => {
-  if (isOpen && risk?.risiko_id) {
-    api
-      .get(`/rawatan/${risk.risiko_id}`)
-      .then(({ data }) => {
-        setFormData({
-          ...data,
-          planTindakan: Array.isArray(data.plan_tindakan)
-            ? data.plan_tindakan
-            : [""],
-          jenisKawalan: data.jenis_kawalan || "",
-          tempohSiap: data.tempoh_jangkaan_siap || "",
-          kakitanganBertanggungjawab: Array.isArray(data.kakitangan_bertanggungjawab)
-            ? data.kakitangan_bertanggungjawab
-            : [""],
-          skor_kebarangkalian: data.skor_kebarangkalian,
-          skor_impak: data.skor_impak,
-        });
+    if (isOpen && risk?.risiko_id) {
+      api
+        .get(`/rawatan/${risk.risiko_id}`)
+        .then(({ data }) => {
+          setFormData({
+            ...data,
+            planTindakan: Array.isArray(data.plan_tindakan) ? data.plan_tindakan : [""],
+            jenisKawalan: data.jenis_kawalan || "",
+            tempohSiap: data.tempoh_jangkaan_siap || "",
+            kakitanganBertanggungjawab: Array.isArray(data.kakitangan_bertanggungjawab)
+              ? data.kakitangan_bertanggungjawab
+              : [""],
+            skor_kebarangkalian: data.skor_kebarangkalian,
+            skor_impak: data.skor_impak,
+          });
+          setRiskColor(data.risk_color || "#f1f5f9");
+        })
+        .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
+    }
+  }, [isOpen, risk]);
 
-        setRiskColor(data.risk_color || "#f1f5f9");
-      })
-      .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
-  }
-}, [isOpen, risk]);
-
-
+  // Risk Matrix
   const riskMatrix = {
-    1: {
-      1: { label: "Rendah", color: "#22c55e" },
-      2: { label: "Rendah", color: "#22c55e" },
-      3: { label: "Sederhana", color: "#eab308" },
-      4: { label: "Sederhana", color: "#eab308" },
-      5: { label: "Tinggi", color: "#f97316" },
-    },
-    2: {
-      1: { label: "Rendah", color: "#22c55e" },
-      2: { label: "Rendah", color: "#22c55e" },
-      3: { label: "Sederhana", color: "#eab308" },
-      4: { label: "Sederhana", color: "#eab308" },
-      5: { label: "Tinggi", color: "#f97316" },
-    },
-    3: {
-      1: { label: "Rendah", color: "#22c55e" },
-      2: { label: "Sederhana", color: "#eab308" },
-      3: { label: "Sederhana", color: "#eab308" },
-      4: { label: "Tinggi", color: "#f97316" },
-      5: { label: "Tinggi", color: "#f97316" },
-    },
-    4: {
-      1: { label: "Sederhana", color: "#eab308" },
-      2: { label: "Sederhana", color: "#eab308" },
-      3: { label: "Tinggi", color: "#f97316" },
-      4: { label: "Tinggi", color: "#f97316" },
-      5: { label: "Sangat Tinggi", color: "#ef4444" },
-    },
-    5: {
-      1: { label: "Sederhana", color: "#eab308" },
-      2: { label: "Tinggi", color: "#f97316" },
-      3: { label: "Tinggi", color: "#f97316" },
-      4: { label: "Sangat Tinggi", color: "#ef4444" },
-      5: { label: "Sangat Tinggi", color: "#ef4444" },
-    },
+    1: { 1: { label: "Rendah", color: "#22c55e" }, 2: { label: "Rendah", color: "#22c55e" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
+    2: { 1: { label: "Rendah", color: "#22c55e" }, 2: { label: "Rendah", color: "#22c55e" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
+    3: { 1: { label: "Rendah", color: "#22c55e" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Tinggi", color: "#f97316" } },
+    4: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
+    5: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Tinggi", color: "#f97316" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Sangat Tinggi", color: "#ef4444" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
   };
 
   const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
 
+  // Update risk level based on score
   useEffect(() => {
     const k = parseInt(formData.skor_kebarangkalian);
     const i = parseInt(formData.skor_impak);
@@ -100,6 +69,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
     }
   }, [formData.skor_kebarangkalian, formData.skor_impak]);
 
+  // Save function
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -162,8 +132,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
               <div className="flex-item">
                 <span className="label-inline">Subsidiari:</span>
                 <span className="data-inline">
-                  {subsidiariList.find((s) => s.subsidiari_id === formData.subsidiari_id)?.nama_subsidiari ||
-                    "-"}
+                  {subsidiariList.find((s) => s.subsidiari_id === formData.subsidiari_id)?.nama_subsidiari || "-"}
                 </span>
               </div>
             </div>
@@ -236,15 +205,10 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
               {/* Plan Tindakan */}
               <div style={{ marginBottom: "12px" }}>
                 <label className="label">Plan Tindakan:</label>
-                {formData.planTindakan?.map((p, idx) => (
+                {formData.planTindakan.map((p, idx) => (
                   <div
                     key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "6px",
-                      gap: "6px",
-                    }}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}
                   >
                     <input
                       value={p}
@@ -255,16 +219,17 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                       }}
                       placeholder={`Plan Tindakan ${idx + 1}`}
                       className="input"
+                      style={{ flex: 1 }}
                     />
-                    {idx !== 0 && (
+                    {formData.planTindakan.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={() =>
                           setFormData((prev) => ({
                             ...prev,
                             planTindakan: prev.planTindakan.filter((_, i) => i !== idx),
-                          }));
-                        }}
+                          }))
+                        }
                         className="button-circle button-remove"
                       >
                         <Trash2 size={16} />
@@ -274,10 +239,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                       <button
                         type="button"
                         onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            planTindakan: [...prev.planTindakan, ""],
-                          }))
+                          setFormData((prev) => ({ ...prev, planTindakan: [...prev.planTindakan, ""] }))
                         }
                         className="button-circle button-add"
                       >
@@ -317,38 +279,31 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
               {/* Kakitangan Bertanggungjawab */}
               <div style={{ marginBottom: "12px" }}>
                 <label className="label">Kakitangan Bertanggungjawab:</label>
-                {formData.kakitanganBertanggungjawab?.map((s, idx) => (
+                {formData.kakitanganBertanggungjawab.map((s, idx) => (
                   <div
                     key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "6px",
-                      gap: "6px",
-                    }}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}
                   >
                     <input
                       value={s}
                       onChange={(e) => {
                         const newList = [...formData.kakitanganBertanggungjawab];
                         newList[idx] = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          kakitanganBertanggungjawab: newList,
-                        }));
+                        setFormData((prev) => ({ ...prev, kakitanganBertanggungjawab: newList }));
                       }}
                       placeholder={`Kakitangan ${idx + 1}`}
                       className="input"
+                      style={{ flex: 1 }}
                     />
-                    {idx !== 0 && (
+                    {formData.kakitanganBertanggungjawab.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={() =>
                           setFormData((prev) => ({
                             ...prev,
                             kakitanganBertanggungjawab: prev.kakitanganBertanggungjawab.filter((_, i) => i !== idx),
-                          }));
-                        }}
+                          }))
+                        }
                         className="button-circle button-remove"
                       >
                         <Trash2 size={16} />
