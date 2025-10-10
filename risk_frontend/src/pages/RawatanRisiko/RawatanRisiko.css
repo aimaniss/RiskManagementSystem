@@ -202,3 +202,43 @@
     font-size: 0.75rem;
   }
 }
+
+.filter-container {
+  display: flex;
+  flex-wrap: nowrap; /* jangan wrap */
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+  overflow-x: auto; /* scroll kalau ruang kurang */
+}
+
+.filter-container input,
+.filter-container select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.filter-input {
+  flex: 1 0 200px; /* input boleh stretch tapi minimum 200px */
+}
+
+.filter-select {
+  flex: 0 0 160px; /* select lebar tetap 160px */
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.1);
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .filter-input,
+  .filter-select {
+    width: 100%; /* responsive full width pada mobile */
+  }
+}
