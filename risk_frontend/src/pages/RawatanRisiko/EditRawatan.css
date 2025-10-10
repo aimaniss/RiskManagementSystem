@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
-/* 🌫️ Modal Overlay */
+/* Modal overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -14,7 +14,7 @@
   padding: 20px;
 }
 
-/* 📦 Modal Container */
+/* Modal container */
 .modal-container {
   background: #ffffff;
   border-radius: 16px;
@@ -28,7 +28,7 @@
   padding: 18px;
 }
 
-/* ❌ Close Button */
+/* Close button modern */
 .close-btn {
   background: #f1f5f9;
   border: none;
@@ -51,7 +51,7 @@
   box-shadow: 0 4px 14px rgba(0, 64, 113, 0.3);
 }
 
-/* 📘 Box Wrapper */
+/* Box wrapper */
 .box {
   border-radius: 12px;
   margin-bottom: 18px;
@@ -60,7 +60,7 @@
   box-shadow: 0 5px 16px rgba(0, 64, 113, 0.06);
 }
 
-/* 📗 Header Box */
+/* Header asas */
 .box-header {
   background: linear-gradient(135deg, #004071, #0066a1);
   color: #fff;
@@ -74,7 +74,7 @@
   align-items: center;
 }
 
-/* 🌟 Warna khusus untuk seksyen utama */
+/* 🌟 Header untuk 4 seksyen utama (warna baru) */
 .box-header.maklumat-risiko,
 .box-header.pengenalpastian-risiko,
 .box-header.penilaian-risiko,
@@ -82,7 +82,7 @@
   background: #0284c7 !important;
 }
 
-/* 🧩 Susunan fleksibel */
+/* Flex row & inline labels */
 .flex-row {
   display: flex;
   flex-wrap: wrap;
@@ -95,7 +95,6 @@
   min-width: 160px;
 }
 
-/* 🏷️ Label & Data */
 .label-inline {
   font-weight: 600;
   color: #004071;
@@ -112,7 +111,7 @@
   font-size: 12px;
 }
 
-/* ✏️ Input & Textarea */
+/* Input, textarea */
 .input,
 textarea {
   width: 100%;
@@ -134,7 +133,7 @@ textarea:focus {
   resize: vertical;
 }
 
-/* ✅ Butang Simpan */
+/* Submit button */
 .submit-button {
   padding: 10px 26px;
   background: #004071;
@@ -153,7 +152,7 @@ textarea:focus {
   box-shadow: 0 5px 16px rgba(0, 116, 200, 0.35);
 }
 
-/* 🎯 Risk score */
+/* Risk score highlight */
 .risk-score-text {
   display: inline-block;
   padding: 3px 8px;
@@ -164,7 +163,7 @@ textarea:focus {
   text-align: center;
 }
 
-/* 🔢 Senarai bernombor */
+/* Numbered list for Punca & Kesan */
 .numbered-list {
   padding-left: 18px;
   margin: 4px 0;
@@ -174,7 +173,7 @@ textarea:focus {
   margin-bottom: 2px;
 }
 
-/* 📱 Responsif */
+/* Responsive */
 @media (max-width: 1024px) {
   .flex-item {
     flex: 1 1 140px;
@@ -206,8 +205,7 @@ textarea:focus {
     min-width: 100%;
   }
 }
-
-/* 🔘 Butang Tambah & Padam */
+/* 🔘 Gaya asas untuk butang bulat (Tambah & Padam) */
 .button-circle {
   display: inline-flex;
   align-items: center;
@@ -219,7 +217,6 @@ textarea:focus {
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
 }
 
 /* ➕ Tambah */
@@ -242,15 +239,51 @@ textarea:focus {
   transform: scale(1.1);
 }
 
-/* 🧱 Susun input + butang selari */
+/* Tambahan kecil untuk spacing */
+.input + .button-circle {
+  margin-left: 4px;
+}
+/* --- Tambah & Delete button style --- */
+.button-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tambah (plus) */
+.button-add {
+  background-color: #0284c7;
+  color: white;
+}
+.button-add:hover {
+  background-color: #0369a1;
+  transform: scale(1.1);
+}
+
+/* Delete (trash) */
+.button-remove {
+  background-color: #dc2626;
+  color: white;
+}
+.button-remove:hover {
+  background-color: #b91c1c;
+  transform: scale(1.1);
+}
+
+/* supaya input + butang sejajar */
 .input + .button-circle {
   margin-left: 6px;
 }
 
-/* Pastikan baris input & butang sejajar */
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+/* susunan flex input + butang */
+div[style*="display: flex"][style*="align-items: center"] {
+  gap: 6px !important;
 }
