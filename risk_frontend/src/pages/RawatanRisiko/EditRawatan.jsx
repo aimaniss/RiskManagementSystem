@@ -7,11 +7,13 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
   const [formData, setFormData] = useState({
     planTindakan: [""],
     kakitanganBertanggungjawab: [""],
+    jenisKawalan: "",
+    tempohSiap: "",
   });
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [saving, setSaving] = useState(false);
 
-  // Fetch data when modal opens
+  // Fetch data bila modal buka
   useEffect(() => {
     if (isOpen && risk?.risiko_id) {
       api
@@ -19,12 +21,13 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
         .then(({ data }) => {
           setFormData({
             ...data,
-            planTindakan: Array.isArray(data.plan_tindakan) ? data.plan_tindakan : [""],
+            planTindakan: Array.isArray(data.plan_tindakan) && data.plan_tindakan.length > 0 ? data.plan_tindakan : [""],
             jenisKawalan: data.jenis_kawalan || "",
             tempohSiap: data.tempoh_jangkaan_siap || "",
-            kakitanganBertanggungjawab: Array.isArray(data.kakitangan_bertanggungjawab)
-              ? data.kakitangan_bertanggungjawab
-              : [""],
+            kakitanganBertanggungjawab:
+              Array.isArray(data.kakitangan_bertanggungjawab) && data.kakitangan_bertanggungjawab.length > 0
+                ? data.kakitangan_bertanggungjawab
+                : [""],
             skor_kebarangkalian: data.skor_kebarangkalian,
             skor_impak: data.skor_impak,
           });
@@ -45,7 +48,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
 
   const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
 
-  // Update risk level based on score
+  // Update warna tahap risiko automatik
   useEffect(() => {
     const k = parseInt(formData.skor_kebarangkalian);
     const i = parseInt(formData.skor_impak);
@@ -94,6 +97,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
   return (
     <div className="modal-overlay">
       <div className="modal-container">
+        {/* Header Modal */}
         <div className="box-header">
           <span>Kemaskini Rawatan Risiko</span>
           <button className="close-btn" onClick={onClose}>
@@ -101,6 +105,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
           </button>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -154,22 +159,6 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                 <span className="label-inline">Risiko:</span>
                 <span className="data-inline">{formData.risiko || "-"}</span>
               </div>
-              <div className="flex-item" style={{ flex: "1 1 100%" }}>
-                <span className="label-inline">Punca:</span>
-                <ol className="numbered-list">
-                  {(formData.punca || []).map((p, idx) => (
-                    <li key={idx}>{p || "-"}</li>
-                  ))}
-                </ol>
-              </div>
-              <div className="flex-item" style={{ flex: "1 1 100%" }}>
-                <span className="label-inline">Kesan:</span>
-                <ol className="numbered-list">
-                  {(formData.kesan || []).map((k, idx) => (
-                    <li key={idx}>{k || "-"}</li>
-                  ))}
-                </ol>
-              </div>
             </div>
           </div>
 
@@ -186,7 +175,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                 <span className="data-inline">{formData.skor_impak || "-"}</span>
               </div>
               <div className="flex-item">
-                <span className="label-inline">Skor Risiko:</span>
+                <span className="label-inline">Tahap Risiko:</span>
                 <span className="data-inline risk-score-text" style={{ backgroundColor: riskColor }}>
                   {formData.tahap_risiko || "-"}
                 </span>
@@ -206,10 +195,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
               <div style={{ marginBottom: "12px" }}>
                 <label className="label">Plan Tindakan:</label>
                 {formData.planTindakan.map((p, idx) => (
-                  <div
-                    key={idx}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}
-                  >
+                  <div key={idx} className="dynamic-row">
                     <input
                       value={p}
                       onChange={(e) => {
@@ -219,7 +205,6 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                       }}
                       placeholder={`Plan Tindakan ${idx + 1}`}
                       className="input"
-                      style={{ flex: 1 }}
                     />
                     {formData.planTindakan.length > 1 && (
                       <button
@@ -239,7 +224,10 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                       <button
                         type="button"
                         onClick={() =>
-                          setFormData((prev) => ({ ...prev, planTindakan: [...prev.planTindakan, ""] }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            planTindakan: [...prev.planTindakan, ""],
+                          }))
                         }
                         className="button-circle button-add"
                       >
@@ -280,10 +268,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
               <div style={{ marginBottom: "12px" }}>
                 <label className="label">Kakitangan Bertanggungjawab:</label>
                 {formData.kakitanganBertanggungjawab.map((s, idx) => (
-                  <div
-                    key={idx}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}
-                  >
+                  <div key={idx} className="dynamic-row">
                     <input
                       value={s}
                       onChange={(e) => {
@@ -293,7 +278,6 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                       }}
                       placeholder={`Kakitangan ${idx + 1}`}
                       className="input"
-                      style={{ flex: 1 }}
                     />
                     {formData.kakitanganBertanggungjawab.length > 1 && (
                       <button
