@@ -242,3 +242,28 @@
     width: 100%; /* responsive full width pada mobile */
   }
 }
+/* RawatanRisiko.css */
+
+/* ... (kod lain) */
+
+/* Gaya untuk sel yang mengandungi senarai */
+.risiko-table td.numbered-list-cell {
+  /* Set alignment jika perlu */
+  vertical-align: top;
+  text-align: left;
+}
+
+/* Gaya untuk senarai bernombor (<ol>) di dalam sel jadual */
+.risiko-table td.numbered-list-cell ol {
+  /* Pastikan ia bernombor (sepatutnya default, tapi untuk kepastian) */
+  list-style-type: decimal;
+  margin: 0;
+  /* Padding untuk beri ruang kepada nombor */
+  padding-left: 20px;
+}
+
+/* Gaya untuk item senarai */
+.risiko-table td.numbered-list-cell ol li {
+  font-size: 0.9em;
+  margin-bottom: 2px;
+}
