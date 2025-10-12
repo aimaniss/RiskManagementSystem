@@ -137,7 +137,16 @@ function RawatanRisiko() {
         </table>
       </div>
 
-      {showModal && <EditRawatan isOpen={showModal} risk={selectedData} pelanList={pelanList} kakitanganList={kakitanganList} onClose={()=>setShowModal(false)} onSave={handleSaveRawatan} />}
+      {showModal && (
+          <EditRawatan 
+          isOpen={showModal} 
+          risk={selectedData}  pelanList={pelanList} 
+          kakitanganList={kakitanganList} 
+          subsidiariList={subsidiariList} // <--- BARIS INI
+          onClose={()=>setShowModal(false)} 
+          onSave={handleSaveRawatan} 
+          />
+          )}
     </div>
   );
 }

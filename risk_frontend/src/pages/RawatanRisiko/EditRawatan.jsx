@@ -4,12 +4,41 @@ import "./EditRawatan.css";
 // Gantikan dengan laluan fail API anda yang betul
 import api from "../../api/api"; 
 
-export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose, onSave }) {
+// Komponen Pembantu untuk Memaparkan Senarai Bernombor
+const ListDisplay = ({ data }) => {
+    if (!data) return <span>-</span>;
+    // Semak sama ada data adalah array
+    if (Array.isArray(data)) {
+        // Semak jika array kosong atau hanya mengandungi string kosong
+        if (data.length === 0 || (data.length === 1 && data[0]?.trim() === "")) return <span>-</span>;
+        return (
+            <ul style={{ listStyleType: 'none', paddingLeft: '0', margin: '0' }}>
+                {data.map((item, index) => (
+                    <li key={index} style={{ marginBottom: '2px', lineHeight: '1.2' }}>
+                        <span className="rawatan-data-inline" style={{ display: 'inline' }}>
+                            {`${index + 1}. ${item}`}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        );
+    }
+    // Jika bukan array (String), gunakan format biasa
+    return <span className="rawatan-data-inline">{data || "-"}</span>;
+};
+
+
+// 💡 Keluarkan subsidiariList dari sini kerana kita menggunakan risk.nama_subsidiari
+export default function EditRawatan({ isOpen, risk, onClose, onSave }) { 
     const [formData, setFormData] = useState({
         planTindakan: [""],
         kakitanganBertanggungjawab: [""],
         jenisKawalan: "",
         tempohSiap: "",
+        punca: [], // Default array kosong
+        kesan: [], // Default array kosong
+        // Tambah key baru untuk menyimpan description status risiko
+        status_risiko_desc: "", 
     });
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const [saving, setSaving] = useState(false);
@@ -17,11 +46,27 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
     // Fetch data bila modal buka
     useEffect(() => {
         if (isOpen && risk?.risiko_id) {
+            // Set data risiko sedia ada (static)
+            setFormData(prev => ({ 
+                ...prev, 
+                ...risk, 
+                // Pastikan key yang betul dari risk object diambil
+                skor_kebarangkalian: risk.skor_kebarangkalian,
+                skor_impak: risk.skor_impak,
+                tahap_risiko: risk.tahap_risiko
+            }));
+
+            // Fetch data rawatan (dynamic)
             api
                 .get(`/rawatan/${risk.risiko_id}`)
                 .then(({ data }) => {
-                    setFormData({
-                        ...data,
+                    setFormData((prev) => ({
+                        ...prev,
+                        rawatan_id: data.rawatan_id, // Penting untuk PUT request
+                        // Update subsidiari_id dan nama_subsidiari
+                        subsidiari_id: data.subsidiari_id || prev.subsidiari_id,
+                        nama_subsidiari: data.nama_subsidiari || prev.nama_subsidiari, 
+                        // Pastikan ia adalah array, jika tidak, set kepada [""]
                         planTindakan: Array.isArray(data.plan_tindakan) && data.plan_tindakan.length > 0 ? data.plan_tindakan : [""],
                         jenisKawalan: data.jenis_kawalan || "",
                         tempohSiap: data.tempoh_jangkaan_siap || "",
@@ -29,9 +74,9 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                             Array.isArray(data.kakitangan_bertanggungjawab) && data.kakitangan_bertanggungjawab.length > 0
                                 ? data.kakitangan_bertanggungjawab
                                 : [""],
-                        skor_kebarangkalian: data.skor_kebarangkalian,
-                        skor_impak: data.skor_impak,
-                    });
+                        punca: data.punca || [], // <-- DATA PUNCA
+                        kesan: data.kesan || [], // <-- DATA KESAN
+                    }));
                 })
                 .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
         }
@@ -52,13 +97,23 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
     useEffect(() => {
         const k = parseInt(formData.skor_kebarangkalian);
         const i = parseInt(formData.skor_impak);
+        
+        let status = "";
+        let statusDesc = "";
+
         if (k && i) {
             const { label, color } = getRiskMatrix(k, i);
+            
+            status = label === "Rendah" ? "Tidak" : "Ya";
+            // LOGIK DESCRIPTION BARU
+            statusDesc = status === "Ya" ? "Risiko memerlukan tindakan" : "Risiko rendah - tiada tindakan";
+
             setFormData((prev) => ({
                 ...prev,
                 skor_risiko: k * i,
                 tahap_risiko: label,
-                status_risiko: label === "Rendah" ? "Tidak" : "Ya",
+                status_risiko: status,
+                status_risiko_desc: statusDesc, // Simpan description
             }));
             setRiskColor(color);
         } else {
@@ -67,22 +122,47 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                 skor_risiko: "",
                 tahap_risiko: "",
                 status_risiko: "",
+                status_risiko_desc: "",
             }));
             setRiskColor("#f1f5f9");
         }
     }, [formData.skor_kebarangkalian, formData.skor_impak]);
 
-    // Save function
+    // Save function (tiada perubahan diperlukan pada logik ini)
     const handleSave = async () => {
+        // Semak jika rawatan_id wujud (diperolehi dari fetch rawatan)
+        if (!formData.rawatan_id) {
+            alert("Ralat: ID rawatan tidak ditemui. Tidak dapat menyimpan.");
+            return;
+        }
+
+        // 1. Bersihkan array: buang string kosong dari planTindakan dan kakitanganBertanggungjawab
+        const cleanedPlanTindakan = formData.planTindakan.filter(p => p.trim() !== "");
+        const cleanedKakitangan = formData.kakitanganBertanggungjawab.filter(k => k.trim() !== "");
+
+        // 2. Data payload untuk API
+        const payload = {
+            plan_tindakan: cleanedPlanTindakan, 
+            jenis_kawalan: formData.jenisKawalan,
+            tempoh_jangkaan_siap: formData.tempohSiap,
+            kakitangan_bertanggungjawab: cleanedKakitangan,
+        };
+
         try {
             setSaving(true);
-            await api.put(`/rawatan/${formData.rawatan_id}`, {
-                plan_tindakan: formData.planTindakan.filter(p => p.trim() !== ""), 
-                jenis_kawalan: formData.jenisKawalan,
-                tempoh_jangkaan_siap: formData.tempohSiap,
-                kakitangan_bertanggungjawab: formData.kakitanganBertanggungjawab.filter(k => k.trim() !== ""),
+            
+            // Lakukan PUT request menggunakan rawatan_id
+            await api.put(`/rawatan/${formData.rawatan_id}`, payload);
+            
+            // Panggil onSave dengan data yang dikemaskini
+            onSave({ 
+                ...risk, 
+                ...formData, 
+                plan_tindakan: cleanedPlanTindakan,
+                kakitangan_bertanggungjawab: cleanedKakitangan,
+                risk_color: riskColor 
             });
-            onSave({ ...formData, risk_color: riskColor });
+
             onClose();
         } catch (err) {
             console.error("❌ Gagal update rawatan:", err);
@@ -91,6 +171,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
             setSaving(false);
         }
     };
+
 
     if (!isOpen) return null;
 
@@ -112,7 +193,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                         handleSave();
                     }}
                 >
-                    {/* Maklumat Risiko */}
+                    {/* 1. Maklumat Risiko */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Maklumat Risiko</div>
                         <div className="rawatan-flex-row">
@@ -127,23 +208,18 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                             <div className="rawatan-flex-item">
                                 <span className="rawatan-label-inline">Separuh Tahun:</span>
                                 <span className="rawatan-data-inline">
-                                    {formData.separuh_tahun === 1
-                                        ? "Pertama"
-                                        : formData.separuh_tahun === 2
-                                            ? "Kedua"
-                                            : "-"}
+                                    {formData.separuh_tahun === 1 ? "Pertama" : formData.separuh_tahun === 2 ? "Kedua" : "-"}
                                 </span>
                             </div>
+                            {/* SUBSIDIARI - Disemak semula untuk memastikan ia tidak ke bawah */}
                             <div className="rawatan-flex-item">
                                 <span className="rawatan-label-inline">Subsidiari:</span>
-                                <span className="rawatan-data-inline">
-                                    {subsidiariList.find((s) => s.subsidiari_id === formData.subsidiari_id)?.nama_subsidiari || "-"}
-                                </span>
+                                <span className="rawatan-data-inline">{formData.nama_subsidiari || "-"}</span>
                             </div>
                         </div>
                     </div>
-
-                    {/* Pengenalpastian Risiko */}
+                    
+                    {/* 2. Pengenalpastian Risiko (Termasuk Punca & Kesan) */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Pengenalpastian Risiko</div>
                         <div className="rawatan-flex-row">
@@ -161,48 +237,67 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                             </div>
                         </div>
 
-                        {/* Punca & Kesan Risiko */}
-                        <div className="rawatan-flex-row">
+                        {/* Punca & Kesan Risiko Bersebelahan */}
+                        <div className="rawatan-flex-row" style={{ marginTop: '10px' }}>
                             <div className="rawatan-flex-item" style={{ flex: "1 1 45%" }}>
                                 <span className="rawatan-label-inline">Punca Risiko:</span>
-                                <span className="rawatan-data-inline">{formData.punca || "-"}</span>
+                                <ListDisplay data={formData.punca} />
                             </div>
                             <div className="rawatan-flex-item" style={{ flex: "1 1 45%" }}>
                                 <span className="rawatan-label-inline">Kesan Risiko:</span>
-                                <span className="rawatan-data-inline">{formData.kesan || "-"}</span>
+                                <ListDisplay data={formData.kesan} />
                             </div>
                         </div>
                     </div>
-
-                    {/* Penilaian Risiko */}
+                    
+                    {/* 3. Penilaian Risiko - Perubahan Struktur Utama di sini */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Penilaian Risiko</div>
-                        <div className="rawatan-flex-row">
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Skor Kebarangkalian:</span>
-                                <span className="rawatan-data-inline">{formData.skor_kebarangkalian || "-"}</span>
+                        
+                        {/* Baris Pertama: Skor & Tahap */}
+                        <div className="rawatan-flex-row rawatan-score-row">
+                            
+                            {/* Kotak 1: Skor Kebarangkalian */}
+                            <div className="rawatan-score-card">
+                                <span className="rawatan-score-label">Skor Kebarangkalian</span>
+                                <span className="rawatan-score-data">{formData.skor_kebarangkalian || "-"}</span>
                             </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Skor Impak:</span>
-                                <span className="rawatan-data-inline">{formData.skor_impak || "-"}</span>
+                            
+                            {/* Kotak 2: Skor Impak */}
+                            <div className="rawatan-score-card">
+                                <span className="rawatan-score-label">Skor Impak</span>
+                                <span className="rawatan-score-data">{formData.skor_impak || "-"}</span>
                             </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Tahap Risiko:</span>
-                                <span className="rawatan-data-inline rawatan-risk-score-text" 
+                            
+                            {/* Kotak 3: Tahap Risiko */}
+                            <div className="rawatan-score-card">
+                                <span className="rawatan-score-label">Tahap Risiko</span>
+                                <span className="rawatan-score-data rawatan-risk-score-text" 
                                     style={{ backgroundColor: riskColor }}
                                     data-level={formData.tahap_risiko}
                                 >
                                     {formData.tahap_risiko || "-"}
                                 </span>
                             </div>
-                            <div className="rawatan-flex-item">
+                        </div>
+
+                        {/* Baris Kedua: Status Risiko (Satu Baris Penuh) */}
+                        <div className="rawatan-flex-row" style={{ paddingTop: '0', paddingBottom: '15px' }}>
+                            <div className="rawatan-flex-item" style={{ flex: "1 1 100%", marginTop: '8px' }}>
                                 <span className="rawatan-label-inline">Status Risiko:</span>
-                                <span className="rawatan-data-inline">{formData.status_risiko || "-"}</span>
+                                <span className="rawatan-status-tag" data-status={formData.status_risiko}>
+                                    {formData.status_risiko || "-"}
+                                </span>
+                                <span className="rawatan-status-desc" data-status={formData.status_risiko}>
+                                    ({formData.status_risiko_desc || "-"})
+                                </span>
                             </div>
                         </div>
+
                     </div>
 
-                    {/* Rawatan Risiko */}
+
+                    {/* 4. Rawatan Risiko (Form Input) - Kekal Sama */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Rawatan Risiko</div>
                         <div style={{ padding: "10px 16px 16px 16px" }}>
@@ -273,6 +368,7 @@ export default function EditRawatan({ isOpen, risk, subsidiariList = [], onClose
                             <div style={{ marginBottom: "12px" }}>
                                 <label className="rawatan-label">Tempoh Jangkaan Siap:</label>
                                 <input
+                                    type="text" // Diubah kepada teks, kerana format date mungkin lari layout/tidak seragam
                                     value={formData.tempohSiap || ""}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
                                     className="rawatan-input"

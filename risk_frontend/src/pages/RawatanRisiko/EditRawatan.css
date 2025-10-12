@@ -104,36 +104,132 @@
 
 /* Item flex */
 .rawatan-flex-item {
-  flex: 1 1 180px;
+  /* Default untuk 4 item: 200px. */
+  flex: 1 1 200px;
 }
 
-/* Text label & data (DIRAPATKAN semula) */
+/* Text label & data (inline) */
 .rawatan-label-inline {
   font-weight: 600;
   color: #475569;
-  margin-right: 4px; /* Tambah semula margin kanan untuk jarak */
-  display: inline-block;
-  /* Buang min-width, biarkan flex item kendalikan lebar */
+  margin-right: 4px;
+  display: inline;
   font-size: 12.5px;
   letter-spacing: 0.1px;
-  vertical-align: middle;
+  vertical-align: top;
+  flex-shrink: 0;
 }
 
 /* Data sentiasa berwarna biru */
 .rawatan-data-inline {
-  display: inline-block;
+  display: inline;
   color: #1d4ed8;
   font-weight: 600;
   font-size: 12.5px;
   letter-spacing: 0.1px;
-  vertical-align: middle;
-  margin-left: 2px; /* Tambah semula margin kiri untuk jarak */
+  vertical-align: top;
+  margin-left: 2px;
   transition: none;
 }
 
-/* ======= Form & Dynamic Input Styles ======= */
+/* Perubahan Fokus untuk Punca & Kesan Risiko (sama seperti kod sebelum ini) */
+.rawatan-flex-row .rawatan-flex-item[style*="45%"] {
+  display: flex;
+  flex-direction: column;
+}
+.rawatan-flex-row .rawatan-flex-item[style*="45%"] > .rawatan-label-inline {
+  display: inline-block;
+  margin-bottom: 2px;
+  vertical-align: middle;
+}
+.rawatan-flex-item[style*="45%"] > ul {
+  margin-top: 0 !important;
+  flex-grow: 1;
+}
+.rawatan-flex-item ul li .rawatan-data-inline {
+  display: inline;
+}
 
-/* Label for input in Rawatan Risiko section */
+/* === STYLING BARU UNTUK SKOR RISIKO DALAM KOTAK (Kecilkan & Centre) === */
+
+.rawatan-score-row {
+  align-items: stretch;
+  /* Gunakan ini untuk menengahkan kotak secara keseluruhan */
+  justify-content: center;
+  gap: 16px; /* Jarak antara kotak */
+}
+
+.rawatan-score-card {
+  /* Saiz kecil dan pengetengan */
+  flex: 0 0 160px; /* Saiz tetap 160px. Flex-grow: 0 (tak berkembang), Flex-shrink: 0 (tak mengecil) */
+  background: #f7f9fc;
+  border: 1px solid #e3e8ee;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  /* Tengahkan kandungan di dalam kotak */
+  align-items: center;
+  justify-content: center;
+  min-height: 70px;
+  text-align: center;
+}
+
+.rawatan-score-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 4px;
+  letter-spacing: 0.1px;
+}
+
+.rawatan-score-data {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+/* Tahap Risiko Tag */
+.rawatan-score-data.rawatan-risk-score-text {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* Status Risiko Tag & Description */
+.rawatan-status-tag {
+  font-size: 13px;
+  font-weight: 600;
+  margin-right: 5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  color: white; /* Default white */
+}
+/* Warna untuk Status: YA */
+.rawatan-status-tag[data-status="Ya"] {
+  background-color: #dc2626; /* Merah terang */
+}
+/* Warna untuk Status: TIDAK */
+.rawatan-status-tag[data-status="Tidak"] {
+  background-color: #059669; /* Hijau terang */
+}
+
+/* Description (kurang terang) */
+.rawatan-status-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b; /* Warna kelabu/pudar */
+}
+
+/* === AKHIR STYLING BARU === */
+
+/* ======= Form & Dynamic Input Styles (Kekal Sama) ======= */
+
 .rawatan-label {
   font-weight: 600;
   color: #0f172a;
@@ -142,7 +238,6 @@
   font-size: 13px;
 }
 
-/* Input, Textarea & Select */
 .rawatan-input,
 .rawatan-textarea,
 .rawatan-select {
@@ -166,7 +261,6 @@
   resize: vertical;
 }
 
-/* Button utama */
 .rawatan-submit-button {
   padding: 10px 26px;
   background: #004071;
@@ -186,7 +280,6 @@
   box-shadow: 0 5px 16px rgba(0, 116, 200, 0.35);
 }
 
-/* Circle Buttons (Add/Delete) */
 .rawatan-button-circle {
   display: inline-flex;
   align-items: center;
@@ -201,7 +294,6 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Add */
 .rawatan-button-add {
   background-color: #0284c7;
   color: white;
@@ -211,7 +303,6 @@
   transform: scale(1.1);
 }
 
-/* Remove */
 .rawatan-button-remove {
   background-color: #ef4444;
   color: white;
@@ -221,7 +312,6 @@
   transform: scale(1.1);
 }
 
-/* Align input + buttons */
 .rawatan-input + .rawatan-button-circle {
   margin-left: 6px;
 }
@@ -232,19 +322,11 @@
   margin-top: 6px;
 }
 
-/* ======= Risk Score Tag Styling ======= */
+/* ======= Risk Score Tag Styling - Dikekalkan untuk Logic Warna Tahap Risiko ======= */
 
-.rawatan-risk-score-text {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-  color: #fff;
-  font-size: 12px;
-  text-align: center;
-}
+/* !!! PERUBAHAN DI SINI: Tukar warna Rendah dari Teal ke Emerald Green yang lebih standard */
 .rawatan-risk-score-text[data-level="Rendah"] {
-  background-color: #14b8a6;
+  background-color: #077451; /* Warna Hijau Zamrud (Emerald Green) */
 }
 .rawatan-risk-score-text[data-level="Sederhana"] {
   background-color: #eab308;
@@ -258,15 +340,6 @@
 
 /* ======= Responsive Adjustments ======= */
 
-@media (max-width: 1024px) {
-  .rawatan-flex-item {
-    flex: 1 1 140px;
-  }
-  .rawatan-modal-container > .rawatan-box-header-main {
-    font-size: 13px;
-    padding: 8px 10px;
-  }
-}
 @media (max-width: 768px) {
   .rawatan-flex-row {
     flex-direction: column;
@@ -275,6 +348,19 @@
   .rawatan-flex-item {
     min-width: 100%;
   }
+
+  /* Susun atur Skor di skrin kecil (menjadi satu baris ke bawah) */
+  .rawatan-score-row {
+    justify-content: flex-start;
+    flex-direction: column;
+  }
+
+  .rawatan-score-card {
+    flex: 1 1 100%;
+    align-items: flex-start; /* Alignment ke kiri semula */
+    text-align: left;
+  }
+
   .rawatan-label-inline {
     display: block;
     margin-right: 0;
@@ -282,5 +368,13 @@
   .rawatan-data-inline {
     display: block;
     margin-left: 0;
+  }
+
+  .rawatan-flex-row .rawatan-flex-item[style*="45%"] {
+    flex-direction: column;
+  }
+
+  .rawatan-flex-item ul li .rawatan-data-inline {
+    display: inline;
   }
 }
