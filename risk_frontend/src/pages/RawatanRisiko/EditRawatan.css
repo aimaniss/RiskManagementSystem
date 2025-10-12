@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* DITINGKATKAN: Kunci untuk mengatasi navbar atau elemen lain */
+  z-index: 9999;
   padding: 24px;
 }
 
@@ -32,7 +32,7 @@
 
 /* Header utama (biru korporat) */
 .rawatan-modal-container > .rawatan-box-header-main {
-  background: linear-gradient(135deg, #004071, #0369a1);
+  background: #004071; /* Warna Biru Gelap Solid */
   color: #ffffff;
   padding: 14px 18px;
   font-weight: 600;
@@ -83,14 +83,14 @@
 
 /* Section Header (gelap sikit) */
 .rawatan-box > .rawatan-box-header {
-  background: #f1f5f9;
+  background: #e2e8f0;
   color: #0f172a;
   font-weight: 600;
   font-size: 13.5px;
   padding: 10px 18px;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
-  border-bottom: 1px solid #e2e4e8;
+  border-bottom: 1px solid #cbd5e1;
   position: static;
 }
 
@@ -98,44 +98,38 @@
 .rawatan-flex-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 16px;
-}
-.rawatan-flex-item {
-  flex: 1 1 200px;
-  min-width: 160px;
+  gap: 8px 16px;
+  padding: 8px 16px;
 }
 
-/* Text label & data (rapat & kontras) */
+/* Item flex */
+.rawatan-flex-item {
+  flex: 1 1 180px;
+}
+
+/* Text label & data (DIRAPATKAN semula) */
 .rawatan-label-inline {
   font-weight: 600;
   color: #475569;
-  margin-right: 4px;
+  margin-right: 4px; /* Tambah semula margin kanan untuk jarak */
   display: inline-block;
-  min-width: 120px;
+  /* Buang min-width, biarkan flex item kendalikan lebar */
   font-size: 12.5px;
   letter-spacing: 0.1px;
   vertical-align: middle;
 }
 
-/* PERUBAHAN DI SINI: Data sentiasa berwarna biru */
+/* Data sentiasa berwarna biru */
 .rawatan-data-inline {
   display: inline-block;
-  color: #1d4ed8; /* TETAPKAN WARNA BIRU DI SINI */
+  color: #1d4ed8;
   font-weight: 600;
   font-size: 12.5px;
   letter-spacing: 0.1px;
   vertical-align: middle;
-  margin-left: 2px;
-  transition: none; /* Buang transisi jika tidak perlu */
+  margin-left: 2px; /* Tambah semula margin kiri untuk jarak */
+  transition: none;
 }
-
-/* GAYA HOVER INI DIBUANG: */
-/*
-.rawatan-box:hover .rawatan-data-inline {
-    color: #1d4ed8;
-}
-*/
 
 /* ======= Form & Dynamic Input Styles ======= */
 
@@ -283,8 +277,7 @@
   }
   .rawatan-label-inline {
     display: block;
-    min-width: auto;
-    margin-bottom: 2px;
+    margin-right: 0;
   }
   .rawatan-data-inline {
     display: block;
