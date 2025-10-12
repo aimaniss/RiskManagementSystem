@@ -31,14 +31,18 @@ const ListDisplay = ({ data }) => {
 // 💡 Keluarkan subsidiariList dari sini kerana kita menggunakan risk.nama_subsidiari
 export default function EditRawatan({ isOpen, risk, onClose, onSave }) { 
     const [formData, setFormData] = useState({
+        // Data input rawatan
         planTindakan: [""],
         kakitanganBertanggungjawab: [""],
         jenisKawalan: "",
-        tempohSiap: "",
-        punca: [], // Default array kosong
-        kesan: [], // Default array kosong
-        // Tambah key baru untuk menyimpan description status risiko
+        tempohSiap: "", 
+        // Data risiko (statik)
+        risiko_id: null, // Diambil dari prop risk
+        rawatan_id: null, // Diisi selepas fetch atau POST
+        punca: [], 
+        kesan: [],
         status_risiko_desc: "", 
+        // ... dan field risiko lain
     });
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const [saving, setSaving] = useState(false);
@@ -46,27 +50,30 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
     // Fetch data bila modal buka
     useEffect(() => {
         if (isOpen && risk?.risiko_id) {
-            // Set data risiko sedia ada (static)
-            setFormData(prev => ({ 
-                ...prev, 
+            // Reset state input untuk borang baru/kosong
+            setFormData({
+                planTindakan: [""],
+                kakitanganBertanggungjawab: [""],
+                jenisKawalan: "",
+                tempohSiap: "", 
+                risiko_id: risk.risiko_id, // Tetapkan ID risiko awal
+                rawatan_id: null, // Reset ID rawatan
+                punca: [], 
+                kesan: [],
+                status_risiko_desc: "",
+                // Tetapkan data risiko sedia ada (statik)
                 ...risk, 
-                // Pastikan key yang betul dari risk object diambil
-                skor_kebarangkalian: risk.skor_kebarangkalian,
-                skor_impak: risk.skor_impak,
-                tahap_risiko: risk.tahap_risiko
-            }));
+            });
 
             // Fetch data rawatan (dynamic)
             api
                 .get(`/rawatan/${risk.risiko_id}`)
                 .then(({ data }) => {
+                    // Data (risiko + rawatan) dikembalikan, mungkin rawatan_id adalah null
                     setFormData((prev) => ({
                         ...prev,
-                        rawatan_id: data.rawatan_id, // Penting untuk PUT request
-                        // Update subsidiari_id dan nama_subsidiari
-                        subsidiari_id: data.subsidiari_id || prev.subsidiari_id,
-                        nama_subsidiari: data.nama_subsidiari || prev.nama_subsidiari, 
-                        // Pastikan ia adalah array, jika tidak, set kepada [""]
+                        ...data, // Timpa maklumat risiko statik (risiko, punca, kesan, dll)
+                        rawatan_id: data.rawatan_id || null, // PENTING: Jika tiada rawatan, set kepada null
                         planTindakan: Array.isArray(data.plan_tindakan) && data.plan_tindakan.length > 0 ? data.plan_tindakan : [""],
                         jenisKawalan: data.jenis_kawalan || "",
                         tempohSiap: data.tempoh_jangkaan_siap || "",
@@ -74,15 +81,22 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             Array.isArray(data.kakitangan_bertanggungjawab) && data.kakitangan_bertanggungjawab.length > 0
                                 ? data.kakitangan_bertanggungjawab
                                 : [""],
-                        punca: data.punca || [], // <-- DATA PUNCA
-                        kesan: data.kesan || [], // <-- DATA KESAN
+                        punca: data.punca || [], 
+                        kesan: data.kesan || [], 
                     }));
                 })
-                .catch((err) => console.error("❌ Gagal fetch rawatan:", err));
+                .catch((err) => {
+                    // Jika 404 (Risiko wujud, tetapi rawatan tidak wujud), biarkan state seperti yang di-reset di atas.
+                    if (err.response?.status === 404) {
+                        console.log(`Risiko ${risk.risiko_id} ditemui, tetapi tiada rawatan sedia ada. Mod Tambah Baru.`);
+                    } else {
+                        console.error("❌ Gagal fetch rawatan:", err);
+                    }
+                });
         }
     }, [isOpen, risk]);
 
-    // Risk Matrix data
+    // Risk Matrix data (Kekal sama)
     const riskMatrix = {
         1: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
         2: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
@@ -93,7 +107,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
 
     const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
 
-    // Update warna tahap risiko automatik
+    // Update warna tahap risiko automatik (Kekal sama)
     useEffect(() => {
         const k = parseInt(formData.skor_kebarangkalian);
         const i = parseInt(formData.skor_impak);
@@ -105,7 +119,6 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
             const { label, color } = getRiskMatrix(k, i);
             
             status = label === "Rendah" ? "Tidak" : "Ya";
-            // LOGIK DESCRIPTION BARU
             statusDesc = status === "Ya" ? "Risiko memerlukan tindakan" : "Risiko rendah - tiada tindakan";
 
             setFormData((prev) => ({
@@ -128,45 +141,70 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
         }
     }, [formData.skor_kebarangkalian, formData.skor_impak]);
 
-    // Save function (tiada perubahan diperlukan pada logik ini)
+    // ** FUNGSI HANDLE SAVE UTAMA (LOGIK UPSERT) **
     const handleSave = async () => {
-        // Semak jika rawatan_id wujud (diperolehi dari fetch rawatan)
-        if (!formData.rawatan_id) {
-            alert("Ralat: ID rawatan tidak ditemui. Tidak dapat menyimpan.");
-            return;
-        }
-
-        // 1. Bersihkan array: buang string kosong dari planTindakan dan kakitanganBertanggungjawab
+        // 1. Bersihkan array: buang string kosong
         const cleanedPlanTindakan = formData.planTindakan.filter(p => p.trim() !== "");
         const cleanedKakitangan = formData.kakitanganBertanggungjawab.filter(k => k.trim() !== "");
 
-        // 2. Data payload untuk API
+        // 2. Tentukan sama ada ia adalah KEMASKINI (PUT) atau TAMBAH (POST)
+        const isUpdate = !!formData.rawatan_id; 
+
+        // 3. Semak Validasi Minimum untuk TAMBAH BARU
+        if (!isUpdate && (!formData.jenisKawalan || cleanedPlanTindakan.length === 0)) {
+            alert("Sila masukkan sekurang-kurangnya satu Plan Tindakan dan pilih Jenis Kawalan.");
+            return;
+        }
+
+        // 4. Bina Payload
         const payload = {
+            // risiko_id hanya digunakan oleh endpoint POST
+            risiko_id: formData.risiko_id, 
+            
             plan_tindakan: cleanedPlanTindakan, 
             jenis_kawalan: formData.jenisKawalan,
-            tempoh_jangkaan_siap: formData.tempohSiap,
+            // Kunci yang seragam digunakan untuk kedua-dua POST dan PUT endpoint
+            tempoh_jangkaan_siap: formData.tempohSiap, 
+
             kakitangan_bertanggungjawab: cleanedKakitangan,
         };
+
+        // 5. Tentukan URL dan Method
+        const url = isUpdate ? `/rawatan/${formData.rawatan_id}` : "/rawatan";
+        const method = isUpdate ? 'put' : 'post';
 
         try {
             setSaving(true);
             
-            // Lakukan PUT request menggunakan rawatan_id
-            await api.put(`/rawatan/${formData.rawatan_id}`, payload);
+            // Lakukan request (POST atau PUT)
+            const response = await api[method](url, payload);
             
-            // Panggil onSave dengan data yang dikemaskini
+            let finalRawatanId = formData.rawatan_id;
+
+            // Jika POST berjaya, ambil rawatan_id baru dari response.
+            if (!isUpdate && response.data?.rawatan_id) {
+                finalRawatanId = response.data.rawatan_id;
+                // Update state supaya jika user tekan save kali kedua, ia akan jadi PUT
+                setFormData(prev => ({ ...prev, rawatan_id: finalRawatanId })); 
+            }
+
+            // Panggil onSave untuk mengemaskini paparan utama (table)
             onSave({ 
                 ...risk, 
                 ...formData, 
+                rawatan_id: finalRawatanId, // Gunakan ID baru/sedia ada
+                jenis_kawalan: formData.jenisKawalan,
+                tempoh_jangkaan_siap: formData.tempohSiap,
                 plan_tindakan: cleanedPlanTindakan,
                 kakitangan_bertanggungjawab: cleanedKakitangan,
                 risk_color: riskColor 
             });
 
             onClose();
+            alert(`Rawatan risiko berjaya di${isUpdate ? 'kemaskini' : 'tambah'}!`);
         } catch (err) {
-            console.error("❌ Gagal update rawatan:", err);
-            alert("Gagal menyimpan perubahan. Sila cuba lagi.");
+            console.error("❌ Gagal menyimpan rawatan:", err.response?.data?.message || err.message);
+            alert(`Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}`);
         } finally {
             setSaving(false);
         }
@@ -180,7 +218,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
             <div className="rawatan-modal-container">
                 {/* Header Modal */}
                 <div className="rawatan-box-header-main">
-                    <span>Kemaskini Rawatan Risiko</span>
+                    <span>{formData.rawatan_id ? "Kemaskini Rawatan Risiko" : "Tambah Rawatan Risiko Baru"}</span>
                     <button className="rawatan-close-btn" onClick={onClose}>
                         <X size={16} />
                     </button>
@@ -194,6 +232,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                     }}
                 >
                     {/* 1. Maklumat Risiko */}
+                    {/* ... (Bahagian Maklumat Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Maklumat Risiko</div>
                         <div className="rawatan-flex-row">
@@ -211,7 +250,6 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                     {formData.separuh_tahun === 1 ? "Pertama" : formData.separuh_tahun === 2 ? "Kedua" : "-"}
                                 </span>
                             </div>
-                            {/* SUBSIDIARI - Disemak semula untuk memastikan ia tidak ke bawah */}
                             <div className="rawatan-flex-item">
                                 <span className="rawatan-label-inline">Subsidiari:</span>
                                 <span className="rawatan-data-inline">{formData.nama_subsidiari || "-"}</span>
@@ -220,6 +258,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                     </div>
                     
                     {/* 2. Pengenalpastian Risiko (Termasuk Punca & Kesan) */}
+                    {/* ... (Bahagian Pengenalpastian Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Pengenalpastian Risiko</div>
                         <div className="rawatan-flex-row">
@@ -250,7 +289,8 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         </div>
                     </div>
                     
-                    {/* 3. Penilaian Risiko - Perubahan Struktur Utama di sini */}
+                    {/* 3. Penilaian Risiko */}
+                    {/* ... (Bahagian Penilaian Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Penilaian Risiko</div>
                         
@@ -297,7 +337,8 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                     </div>
 
 
-                    {/* 4. Rawatan Risiko (Form Input) - Kekal Sama */}
+                    {/* 4. Rawatan Risiko (Form Input) */}
+                    {/* ... (Bahagian Rawatan Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Rawatan Risiko</div>
                         <div style={{ padding: "10px 16px 16px 16px" }}>
@@ -368,7 +409,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             <div style={{ marginBottom: "12px" }}>
                                 <label className="rawatan-label">Tempoh Jangkaan Siap:</label>
                                 <input
-                                    type="text" // Diubah kepada teks, kerana format date mungkin lari layout/tidak seragam
+                                    type="text" 
                                     value={formData.tempohSiap || ""}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
                                     className="rawatan-input"
@@ -422,13 +463,18 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                     </div>
                                 ))}
                             </div>
+                            
+                            {/* Butang Simpan */}
+                            <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                                <button 
+                                    type="submit" 
+                                    className="rawatan-save-btn"
+                                    disabled={saving}
+                                >
+                                    {saving ? 'Menyimpan...' : (formData.rawatan_id ? 'Simpan Kemas Kini' : 'Tambah Rawatan')}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-
-                    <div style={{ textAlign: "center", marginTop: "16px" }}>
-                        <button type="submit" className="rawatan-submit-button" disabled={saving}>
-                            {saving ? "Menyimpan..." : "Simpan Perubahan"}
-                        </button>
                     </div>
                 </form>
             </div>
