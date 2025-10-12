@@ -1,79 +1,97 @@
 import { useState, useEffect } from "react";
-import { X, Trash2, Plus } from "lucide-react";
+import { X, Trash2, Plus, BookOpen, Save } from "lucide-react"; 
 import "./EditRawatan.css";
 // Gantikan dengan laluan fail API anda yang betul
 import api from "../../api/api"; 
 
+// =======================================================
+// IMPORT KOMPONEN PANDUANMODAL DARI FOLDER SEBELAH
+// =======================================================
+import PanduanModal from '../Panduan/Panduan'; 
+// =======================================================
+
+
 // Komponen Pembantu untuk Memaparkan Senarai Bernombor
 const ListDisplay = ({ data }) => {
-    if (!data) return <span>-</span>;
-    // Semak sama ada data adalah array
-    if (Array.isArray(data)) {
-        // Semak jika array kosong atau hanya mengandungi string kosong
-        if (data.length === 0 || (data.length === 1 && data[0]?.trim() === "")) return <span>-</span>;
-        return (
-            <ul style={{ listStyleType: 'none', paddingLeft: '0', margin: '0' }}>
-                {data.map((item, index) => (
-                    <li key={index} style={{ marginBottom: '2px', lineHeight: '1.2' }}>
-                        <span className="rawatan-data-inline" style={{ display: 'inline' }}>
-                            {`${index + 1}. ${item}`}
-                        </span>
-                    </li>
-                ))}
-            </ul>
-        );
-    }
-    // Jika bukan array (String), gunakan format biasa
-    return <span className="rawatan-data-inline">{data || "-"}</span>;
+    // Pastikan data adalah array dan ditapis (filter) untuk buang item kosong
+    const cleanedData = Array.isArray(data) ? data.filter(item => item?.trim() !== "") : [];
+
+    if (cleanedData.length === 0) return <span style={{ color: '#64748b' }}>-</span>;
+
+    return (
+        <ul style={{ listStyleType: 'none', paddingLeft: '0', margin: '0' }}>
+            {cleanedData.map((item, index) => (
+                <li key={index} className="rawatan-list-item">
+                    <span className="rawatan-data-inline">
+                        {`${index + 1}. ${item}`}
+                    </span>
+                </li>
+            ))}
+        </ul>
+    );
 };
 
 
-// 💡 Keluarkan subsidiariList dari sini kerana kita menggunakan risk.nama_subsidiari
+// Risk Matrix data
+const riskMatrix = {
+    1: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
+    2: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
+    3: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Tinggi", color: "#f97316" } },
+    4: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
+    5: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Tinggi", color: "#f97316" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Sangat Tinggi", color: "#ef4444" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
+};
+
+const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
+
+
 export default function EditRawatan({ isOpen, risk, onClose, onSave }) { 
+    const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
     const [formData, setFormData] = useState({
         // Data input rawatan
         planTindakan: [""],
         kakitanganBertanggungjawab: [""],
         jenisKawalan: "",
         tempohSiap: "", 
-        // Data risiko (statik)
-        risiko_id: null, // Diambil dari prop risk
-        rawatan_id: null, // Diisi selepas fetch atau POST
+        // Data risiko (statik - untuk display)
+        risiko_id: null, 
+        rawatan_id: null, 
         punca: [], 
         kesan: [],
+        skor_kebarangkalian: null,
+        skor_impak: null,
+        // Ini akan di-overwrite oleh useEffect
+        tahap_risiko: "", 
+        // Perubahan: status_risiko = YA/TIDAK, status_risiko_desc = description
+        status_risiko: "", 
         status_risiko_desc: "", 
-        // ... dan field risiko lain
     });
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const [saving, setSaving] = useState(false);
 
-    // Fetch data bila modal buka
+    // Fetch data bila modal buka & update Risk Status bila skor berubah
     useEffect(() => {
-        if (isOpen && risk?.risiko_id) {
-            // Reset state input untuk borang baru/kosong
+        if (!isOpen) return; // Keluar jika modal ditutup
+
+        if (risk?.risiko_id) {
+            // 1. Reset state input awal (penting jika modal digunakan semula)
             setFormData({
                 planTindakan: [""],
                 kakitanganBertanggungjawab: [""],
                 jenisKawalan: "",
                 tempohSiap: "", 
-                risiko_id: risk.risiko_id, // Tetapkan ID risiko awal
-                rawatan_id: null, // Reset ID rawatan
-                punca: [], 
-                kesan: [],
-                status_risiko_desc: "",
-                // Tetapkan data risiko sedia ada (statik)
-                ...risk, 
+                risiko_id: risk.risiko_id, 
+                rawatan_id: null, // Asumsi tiada rawatan lagi
+                ...risk, // Spread data risiko sedia ada (no_rujukan, skor_kebarangkalian, dll)
             });
 
-            // Fetch data rawatan (dynamic)
+            // 2. Fetch data rawatan (dynamic)
             api
                 .get(`/rawatan/${risk.risiko_id}`)
                 .then(({ data }) => {
-                    // Data (risiko + rawatan) dikembalikan, mungkin rawatan_id adalah null
+                    // Update dengan data rawatan jika ada
                     setFormData((prev) => ({
                         ...prev,
-                        ...data, // Timpa maklumat risiko statik (risiko, punca, kesan, dll)
-                        rawatan_id: data.rawatan_id || null, // PENTING: Jika tiada rawatan, set kepada null
+                        rawatan_id: data.rawatan_id || null, 
                         planTindakan: Array.isArray(data.plan_tindakan) && data.plan_tindakan.length > 0 ? data.plan_tindakan : [""],
                         jenisKawalan: data.jenis_kawalan || "",
                         tempohSiap: data.tempoh_jangkaan_siap || "",
@@ -81,55 +99,45 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             Array.isArray(data.kakitangan_bertanggungjawab) && data.kakitangan_bertanggungjawab.length > 0
                                 ? data.kakitangan_bertanggungjawab
                                 : [""],
-                        punca: data.punca || [], 
-                        kesan: data.kesan || [], 
+                        // Pastikan data risiko statik diserap dari hasil fetch jika API mengembalikan data gabungan (risiko + rawatan)
+                        punca: data.punca || prev.punca, 
+                        kesan: data.kesan || prev.kesan, 
                     }));
                 })
                 .catch((err) => {
-                    // Jika 404 (Risiko wujud, tetapi rawatan tidak wujud), biarkan state seperti yang di-reset di atas.
-                    if (err.response?.status === 404) {
-                        console.log(`Risiko ${risk.risiko_id} ditemui, tetapi tiada rawatan sedia ada. Mod Tambah Baru.`);
-                    } else {
+                    if (err.response?.status !== 404) {
                         console.error("❌ Gagal fetch rawatan:", err);
                     }
+                    // Jika 404, biarkan state seperti yang di-reset di atas.
                 });
         }
     }, [isOpen, risk]);
 
-    // Risk Matrix data (Kekal sama)
-    const riskMatrix = {
-        1: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
-        2: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
-        3: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Tinggi", color: "#f97316" } },
-        4: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
-        5: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Tinggi", color: "#f97316" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Sangat Tinggi", color: "#ef4444" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
-    };
-
-    const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-
-    // Update warna tahap risiko automatik (Kekal sama)
+    // Update warna tahap risiko automatik
     useEffect(() => {
         const k = parseInt(formData.skor_kebarangkalian);
         const i = parseInt(formData.skor_impak);
         
-        let status = "";
-        let statusDesc = "";
-
         if (k && i) {
             const { label, color } = getRiskMatrix(k, i);
             
-            status = label === "Rendah" ? "Tidak" : "Ya";
-            statusDesc = status === "Ya" ? "Risiko memerlukan tindakan" : "Risiko rendah - tiada tindakan";
+            // >>> PERUBAHAN LOGIK STATUS RISIKO <<<
+            // Status 'Perlu' (YA) jika Tinggi atau Sangat Tinggi
+            const isRequired = (label === "Tinggi" || label === "Sangat Tinggi");
+            
+            const status = isRequired ? "YA" : "TIDAK";
+            const statusDesc = isRequired ? "Risiko memerlukan tindakan segera dan rekod rawatan." : "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
 
             setFormData((prev) => ({
                 ...prev,
                 skor_risiko: k * i,
                 tahap_risiko: label,
                 status_risiko: status,
-                status_risiko_desc: statusDesc, // Simpan description
+                status_risiko_desc: statusDesc,
             }));
             setRiskColor(color);
         } else {
+            // Reset jika skor tiada
             setFormData((prev) => ({
                 ...prev,
                 skor_risiko: "",
@@ -150,22 +158,25 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
         // 2. Tentukan sama ada ia adalah KEMASKINI (PUT) atau TAMBAH (POST)
         const isUpdate = !!formData.rawatan_id; 
 
-        // 3. Semak Validasi Minimum untuk TAMBAH BARU
-        if (!isUpdate && (!formData.jenisKawalan || cleanedPlanTindakan.length === 0)) {
-            alert("Sila masukkan sekurang-kurangnya satu Plan Tindakan dan pilih Jenis Kawalan.");
+        // 3. Semak Validasi Minimum 
+        if (
+            cleanedPlanTindakan.length === 0 || 
+            cleanedKakitangan.length === 0 || // PERUBAHAN DI SINI: Semak kakitangan
+            !formData.jenisKawalan || 
+            !formData.tempohSiap
+        ) {
+            // PERUBAHAN DI SINI: Kemas kini mesej alert
+            alert("Sila masukkan sekurang-kurangnya satu **Plan Tindakan** dan **Kakitangan Bertanggungjawab**, pilih **Jenis Kawalan**, dan isikan **Tempoh Jangkaan Siap**.");
             return;
         }
 
         // 4. Bina Payload
         const payload = {
-            // risiko_id hanya digunakan oleh endpoint POST
+            // risiko_id hanya untuk POST (tambah baru)
             risiko_id: formData.risiko_id, 
-            
             plan_tindakan: cleanedPlanTindakan, 
             jenis_kawalan: formData.jenisKawalan,
-            // Kunci yang seragam digunakan untuk kedua-dua POST dan PUT endpoint
             tempoh_jangkaan_siap: formData.tempohSiap, 
-
             kakitangan_bertanggungjawab: cleanedKakitangan,
         };
 
@@ -176,23 +187,20 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
         try {
             setSaving(true);
             
-            // Lakukan request (POST atau PUT)
             const response = await api[method](url, payload);
             
-            let finalRawatanId = formData.rawatan_id;
+            let finalRawatanId = isUpdate ? formData.rawatan_id : response.data?.rawatan_id;
 
-            // Jika POST berjaya, ambil rawatan_id baru dari response.
             if (!isUpdate && response.data?.rawatan_id) {
-                finalRawatanId = response.data.rawatan_id;
-                // Update state supaya jika user tekan save kali kedua, ia akan jadi PUT
+                // Untuk POST, update rawatan_id untuk sesi ini
                 setFormData(prev => ({ ...prev, rawatan_id: finalRawatanId })); 
             }
 
-            // Panggil onSave untuk mengemaskini paparan utama (table)
+            // Panggil onSave dengan data terbaru
             onSave({ 
-                ...risk, 
+                ...risk, // Pastikan data risiko asal dikekalkan
                 ...formData, 
-                rawatan_id: finalRawatanId, // Gunakan ID baru/sedia ada
+                rawatan_id: finalRawatanId, 
                 jenis_kawalan: formData.jenisKawalan,
                 tempoh_jangkaan_siap: formData.tempohSiap,
                 plan_tindakan: cleanedPlanTindakan,
@@ -219,7 +227,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                 {/* Header Modal */}
                 <div className="rawatan-box-header-main">
                     <span>{formData.rawatan_id ? "Kemaskini Rawatan Risiko" : "Tambah Rawatan Risiko Baru"}</span>
-                    <button className="rawatan-close-btn" onClick={onClose}>
+                    <button className="rawatan-close-btn" onClick={onClose} aria-label="Tutup Borang">
                         <X size={16} />
                     </button>
                 </div>
@@ -231,10 +239,20 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         handleSave();
                     }}
                 >
-                    {/* 1. Maklumat Risiko */}
-                    {/* ... (Bahagian Maklumat Risiko Kekal Sama) ... */}
+                    {/* 2. Maklumat Risiko */}
                     <div className="rawatan-box">
-                        <div className="rawatan-box-header">Maklumat Risiko</div>
+                        <div className="rawatan-box-header rawatan-risk-header">
+                            <span>Maklumat Risiko</span>
+                            {/* KEDUDUKAN BARU BUTTON PANDUAN (kanan hujung) */}
+                            <button 
+                                type="button" 
+                                className="rawatan-panduan-btn" 
+                                onClick={() => setIsPanduanOpen(true)}
+                            >
+                                <BookOpen size={16} style={{ marginRight: '6px' }} />
+                                Panduan 
+                            </button>
+                        </div>
                         <div className="rawatan-flex-row">
                             <div className="rawatan-flex-item">
                                 <span className="rawatan-label-inline">No Rujukan:</span>
@@ -257,8 +275,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         </div>
                     </div>
                     
-                    {/* 2. Pengenalpastian Risiko (Termasuk Punca & Kesan) */}
-                    {/* ... (Bahagian Pengenalpastian Risiko Kekal Sama) ... */}
+                    {/* ... (Bahagian Pengenalpastian & Penilaian Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Pengenalpastian Risiko</div>
                         <div className="rawatan-flex-row">
@@ -277,7 +294,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         </div>
 
                         {/* Punca & Kesan Risiko Bersebelahan */}
-                        <div className="rawatan-flex-row" style={{ marginTop: '10px' }}>
+                        <div className="rawatan-flex-row rawatan-list-section">
                             <div className="rawatan-flex-item" style={{ flex: "1 1 45%" }}>
                                 <span className="rawatan-label-inline">Punca Risiko:</span>
                                 <ListDisplay data={formData.punca} />
@@ -290,30 +307,26 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                     </div>
                     
                     {/* 3. Penilaian Risiko */}
-                    {/* ... (Bahagian Penilaian Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
                         <div className="rawatan-box-header">Penilaian Risiko</div>
                         
                         {/* Baris Pertama: Skor & Tahap */}
                         <div className="rawatan-flex-row rawatan-score-row">
                             
-                            {/* Kotak 1: Skor Kebarangkalian */}
                             <div className="rawatan-score-card">
                                 <span className="rawatan-score-label">Skor Kebarangkalian</span>
                                 <span className="rawatan-score-data">{formData.skor_kebarangkalian || "-"}</span>
                             </div>
                             
-                            {/* Kotak 2: Skor Impak */}
                             <div className="rawatan-score-card">
                                 <span className="rawatan-score-label">Skor Impak</span>
                                 <span className="rawatan-score-data">{formData.skor_impak || "-"}</span>
                             </div>
                             
-                            {/* Kotak 3: Tahap Risiko */}
                             <div className="rawatan-score-card">
-                                <span className="rawatan-score-label">Tahap Risiko</span>
+                                <span className="rawatan-score-label">Skor Risiko</span>
                                 <span className="rawatan-score-data rawatan-risk-score-text" 
-                                    style={{ backgroundColor: riskColor }}
+                                    style={{ backgroundColor: riskColor, color: riskColor === "#f1f5f9" ? '#475569' : '#ffffff' }}
                                     data-level={formData.tahap_risiko}
                                 >
                                     {formData.tahap_risiko || "-"}
@@ -322,14 +335,17 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         </div>
 
                         {/* Baris Kedua: Status Risiko (Satu Baris Penuh) */}
-                        <div className="rawatan-flex-row" style={{ paddingTop: '0', paddingBottom: '15px' }}>
+                        <div className="rawatan-flex-row rawatan-status-row">
                             <div className="rawatan-flex-item" style={{ flex: "1 1 100%", marginTop: '8px' }}>
-                                <span className="rawatan-label-inline">Status Risiko:</span>
+                                {/* PERUBAHAN LABEL: Status Rawatan Diperlukan -> Status Risiko */}
+                                <span className="rawatan-label-inline">Status Risiko:</span> 
                                 <span className="rawatan-status-tag" data-status={formData.status_risiko}>
-                                    {formData.status_risiko || "-"}
+                                    {/* OUTPUT DARI LOGIK: YA/TIDAK */}
+                                    {formData.status_risiko || "-"} 
                                 </span>
-                                <span className="rawatan-status-desc" data-status={formData.status_risiko}>
-                                    ({formData.status_risiko_desc || "-"})
+                                {/* DESCRIPTION DARI LOGIK */}
+                                <span className="rawatan-status-desc">
+                                    ({formData.status_risiko_desc || "Tiada data skor"})
                                 </span>
                             </div>
                         </div>
@@ -338,15 +354,15 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
 
 
                     {/* 4. Rawatan Risiko (Form Input) */}
-                    {/* ... (Bahagian Rawatan Risiko Kekal Sama) ... */}
                     <div className="rawatan-box">
-                        <div className="rawatan-box-header">Rawatan Risiko</div>
-                        <div style={{ padding: "10px 16px 16px 16px" }}>
-                            {/* Plan Tindakan */}
-                            <div style={{ marginBottom: "12px" }}>
-                                <label className="rawatan-label">Plan Tindakan:</label>
+                        <div className="rawatan-box-header">Rawatan Risiko </div>
+                        <div style={{ padding: "10px 18px 18px 18px" }}> {/* Tingkatkan padding sikit */}
+                            
+                            {/* Plan Tindakan - Dynamic Input List */}
+                            <div style={{ marginBottom: "16px" }}>
+                                <label className="rawatan-label rawatan-label-required">Pelan Tindakan:</label>
                                 {formData.planTindakan.map((p, idx) => (
-                                    <div key={idx} className="rawatan-dynamic-row">
+                                    <div key={`plan-${idx}`} className="rawatan-dynamic-row">
                                         <input
                                             value={p}
                                             onChange={(e) => {
@@ -354,8 +370,9 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                 newList[idx] = e.target.value;
                                                 setFormData((prev) => ({ ...prev, planTindakan: newList }));
                                             }}
-                                            placeholder={`Plan Tindakan ${idx + 1}`}
+                                            placeholder={`Langkah Tindakan ${idx + 1}`}
                                             className="rawatan-input"
+                                            required={idx === 0} // Buat sekurang-kurangnya yang pertama wajib
                                         />
                                         {formData.planTindakan.length > 1 && (
                                             <button
@@ -367,10 +384,12 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                     }))
                                                 }
                                                 className="rawatan-button-circle rawatan-button-remove"
+                                                aria-label="Buang Plan Tindakan"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
                                         )}
+                                        {/* Hanya tambah butang plus di input terakhir */}
                                         {idx === formData.planTindakan.length - 1 && (
                                             <button
                                                 type="button"
@@ -380,7 +399,8 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                         planTindakan: [...prev.planTindakan, ""],
                                                     }))
                                                 }
-                                                className="rawatan-button-circle rawatan-button-add"
+                                                className="rawatan-button-circle rawatan-button-add rawatan-button-add-blue" // TAMBAH CLASS BARU
+                                                aria-label="Tambah Plan Tindakan"
                                             >
                                                 <Plus size={16} />
                                             </button>
@@ -389,39 +409,41 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                 ))}
                             </div>
 
-                            {/* Jenis Kawalan */}
-                            <div style={{ marginBottom: "12px" }}>
-                                <label className="rawatan-label">Jenis Kawalan:</label>
+                            {/* Jenis Kawalan - Select */}
+                            <div style={{ marginBottom: "16px" }}>
+                                <label className="rawatan-label rawatan-label-required">Jenis Kawalan:</label>
                                 <select
                                     value={formData.jenisKawalan || ""}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, jenisKawalan: e.target.value }))}
                                     className="rawatan-select"
+                                    required
                                 >
-                                    <option value="">-- Pilih Jenis Kawalan --</option>
-                                    <option value="Terima">Terima – Menyediakan pelan</option>
-                                    <option value="Kurang">Kurang – Mengurangkan kebarangkalian / impak risiko</option>
-                                    <option value="Pindah">Pindah – Pindahkan risiko kepada pihak ketiga</option>
-                                    <option value="Elak">Elak – Hentikan atau ubah aktiviti yang menyebabkan risiko</option>
+                                    <option value="">-- Pilih Strategi Kawalan --</option>
+                                    <option value="Terima">Terima – Menerima risiko </option>
+                                    <option value="Kurang">Kurang – Mengurangkan kebarangkalian dan impak risiko</option>
+                                    <option value="Pindah">Pindah – Pindahkan risiko </option>
+                                    <option value="Elak">Elak – Berhenti menjalankan aktiviti / program atau mengubah objektif aktiviti yang boleh menyebabkan risiko</option>
                                 </select>
                             </div>
 
-                            {/* Tempoh Jangkaan Siap */}
-                            <div style={{ marginBottom: "12px" }}>
-                                <label className="rawatan-label">Tempoh Jangkaan Siap:</label>
+                            {/* Tempoh Jangkaan Siap - Input Text */}
+                            <div style={{ marginBottom: "16px" }}>
+                                <label className="rawatan-label rawatan-label-required">Tempoh Jangkaan Siap Tindakan:</label>
                                 <input
                                     type="text" 
                                     value={formData.tempohSiap || ""}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
                                     className="rawatan-input"
-                                    placeholder="Cth: 2 bulan / 31 Dis 2024"
+                                    placeholder="Cth: 2 bulan "
+                                    required
                                 />
                             </div>
 
-                            {/* Kakitangan Bertanggungjawab */}
-                            <div style={{ marginBottom: "12px" }}>
-                                <label className="rawatan-label">Kakitangan Bertanggungjawab:</label>
+                            {/* Kakitangan Bertanggungjawab - Dynamic Input List */}
+                            <div style={{ marginBottom: "20px" }}>
+                                <label className="rawatan-label rawatan-label-required">Kakitangan Bertanggungjawab:</label> {/* PERUBAHAN DI SINI: Tambah rawatan-label-required */}
                                 {formData.kakitanganBertanggungjawab.map((s, idx) => (
-                                    <div key={idx} className="rawatan-dynamic-row">
+                                    <div key={`kakitangan-${idx}`} className="rawatan-dynamic-row">
                                         <input
                                             value={s}
                                             onChange={(e) => {
@@ -429,8 +451,9 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                 newList[idx] = e.target.value;
                                                 setFormData((prev) => ({ ...prev, kakitanganBertanggungjawab: newList }));
                                             }}
-                                            placeholder={`Kakitangan ${idx + 1}`}
+                                            placeholder={`Nama kakitangan / jawatan ${idx + 1}`}
                                             className="rawatan-input"
+                                            required={idx === 0} // PERUBAHAN DI SINI: Jadikan input pertama wajib
                                         />
                                         {formData.kakitanganBertanggungjawab.length > 1 && (
                                             <button
@@ -442,6 +465,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                     }))
                                                 }
                                                 className="rawatan-button-circle rawatan-button-remove"
+                                                aria-label="Buang Kakitangan"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -455,7 +479,8 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                                         kakitanganBertanggungjawab: [...prev.kakitanganBertanggungjawab, ""],
                                                     }))
                                                 }
-                                                className="rawatan-button-circle rawatan-button-add"
+                                                className="rawatan-button-circle rawatan-button-add rawatan-button-add-blue" // TAMBAH CLASS BARU
+                                                aria-label="Tambah Kakitangan"
                                             >
                                                 <Plus size={16} />
                                             </button>
@@ -463,20 +488,28 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                     </div>
                                 ))}
                             </div>
-                            
-                            {/* Butang Simpan */}
-                            <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                                <button 
-                                    type="submit" 
-                                    className="rawatan-save-btn"
+
+                            {/* Butang Simpan (Biru Pekat) */}
+                            <div className="rawatan-save-btn-wrapper">
+                                <button
+                                    type="submit"
+                                    className="rawatan-save-btn-dark-blue" // CLASS rawatan-save-btn TELAH DIBUANG
                                     disabled={saving}
                                 >
-                                    {saving ? 'Menyimpan...' : (formData.rawatan_id ? 'Simpan Kemas Kini' : 'Tambah Rawatan')}
+                                    {saving ? "Menyimpan..." : (
+                                        <>
+                                            <Save size={18} style={{ marginRight: '8px' }} />
+                                            Simpan Kemaskini
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </form>
+                
+                {/* Modal Panduan (Tutup bila selesai) */}
+                {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
             </div>
         </div>
     );

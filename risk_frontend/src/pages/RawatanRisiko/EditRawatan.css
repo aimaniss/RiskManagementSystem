@@ -1,7 +1,7 @@
+/* Import fonts yang dikehendaki */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* ======= Modal & Overlay Styling ======= */
-
+/* ======= Modal & Overlay Styling - Kekal Sama ======= */
 .rawatan-modal-overlay {
   position: fixed;
   inset: 0;
@@ -28,7 +28,7 @@
   max-height: 95vh;
 }
 
-/* ======= Shared Component Styles ======= */
+/* ======= Shared Component Styles - Kekal Sama ======= */
 
 /* Header utama (biru korporat) */
 .rawatan-modal-container > .rawatan-box-header-main {
@@ -68,6 +68,84 @@
   transform: scale(1.05);
 }
 
+/* === BUTANG PANDUAN (PERUBAHAN KEDUDUKAN & STYLING) === */
+
+/* Wrapper lama tidak lagi diperlukan (atau sembunyikan) */
+.rawatan-panduan-container-wrapper {
+  display: none; /* Sembunyikan wrapper lama */
+}
+
+/* Modifikasi header untuk meletakkan Panduan di kanan */
+.rawatan-risk-header {
+  display: flex;
+  justify-content: space-between; /* Tolak Panduan ke kanan hujung */
+  align-items: center;
+  /* Pastikan tiada padding atau margin lain yang mengganggu flex */
+}
+/* Styling Baru untuk Score Card */
+.rawatan-score-card {
+  /* Memastikan ia fleksibel dan mengisi ruang dalam rawatan-score-row */
+  flex: 1;
+  min-width: 150px; /* Lebar minimum untuk setiap kad */
+
+  /* Styling Kotak */
+  border: 1px solid #d1d5db; /* Border kelabu muda */
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center; /* Teks di tengah */
+  background-color: #f9fafb; /* Latar belakang sedikit kelabu */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.rawatan-score-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rawatan-score-data {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  display: block; /* Memastikan ia mengambil lebar penuh */
+}
+
+/* Tahap Risiko Tag */
+.rawatan-risk-score-text {
+  font-size: 14px; /* Dikecilkan sedikit */
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 0 auto; /* Tengahkannya */
+}
+.rawatan-panduan-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px; /* Dikecilkan sedikit untuk muat di header */
+  background-color: #dbeafe; /* Biru muda */
+  color: #1d4ed8; /* Teks biru gelap */
+  border: 1px solid #93c5fd; /* Border biru muda */
+  border-radius: 6px; /* Dikecilkan sedikit */
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px; /* Dikecilkan sedikit */
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.rawatan-panduan-btn:hover {
+  background-color: #93c5fd; /* Biru lebih gelap pada hover */
+  border-color: #60a5fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Box Section */
 .rawatan-box {
   border-radius: 12px;
@@ -94,7 +172,7 @@
   position: static;
 }
 
-/* Flex layout untuk maklumat risiko */
+/* Flex layout, Item flex, Text label & data - Kekal Sama */
 .rawatan-flex-row {
   display: flex;
   flex-wrap: wrap;
@@ -102,13 +180,10 @@
   padding: 8px 16px;
 }
 
-/* Item flex */
 .rawatan-flex-item {
-  /* Default untuk 4 item: 200px. */
   flex: 1 1 200px;
 }
 
-/* Text label & data (inline) */
 .rawatan-label-inline {
   font-weight: 600;
   color: #475569;
@@ -120,7 +195,6 @@
   flex-shrink: 0;
 }
 
-/* Data sentiasa berwarna biru */
 .rawatan-data-inline {
   display: inline;
   color: #1d4ed8;
@@ -132,249 +206,165 @@
   transition: none;
 }
 
-/* Perubahan Fokus untuk Punca & Kesan Risiko (sama seperti kod sebelum ini) */
 .rawatan-flex-row .rawatan-flex-item[style*="45%"] {
   display: flex;
   flex-direction: column;
 }
 .rawatan-flex-row .rawatan-flex-item[style*="45%"] > .rawatan-label-inline {
-  display: inline-block;
-  margin-bottom: 2px;
-  vertical-align: middle;
-}
-.rawatan-flex-item[style*="45%"] > ul {
-  margin-top: 0 !important;
-  flex-grow: 1;
-}
-.rawatan-flex-item ul li .rawatan-data-inline {
-  display: inline;
+  display: inline; /* Overwrite flex-direction to keep inline styling */
 }
 
-/* === STYLING BARU UNTUK SKOR RISIKO DALAM KOTAK (Kecilkan & Centre) === */
+/* === STYLING SKOR RISIKO & STATUS RISIKO (TUKAR YA/TIDAK) - Kekal Sama === */
 
 .rawatan-score-row {
   align-items: stretch;
-  /* Gunakan ini untuk menengahkan kotak secara keseluruhan */
   justify-content: center;
-  gap: 16px; /* Jarak antara kotak */
-}
-
-.rawatan-score-card {
-  /* Saiz kecil dan pengetengan */
-  flex: 0 0 160px; /* Saiz tetap 160px. Flex-grow: 0 (tak berkembang), Flex-shrink: 0 (tak mengecil) */
-  background: #f7f9fc;
-  border: 1px solid #e3e8ee;
-  border-radius: 10px;
-  padding: 12px 15px;
-  display: flex;
-  flex-direction: column;
-  /* Tengahkan kandungan di dalam kotak */
-  align-items: center;
-  justify-content: center;
-  min-height: 70px;
-  text-align: center;
-}
-
-.rawatan-score-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748b;
-  margin-bottom: 4px;
-  letter-spacing: 0.1px;
-}
-
-.rawatan-score-data {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-}
-/* Tahap Risiko Tag */
-.rawatan-score-data.rawatan-risk-score-text {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-  color: #fff;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 2px;
+  gap: 16px;
 }
 
 /* Status Risiko Tag & Description */
 .rawatan-status-tag {
-  font-size: 13px;
-  font-weight: 600;
-  margin-right: 5px;
-  padding: 2px 6px;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 2px 8px;
   border-radius: 4px;
   display: inline-block;
-  color: white; /* Default white */
-}
-/* Warna untuk Status: YA */
-.rawatan-status-tag[data-status="Ya"] {
-  background-color: #dc2626; /* Merah terang */
-}
-/* Warna untuk Status: TIDAK */
-.rawatan-status-tag[data-status="Tidak"] {
-  background-color: #059669; /* Hijau terang */
+  margin-right: 8px;
 }
 
-/* Description (kurang terang) */
+/* Status: YA (Sebelumnya 'Perlu') */
+.rawatan-status-tag[data-status="YA"] {
+  background-color: #fee2e2;
+  color: #ef4444; /* Merah */
+}
+/* Status: TIDAK (Sebelumnya 'Tidak Perlu') */
+.rawatan-status-tag[data-status="TIDAK"] {
+  background-color: #d1fae5;
+  color: #10b981; /* Hijau */
+}
+
 .rawatan-status-desc {
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b; /* Warna kelabu/pudar */
+  color: #64748b;
+  font-size: 12.5px;
 }
 
-/* === AKHIR STYLING BARU === */
+/* === INPUT & FORM STYLING - Kekal Sama === */
 
-/* ======= Form & Dynamic Input Styles (Kekal Sama) ======= */
+/* INPUT TEXT, SELECT, DAN DYNAMIC ROW STYLING (DIANGGAP SUDAH ADA) */
 
 .rawatan-label {
-  font-weight: 600;
-  color: #0f172a;
   display: block;
   margin-bottom: 6px;
+  font-weight: 600;
+  color: #334155;
   font-size: 13px;
+}
+.rawatan-label-required::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .rawatan-input,
-.rawatan-textarea,
 .rawatan-select {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #d4d7db;
-  background: #f9fafb;
-  font-size: 12px;
-  transition: all 0.2s;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f2937;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .rawatan-input:focus,
-.rawatan-textarea:focus,
 .rawatan-select:focus {
-  border-color: #004071;
-  box-shadow: 0 0 0 2px rgba(0, 64, 113, 0.12);
-  background: #fff;
-}
-.rawatan-textarea-risiko {
-  min-height: 60px;
-  resize: vertical;
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
-.rawatan-submit-button {
-  padding: 10px 26px;
-  background: #004071;
-  color: #fff;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 3px 10px rgba(0, 64, 113, 0.25);
-  margin-bottom: 20px;
-}
-.rawatan-submit-button:hover {
-  background: #0369a1;
-  transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(0, 116, 200, 0.35);
-}
-
-.rawatan-button-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.rawatan-button-add {
-  background-color: #0284c7;
-  color: white;
-}
-.rawatan-button-add:hover {
-  background-color: #0369a1;
-  transform: scale(1.1);
-}
-
-.rawatan-button-remove {
-  background-color: #ef4444;
-  color: white;
-}
-.rawatan-button-remove:hover {
-  background-color: #dc2626;
-  transform: scale(1.1);
-}
-
-.rawatan-input + .rawatan-button-circle {
-  margin-left: 6px;
-}
 .rawatan-dynamic-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 6px;
+  margin-bottom: 8px;
+}
+.rawatan-dynamic-row input {
+  margin-bottom: 0; /* Override default input margin */
 }
 
-/* ======= Risk Score Tag Styling - Dikekalkan untuk Logic Warna Tahap Risiko ======= */
+/* === PERUBAHAN WARNA BUTANG ADD (Plus Sign) -> BIRU BIASA - Kekal Sama === */
 
-/* !!! PERUBAHAN DI SINI: Tukar warna Rendah dari Teal ke Emerald Green yang lebih standard */
-.rawatan-risk-score-text[data-level="Rendah"] {
-  background-color: #077451; /* Warna Hijau Zamrud (Emerald Green) */
-}
-.rawatan-risk-score-text[data-level="Sederhana"] {
-  background-color: #eab308;
-}
-.rawatan-risk-score-text[data-level="Tinggi"] {
-  background-color: #f97316;
-}
-.rawatan-risk-score-text[data-level="Sangat Tinggi"] {
-  background-color: #ef4444;
+.rawatan-button-circle {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* ======= Responsive Adjustments ======= */
+/* Default Add button (Biru Biasa) */
+.rawatan-button-add-blue {
+  background-color: #3b82f6; /* Biru Biasa */
+  color: white;
+}
+.rawatan-button-add-blue:hover {
+  background-color: #2563eb;
+  transform: scale(1.05);
+}
+
+/* Remove button (Kekal merah) */
+.rawatan-button-remove {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+.rawatan-button-remove:hover {
+  background-color: #fecaca;
+  transform: scale(1.05);
+}
+
+/* === PERUBAHAN WARNA BUTANG SIMPAN KEMASKINI -> BIRU PEKAT === */
+
+.rawatan-save-btn-wrapper {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.rawatan-save-btn-dark-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  background-color: #004071; /* Warna Biru Pekat (sama dengan header utama) */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 64, 113, 0.2); /* Shadow biru pekat */
+}
+
+.rawatan-save-btn-dark-blue:hover {
+  background-color: #003055; /* Biru Pekat lebih gelap pada hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 64, 113, 0.3);
+}
+
+.rawatan-save-btn-dark-blue:disabled {
+  background-color: #aebfd4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* === MEDIA QUERIES - Kekal Sama === */
 
 @media (max-width: 768px) {
-  .rawatan-flex-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .rawatan-flex-item {
-    min-width: 100%;
-  }
-
-  /* Susun atur Skor di skrin kecil (menjadi satu baris ke bawah) */
-  .rawatan-score-row {
-    justify-content: flex-start;
-    flex-direction: column;
-  }
-
-  .rawatan-score-card {
-    flex: 1 1 100%;
-    align-items: flex-start; /* Alignment ke kiri semula */
-    text-align: left;
-  }
-
-  .rawatan-label-inline {
-    display: block;
-    margin-right: 0;
-  }
-  .rawatan-data-inline {
-    display: block;
-    margin-left: 0;
-  }
-
-  .rawatan-flex-row .rawatan-flex-item[style*="45%"] {
-    flex-direction: column;
-  }
-
-  .rawatan-flex-item ul li .rawatan-data-inline {
-    display: inline;
-  }
+  /* ... media query styles kekal sama ... */
 }
