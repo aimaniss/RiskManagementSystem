@@ -1,0 +1,290 @@
+/* ====== TambahLogModal Scoped Styling ====== */
+.tambahlog-modal *,
+.tambahlog-modal-overlay {
+  font-family: "Inter", sans-serif;
+  font-size: 0.88rem;
+  box-sizing: border-box;
+}
+
+/* Overlay */
+.tambahlog-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+/* Container */
+.tambahlog-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 850px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: tambahlog-slide-up 0.25s ease-out;
+}
+
+/* Animation */
+@keyframes tambahlog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.tambahlog-header {
+  /* Menggunakan warna utama biru */
+  background: #0074c8;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 14px 18px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tambahlog-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+.tambahlog-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Body */
+.tambahlog-body {
+  padding: 18px;
+  background: #fafafa;
+}
+
+/* Section box */
+.tambahlog-box {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 14px 16px;
+}
+
+.tambahlog-box-header {
+  font-weight: 600;
+  /* Warna teks biru lebih gelap */
+  color: #005fa3;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  /* Sempadan biru pucat */
+  border-bottom: 2px solid #cce1f5;
+  padding-bottom: 4px;
+}
+
+/* Flex Layout (untuk Tahun, Separuh Tahun, No Bil, Skor Risiko, Keberkesanan) */
+.tambahlog-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  margin-top: 10px;
+}
+.tambahlog-box .tambahlog-row:first-of-type {
+  margin-top: 0; /* Buang margin top jika ia adalah row pertama dalam box */
+}
+
+/* Flex Item (untuk Input/Select tunggal) */
+.tambahlog-item {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tambahlog-item label,
+.tambahlog-box > label {
+  /* Gaya label utama di atas textarea */
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+  display: block; /* Pastikan label berada di baris sendiri */
+}
+
+.tambahlog-item input,
+.tambahlog-item select,
+.tambahlog-item textarea,
+.tambahlog-box > textarea {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: 0.2s;
+  width: 100%; /* Pastikan textarea menggunakan lebar penuh */
+}
+
+.tambahlog-box > textarea {
+  /* Meningkatkan ketinggian minimum textarea Catatan */
+  min-height: 100px;
+  resize: vertical;
+}
+
+.tambahlog-item input:focus,
+.tambahlog-item select:focus,
+.tambahlog-item textarea:focus,
+.tambahlog-box > textarea:focus {
+  /* Warna fokus menggunakan biru utama */
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.2);
+  outline: none;
+}
+
+.tambahlog-readonly {
+  background: #f3f4f6;
+}
+
+/* List Row (Pelan Tindakan / Kakitangan) */
+
+/* Digunakan untuk mengawal jarak antara set senarai */
+.tambahlog-list-section {
+  padding: 10px 0;
+}
+.tambahlog-list-section:first-child {
+  padding-top: 5px;
+}
+
+.tambahlog-input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tambahlog-input-row input {
+  /* Input dalam senarai perlu menggayakan input biasa */
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+/* Button Circle */
+.tambahlog-btn-circle {
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 3px;
+  flex-shrink: 0; /* Jangan biarkan ia mengecut */
+}
+
+.tambahlog-btn-add {
+  background: #0074c8;
+  color: white;
+}
+.tambahlog-btn-add:hover {
+  background: #005fa3;
+}
+
+.tambahlog-btn-remove {
+  background: #ef4444;
+  color: white;
+}
+.tambahlog-btn-remove:hover {
+  background: #dc2626;
+}
+
+/* Score/Tahap Risiko */
+.tambahlog-score-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.tambahlog-risk-badge {
+  font-weight: 600;
+  color: white;
+  padding: 7px 10px;
+  border-radius: 6px;
+  text-align: center;
+  line-height: 1.2;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Footer */
+.tambahlog-footer {
+  display: flex;
+  /* Mula-mula ditetapkan kepada flex-end */
+  gap: 10px;
+  padding: 14px 18px;
+  background: #f1f5f9;
+  border-top: 1px solid #e2e8f0;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* Penjajaran Pusat untuk Footer */
+.tambahlog-footer-centered {
+  justify-content: center; /* Memusatkan butang */
+}
+
+.tambahlog-btn-cancel {
+  background: #e5e7eb;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.tambahlog-btn-cancel:hover {
+  background: #d1d5db;
+}
+
+.tambahlog-btn-submit {
+  /* Menggunakan warna utama biru */
+  background: #0074c8;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+.tambahlog-btn-submit:hover {
+  /* Warna hover biru lebih gelap */
+  background: #005fa3;
+}
+
+.spin {
+  animation: tambahlog-spin 1s linear infinite;
+}
+@keyframes tambahlog-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

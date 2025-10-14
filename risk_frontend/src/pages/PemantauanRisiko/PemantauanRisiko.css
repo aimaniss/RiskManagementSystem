@@ -1,187 +1,342 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+/* Import fonts yang dikehendaki */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Container utama */
-.senarai-risiko-container {
-  padding: 20px;
-  font-family: "Inter", sans-serif;
-  background-color: #f9fafb;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.senarai-risiko-container h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #004071;
-  font-weight: 600;
-}
-
-/* Cards container */
-.cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-/* Card style */
-.info-card {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.info-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
-}
-
-.info-card h3 {
-  font-size: 14px;
-  color: #1e293b;
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-
-.info-card p {
-  font-size: 28px;
-  font-weight: bold;
-  color: #0f172a;
-  margin: 0;
-}
-
-/* Filter container bawah card */
-.filter-container {
+/* ======================================================= */
+/* 1. Modal Overlay and Container Styles */
+/* ======================================================= */
+.rawatan-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  justify-content: center;
   align-items: center;
-  overflow-x: auto;
+  z-index: 9999; /* DITINGKATKAN: Memastikan ia menutup top navbar */
+  font-family: "Inter", sans-serif;
+}
+
+.rawatan-modal-container {
+  background: white;
+  border-radius: 10px;
+  width: 95%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  font-family: "Inter", sans-serif;
+}
+
+/* ======================================================= */
+/* 2. Header Styles */
+/* ======================================================= */
+.rawatan-box-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #1e3a8a; /* Blue 800 */
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.rawatan-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.rawatan-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.rawatan-panduan-btn {
+  background-color: #3b82f6; /* Blue 500 */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+  font-weight: 600;
+}
+
+.rawatan-panduan-btn:hover {
+  background-color: #2563eb; /* Blue 600 */
+}
+
+/* ======================================================= */
+/* 3. General Box & Read-Only Display Styles */
+/* ======================================================= */
+
+.rawatan-box {
+  margin: 15px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rawatan-box-header {
+  background-color: #f3f4f6; /* Gray 100 */
+  padding: 10px 18px;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Header Khusus untuk Maklumat Risiko, Rawatan & Pemantauan */
+/* Catatan: 'rawatan-risk-header' digunakan untuk Maklumat Risiko dan kini Pemantauan Risiko */
+.rawatan-risk-header {
+  background-color: #fef3c7; /* Kuning Pudar */
+  color: #92400e; /* Teks coklat gelap */
+  /* Tambah flex di JSX untuk butang Panduan */
+}
+
+/* Header Rawatan (Rawatan Risiko) - Biru Tua */
+.rawatan-monitoring-header {
+  background-color: #004071; /* Biru Tua/Navy */
+  color: white;
+}
+
+.rawatan-flex-row {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  gap: 15px;
+  background-color: white;
+}
+
+.rawatan-flex-item {
+  flex: 1 1 200px;
+  min-width: 250px;
+}
+
+.rawatan-list-section {
+  padding-top: 0;
+}
+
+.rawatan-label-inline {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280; /* Gray 500 */
+  display: block;
+  margin-bottom: 3px;
+}
+
+.rawatan-data-inline {
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 500;
+  display: block;
+}
+
+.rawatan-list-item {
+  margin-bottom: 5px;
+  padding-left: 0;
+}
+
+/* ======================================================= */
+/* 4. Score Display Styles (Penilaian Risiko) */
+/* ======================================================= */
+.rawatan-score-row {
+  justify-content: space-around;
+  align-items: center;
+}
+
+.rawatan-score-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 5px;
+  min-width: 120px;
+  flex: 1 1 150px;
+}
+
+.rawatan-score-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 5px;
+}
+
+.rawatan-score-data {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.rawatan-risk-score-text {
+  font-size: 1rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  min-width: 100px;
+  display: inline-block;
+  color: white !important;
+}
+
+/* ======================================================= */
+/* 5. Rawatan Read-Only Display (Khas untuk EditPemantauan) */
+/* ======================================================= */
+.rawatan-data-display-section {
+  padding: 15px 18px 18px 18px;
+  background-color: #f9fafb; /* Latar belakang berbeza untuk Rawatan Read-Only */
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 5px;
+}
+
+.rawatan-data-line-block {
+  margin-bottom: 12px;
+}
+
+.rawatan-label-mon {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.rawatan-data-mon {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  display: block;
+  margin-left: 0;
+}
+
+/* ======================================================= */
+/* 6. Pemantauan Form Input Styles */
+/* ======================================================= */
+
+.rawatan-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.rawatan-label-required::after {
+  content: " *";
+  color: #ef4444; /* Red 500 */
+}
+
+.rawatan-input,
+.rawatan-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  background-color: white;
+}
+
+.rawatan-input:focus,
+.rawatan-select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.rawatan-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+.rawatan-textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* ======================================================= */
+/* 7. Save Button Styles */
+/* ======================================================= */
+
+.rawatan-save-btn-wrapper {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.rawatan-save-btn-dark-blue {
+  background-color: #1e3a8a; /* Blue 800 */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
 }
 
-.filter-container select,
-.filter-container input {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  white-space: nowrap;
+.rawatan-save-btn-dark-blue:hover:not(:disabled) {
+  background-color: #172554; /* Blue 900 */
 }
 
-.filter-input {
-  flex: 1 0 200px;
+.rawatan-save-btn-dark-blue:disabled {
+  background-color: #9ca3af; /* Gray 400 */
+  cursor: not-allowed;
 }
 
-.filter-select {
-  flex: 0 0 160px;
-}
-
-.filter-input:focus,
-.filter-select:focus {
-  border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.1);
-  outline: none;
-}
-
-/* Table wrapper */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-/* Table */
-.risiko-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1100px;
-}
-
-/* Header */
-.risiko-table th {
-  background-color: #0074c8;
-  color: white;
-  font-weight: 600;
-  text-align: center;
-  padding: 12px 10px;
-  font-size: 14px;
-}
-
-/* Data rows */
-.risiko-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #d3d3d3;
-  font-size: 14px;
-  border-right: 1px solid #e5e7eb;
-  background-color: #fff;
-}
-
-/* Buang border-right pada last column */
-.risiko-table td:last-child {
-  border-right: none;
-}
-
-/* Alternating row shading */
-.risiko-table tr:nth-child(even) td {
-  background-color: #f9fafb;
-}
-
-/* Hover effect */
-.risiko-table tr:hover td {
-  background-color: #e1f0ff;
-}
-
-/* Center alignment */
-.risiko-table td.center {
-  text-align: center;
-}
-
-/* Risk box untuk tahap risiko */
-.risk-box {
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
-  min-width: 32px;
-}
-
-/* Responsive Scaling */
-@media (max-width: 1400px) {
-  .senarai-risiko-container h1 {
-    font-size: 1.25rem;
-  }
-  .risiko-table {
-    min-width: 680px;
-  }
-  .risiko-table td,
-  .risiko-table th {
-    font-size: 0.78rem;
-    padding: 7px 5px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .risiko-table {
-    min-width: 600px;
-  }
-}
-
+/* ======================================================= */
+/* 8. Media Queries for Responsiveness */
+/* ======================================================= */
 @media (max-width: 768px) {
-  .senarai-risiko-container {
-    padding: 12px;
-  }
-  .risiko-table {
-    font-size: 0.75rem;
-  }
-  .filter-input,
-  .filter-select {
+  .rawatan-modal-container {
     width: 100%;
+    margin: 10px;
+  }
+  .rawatan-flex-item {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+  .rawatan-score-row {
+    flex-direction: column;
+  }
+  .rawatan-score-card {
+    width: 100%;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .rawatan-score-card:last-child {
+    border-bottom: none;
   }
 }

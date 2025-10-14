@@ -8,7 +8,7 @@ import subsidiariRoutes from "./routes/subsidiari.js";
 import risikoRoutes from "./routes/risiko.js";
 import tahunRoutes from "./routes/tahun.js";
 import rawatanRoutes from "./routes/rawatan.js";
-
+import pemantauanRoutes from "./routes/pemantauan.js";
 
 
 
@@ -32,6 +32,7 @@ app.use("/api/subsidiari", subsidiariRoutes);
 app.use("/api/risiko", risikoRoutes);
 app.use("/api/tahun", tahunRoutes);
 app.use("/api/rawatan", rawatanRoutes);
+app.use('/api/pemantauan-risiko', pemantauanRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
