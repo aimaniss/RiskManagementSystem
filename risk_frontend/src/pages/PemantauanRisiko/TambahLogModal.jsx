@@ -18,8 +18,8 @@ export default function TambahLogModal({
   isOpen,
   onClose,
   risikoId,
-  onLogAdded,     // old name (ke backward-compatibility)
-  onSaveSuccess,  // preferred name used in EditPemantauan
+  onLogAdded,
+  onSaveSuccess,
 }) {
   const currentYear = new Date().getFullYear();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +27,8 @@ export default function TambahLogModal({
   // Auto-populate No. Rujukan & Risiko
   const [risikoTeks, setRisikoTeks] = useState("");
   const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
+  const [risikoInfo, setRisikoInfo] = useState(null); // 🟢 simpan info asal risiko
+  const [validationMessage, setValidationMessage] = useState(""); // 🟢 mesej alert bawah input
 
   const [formData, setFormData] = useState({
     risiko_id: risikoId || null,
@@ -65,22 +67,70 @@ export default function TambahLogModal({
       try {
         const res = await api.get(`/pemantauan-risiko/${risikoId}/info`);
         const info = res.data || {};
-        // fallback: API mungkin namakan kolum 'risiko' atau 'nama_risiko'
         if (!mounted) return;
         setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
         setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
-        // juga set in formData.risiko_id just in case
+        setRisikoInfo(info); // 🟢 simpan maklumat asal risiko
         setFormData((prev) => ({ ...prev, risiko_id: risikoId }));
       } catch (err) {
         console.error("❌ Gagal fetch info risiko:", err);
-        // tetap kosong — readOnly akan tunjuk '-' atau empty
         setRisikoTeks("");
         setRisikoNoRujukan("-");
+        setRisikoInfo(null);
       }
     };
     fetchRisikoInfo();
     return () => { mounted = false; };
   }, [isOpen, risikoId]);
+
+  // 🟢 Auto semak bila tahun / separuh tahun berubah
+  useEffect(() => {
+    const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
+    if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
+      setValidationMessage("");
+      return;
+    }
+
+    const semak = async () => {
+      // 1️⃣ Semak kalau kurang dari risiko asal
+      if (risikoInfo) {
+        const asalTahun = parseInt(risikoInfo.tahun);
+        const asalSeparuh = parseInt(risikoInfo.separuh_tahun);
+        const tahunBaru = parseInt(tahun_pemantauan);
+        const separuhBaru = parseInt(separuh_tahun_pemantauan);
+
+        if (
+          tahunBaru < asalTahun ||
+          (tahunBaru === asalTahun && separuhBaru < asalSeparuh)
+        ) {
+          setValidationMessage("❌ Separuh tahun tidak boleh kurang daripada risiko asal.");
+          return;
+        }
+      }
+
+      // 2️⃣ Semak duplicate di backend
+      try {
+       const res = await api.get(`/pemantauan-risiko/check-duplicate`, {
+  params: {
+    risiko_id: risikoId,
+    tahun: tahun_pemantauan,
+    separuh: separuh_tahun_pemantauan,
+  },
+});
+if (res.data.duplicate) {
+  setValidationMessage("⚠️ Tahun dan separuh tahun ini sudah wujud dalam log.");
+} else {
+  setValidationMessage("✅ Tahun dan separuh tahun ini boleh digunakan.");
+}
+
+      } catch (err) {
+        console.error("❌ Ralat semakan:", err);
+        setValidationMessage("⚠️ Gagal semak data. Cuba lagi.");
+      }
+    };
+
+    semak();
+  }, [formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, risikoInfo, risikoId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,13 +167,18 @@ export default function TambahLogModal({
         return;
       }
 
+      // 🟢 Cegah submit kalau ada error
+      if (validationMessage.includes("❌") || validationMessage.includes("⚠️")) {
+        alert("Sila betulkan tahun atau separuh tahun sebelum simpan.");
+        setIsLoading(false);
+        return;
+      }
+
       const res = await api.post("/pemantauan-risiko/log", formData);
-      // backend: { message: "...", data: newLog }
       const newLog = res.data?.data ?? res.data;
 
       alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya ditambah!`);
 
-      // Sokong kedua-dua nama callback (onSaveSuccess atau onLogAdded)
       const notify = onSaveSuccess || onLogAdded;
       if (typeof notify === "function") {
         try { notify(newLog); } catch (err) { console.warn("callback error:", err); }
@@ -182,12 +237,31 @@ export default function TambahLogModal({
                     <option value={2}>Kedua</option>
                   </select>
                 </div>
+              </div>
+
+              {/* 🟢 Alert bawah input */}
+              {validationMessage && (
+                <p
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "0.9rem",
+                    color: validationMessage.includes("✅") ? "#16a34a" : "#dc2626",
+                  }}
+                >
+                  {validationMessage}
+                </p>
+              )}
+
+              <div className="tambahlog-row">
                 <div className="tambahlog-item">
                   <label>Kelulusan:</label>
                   <input type="text" name="no_bil_kelulusan" value={formData.no_bil_kelulusan} onChange={handleChange} />
                 </div>
               </div>
             </div>
+
+           
+
 
             {/* Pelan & Kakitangan */}
             {["pelan_tindakan_list", "kakitangan_list"].map((listName, idx) => (

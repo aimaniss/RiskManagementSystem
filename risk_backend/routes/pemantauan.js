@@ -150,6 +150,37 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
   }
 });
 
+
+/* =======================================================
+   🟡 GET: Semak Kewujudan Tahun & Separuh Tahun
+   ENDPOINT: /pemantauan-risiko/check-duplicate
+   Query: ?risiko_id=1&tahun=2025&separuh=1
+======================================================= */
+router.get("/check-duplicate", verifyToken, async (req, res) => {
+  try {
+    const { risiko_id, tahun, separuh } = req.query;
+
+    if (!risiko_id || !tahun || !separuh) {
+      return res.status(400).json({ message: "Parameter tidak lengkap." });
+    }
+
+    const checkQuery = `
+      SELECT COUNT(*) AS count 
+      FROM LogPemantauan 
+      WHERE risiko_id = $1 
+      AND tahun_pemantauan = $2 
+      AND separuh_tahun_pemantauan = $3
+    `;
+    const { rows } = await pool.query(checkQuery, [risiko_id, tahun, separuh]);
+    const duplicate = parseInt(rows[0].count, 10) > 0;
+
+    res.json({ duplicate });
+  } catch (err) {
+    console.error("❌ Ralat GET /check-duplicate:", err);
+    res.status(500).json({ message: "Gagal menyemak data duplicate." });
+  }
+});
+
 /* =======================================================
    ➕ POST: Tambah Log Pemantauan Baru
    ENDPOINT: /pemantauan-risiko/log
