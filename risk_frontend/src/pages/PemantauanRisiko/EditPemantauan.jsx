@@ -24,9 +24,8 @@ const ListDisplay = ({ data, isLogContext = false }) => {
         if (item?.kesan_text) return item.kesan_text;
 
         // 🚨 PEMBETULAN UTAMA: Tambah kunci yang paling mungkin digunakan oleh API anda 🚨
-        // Ini membolehkan ListDisplay membaca objek seperti {id: 1, nama_punca: "Punca A"}
-        if (item?.nama_punca) return item.nama_punca; // 👈 DITAMBAH
-        if (item?.nama_kesan) return item.nama_kesan; // 👈 DITAMBAH
+        if (item?.nama_punca) return item.nama_punca; 
+        if (item?.nama_kesan) return item.nama_kesan; 
         // -------------------------------------------------------------
 
         // ✅ 3. UTAMAKAN field butiran LOG/RAWATAN
@@ -105,6 +104,10 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         kategori: "", 
         bahagian: "", 
         risiko: "", 
+        // 👇 FIELD BARU UNTUK STATUS RISIKO
+        status_risiko: "", 
+        status_risiko_desc: "",
+        // 👆 FIELD BARU UNTUK STATUS RISIKO
     });
 
     const [riskColor, setRiskColor] = useState("#f1f5f9");
@@ -156,6 +159,8 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
             // Pastikan ia adalah array yang sah
             return Array.isArray(arr) ? arr : [];
         };
+
+        
         
         // Map data dari prop 'risk' ke dalam state 'data'
         const initialData = {
@@ -185,6 +190,9 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
             
             planTindakan: getRiskArray('plan_tindakan', 'rawatan_plan_tindakan'), 
             kakitanganBertanggungjawab: getRiskArray('kakitangan_bertanggungjawab', 'rawatan_kakitangan_bertanggungjawab'),
+            // Tetapkan status_risiko & status_risiko_desc secara lalai, akan dikira dalam useEffect ke-2.
+            status_risiko: "",
+            status_risiko_desc: "",
         };
         
         // 💡 DEBUG 2: Semak data yang telah dipetakan
@@ -194,19 +202,41 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
 
     }, [isOpen, risk]); 
 
-    // 2. Update warna Tahap Risiko Awal (Dikekalkan)
+    // 2. Update warna dan Tahap Risiko Awal, **SERTA STATUS RISIKO BARU**
     useEffect(() => {
         const kAwal = parseInt(data.skor_kebarangkalian);
         const iAwal = parseInt(data.skor_impak);
+        let tahapRisiko = "-";
+        let warnaRisiko = "#f1f5f9";
+        let status = "-";
+        let statusDesc = "-";
+
         if (kAwal >= 1 && kAwal <= 5 && iAwal >= 1 && iAwal <= 5) {
             const { label, color } = getRiskMatrix(kAwal, iAwal);
-            setRiskColor(color);
-            setData(prev => ({ ...prev, tahap_risiko: label }));
-        } else {
-            setRiskColor("#f1f5f9");
-            setData(prev => ({ ...prev, tahap_risiko: "-" }));
-        }
-    }, [data.skor_kebarangkalian, data.skor_impak]);
+            tahapRisiko = label;
+            warnaRisiko = color;
+
+            // Logika Status Risiko BARU
+            if (label === "Rendah") {
+                status = "TIDAK";
+                statusDesc = "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
+            } else {
+                status = "YA";
+                statusDesc = "Risiko memerlukan tindakan segera dan rekod rawatan.";
+            }
+        } 
+        
+        setRiskColor(warnaRisiko);
+        setData(prev => ({ 
+            ...prev, 
+            tahap_risiko: tahapRisiko,
+            // 👇 UPDATE DATA DENGAN STATUS RISIKO BARU
+            status_risiko: status,
+            status_risiko_desc: statusDesc,
+            // 👆 UPDATE DATA DENGAN STATUS RISIKO BARU
+        }));
+
+    }, [data.skor_kebarangkalian, data.skor_impak]); // Bergantung pada skor kebarangkalian dan impak
 
     
     // Fungsi untuk mengendalikan butang padam log (Dikekalkan)
@@ -282,7 +312,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                         </div>
                     </div>
                     
-                    {/* 3. Penilaian Risiko Awal (READ-ONLY) - Dikekalkan */}
+                    {/* 3. Penilaian Risiko Awal (READ-ONLY) - Diubahsuai untuk Status Risiko */}
                     <div className="pemantauan-box">
                         <div className="pemantauan-box-header">Penilaian Risiko Awal</div>
                         <div className="pemantauan-flex-row pemantauan-score-row">
@@ -297,6 +327,37 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                 </span>
                             </div>
                         </div>
+                        {/* 👇 KOTAK STATUS RISIKO BARU */}
+                        <div className="pemantauan-flex-row" style={{ marginTop: '15px' }}>
+                             <div className="pemantauan-flex-item" style={{ display: 'flex', flexDirection: 'column', flex: "1 1 100%" }}>
+                                <span className="pemantauan-label-inline" style={{ fontWeight: 'bold', marginBottom: '5px' }}>Status Risiko:</span>
+                                <div style={{ 
+                                    padding: '10px 15px', 
+                                    borderRadius: '6px', 
+                                    backgroundColor: data.status_risiko === 'YA' ? '#fef2f2' : data.status_risiko === 'TIDAK' ? '#ecfdf5' : '#f1f5f9',
+                                    border: `1px solid ${data.status_risiko === 'YA' ? '#f87171' : data.status_risiko === 'TIDAK' ? '#34d399' : '#e2e8f0'}`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}>
+                                    <span style={{ 
+                                        fontWeight: 'bold', 
+                                        color: data.status_risiko === 'YA' ? '#ef4444' : data.status_risiko === 'TIDAK' ? '#10b981' : '#475569',
+                                        minWidth: '70px',
+                                        textAlign: 'center',
+                                        marginRight: '15px',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        backgroundColor: data.status_risiko === 'YA' ? '#f8717130' : data.status_risiko === 'TIDAK' ? '#10b98130' : '#e2e8f0'
+                                    }}>
+                                        {data.status_risiko || "-"}
+                                    </span>
+                                    <span style={{ color: '#475569', fontSize: '0.9rem' }}>
+                                        {data.status_risiko_desc || "Skor risiko tiada."}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {/* 👆 KOTAK STATUS RISIKO BARU */}
                     </div>
 
                     {/* 4. Rawatan Risiko (READ-ONLY) - Dikekalkan */}
@@ -322,7 +383,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                         </div>
                     </div>
 
-                    {/* 5. PAPARAN LOG SEJARAH PEMANTAUAN (JADUAL) - Dikekalkan */}
+                    {/* 5. PAPARAN LOG SEJARAH PEMANTAUAN (JADUAL) - Dibaiki untuk kekerapan_pemantauan */}
                     <div className="pemantauan-box">
                         <div className="pemantauan-box-header" style={{ backgroundColor: '#10b981', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>Log Sejarah Pemantauan Risiko</span>
@@ -360,7 +421,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                                 <th>Tahun</th>
                                                 <th>Separuh Tahun</th>
                                                 <th>Pelan Tindakan</th>
-                                                <th>Kekerapan Audit</th> 
+                                                <th>Kekerapan Pemantauan</th> {/* 👈 DIPERBAIKI: Tukar kepada Pemantauan */}
                                                 <th>Kakitangan Bertanggungjawab</th>
                                                 <th>K'kalian Skor</th> 
                                                 <th>Impak Skor</th>
@@ -392,7 +453,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                                             <td data-label="PELAN TINDAKAN">
                                                                 <ListDisplay data={pelanTindakanLog} />
                                                             </td>
-                                                            <td data-label="KEKERAPAN AUDIT">{log.kekerapan_audit || '-'}</td>
+                                                            <td data-label="KEKERAPAN AUDIT">{log.kekerapan_pemantauan || '-'}</td> {/* 👈 DIPERBAIKI: Guna kekerapan_pemantauan */}
                                                             <td data-label="BERTANGGUNGJAWAB">
                                                                 <ListDisplay data={kakitanganLog} />
                                                             </td> 
@@ -407,8 +468,8 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                                                 </span>
                                                             </td>
                                                             <td data-label="STATUS">{log.status_pemantauan || '-'}</td> 
-                                                            <td data-label="KELULUSAN">{log.kelulusan_bil_no || '-'}</td> 
-                                                            <td data-label="CATATAN" style={{ maxWidth: '200px', whiteSpace: 'normal' }}>{log.catatan_pemantauan || '-'}</td> 
+                                                            <td data-label="KELULUSAN">{log.no_bil_kelulusan || '-'}</td> {/* Menggunakan no_bil_kelulusan seperti dalam DDL */}
+                                                            <td data-label="CATATAN" style={{ maxWidth: '200px', whiteSpace: 'normal' }}>{log.catatan || '-'}</td> {/* Menggunakan catatan seperti dalam DDL */}
                                                             <td data-label="TINDAKAN">
                                                                 <button
                                                                     type="button"
