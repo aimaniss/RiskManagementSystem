@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react"; 
 import api from "../../api/api";
 import { Pencil, Loader2 } from "lucide-react"; 
-// Import komponen Modal anda
 import EditPemantauan from "./EditPemantauan"; 
 import "./PemantauanRisiko.css"; 
 
@@ -36,13 +35,13 @@ function PemantauanRisiko() {
     
     // State untuk Modal Edit Pemantauan
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedRisk, setSelectedRisk] = useState(null);
-
+    const [selectedRiskForEdit, setSelectedRiskForEdit] = useState(null); // 🟢 DIUBAH
+    const [loadingModal, setLoadingModal] = useState(false); // 🆕 TAMBAH
     
     // Handler untuk Tutup Modal
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setSelectedRisk(null);
+        setSelectedRiskForEdit(null); // 🟢 DIUBAH
     };
     
     // PENTING: Fungsi utama untuk memuatkan data risiko dan status pemantauan terkini
@@ -84,9 +83,9 @@ function PemantauanRisiko() {
                         pemantauanData = {
                             tahun_pemantauan: latestPemantauan.tahun_pemantauan,
                             separuh_tahun_pemantauan: latestPemantauan.separuh_tahun_pemantauan,
-                            // Ekstrak pelan tindakan dari log (gunakan ListDisplay di EditPemantauan untuk array)
+                            // Ekstrak pelan tindakan dari log
                             pelan_tindakan_pemantauan: Array.isArray(latestPemantauan.pelan_tindakan_log) 
-                                ? latestPemantauan.pelan_tindakan_log.map(p => p.butiran_log).join('; ') // Untuk paparan jadual
+                                ? latestPemantauan.pelan_tindakan_log.map(p => p.butiran_log).join('; ') 
                                 : "-",
                             status_pemantauan_terkini: latestPemantauan.status_pemantauan, 
                             catatan: latestPemantauan.catatan_pemantauan,
@@ -103,19 +102,16 @@ function PemantauanRisiko() {
                 return {
                     ...d, 
                     id: d.risiko_id, 
+                    risiko_id: d.risiko_id, // Pastikan risiko_id wujud di root object
                     
                     // 🛠️ MAPPING DATA ASAL UNTUK MODAL EDIT 🛠️
                     tahun_asal: d.tahun, 
                     separuh_tahun_asal: d.separuh_tahun,
-                    skor_kebarangkalian_sebelum: d.skor_kebarangkalian, // Digunakan oleh modal untuk kira skor awal
+                    skor_kebarangkalian_sebelum: d.skor_kebarangkalian, 
                     skor_impak_sebelum: d.skor_impak,
                     
-                    // ✅ PENAMBAHAN UNTUK PUNCA & KESAN RISIKO
-                    // Anda perlu pastikan 'punca_risiko_data' dan 'kesan_risiko_data' adalah key yang betul dari API anda.
-                    // Mereka harus mengandungi ARRAY of objects/strings.
-                     punca_risiko_data: Array.isArray(d.punca) ? d.punca : [], 
-                    kesan_risiko_data: Array.isArray(d.kesan) ? d.kesan : [],
-                    // ----------------------------------------------------
+                    // ❌ DIBUANG DARI SINI: punca_risiko_data & kesan_risiko_data
+                    // Ini akan diambil secara spesifik di handleEdit
                     
                     // Data Daftar
                     tahap_risiko_daftar: skorDaftarLabel, 
@@ -149,14 +145,40 @@ function PemantauanRisiko() {
     }, [fetchData]);
 
     
-    // Handler untuk Buka Modal
-    const handleEdit = (risiko) => {
-        setSelectedRisk(risiko);
-        setIsModalOpen(true);
+    // 🟢 Handler yang baru untuk Buka Modal (Mengambil data penuh risiko)
+    const handleEdit = async (risikoSenarai) => {
+        try {
+            setLoadingModal(true);
+            // Panggil API yang mengembalikan PUNCA & KESAN (route GET /rawatan/:risiko_id)
+            const res = await api.get(`/rawatan/${risikoSenarai.risiko_id}`); 
+            const fullRiskData = res.data;
+
+            // Gabungkan data ringkas dari senarai dengan data penuh dari fetch
+            const dataUntukModal = {
+                ...risikoSenarai, // Ambil status pemantauan terkini
+                ...fullRiskData, // Gantikan/tambah data asal risiko (termasuk punca/kesan dari API)
+                
+                // Pastikan key sepadan dengan yang anda gunakan dalam modal:
+                punca_risiko_data: Array.isArray(fullRiskData.punca) ? fullRiskData.punca : [],
+                kesan_risiko_data: Array.isArray(fullRiskData.kesan) ? fullRiskData.kesan : [],
+                
+                // Overwrite skor sebelum/selepas
+                skor_kebarangkalian_sebelum: fullRiskData.skor_kebarangkalian,
+                skor_impak_sebelum: fullRiskData.skor_impak,
+            };
+            
+            setSelectedRiskForEdit(dataUntukModal);
+            setIsModalOpen(true);
+
+        } catch (err) {
+            console.error(`Ralat memuat data risiko lengkap ${risikoSenarai.risiko_id}:`, err);
+            // Di sini anda boleh tambah notifikasi ralat kepada pengguna
+        } finally {
+            setLoadingModal(false);
+        }
     };
     
     // Handler untuk Kemaskini data selepas Simpan dari Modal EditPemantauanRisiko
-    // Hanya panggil semula fetchData untuk mendapatkan data terkini dari API
     const handleRefreshData = useCallback(() => {
         handleCloseModal(); // Tutup modal dahulu
         fetchData(); // Muat semula SEMUA data untuk mendapatkan status pemantauan terkini
@@ -287,7 +309,7 @@ function PemantauanRisiko() {
                                     {/* PELAN TINDAKAN RAWATAN (ASAL) */}
                                     <td>
                                             {Array.isArray(d.plan_tindakan) && d.plan_tindakan.length > 0
-                                                ? d.plan_tindakan.map(p => p.butiran_aktiviti).join('; ')
+                                                ? d.plan_tindakan.map(p => p.butiran_aktiviti || p).join('; ') // Added || p just in case array is of strings
                                                 : "-"}
                                     </td> 
                                     
@@ -305,7 +327,7 @@ function PemantauanRisiko() {
                                     
                                     <td>{d.catatan || "-"}</td>
                                     <td className="center">
-                                        <button className="icon-edit-btn" onClick={() => handleEdit(d)} title="Lihat/Kemaskini Pemantauan">
+                                        <button className="icon-edit-btn" onClick={() => handleEdit(d)} title="Lihat/Kemaskini Pemantauan" disabled={loadingModal}>
                                             <Pencil size={18} />
                                         </button>
                                     </td>
@@ -319,12 +341,12 @@ function PemantauanRisiko() {
             </div>
             
             {/* Render Modal Edit Pemantauan Risiko */}
-            {isModalOpen && selectedRisk && (
+            {isModalOpen && selectedRiskForEdit && ( // 🟢 GUNA STATE YANG BARU
                 <EditPemantauan
                     isOpen={isModalOpen}
-                    risk={selectedRisk} 
+                    risk={selectedRiskForEdit} // 🟢 HANTAR DATA LENGKAP KE MODAL
                     onClose={handleCloseModal}
-                    onLogSave={handleRefreshData} // Ganti onSave lama dengan ini
+                    onLogSave={handleRefreshData}
                 />
             )}
         </div>
