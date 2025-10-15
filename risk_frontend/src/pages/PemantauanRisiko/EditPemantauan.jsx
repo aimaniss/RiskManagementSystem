@@ -119,6 +119,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         try {
             const response = await api.get(`/pemantauan-risiko/${risikoId}/sejarah`); 
             
+            
             const logArray = response.data || []; 
             const sortedLog = logArray.sort((a, b) => {
                 if (b.tahun_pemantauan !== a.tahun_pemantauan) {
