@@ -237,6 +237,33 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
   }
 });
 
+/* =======================================================
+   🟢 GET: Tahap Risiko Rujukan (Log Terakhir atau Risiko Asal)
+   ENDPOINT: /pemantauan-risiko/:risiko_id/tahap-rujukan
+======================================================= */
+router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
+  try {
+    const { risiko_id } = req.params;
+    const risikoIdInt = parseInt(risiko_id, 10);
+
+    // ⭐ Menggunakan rentetan SATU BARIS untuk mengelakkan isu newline/whitespace tersembunyi
+    const query = 
+`SELECT r.risiko_id, r.tahap_risiko AS tahap_risiko_asal, (SELECT lp_latest.keberkesanan FROM LogPemantauan lp_latest WHERE lp_latest.risiko_id = r.risiko_id ORDER BY lp_latest.tahun_pemantauan DESC, lp_latest.tarikh_pemantauan DESC LIMIT 1) AS keberkesanan_log_terakhir, COALESCE((SELECT CASE (lp_latest.skor_kebarangkalian_selepas * lp_latest.skor_impak_selepas) WHEN 1 THEN 'R' WHEN 2 THEN 'R' WHEN 3 THEN 'S' WHEN 4 THEN 'S' WHEN 5 THEN 'T' WHEN 6 THEN 'R' WHEN 8 THEN 'S' WHEN 9 THEN 'S' WHEN 10 THEN 'T' WHEN 12 THEN 'T' WHEN 15 THEN 'ST' WHEN 16 THEN 'ST' WHEN 20 THEN 'ST' WHEN 25 THEN 'ST' ELSE r.tahap_risiko END FROM LogPemantauan lp_latest WHERE lp_latest.risiko_id = r.risiko_id ORDER BY lp_latest.tahun_pemantauan DESC, lp_latest.tarikh_pemantauan DESC LIMIT 1), r.tahap_risiko) AS tahap_risiko_rujukan FROM Risiko r WHERE r.risiko_id = $1;`;
+
+    // Tidak perlu .trim() jika menggunakan string literal biasa
+    const { rows } = await pool.query(query, [risikoIdInt]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("❌ Ralat GET /:risiko_id/tahap-rujukan:", err);
+    res.status(500).json({ message: "Gagal memuatkan maklumat risiko rujukan." });
+  }
+});
+
 
 /* =======================================================
    ➕ POST: Tambah Log Pemantauan Baru
