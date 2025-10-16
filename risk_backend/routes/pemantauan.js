@@ -93,6 +93,8 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
         r.risiko_id,
         r.no_rujukan,
         r.risiko,
+        r.tahun AS tahun_risiko_asal,
+        r.separuh_tahun AS separuh_tahun_risiko_asal,
         s.nama_subsidiari
       FROM Risiko r
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
