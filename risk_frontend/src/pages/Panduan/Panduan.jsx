@@ -7,7 +7,7 @@ const WARNA_RISIKO = {
     'SANGAT TINGGI': '#ef4444', 
     'TINGGI': '#f97316',        
     'SEDERHANA': '#eab308',     
-    'RENDAH': '#14b8a6',        
+    'RENDAH': '#22c55e',        
 };
 
 // Data Rujukan (Kekal)

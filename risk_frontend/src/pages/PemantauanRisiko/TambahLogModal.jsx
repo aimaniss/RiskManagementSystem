@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react"; // ⬅️ Tambah BookOpen
 import api from "../../api/api";
 import "./TambahLogModal.css";
 
+// 💡 Anggap PanduanModal berada di lokasi yang boleh diakses
+// Sila ubah laluan (path) jika perlu!
+import PanduanModal from '../Panduan/Panduan'; // ⬅️ Tambah import PanduanModal
+
+
 // Risk matrix (tahap risiko selepas kawalan)
 const riskMatrix = {
-  1: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
-  2: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Rendah", color: "#14b8a6" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Sederhana", color: "#eab308" }, 5: { label: "Tinggi", color: "#f97316" } },
-  3: { 1: { label: "Rendah", color: "#14b8a6" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Sederhana", color: "#eab308" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Tinggi", color: "#f97316" } },
-  4: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Sederhana", color: "#eab308" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Tinggi", color: "#f97316" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
-  5: { 1: { label: "Sederhana", color: "#eab308" }, 2: { label: "Tinggi", color: "#f97316" }, 3: { label: "Tinggi", color: "#f97316" }, 4: { label: "Sangat Tinggi", color: "#ef4444" }, 5: { label: "Sangat Tinggi", color: "#ef4444" } },
+  1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
+    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
+    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
+    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
+    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
 };
 
 const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
@@ -23,12 +28,13 @@ export default function TambahLogModal({
 }) {
   const currentYear = new Date().getFullYear();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPanduanOpen, setIsPanduanOpen] = useState(false); // ⬅️ State untuk PanduanModal
 
   // Auto-populate No. Rujukan & Risiko
   const [risikoTeks, setRisikoTeks] = useState("");
   const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
-  const [risikoInfo, setRisikoInfo] = useState(null); // 🟢 simpan info asal risiko
-  const [validationMessage, setValidationMessage] = useState(""); // 🟢 mesej alert bawah input
+  const [risikoInfo, setRisikoInfo] = useState(null);
+  const [validationMessage, setValidationMessage] = useState("");
 
   const [formData, setFormData] = useState({
     risiko_id: risikoId || null,
@@ -70,7 +76,7 @@ export default function TambahLogModal({
         if (!mounted) return;
         setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
         setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
-        setRisikoInfo(info); // 🟢 simpan maklumat asal risiko
+        setRisikoInfo(info);
         setFormData((prev) => ({ ...prev, risiko_id: risikoId }));
       } catch (err) {
         console.error("❌ Gagal fetch info risiko:", err);
@@ -83,7 +89,7 @@ export default function TambahLogModal({
     return () => { mounted = false; };
   }, [isOpen, risikoId]);
 
-  // 🟢 Auto semak bila tahun / separuh tahun berubah
+  // Auto semak bila tahun / separuh tahun berubah
 useEffect(() => {
   const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
   if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
@@ -160,7 +166,7 @@ useEffect(() => {
         return;
       }
 
-      // 🟢 Cegah submit kalau ada error
+      // Cegah submit kalau ada error
       if (validationMessage.includes("❌") || validationMessage.includes("⚠️")) {
         alert("Sila betulkan tahun atau separuh tahun sebelum simpan.");
         setIsLoading(false);
@@ -202,7 +208,7 @@ useEffect(() => {
           <div className="tambahlog-body">
            {/* 1. Maklumat Risiko */}
 <div className="tambahlog-box">
-  <div className="tambahlog-box-header">Maklumat Risiko</div>
+  <div className="tambahlog-box-header">1. Maklumat Risiko</div>
   <div className="tambahlog-row">
     <div className="tambahlog-item">
       <label>No. Rujukan Risiko:</label>
@@ -235,7 +241,14 @@ useEffect(() => {
 
             {/* 2. Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">Maklumat Pemantauan</div>
+                {/* ⬅️ PERUBAHAN DI SINI: Letak butang Panduan di sebelah kanan header */}
+              <div className="tambahlog-box-header tambahlog-header-with-btn">
+                <span>2. Maklumat Pemantauan</span>
+                <button type="button" className="tambahlog-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
+                  <BookOpen size={16} style={{ marginRight: '6px' }} />
+                  Panduan
+                </button>
+              </div>
               {/* Tahun, Separuh Tahun & Kelulusan */}
               <div className="tambahlog-row">
                 <div className="tambahlog-item">
@@ -335,7 +348,7 @@ useEffect(() => {
 
             {/* 3. Penilaian dan Keberkesanan Tindakan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
+              <div className="tambahlog-box-header">3. Penilaian dan Keberkesanan Tindakan</div>
               <div className="tambahlog-row">
                 <div className="tambahlog-item">
                   <label>Skor Kebarangkalian:</label>
@@ -350,7 +363,7 @@ useEffect(() => {
                   </select>
                 </div>
                 <div className="tambahlog-item">
-                  <span className="tambahlog-score-label">Skor Risiko:</span>
+                  <span className="tambahlog-score-label">Tahap Risiko:</span>
                   <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
                 </div>
               </div>
@@ -367,7 +380,7 @@ useEffect(() => {
 
             {/* 4. Status Pemantauan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">Status Pemantauan</div>
+              <div className="tambahlog-box-header">4. Status Pemantauan</div>
               <div className="tambahlog-row">
                 <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
                   <label>Status Pemantauan Semasa:</label>
@@ -384,7 +397,7 @@ useEffect(() => {
 
             {/* 5. Catatan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">Catatan</div>
+              <div className="tambahlog-box-header">5. Catatan</div>
               <label>Sila masukkan catatan pemantauan:</label>
               <textarea name="catatan" value={formData.catatan} onChange={handleChange} rows="5" />
             </div>
@@ -398,7 +411,16 @@ useEffect(() => {
             </button>
           </div>
         </form>
-      </div>
+        
+        {/* ⬅️ Tambah PanduanModal di sini */}
+        <PanduanModal 
+          isOpen={isPanduanOpen} 
+          onClose={() => setIsPanduanOpen(false)} 
+          // Anda boleh tentukan content atau jenis panduan di sini
+          title="Panduan Log Pemantauan"
+          content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
+        />
     </div>
+  </div>
   );
 }
