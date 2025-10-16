@@ -1,566 +1,657 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react"; 
-import api from "../../api/api";
-import "./TambahLogModal.css";
+import api from "../../api/api"; // Pastikan laluan API anda betul
+import "./TambahLogModal.css"; // Pastikan fail CSS wujud
 
 import PanduanModal from '../Panduan/Panduan'; 
 
 
 // Risk matrix (tahap risiko selepas kawalan)
 const riskMatrix = {
-    // Kebarangkalian (y-axis) : { Impak (x-axis) : { label, color } }
-    1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-    2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-    3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
-    4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
-    5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
+    // Kebarangkalian (y-axis) : { Impak (x-axis) : { label, color } }
+    1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+    2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+    3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
+    4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
+    5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
 };
 
 const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
 
-/** * ⭐ FUNGSI BARU UNTUK MENDAPATKAN WARNA BERDASARKAN LABEL RISIKO 
- * Ini menyelesaikan isu 'Tahap Risiko Rujukan' tidak berwarna.
+/** * Fungsi untuk mendapatkan warna berdasarkan label risiko (diguna untuk Tahap Risiko Rujukan)
  */
 const getColorByTahapRisikoLabel = (label) => {
     if (label === "Tiada Data") return "#f1f5f9";
     
-    // Cari label dalam matrix untuk mendapatkan warna yang sepadan
     for (const k in riskMatrix) {
         for (const i in riskMatrix[k]) {
             if (riskMatrix[k][i].label === label) {
-                return riskMatrix[k][i].color; // Pulangkan warna yang ditemui (cth: #22c55e untuk R)
+                return riskMatrix[k][i].color; 
             }
         }
     }
-    // Fallback jika label ada tapi tidak ditemui (jarang berlaku)
     return "#f1f5f9"; 
 };
 
 
 // Tahap Risiko: R < S < T < ST
 const TAHAP_RISIKO_ORDER = {
-    "R": 1,
-    "S": 2,
-    "T": 3,
-    "ST": 4,
-    "Tiada Data": 0,
+    "R": 1,
+    "S": 2,
+    "T": 3,
+    "ST": 4,
+    "Tiada Data": 0,
 };
 
-// ⭐ Data mapping untuk Keberkesanan
+// Data mapping untuk Keberkesanan
 const KEBERKESANAN_MAPPING = {
-    "Ya": "Berkesan (Menurun atau Kekal)",
-    "Tidak": "Tidak Berkesan (Meningkat)",
+    "Ya": "Berkesan (Menurun atau Kekal)",
+    "Tidak": "Tidak Berkesan (Meningkat)",
 };
 
 export default function TambahLogModal({
-    isOpen,
-    onClose,
-    risikoId,
-    onLogAdded,
-    onSaveSuccess,
+    isOpen,
+    onClose,
+    risikoId,
+    onLogAdded, 
+    onSaveSuccess, 
+    logDataToEdit = null, 
 }) {
-    const currentYear = new Date().getFullYear();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false); // State untuk PanduanModal
+    // ================================================================
+    // ⭐ TENTUKAN MOD & TAJUK MODAL
+    const isEditMode = !!logDataToEdit;
+    const modalTitle = isEditMode ? "Kemaskini Log Pemantauan" : "Tambah Log Pemantauan Baharu";
+    // ================================================================
 
-    // Auto-populate No. Rujukan & Risiko
-    const [risikoTeks, setRisikoTeks] = useState("");
-    const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
-    const [risikoInfo, setRisikoInfo] = useState(null);
-    const [validationMessage, setValidationMessage] = useState("");
-    
-    // ⭐ STATE BARU UNTUK AUTO-KEBERKESANAN
-    const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data"); 
-    // const [isKeberkesananManual, setIsKeberkesananManual] = useState(false); // TIDAK PERLU MANUAL LAGI
+    const [isLoading, setIsLoading] = useState(false);
+    const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
 
-    const [formData, setFormData] = useState({
-        risiko_id: risikoId || null,
-        tahun_pemantauan: "",
-        separuh_tahun_pemantauan: 1,
-        skor_kebarangkalian_selepas: 1,
-        skor_impak_selepas: 1,
-        keberkesanan: "Ya", // ⭐ Tetapkan nilai awal kepada "Ya"
-        status_pemantauan: "Selesai",
-        catatan: "",
-        no_bil_kelulusan: "",
-        kekerapan_pemantauan: "",
-        pelan_tindakan_list: [{ butiran_aktiviti: "" }],
-        kakitangan_list: [{ butiran_kakitangan: "" }],
-    });
+    // Auto-populate No. Rujukan & Risiko
+    const [risikoTeks, setRisikoTeks] = useState("");
+    const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
+    const [risikoInfo, setRisikoInfo] = useState(null);
+    const [validationMessage, setValidationMessage] = useState("");
+    
+    // STATE BARU UNTUK AUTO-KEBERKESANAN
+    const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data"); 
 
-    const [tahapRisikoSelepas, setTahapRisikoSelepas] = useState(getRiskMatrix(1, 1));
-    
-    // Fungsi untuk mendapatkan label yang dipaparkan di UI
-    const getKeberkesananLabel = (value) => KEBERKESANAN_MAPPING[value] || value;
+    // ================================================================
+    // ⭐ STATE BORANG
+    // ================================================================
+    const getInitialFormData = useCallback(() => ({
+        log_id: null, 
+        risiko_id: risikoId || null,
+        tahun_pemantauan: new Date().getFullYear(), // Default ke tahun semasa
+        separuh_tahun_pemantauan: 1,
+        skor_kebarangkalian_selepas: 1,
+        skor_impak_selepas: 1,
+        keberkesanan: "Ya", 
+        status_pemantauan: "Selesai",
+        catatan: "",
+        no_bil_kelulusan: "",
+        kekerapan_pemantauan: "",
+        pelan_tindakan_list: [{ butiran_aktiviti: "" }],
+        kakitangan_list: [{ butiran_kakitangan: "" }],
+    }), [risikoId]);
 
-    // 1. Update tahap risiko selepas & Auto-Keberkesanan
-    useEffect(() => {
-        const k = parseInt(formData.skor_kebarangkalian_selepas, 10);
-        const i = parseInt(formData.skor_impak_selepas, 10);
-        const tahapSelepas = getRiskMatrix(k, i);
-        setTahapRisikoSelepas(tahapSelepas);
-        
-        // ⭐ AUTO-KEBERKESANAN LOGIC (Hanya guna Ya/Tidak)
-        if (tahapRisikoRujukan) {
-            const tahapOrderRujukan = TAHAP_RISIKO_ORDER[tahapRisikoRujukan] || 0;
-            const tahapOrderSelepas = TAHAP_RISIKO_ORDER[tahapSelepas.label] || 0;
-            
-            let autoKeberkesanan;
+    const [formData, setFormData] = useState(getInitialFormData);
 
-            // Skor selepas mesti lebih RENDAH (Berkesan) atau SAMA (Kekal/Berkesan)
-            if (tahapOrderSelepas <= tahapOrderRujukan) {
-                autoKeberkesanan = "Ya"; // ⭐ Menggunakan nilai Ya (Berkesan/Kekal)
-            } else { // tahapOrderSelepas > tahapOrderRujukan
-                autoKeberkesanan = "Tidak"; // ⭐ Menggunakan nilai Tidak
-            }
-            
-            setFormData((prev) => ({ ...prev, keberkesanan: autoKeberkesanan }));
-        }
-
-    }, [formData.skor_kebarangkalian_selepas, formData.skor_impak_selepas, tahapRisikoRujukan]);
+    const [tahapRisikoSelepas, setTahapRisikoSelepas] = useState(getRiskMatrix(1, 1));
+    
+    // Fungsi untuk mendapatkan label yang dipaparkan di UI
+    const getKeberkesananLabel = (value) => KEBERKESANAN_MAPPING[value] || value;
 
 
-    // Update risiko_id bila props berubah
-    useEffect(() => {
-        setFormData((prev) => ({ ...prev, risiko_id: risikoId || prev.risiko_id }));
-    }, [risikoId]);
-
-
-
-
-    // 2. Fetch No. Rujukan, Risiko & Tahap Risiko Rujukan bila modal dibuka
-    useEffect(() => {
-        if (!isOpen || !risikoId) return;
-        let mounted = true;
-        const fetchRisikoInfo = async () => {
-            try {
-                // 1. Dapatkan info asas
-                const infoRes = await api.get(`/pemantauan-risiko/${risikoId}/info`);
-                const info = infoRes.data || {};
-
-                // 2. Dapatkan Tahap Risiko Rujukan (Log Terakhir)
-                      const rujukanRes = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`);
-                      const rujukanInfo = rujukanRes.data || {};
-
-                      if (!mounted) return;
-
-                      setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
-                      setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
-                      setRisikoInfo(info);
-                      setFormData((prev) => ({ ...prev, risiko_id: risikoId }));
-
-                      // ====================================================
-                      // 🔁 Jika tiada log pemantauan → guna tahap risiko asal
-                      // ====================================================
-                      let tahapRujukan;
-                      if (rujukanInfo && rujukanInfo.tahap_risiko_rujukan && rujukanInfo.tahap_risiko_rujukan !== "Tiada Data") {
-                          tahapRujukan = rujukanInfo.tahap_risiko_rujukan;
-                      } else {
-                          // fallback ke tahap risiko asal (berdasarkan kawalan asal risiko)
-                          const kAsal = parseInt(info.kebarangkalian_selepas || info.kebarangkalian_asal || 1, 10);
-                          const iAsal = parseInt(info.impak_selepas || info.impak_asal || 1, 10);
-                          tahapRujukan = getRiskMatrix(kAsal, iAsal).label;
-                      }
-
-                      setTahapRisikoRujukan(tahapRujukan);
-                      
-            } catch (err) {
-                console.error("❌ Gagal fetch info risiko:", err);
-                // ... (reset states)
-            }
-        };
-        fetchRisikoInfo();
-        return () => { mounted = false; };
-    }, [isOpen, risikoId]);
-
-    // Auto semak bila tahun / separuh tahun berubah
-    useEffect(() => {
-        const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
-        if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
-            setValidationMessage("");
-            return;
-        }
-
-        const semak = async () => {
-            try {
-                const res = await api.get(`/pemantauan-risiko/check-duplicate`, {
-                    params: {
-                        risiko_id: risikoId,
-                        tahun: tahun_pemantauan,
-                        separuh: separuh_tahun_pemantauan,
-                    },
-                });
-
-                const { duplicate, invalid, message } = res.data;
-
-                if (invalid) {
-                    setValidationMessage(`❌ ${message}`);
-                } else if (duplicate) {
-                    setValidationMessage(`⚠️ ${message}`);
-                } else {
-                    setValidationMessage(`✅ ${message}`);
-                }
-            } catch (err) {
-                console.error("❌ Ralat semakan:", err);
-                setValidationMessage("⚠️ Gagal menyemak data. Cuba lagi.");
-            }
-        };
-
-        semak();
-    }, [
-        formData.tahun_pemantauan,
-        formData.separuh_tahun_pemantauan,
-        risikoInfo,
-        risikoId,
-    ]);
-// 🔁 Auto-refresh Tahap Risiko Rujukan bila Tahun/Separuh Tahun berubah
-useEffect(() => {
-    if (!risikoId || !formData.tahun_pemantauan || !formData.separuh_tahun_pemantauan) return;
-
-    const fetchTahapRisikoRujukanTerkini = async () => {
-        try {
-            const res = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`, {
-                params: {
-                    tahun: formData.tahun_pemantauan,
-                    separuh: formData.separuh_tahun_pemantauan,
-                },
-            });
-            const data = res.data || {};
+    // ================================================================
+    // 1. Logic Update Tahap Risiko Selepas & Auto-Keberkesanan
+    // ================================================================
+    useEffect(() => {
+        const k = parseInt(formData.skor_kebarangkalian_selepas, 10);
+        const i = parseInt(formData.skor_impak_selepas, 10);
+        const tahapSelepas = getRiskMatrix(k, i);
+        setTahapRisikoSelepas(tahapSelepas);
+        
+        // AUTO-KEBERKESANAN LOGIC
+        if (tahapRisikoRujukan && formData.skor_kebarangkalian_selepas && formData.skor_impak_selepas) {
+            const tahapOrderRujukan = TAHAP_RISIKO_ORDER[tahapRisikoRujukan] || 0;
+            const tahapOrderSelepas = TAHAP_RISIKO_ORDER[tahapSelepas.label] || 0;
             
-            // fallback kalau tiada data
-            let tahap = data.tahap_risiko_rujukan;
-            if (!tahap || tahap === "Tiada Data") {
-                const kAsal = parseInt(risikoInfo?.kebarangkalian_selepas || risikoInfo?.kebarangkalian_asal || 1, 10);
-                const iAsal = parseInt(risikoInfo?.impak_selepas || risikoInfo?.impak_asal || 1, 10);
-                tahap = getRiskMatrix(kAsal, iAsal).label;
+            let autoKeberkesanan;
+
+            // Skor selepas mesti lebih RENDAH (Berkesan) atau SAMA (Kekal/Berkesan)
+            if (tahapOrderSelepas <= tahapOrderRujukan) {
+                autoKeberkesanan = "Ya"; 
+            } else { 
+                autoKeberkesanan = "Tidak"; 
+            }
+            
+            setFormData((prev) => ({ ...prev, keberkesanan: autoKeberkesanan }));
+        }
+
+    }, [formData.skor_kebarangkalian_selepas, formData.skor_impak_selepas, tahapRisikoRujukan]);
+
+
+    // ================================================================
+    // 2. useEffect untuk Pra-Isi Data Edit / Reset Data Tambah
+    // ================================================================
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Fungsi pembantu untuk memformatkan data list
+        const formatList = (list, key) => {
+            const formatted = list?.length > 0 && Array.isArray(list) 
+                                                ? list.map(item => ({ [key]: item || "" })) 
+                                                : [{ [key]: "" }];
+            return formatted;
+        };
+
+
+        if (logDataToEdit) {
+            // Mod EDIT: Gunakan data yang dihantar
+            const k = parseInt(logDataToEdit.skor_kebarangkalian_selepas, 10);
+            const i = parseInt(logDataToEdit.skor_impak_selepas, 10);
+            
+            const logId = logDataToEdit.log_id || logDataToEdit.id;
+
+            setFormData({
+                log_id: logId, 
+                risiko_id: logDataToEdit.risiko_id || risikoId,
+                tahun_pemantauan: logDataToEdit.tahun_pemantauan || '',
+                separuh_tahun_pemantauan: logDataToEdit.separuh_tahun_pemantauan || 1,
+                skor_kebarangkalian_selepas: k,
+                skor_impak_selepas: i,
+                keberkesanan: logDataToEdit.keberkesanan || "Ya", 
+                status_pemantauan: logDataToEdit.status_pemantauan || "Selesai",
+                catatan: logDataToEdit.catatan || "",
+                no_bil_kelulusan: logDataToEdit.no_bil_kelulusan || "",
+                kekerapan_pemantauan: logDataToEdit.kekerapan_pemantauan || "",
+                pelan_tindakan_list: formatList(logDataToEdit.pelan_tindakan_log, "butiran_aktiviti"),
+                kakitangan_list: formatList(logDataToEdit.kakitangan_log, "butiran_kakitangan"),
+            });
+            setTahapRisikoSelepas(getRiskMatrix(k, i));
+
+            setValidationMessage(""); 
+
+        } else {
+            // Mod TAMBAH: Guna nilai lalai
+            setFormData(getInitialFormData());
+            setTahapRisikoSelepas(getRiskMatrix(1, 1));
+            setValidationMessage("");
+        }
+    }, [isOpen, logDataToEdit, getInitialFormData]); 
+
+
+    // ================================================================
+    // 3. Fetch Info Risiko & Tahap Rujukan
+    // ================================================================
+    useEffect(() => {
+        if (!isOpen || !risikoId || !formData.tahun_pemantauan) return; 
+
+        let mounted = true;
+        const fetchRisikoInfo = async () => {
+            try {
+                // Fetch info risiko umum
+                const infoRes = await api.get(`/pemantauan-risiko/${risikoId}/info`);
+                const info = infoRes.data || {};
+                
+                const excludeId = logDataToEdit?.log_id || logDataToEdit?.id;
+
+                // Fetch log terakhir untuk tahap rujukan
+                const rujukanRes = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`, {
+                    params: {
+                        tahun: formData.tahun_pemantauan,
+                        separuh: formData.separuh_tahun_pemantauan,
+                        exclude_log_id: excludeId,
+                    }
+                });
+                const rujukanInfo = rujukanRes.data || {};
+
+                if (!mounted) return;
+
+                setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
+                setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
+                setRisikoInfo(info);
+                
+                // Tentukan tahap rujukan (Logik yang sama)
+                let tahapRujukan;
+                if (rujukanInfo && rujukanInfo.tahap_risiko_rujukan && rujukanInfo.tahap_risiko_rujukan !== "Tiada Data") {
+                    tahapRujukan = rujukanInfo.tahap_risiko_rujukan;
+                } else {
+                    const kAsal = parseInt(info.kebarangkalian_selepas || info.kebarangkalian_asal || 1, 10);
+                    const iAsal = parseInt(info.impak_selepas || info.impak_asal || 1, 10);
+                    tahapRujukan = getRiskMatrix(kAsal, iAsal).label;
+                }
+
+                setTahapRisikoRujukan(tahapRujukan);
+                
+            } catch (err) {
+                console.error("❌ Gagal fetch info risiko:", err);
+            }
+        };
+        fetchRisikoInfo();
+        return () => { mounted = false; };
+    }, [isOpen, risikoId, formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, logDataToEdit]); 
+
+
+    // ================================================================
+    // 4. Semak Duplikasi (Hanya untuk Mod TAMBAH)
+    // ================================================================
+    useEffect(() => {
+        if (isEditMode) { 
+            setValidationMessage(""); 
+            return;
+        }
+
+        const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
+        if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
+            setValidationMessage("");
+            return;
+        }
+
+        const semak = async () => {
+            try {
+                const res = await api.get(`/pemantauan-risiko/check-duplicate`, {
+                    params: {
+                        risiko_id: risikoId,
+                        tahun: tahun_pemantauan,
+                        separuh: separuh_tahun_pemantauan,
+                    },
+                });
+
+                const { duplicate, invalid, message } = res.data;
+
+                if (invalid) {
+                    setValidationMessage(`❌ ${message}`);
+                } else if (duplicate) {
+                    setValidationMessage(`⚠️ ${message}`);
+                } else {
+                    setValidationMessage(`✅ ${message}`);
+                }
+            } catch (err) {
+                console.error("❌ Ralat semakan:", err);
+                setValidationMessage("⚠️ Gagal menyemak data. Cuba lagi.");
+            }
+        };
+
+        semak();
+    }, [
+        formData.tahun_pemantauan,
+        formData.separuh_tahun_pemantauan,
+        risikoId,
+    ]);
+
+
+    // ================================================================
+    // 5. Handlers
+    // ================================================================
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name.includes("skor_") ? (value === "" ? "" : parseInt(value, 10)) : value,
+        }));
+    };
+
+    const handleListChange = (listName, index, field, value) => {
+        const list = [...formData[listName]];
+        list[index][field] = value;
+        setFormData((prev) => ({ ...prev, [listName]: list }));
+    };
+
+    const handleAddListItem = (listName) => {
+        const key = listName === "pelan_tindakan_list" ? "butiran_aktiviti" : "butiran_kakitangan";
+        setFormData((prev) => ({ ...prev, [listName]: [...prev[listName], { [key]: "" }] }));
+    };
+
+    const handleRemoveListItem = (listName, index) => {
+        const list = formData[listName].filter((_, i) => i !== index);
+        const key = listName === "pelan_tindakan_list" ? "butiran_aktiviti" : "butiran_kakitangan";
+        setFormData((prev) => ({ ...prev, [listName]: list.length ? list : [{ [key]: "" }] }));
+    };
+
+    // ================================================================
+    // 6. Logic Submit DENGAN VALIDASI BARU
+    // ================================================================
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        const isEdit = isEditMode; 
+        const logId = formData.log_id;
+        const method = isEdit ? "put" : "post"; 
+        const url = isEdit ? `/pemantauan-risiko/log/${logId}` : "/pemantauan-risiko/log";
+
+        // --- ⭐ LOGIK PENGESAHAN MANDATORI BARU ⭐ ---
+        const pelanLog = formData.pelan_tindakan_list.map(item => item.butiran_aktiviti).filter(Boolean);
+        const kakitanganLog = formData.kakitangan_list.map(item => item.butiran_kakitangan).filter(Boolean);
+
+        const requiredFields = {
+            'Tahun Pemantauan': formData.tahun_pemantauan,
+            'Pelan Tindakan': pelanLog.length > 0, // Semak list tidak kosong
+            'Kakitangan': kakitanganLog.length > 0, // Semak list tidak kosong
+            'Skor Kebarangkalian': formData.skor_kebarangkalian_selepas,
+            'Skor Impak': formData.skor_impak_selepas,
+            'Status Pemantauan': formData.status_pemantauan,
+            'Kekerapan Pemantauan': formData.kekerapan_pemantauan,
+        };
+
+        const missingFields = Object.keys(requiredFields).filter(key => {
+            const value = requiredFields[key];
+            // Semak nilai kosong, 0 atau false (untuk list.length)
+            return value === null || value === undefined || value === "" || value === 0 || value === false;
+        });
+
+        if (missingFields.length > 0) {
+            alert(`Sila lengkapkan maklumat wajib berikut: ${missingFields.join(", ")}.`);
+            setIsLoading(false);
+            return;
+        }
+        
+        // Cegah submit kalau ada error duplikasi (hanya dalam mod Tambah)
+        if (!isEdit && (validationMessage.includes("❌") || validationMessage.includes("⚠️"))) {
+            alert("Sila betulkan tahun atau separuh tahun sebelum simpan.");
+            setIsLoading(false);
+            return;
+        }
+        // ------------------------------------------------------------------
+
+        try {
+            // Format semula data list
+            const payload = {
+                ...formData,
+                pelan_tindakan_log: pelanLog,
+                kakitangan_log: kakitanganLog,
+                pelan_tindakan_list: undefined,
+                kakitangan_list: undefined,
+            };
+            
+            if (!isEdit) {
+                delete payload.log_id;
             }
 
-            setTahapRisikoRujukan(tahap);
+            const res = await api[method](url, payload);
+            const savedLog = res.data?.data ?? res.data;
+
+            const actionText = isEdit ? "dikemaskini" : "ditambah";
+            alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya ${actionText}!`);
+
+            const notify = onSaveSuccess || onLogAdded;
+            if (typeof notify === "function") {
+                try { notify(savedLog); } catch (err) { console.warn("callback error:", err); }
+            }
+
+            onClose?.();
         } catch (err) {
-            console.error("❌ Gagal auto-refresh tahap risiko rujukan:", err);
+            console.error(`❌ Ralat ${isEdit ? "mengedit" : "menambah"} log:`, err);
+            alert(`Gagal ${isEdit ? "mengedit" : "menambah"} log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    fetchTahapRisikoRujukanTerkini();
-}, [formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, risikoId]);
+    if (!isOpen) return null;
+
+    // ================================================================
+    // 7. Render UI DENGAN ATRIBUT DISABLE/READONLY BARU
+    // ================================================================
+    return (
+        <div className="tambahlog-modal-overlay">
+            <div className="tambahlog-modal">
+                <form onSubmit={handleSubmit}>
+                    <div className="tambahlog-header">
+                        <span>{modalTitle}</span>
+                        <button type="button" className="tambahlog-close-btn" onClick={onClose}>
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    <div className="tambahlog-body">
+                        {/* ... (Maklumat Risiko - Tiada perubahan) ... */}
+                         <div className="tambahlog-box">
+                            <div className="tambahlog-box-header">Maklumat Risiko</div>
+                            <div className="tambahlog-row tambahlog-row-compact">
+                                <div className="tambahlog-item">
+                                    <label>No. Rujukan Risiko:</label>
+                                    <div className="tambahlog-textonly">{risikoNoRujukan || "-"}</div>
+                                </div>
+                                <div className="tambahlog-item">
+                                    <label>Risiko:</label>
+                                    <div className="tambahlog-textonly">{risikoTeks || "-"}</div>
+                                </div>
+                            </div>
+
+                            <div className="tambahlog-row tambahlog-row-compact">
+                                <div className="tambahlog-item">
+                                    <label>Tahun Risiko Asal:</label>
+                                    <div className="tambahlog-textonly">{risikoInfo?.tahun_risiko_asal || "-"}</div>
+                                </div>
+                                <div className="tambahlog-item">
+                                    <label>Separuh Tahun Risiko Asal:</label>
+                                    <div className="tambahlog-textonly">
+                                        {risikoInfo?.separuh_tahun_risiko_asal
+                                            ? risikoInfo.separuh_tahun_risiko_asal === 1
+                                                ? "Pertama"
+                                                : "Kedua"
+                                            : "-"}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="tambahlog-row" style={{marginTop:'10px', paddingBottom:'5px', borderBottom:'1px solid #ccc'}}>
+                                <div className="tambahlog-item tambahlog-tahap-rujukan">
+                                    <label>Tahap Risiko Rujukan (Log Terakhir):</label>
+                                    
+                                     <div className="tambahlog-inline-data">
+                                        <span className="tambahlog-risk-badge" style={{ backgroundColor: getColorByTahapRisikoLabel(tahapRisikoRujukan) }}>
+                                            {tahapRisikoRujukan || "Memuatkan..."}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        {/* ... (Akhir Maklumat Risiko) ... */}
 
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        
-        // ⭐ Keberkesanan tidak perlu diubah secara manual, jadi tiada logic isKeberkesananManual
+                        {/*Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
+                        <div className="tambahlog-box">  
+                            <div className="tambahlog-box-header tambahlog-header-with-btn">
+                                <span>Maklumat Pemantauan</span>
+                                <button type="button" className="tambahlog-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
+                                    <BookOpen size={16} style={{ marginRight: '6px' }} />
+                                    Panduan
+                                </button>
+                            </div>
+                            {/* Tahun, Separuh Tahun & Kelulusan - KINI DIKAWAL */}
+                            <div className="tambahlog-row">
+                                <div className="tambahlog-item">
+                                    <label>Tahun Pemantauan:*</label>
+                                    <input 
+                                        type="number" 
+                                        name="tahun_pemantauan" 
+                                        value={formData.tahun_pemantauan} 
+                                        onChange={handleChange} 
+                                        required 
+                                        readOnly={isEditMode} // ⭐ Tambah readOnly di sini
+                                        style={isEditMode ? { backgroundColor: '#f3f4f6' } : {}}
+                                    />
+                                </div>
+                                <div className="tambahlog-item">
+                                    <label>Separuh Tahun Pemantauan:*</label>
+                                    <select 
+                                        name="separuh_tahun_pemantauan" 
+                                        value={formData.separuh_tahun_pemantauan} 
+                                        onChange={handleChange}
+                                        disabled={isEditMode} // ⭐ Tambah disabled di sini
+                                        style={isEditMode ? { backgroundColor: '#f3f4f6' } : {}}
+                                    >
+                                        <option value={1}>Pertama</option>
+                                        <option value={2}>Kedua</option>
+                                    </select>
+                                </div>
+                                <div className="tambahlog-item">
+                                    <label>Kelulusan:</label>
+                                    <input type="text" name="no_bil_kelulusan" value={formData.no_bil_kelulusan} onChange={handleChange} />
+                                </div>
+                            </div>
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: name.includes("skor_") ? (value === "" ? "" : parseInt(value, 10)) : value,
-        }));
-    };
+                            {/* Alert Duplikasi (Hanya untuk Tambah) */}
+                            {validationMessage && !isEditMode && (
+                                <p
+                                    style={{
+                                        marginTop: "8px",
+                                        fontSize: "0.9rem",
+                                        color: validationMessage.includes("✅") ? "#16a34a" : (validationMessage.includes("❌") || validationMessage.includes("⚠️") ? "#dc2626" : "#eab308"),
+                                    }}
+                                >
+                                    {validationMessage}
+                                </p>
+                            )}
 
-    const handleListChange = (listName, index, field, value) => {
-        const list = [...formData[listName]];
-        list[index][field] = value;
-        setFormData((prev) => ({ ...prev, [listName]: list }));
-    };
+                            {/* Pelan Tindakan Pemantauan */}
+                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan:*</div>
+                            {formData.pelan_tindakan_list.map((item, index) => {
+                                const listName = "pelan_tindakan_list";
+                                const key = "butiran_aktiviti";
+                                return (
+                                    <div className="tambahlog-input-row" key={index}>
+                                        <input
+                                            type="text"
+                                            value={item[key]}
+                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
+                                            placeholder={`Butiran Pelan Tindakan ${index + 1}`}
+                                            // required telah dialihkan ke logic handleSubmit
+                                        />
+                                        {formData[listName].length > 1 && (
+                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
+                                        {index === formData[listName].length - 1 && (
+                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
+                                                <Plus size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
 
-    const handleAddListItem = (listName) => {
-        const key = listName === "pelan_tindakan_list" ? "butiran_aktiviti" : "butiran_kakitangan";
-        setFormData((prev) => ({ ...prev, [listName]: [...prev[listName], { [key]: "" }] }));
-    };
+                            {/* Kakitangan Bertanggungjawab */}
+                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab:*</div>
+                            {formData.kakitangan_list.map((item, index) => {
+                                const listName = "kakitangan_list";
+                                const key = "butiran_kakitangan";
+                                return (
+                                    <div className="tambahlog-input-row" key={index}>
+                                        <input
+                                            type="text"
+                                            value={item[key]}
+                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
+                                            placeholder={`Kakitangan Bertanggungjawab ${index + 1}`}
+                                            // required telah dialihkan ke logic handleSubmit
+                                        />
+                                        {formData[listName].length > 1 && (
+                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
+                                        {index === formData[listName].length - 1 && (
+                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
+                                                <Plus size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
 
-    const handleRemoveListItem = (listName, index) => {
-        const list = formData[listName].filter((_, i) => i !== index);
-        const key = listName === "pelan_tindakan_list" ? "butiran_aktiviti" : "butiran_kakitangan";
-        setFormData((prev) => ({ ...prev, [listName]: list.length ? list : [{ [key]: "" }] }));
-    };
+                            {/* Kekerapan Pemantauan */}
+                            <div className="tambahlog-row" style={{ marginTop: '10px' }}>
+                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
+                                    <label>Kekerapan Pemantauan:*</label>
+                                    <input type="text" name="kekerapan_pemantauan" value={formData.kekerapan_pemantauan} onChange={handleChange} required placeholder="Contoh: 3 Bulan / Tahunan" />
+                                </div>
+                            </div>
+                        </div>
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            if (!formData.risiko_id || !formData.status_pemantauan || !formData.kekerapan_pemantauan) {
-                alert("Sila lengkapkan maklumat wajib (Risiko, Status Pemantauan, Kekerapan Pemantauan).");
-                setIsLoading(false);
-                return;
-            }
+                        {/*Penilaian dan Keberkesanan Tindakan */}
+                        <div className="tambahlog-box">
+                            <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
+                            <div className="tambahlog-row">
+                                <div className="tambahlog-item">
+                                    <label>Skor Kebarangkalian (Selepas):*</label>
+                                    <select name="skor_kebarangkalian_selepas" value={formData.skor_kebarangkalian_selepas} onChange={handleChange} required>
+                                        {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
+                                    </select>
+                                </div>
+                                <div className="tambahlog-item">
+                                    <label>Skor Impak (Selepas):*</label>
+                                    <select name="skor_impak_selepas" value={formData.skor_impak_selepas} onChange={handleChange} required>
+                                        {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
+                                    </select>
+                                </div>
+                                <div className="tambahlog-item">
+                                    <span className="tambahlog-score-label">Tahap Risiko (Selepas):</span>
+                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
+                                </div>
+                            </div>
+                            <div className="tambahlog-row">
+                                <div className="tambahlog-item">
+                                    <label>Keberkesanan (Auto-set):</label>
+                                    <input 
+                                        type="text"
+                                        name="keberkesanan"
+                                        value={`${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`}
+                                        readOnly
+                                        disabled
+                                        style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-            // Cegah submit kalau ada error
-            if (validationMessage.includes("❌") || validationMessage.includes("⚠️")) {
-                alert("Sila betulkan tahun atau separuh tahun sebelum simpan.");
-                setIsLoading(false);
-                return;
-            }
+                        {/*Status Pemantauan */}
+                        <div className="tambahlog-box">
+                            <div className="tambahlog-box-header">Status Pemantauan</div>
+                            <div className="tambahlog-row">
+                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
+                                    <label>Status Pemantauan Semasa:*</label>
+                                    <select name="status_pemantauan" value={formData.status_pemantauan} onChange={handleChange} required>
+                                        <option>Buka</option>
+                                        <option>Sedang Dilaksanakan</option>
+                                        <option>Pemantauan</option>
+                                        <option>Selesai</option>
+                                        <option>Tutup</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-            // ⭐ Penting: Keberkesanan hanya hantar "Ya" atau "Tidak" ke API
-            const payload = {
-                ...formData,
-                keberkesanan: formData.keberkesanan, // Sudah diset kepada "Ya" atau "Tidak" secara auto
-            };
+                        {/*Catatan */}
+                        <div className="tambahlog-box">
+                            <div className="tambahlog-box-header">Catatan</div>
+                            <label>Sila masukkan catatan pemantauan:</label>
+                            <textarea name="catatan" value={formData.catatan} onChange={handleChange} rows="5" />
+                        </div>
+                    </div>
 
-            const res = await api.post("/pemantauan-risiko/log", payload);
-            const newLog = res.data?.data ?? res.data;
-
-            alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya ditambah!`);
-
-            const notify = onSaveSuccess || onLogAdded;
-            if (typeof notify === "function") {
-                try { notify(newLog); } catch (err) { console.warn("callback error:", err); }
-            }
-
-            onClose?.();
-        } catch (err) {
-            console.error("❌ Ralat menambah log:", err);
-            alert(`Gagal menambah log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="tambahlog-modal-overlay">
-            <div className="tambahlog-modal">
-                <form onSubmit={handleSubmit}>
-                    <div className="tambahlog-header">
-                        <span>Tambah Log Pemantauan Baharu</span>
-                        <button type="button" className="tambahlog-close-btn" onClick={onClose}>
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    <div className="tambahlog-body">
-                        {/* Maklumat Risiko */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Maklumat Risiko</div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>No. Rujukan Risiko:</label>
-                                    <div className="tambahlog-textonly">{risikoNoRujukan || "-"}</div>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Risiko:</label>
-                                    <div className="tambahlog-textonly">{risikoTeks || "-"}</div>
-                                </div>
-                            </div>
-
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Tahun Risiko Asal:</label>
-                                    <div className="tambahlog-textonly">{risikoInfo?.tahun_risiko_asal || "-"}</div>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Separuh Tahun Risiko Asal:</label>
-                                    <div className="tambahlog-textonly">
-                                        {risikoInfo?.separuh_tahun_risiko_asal
-                                            ? risikoInfo.separuh_tahun_risiko_asal === 1
-                                                ? "Pertama"
-                                                : "Kedua"
-                                            : "-"}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {/* Tambahan: Tahap Risiko Rujukan */}
-                            <div className="tambahlog-row" style={{marginTop:'10px', paddingBottom:'5px', borderBottom:'1px solid #ccc'}}>
-                                <div className="tambahlog-item" style={{ flex: '1 1 100%', alignItems: 'center' }}>
-                                    <label>Tahap Risiko Rujukan (Log Terakhir):</label>
-                                    
-                                     {/* ⭐ PERBAIKI: Menggunakan fungsi getColorByTahapRisikoLabel untuk dapatkan warna sebenar */}
-                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: getColorByTahapRisikoLabel(tahapRisikoRujukan) }}>
-                                        {tahapRisikoRujukan || "Memuatkan..."}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                        </div>
-
-
-                        {/*Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
-                        <div className="tambahlog-box">  
-                            <div className="tambahlog-box-header tambahlog-header-with-btn">
-                                <span>Maklumat Pemantauan</span>
-                                <button type="button" className="tambahlog-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
-                                    <BookOpen size={16} style={{ marginRight: '6px' }} />
-                                    Panduan
-                                </button>
-                            </div>
-                            {/* Tahun, Separuh Tahun & Kelulusan */}
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Tahun Pemantauan:</label>
-                                    <input type="number" name="tahun_pemantauan" value={formData.tahun_pemantauan} onChange={handleChange} required />
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Separuh Tahun Pemantauan:</label>
-                                    <select name="separuh_tahun_pemantauan" value={formData.separuh_tahun_pemantauan} onChange={handleChange}>
-                                        <option value={1}>Pertama</option>
-                                        <option value={2}>Kedua</option>
-                                    </select>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Kelulusan:</label>
-                                    <input type="text" name="no_bil_kelulusan" value={formData.no_bil_kelulusan} onChange={handleChange} />
-                                                </div>
-                            </div>
-
-                            {/* Alert Duplikasi */}
-                            {validationMessage && (
-                                <p
-                                    style={{
-                                        marginTop: "8px",
-                                        fontSize: "0.9rem",
-                                        color: validationMessage.includes("✅") ? "#16a34a" : (validationMessage.includes("❌") || validationMessage.includes("⚠️") ? "#dc2626" : "#eab308"),
-                                    }}
-                                >
-                                    {validationMessage}
-                                </p>
-                            )}
-
-                            {/* Pelan Tindakan Pemantauan */}
-                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan:</div>
-                            {formData.pelan_tindakan_list.map((item, index) => {
-                                const listName = "pelan_tindakan_list";
-                                const key = "butiran_aktiviti";
-                                return (
-                                    <div className="tambahlog-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={`Butiran Pelan Tindakan ${index + 1}`}
-                                            required
-                                        />
-                                        {formData[listName].length > 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                        {index === formData[listName].length - 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* Kakitangan Bertanggungjawab */}
-                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab:</div>
-                            {formData.kakitangan_list.map((item, index) => {
-                                const listName = "kakitangan_list";
-                                const key = "butiran_kakitangan";
-                                return (
-                                    <div className="tambahlog-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={`Kakitangan Bertanggungjawab ${index + 1}`}
-                                            required
-                                        />
-                                        {formData[listName].length > 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                        {index === formData[listName].length - 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* Kekerapan Pemantauan */}
-                            <div className="tambahlog-row" style={{ marginTop: '10px' }}>
-                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Kekerapan Pemantauan:</label>
-                                    <input type="text" name="kekerapan_pemantauan" value={formData.kekerapan_pemantauan} onChange={handleChange} required placeholder="Contoh: 3 Bulan / Tahunan" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*Penilaian dan Keberkesanan Tindakan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Skor Kebarangkalian (Selepas):</label>
-                                    <select name="skor_kebarangkalian_selepas" value={formData.skor_kebarangkalian_selepas} onChange={handleChange}>
-                                        {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
-                                    </select>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Skor Impak (Selepas):</label>
-                                    <select name="skor_impak_selepas" value={formData.skor_impak_selepas} onChange={handleChange}>
-                                        {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
-                                    </select>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <span className="tambahlog-score-label">Tahap Risiko (Selepas):</span>
-                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
-                                </div>
-                            </div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Keberkesanan (Auto-set):</label>
-                                    {/* ⭐ DIGANTI DENGAN INPUT TEKS YANG DINYAHDAYAKAN */}
-                                    <input 
-                                       type="text"
-                                       name="keberkesanan"
-                                       value={`${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`}
-                                       readOnly
-                                       disabled
-                                       style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*Status Pemantauan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Status Pemantauan</div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Status Pemantauan Semasa:</label>
-                                    <select name="status_pemantauan" value={formData.status_pemantauan} onChange={handleChange}>
-                                        <option>Buka</option>
-                                        <option>Sedang Dilaksanakan</option>
-                                        <option>Pemantauan</option>
-                                        <option>Selesai</option>
-                                        <option>Tutup</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*Catatan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Catatan</div>
-                            <label>Sila masukkan catatan pemantauan:</label>
-                            <textarea name="catatan" value={formData.catatan} onChange={handleChange} rows="5" />
-                        </div>
-                    </div>
-
-                    <div className="tambahlog-footer tambahlog-footer-centered">
-                        <button type="button" className="tambahlog-btn-cancel" onClick={onClose}>Batal</button>
-                        <button type="submit" className="tambahlog-btn-submit" disabled={isLoading}>
-                            {isLoading ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
-                            {isLoading ? "Menyimpan..." : "Simpan Log"}
-                        </button>
-                    </div>
-                </form>
+                    <div className="tambahlog-footer tambahlog-footer-centered">
+                        <button type="button" className="tambahlog-btn-cancel" onClick={onClose}>Batal</button>
+                        <button type="submit" className="tambahlog-btn-submit" disabled={isLoading}>
+                            {isLoading ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+                            {isLoading ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Simpan Log")}
+                        </button>
+                    </div>
+                </form>
 
 
-                <PanduanModal 
-                    isOpen={isPanduanOpen} 
-                    onClose={() => setIsPanduanOpen(false)} 
-                
-                    title="Panduan Log Pemantauan"
-                    content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
-                />
-            </div>
-        </div>
-    );
+                <PanduanModal 
+                    isOpen={isPanduanOpen} 
+                    onClose={() => setIsPanduanOpen(false)} 
+                    title="Panduan Log Pemantauan"
+                    content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
+                />
+            </div>
+        </div>
+    );
 }

@@ -442,4 +442,143 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
   }
 });
 
+/* =======================================================
+   PUT: Kemaskini Log Pemantauan
+   ENDPOINT: /pemantauan-risiko/log/:log_id
+======================================================= */
+router.put("/log/:log_id", verifyToken, async (req, res) => {
+  const client = await pool.connect();
+  const { log_id } = req.params;
+
+  const {
+  risiko_id,
+  tahun_pemantauan,
+  separuh_tahun_pemantauan,
+  skor_kebarangkalian_selepas,
+  skor_impak_selepas,
+  keberkesanan,
+  status_pemantauan,
+  catatan,
+  no_bil_kelulusan,
+  kekerapan_pemantauan,
+  pelan_tindakan_list,
+  kakitangan_list,
+  pelan_tindakan_log,
+  kakitangan_log,
+} = req.body;
+
+// Gunakan fallback jika list asal tiada
+const finalPelanList = (pelan_tindakan_list?.length ? pelan_tindakan_list : pelan_tindakan_log) || [];
+const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitangan_log) || [];
+
+  if (!log_id || !risiko_id) {
+    return res.status(400).json({ message: "Log ID dan Risiko ID diperlukan" });
+  }
+
+  try {
+    // 🔍 Debug log: pastikan data sampai dari frontend
+    console.log("📩 PUT /log/:log_id diterima:", {
+      log_id,
+      risiko_id,
+      pelan_tindakan_list,
+      kakitangan_list,
+    });
+
+    await client.query("BEGIN");
+
+    // 1️⃣ Kemaskini LogPemantauan
+    const logUpdateQuery = `
+      UPDATE LogPemantauan
+      SET 
+        risiko_id = $1,
+        tahun_pemantauan = $2,
+        separuh_tahun_pemantauan = $3,
+        skor_kebarangkalian_selepas = $4,
+        skor_impak_selepas = $5,
+        keberkesanan = $6,
+        status_pemantauan = $7,
+        catatan = $8,
+        no_bil_kelulusan = $9,
+        kekerapan_pemantauan = $10,
+        tarikh_kemaskini = NOW()
+      WHERE log_id = $11
+      RETURNING *;
+    `;
+
+    const logValues = [
+      risiko_id,
+      tahun_pemantauan,
+      separuh_tahun_pemantauan,
+      skor_kebarangkalian_selepas,
+      skor_impak_selepas,
+      keberkesanan,
+      status_pemantauan,
+      catatan,
+      no_bil_kelulusan,
+      kekerapan_pemantauan,
+      log_id,
+    ];
+
+    const logResult = await client.query(logUpdateQuery, logValues);
+    if (logResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Log tidak dijumpai" });
+    }
+
+    // 2️⃣ Padam data lama (supaya update bersih)
+    await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
+    await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
+// 3️⃣ Tambah semula Pelan Tindakan
+if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
+  for (const item of finalPelanList) {
+    const butiran = (typeof item === "string")
+      ? item.trim()
+      : (item?.butiran_aktiviti || "").trim();
+
+    if (!butiran) continue; // skip kosong
+
+    await client.query(
+      `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti)
+       VALUES ($1, $2)`,
+      [log_id, butiran]
+    );
+  }
+}
+
+// 4️⃣ Tambah semula Kakitangan
+if (Array.isArray(finalKakitanganList) && finalKakitanganList.length > 0) {
+  for (const item of finalKakitanganList) {
+    const butiran = (typeof item === "string")
+      ? item.trim()
+      : (item?.butiran_kakitangan || "").trim();
+
+    if (!butiran) continue;
+
+    await client.query(
+      `INSERT INTO KakitanganPemantauan (log_id, butiran_kakitangan)
+       VALUES ($1, $2)`,
+      [log_id, butiran]
+    );
+  }
+}
+    
+
+    await client.query("COMMIT");
+
+    res.json({
+      message: "✅ Log berjaya dikemaskini",
+      data: logResult.rows[0],
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("❌ Ralat PUT log:", err);
+    res.status(500).json({
+      message: "Ralat server semasa mengemaskini log.",
+      error: err.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;
