@@ -357,8 +357,7 @@ export default function TambahLogModal({
                 ...formData,
                 pelan_tindakan_log: pelanLog,
                 kakitangan_log: kakitanganLog,
-                pelan_tindakan_list: undefined,
-                kakitangan_list: undefined,
+                
             };
             
             if (!isEdit) {
