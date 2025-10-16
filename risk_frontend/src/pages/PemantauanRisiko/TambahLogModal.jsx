@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react"; 
-import api from "../../api/api"; // Pastikan laluan API anda betul
-import "./TambahLogModal.css"; // Pastikan fail CSS wujud
+import api from "../../api/api"; 
+import "./TambahLogModal.css"; 
 
 import PanduanModal from '../Panduan/Panduan'; 
 
@@ -18,7 +18,7 @@ const riskMatrix = {
 
 const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
 
-/** * Fungsi untuk mendapatkan warna berdasarkan label risiko (diguna untuk Tahap Risiko Rujukan)
+/** * Fungsi untuk mendapatkan warna berdasarkan label risiko 
  */
 const getColorByTahapRisikoLabel = (label) => {
     if (label === "Tiada Data") return "#f1f5f9";
@@ -43,7 +43,6 @@ const TAHAP_RISIKO_ORDER = {
     "Tiada Data": 0,
 };
 
-// Data mapping untuk Keberkesanan
 const KEBERKESANAN_MAPPING = {
     "Ya": "Berkesan (Menurun atau Kekal)",
     "Tidak": "Tidak Berkesan (Meningkat)",
@@ -58,7 +57,7 @@ export default function TambahLogModal({
     logDataToEdit = null, 
 }) {
     // ================================================================
-    // ⭐ TENTUKAN MOD & TAJUK MODAL
+    
     const isEditMode = !!logDataToEdit;
     const modalTitle = isEditMode ? "Kemaskini Log Pemantauan" : "Tambah Log Pemantauan Baharu";
     // ================================================================
@@ -66,22 +65,20 @@ export default function TambahLogModal({
     const [isLoading, setIsLoading] = useState(false);
     const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
 
-    // Auto-populate No. Rujukan & Risiko
+    
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
     const [risikoInfo, setRisikoInfo] = useState(null);
     const [validationMessage, setValidationMessage] = useState("");
     
-    // STATE BARU UNTUK AUTO-KEBERKESANAN
+   
     const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data"); 
 
-    // ================================================================
-    // ⭐ STATE BORANG
-    // ================================================================
+  
     const getInitialFormData = useCallback(() => ({
         log_id: null, 
         risiko_id: risikoId || null,
-        tahun_pemantauan: new Date().getFullYear(), // Default ke tahun semasa
+        tahun_pemantauan: new Date().getFullYear(), 
         separuh_tahun_pemantauan: 1,
         skor_kebarangkalian_selepas: 1,
         skor_impak_selepas: 1,
@@ -103,7 +100,7 @@ export default function TambahLogModal({
 
 
     // ================================================================
-    // 1. Logic Update Tahap Risiko Selepas & Auto-Keberkesanan
+    // Logic Update Tahap Risiko Selepas & Auto-Keberkesanan
     // ================================================================
     useEffect(() => {
         const k = parseInt(formData.skor_kebarangkalian_selepas, 10);
@@ -132,7 +129,7 @@ export default function TambahLogModal({
 
 
     // ================================================================
-    // 2. useEffect untuk Pra-Isi Data Edit / Reset Data Tambah
+    // useEffect untuk Pra-Isi Data Edit / Reset Data Tambah
     // ================================================================
     useEffect(() => {
         if (!isOpen) return;
@@ -147,7 +144,7 @@ export default function TambahLogModal({
 
 
         if (logDataToEdit) {
-            // Mod EDIT: Gunakan data yang dihantar
+            // Mod EDIT
             const k = parseInt(logDataToEdit.skor_kebarangkalian_selepas, 10);
             const i = parseInt(logDataToEdit.skor_impak_selepas, 10);
             
@@ -173,7 +170,7 @@ export default function TambahLogModal({
             setValidationMessage(""); 
 
         } else {
-            // Mod TAMBAH: Guna nilai lalai
+            
             setFormData(getInitialFormData());
             setTahapRisikoSelepas(getRiskMatrix(1, 1));
             setValidationMessage("");
@@ -182,7 +179,7 @@ export default function TambahLogModal({
 
 
     // ================================================================
-    // 3. Fetch Info Risiko & Tahap Rujukan
+    // Fetch Info Risiko & Tahap Rujukan
     // ================================================================
     useEffect(() => {
         if (!isOpen || !risikoId || !formData.tahun_pemantauan) return; 
@@ -234,7 +231,7 @@ export default function TambahLogModal({
 
 
     // ================================================================
-    // 4. Semak Duplikasi (Hanya untuk Mod TAMBAH)
+    // Semak Duplikasi (Hanya untuk Mod TAMBAH)
     // ================================================================
     useEffect(() => {
         if (isEditMode) { 
@@ -282,7 +279,7 @@ export default function TambahLogModal({
 
 
     // ================================================================
-    // 5. Handlers
+    //  Handlers
     // ================================================================
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -310,9 +307,7 @@ export default function TambahLogModal({
         setFormData((prev) => ({ ...prev, [listName]: list.length ? list : [{ [key]: "" }] }));
     };
 
-    // ================================================================
-    // 6. Logic Submit DENGAN VALIDASI BARU
-    // ================================================================
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -322,14 +317,14 @@ export default function TambahLogModal({
         const method = isEdit ? "put" : "post"; 
         const url = isEdit ? `/pemantauan-risiko/log/${logId}` : "/pemantauan-risiko/log";
 
-        // --- ⭐ LOGIK PENGESAHAN MANDATORI BARU ⭐ ---
+        
         const pelanLog = formData.pelan_tindakan_list.map(item => item.butiran_aktiviti).filter(Boolean);
         const kakitanganLog = formData.kakitangan_list.map(item => item.butiran_kakitangan).filter(Boolean);
 
         const requiredFields = {
             'Tahun Pemantauan': formData.tahun_pemantauan,
-            'Pelan Tindakan': pelanLog.length > 0, // Semak list tidak kosong
-            'Kakitangan': kakitanganLog.length > 0, // Semak list tidak kosong
+            'Pelan Tindakan': pelanLog.length > 0, 
+            'Kakitangan': kakitanganLog.length > 0, 
             'Skor Kebarangkalian': formData.skor_kebarangkalian_selepas,
             'Skor Impak': formData.skor_impak_selepas,
             'Status Pemantauan': formData.status_pemantauan,
@@ -357,7 +352,7 @@ export default function TambahLogModal({
         // ------------------------------------------------------------------
 
         try {
-            // Format semula data list
+            
             const payload = {
                 ...formData,
                 pelan_tindakan_log: pelanLog,
@@ -392,9 +387,7 @@ export default function TambahLogModal({
 
     if (!isOpen) return null;
 
-    // ================================================================
-    // 7. Render UI DENGAN ATRIBUT DISABLE/READONLY BARU
-    // ================================================================
+   
     return (
         <div className="tambahlog-modal-overlay">
             <div className="tambahlog-modal">
@@ -407,12 +400,12 @@ export default function TambahLogModal({
                     </div>
 
                     <div className="tambahlog-body">
-                        {/* ... (Maklumat Risiko - Tiada perubahan) ... */}
+                        {/* ... (Maklumat Risiko ) ... */}
                          <div className="tambahlog-box">
                             <div className="tambahlog-box-header">Maklumat Risiko</div>
                             <div className="tambahlog-row tambahlog-row-compact">
                                 <div className="tambahlog-item">
-                                    <label>No. Rujukan Risiko:</label>
+                                    <label>No. Rujukan:</label>
                                     <div className="tambahlog-textonly">{risikoNoRujukan || "-"}</div>
                                 </div>
                                 <div className="tambahlog-item">
@@ -423,11 +416,11 @@ export default function TambahLogModal({
 
                             <div className="tambahlog-row tambahlog-row-compact">
                                 <div className="tambahlog-item">
-                                    <label>Tahun Risiko Asal:</label>
+                                    <label>Tahun Didaftarkan:</label>
                                     <div className="tambahlog-textonly">{risikoInfo?.tahun_risiko_asal || "-"}</div>
                                 </div>
                                 <div className="tambahlog-item">
-                                    <label>Separuh Tahun Risiko Asal:</label>
+                                    <label>Separuh Tahun Didaftarkan:</label>
                                     <div className="tambahlog-textonly">
                                         {risikoInfo?.separuh_tahun_risiko_asal
                                             ? risikoInfo.separuh_tahun_risiko_asal === 1
@@ -440,7 +433,7 @@ export default function TambahLogModal({
                             
                             <div className="tambahlog-row" style={{marginTop:'10px', paddingBottom:'5px', borderBottom:'1px solid #ccc'}}>
                                 <div className="tambahlog-item tambahlog-tahap-rujukan">
-                                    <label>Tahap Risiko Rujukan (Log Terakhir):</label>
+                                    <label>Skor Risiko Sebelum:</label>
                                     
                                      <div className="tambahlog-inline-data">
                                         <span className="tambahlog-risk-badge" style={{ backgroundColor: getColorByTahapRisikoLabel(tahapRisikoRujukan) }}>
@@ -473,7 +466,7 @@ export default function TambahLogModal({
                                         value={formData.tahun_pemantauan} 
                                         onChange={handleChange} 
                                         required 
-                                        readOnly={isEditMode} // ⭐ Tambah readOnly di sini
+                                        readOnly={isEditMode} 
                                         style={isEditMode ? { backgroundColor: '#f3f4f6' } : {}}
                                     />
                                 </div>
@@ -483,7 +476,7 @@ export default function TambahLogModal({
                                         name="separuh_tahun_pemantauan" 
                                         value={formData.separuh_tahun_pemantauan} 
                                         onChange={handleChange}
-                                        disabled={isEditMode} // ⭐ Tambah disabled di sini
+                                        disabled={isEditMode} 
                                         style={isEditMode ? { backgroundColor: '#f3f4f6' } : {}}
                                     >
                                         <option value={1}>Pertama</option>
@@ -521,7 +514,7 @@ export default function TambahLogModal({
                                             value={item[key]}
                                             onChange={(e) => handleListChange(listName, index, key, e.target.value)}
                                             placeholder={`Butiran Pelan Tindakan ${index + 1}`}
-                                            // required telah dialihkan ke logic handleSubmit
+                                            
                                         />
                                         {formData[listName].length > 1 && (
                                             <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
@@ -568,7 +561,7 @@ export default function TambahLogModal({
                             {/* Kekerapan Pemantauan */}
                             <div className="tambahlog-row" style={{ marginTop: '10px' }}>
                                 <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Kekerapan Pemantauan:*</label>
+                                    <label>Kekerapan:*</label>
                                     <input type="text" name="kekerapan_pemantauan" value={formData.kekerapan_pemantauan} onChange={handleChange} required placeholder="Contoh: 3 Bulan / Tahunan" />
                                 </div>
                             </div>
@@ -579,25 +572,25 @@ export default function TambahLogModal({
                             <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
                             <div className="tambahlog-row">
                                 <div className="tambahlog-item">
-                                    <label>Skor Kebarangkalian (Selepas):*</label>
+                                    <label>Skor Kebarangkalian:*</label>
                                     <select name="skor_kebarangkalian_selepas" value={formData.skor_kebarangkalian_selepas} onChange={handleChange} required>
                                         {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
                                     </select>
                                 </div>
                                 <div className="tambahlog-item">
-                                    <label>Skor Impak (Selepas):*</label>
+                                    <label>Skor Impak:*</label>
                                     <select name="skor_impak_selepas" value={formData.skor_impak_selepas} onChange={handleChange} required>
                                         {[1, 2, 3, 4, 5].map((v) => <option key={v}>{v}</option>)}
                                     </select>
                                 </div>
                                 <div className="tambahlog-item">
-                                    <span className="tambahlog-score-label">Tahap Risiko (Selepas):</span>
+                                    <span className="tambahlog-score-label">Skor Risiko :</span>
                                     <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
                                 </div>
                             </div>
                             <div className="tambahlog-row">
                                 <div className="tambahlog-item">
-                                    <label>Keberkesanan (Auto-set):</label>
+                                    <label>Keberkesanan:</label>
                                     <input 
                                         type="text"
                                         name="keberkesanan"
@@ -630,7 +623,7 @@ export default function TambahLogModal({
                         {/*Catatan */}
                         <div className="tambahlog-box">
                             <div className="tambahlog-box-header">Catatan</div>
-                            <label>Sila masukkan catatan pemantauan:</label>
+                            <label>Sila masukkan catatan :</label>
                             <textarea name="catatan" value={formData.catatan} onChange={handleChange} rows="5" />
                         </div>
                     </div>
