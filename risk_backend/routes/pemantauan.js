@@ -238,31 +238,102 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   🟢 GET: Tahap Risiko Rujukan (Log Terakhir atau Risiko Asal)
-   ENDPOINT: /pemantauan-risiko/:risiko_id/tahap-rujukan
+   🟢 GET: Tahap Risiko Rujukan (Log Terakhir atau Risiko Asal)
+   ENDPOINT: /pemantauan-risiko/:risiko_id/tahap-rujukan
 ======================================================= */
 router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
-  try {
-    const { risiko_id } = req.params;
-    const risikoIdInt = parseInt(risiko_id, 10);
+  try {
+    const { risiko_id } = req.params;
 
-    // ⭐ Menggunakan rentetan SATU BARIS untuk mengelakkan isu newline/whitespace tersembunyi
-    const query = 
-`SELECT r.risiko_id, r.tahap_risiko AS tahap_risiko_asal, (SELECT lp_latest.keberkesanan FROM LogPemantauan lp_latest WHERE lp_latest.risiko_id = r.risiko_id ORDER BY lp_latest.tahun_pemantauan DESC, lp_latest.tarikh_pemantauan DESC LIMIT 1) AS keberkesanan_log_terakhir, COALESCE((SELECT CASE (lp_latest.skor_kebarangkalian_selepas * lp_latest.skor_impak_selepas) WHEN 1 THEN 'R' WHEN 2 THEN 'R' WHEN 3 THEN 'S' WHEN 4 THEN 'S' WHEN 5 THEN 'T' WHEN 6 THEN 'R' WHEN 8 THEN 'S' WHEN 9 THEN 'S' WHEN 10 THEN 'T' WHEN 12 THEN 'T' WHEN 15 THEN 'ST' WHEN 16 THEN 'ST' WHEN 20 THEN 'ST' WHEN 25 THEN 'ST' ELSE r.tahap_risiko END FROM LogPemantauan lp_latest WHERE lp_latest.risiko_id = r.risiko_id ORDER BY lp_latest.tahun_pemantauan DESC, lp_latest.tarikh_pemantauan DESC LIMIT 1), r.tahap_risiko) AS tahap_risiko_rujukan FROM Risiko r WHERE r.risiko_id = $1;`;
+    // Risk matrix 5x5
+    const riskMatrix = {
+      1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+      2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+      3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
+      4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
+      5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
+    };
 
-    // Tidak perlu .trim() jika menggunakan string literal biasa
-    const { rows } = await pool.query(query, [risikoIdInt]);
+    const getRiskLevel = (k, i) => {
+      const kk = Math.min(Math.max(parseInt(k || 1), 1), 5);
+      const ii = Math.min(Math.max(parseInt(i || 1), 1), 5);
+      return (riskMatrix[kk] && riskMatrix[kk][ii]) 
+        ? riskMatrix[kk][ii] 
+        : { label: "Tiada", color: "#9ca3af" };
+    };
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
-    }
+    // 1️⃣ Cuba dapatkan log terakhir (selepas kawalan)
+   // 1️⃣ Cuba dapatkan log terakhir SEBELUM tahun & separuh semasa (jika diberi)
+const { tahun, separuh } = req.query;
 
-    res.json(rows[0]);
-  } catch (err) {
-    console.error("❌ Ralat GET /:risiko_id/tahap-rujukan:", err);
-    res.status(500).json({ message: "Gagal memuatkan maklumat risiko rujukan." });
-  }
+let logQuery = `
+  SELECT skor_kebarangkalian_selepas AS k, skor_impak_selepas AS i
+  FROM logpemantauan
+  WHERE risiko_id = $1
+`;
+const params = [risiko_id];
+
+if (tahun && separuh) {
+  logQuery += `
+    AND (
+      tahun_pemantauan < $2
+      OR (tahun_pemantauan = $2 AND separuh_tahun_pemantauan < $3)
+    )
+    ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC, tarikh_pemantauan DESC
+    LIMIT 1
+  `;
+  params.push(parseInt(tahun, 10), parseInt(separuh, 10));
+} else {
+  logQuery += `
+    ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC
+    LIMIT 1
+  `;
+}
+
+const logRes = await pool.query(logQuery, params);
+
+
+    let k = 1, i = 1, sumber = "risiko";
+
+    if (logRes.rows.length > 0 && logRes.rows[0].k && logRes.rows[0].i) {
+      k = logRes.rows[0].k;
+      i = logRes.rows[0].i;
+      sumber = "log";
+    } else {
+      // 2️⃣ Tiada log? guna data asal dari jadual risiko
+      const risikoRes = await pool.query(
+        `SELECT skor_kebarangkalian AS k, skor_impak AS i
+         FROM risiko
+         WHERE risiko_id = $1`,
+        [risiko_id]
+      );
+
+      if (risikoRes.rows.length === 0) {
+        return res.status(404).json({ message: "Risiko tidak dijumpai" });
+      }
+
+      k = risikoRes.rows[0].k;
+      i = risikoRes.rows[0].i;
+      sumber = "risiko";
+    }
+
+    const tahap = getRiskLevel(k, i);
+
+    res.json({
+      risiko_id,
+      sumber,
+      skor_kebarangkalian: k,
+      skor_impak: i,
+      tahap_risiko_rujukan: tahap.label,
+      warna: tahap.color,
+    });
+
+  } catch (err) {
+    console.error("❌ Ralat GET /:risiko_id/tahap-rujukan:", err);
+    res.status(500).json({ message: err.message });
+  }
 });
+
 
 
 /* =======================================================

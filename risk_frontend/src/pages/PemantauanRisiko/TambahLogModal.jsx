@@ -18,6 +18,25 @@ const riskMatrix = {
 
 const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
 
+/** * ⭐ FUNGSI BARU UNTUK MENDAPATKAN WARNA BERDASARKAN LABEL RISIKO 
+ * Ini menyelesaikan isu 'Tahap Risiko Rujukan' tidak berwarna.
+ */
+const getColorByTahapRisikoLabel = (label) => {
+    if (label === "Tiada Data") return "#f1f5f9";
+    
+    // Cari label dalam matrix untuk mendapatkan warna yang sepadan
+    for (const k in riskMatrix) {
+        for (const i in riskMatrix[k]) {
+            if (riskMatrix[k][i].label === label) {
+                return riskMatrix[k][i].color; // Pulangkan warna yang ditemui (cth: #22c55e untuk R)
+            }
+        }
+    }
+    // Fallback jika label ada tapi tidak ditemui (jarang berlaku)
+    return "#f1f5f9"; 
+};
+
+
 // Tahap Risiko: R < S < T < ST
 const TAHAP_RISIKO_ORDER = {
     "R": 1,
@@ -29,8 +48,8 @@ const TAHAP_RISIKO_ORDER = {
 
 // ⭐ Data mapping untuk Keberkesanan
 const KEBERKESANAN_MAPPING = {
-    "Ya": "Berkesan (Menurun atau Kekal)",
-    "Tidak": "Tidak Berkesan (Meningkat)",
+    "Ya": "Berkesan (Menurun atau Kekal)",
+    "Tidak": "Tidak Berkesan (Meningkat)",
 };
 
 export default function TambahLogModal({
@@ -56,7 +75,7 @@ export default function TambahLogModal({
 
     const [formData, setFormData] = useState({
         risiko_id: risikoId || null,
-        tahun_pemantauan: currentYear,
+        tahun_pemantauan: "",
         separuh_tahun_pemantauan: 1,
         skor_kebarangkalian_selepas: 1,
         skor_impak_selepas: 1,
@@ -107,6 +126,8 @@ export default function TambahLogModal({
     }, [risikoId]);
 
 
+
+
     // 2. Fetch No. Rujukan, Risiko & Tahap Risiko Rujukan bila modal dibuka
     useEffect(() => {
         if (!isOpen || !risikoId) return;
@@ -117,21 +138,32 @@ export default function TambahLogModal({
                 const infoRes = await api.get(`/pemantauan-risiko/${risikoId}/info`);
                 const info = infoRes.data || {};
 
-                // 2. Dapatkan Tahap Risiko Rujukan
-                const rujukanRes = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`); 
-                const rujukanInfo = rujukanRes.data || {};
-                
-                if (!mounted) return;
-                
-                setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
-                setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
-                setRisikoInfo(info);
-                setFormData((prev) => ({ ...prev, risiko_id: risikoId }));
-                
-                // ⭐ SET Tahap Risiko Rujukan
-                const tahapRujukan = rujukanInfo.tahap_risiko_rujukan || "Tiada Data";
-                setTahapRisikoRujukan(tahapRujukan);
-                
+                // 2. Dapatkan Tahap Risiko Rujukan (Log Terakhir)
+                      const rujukanRes = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`);
+                      const rujukanInfo = rujukanRes.data || {};
+
+                      if (!mounted) return;
+
+                      setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
+                      setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
+                      setRisikoInfo(info);
+                      setFormData((prev) => ({ ...prev, risiko_id: risikoId }));
+
+                      // ====================================================
+                      // 🔁 Jika tiada log pemantauan → guna tahap risiko asal
+                      // ====================================================
+                      let tahapRujukan;
+                      if (rujukanInfo && rujukanInfo.tahap_risiko_rujukan && rujukanInfo.tahap_risiko_rujukan !== "Tiada Data") {
+                          tahapRujukan = rujukanInfo.tahap_risiko_rujukan;
+                      } else {
+                          // fallback ke tahap risiko asal (berdasarkan kawalan asal risiko)
+                          const kAsal = parseInt(info.kebarangkalian_selepas || info.kebarangkalian_asal || 1, 10);
+                          const iAsal = parseInt(info.impak_selepas || info.impak_asal || 1, 10);
+                          tahapRujukan = getRiskMatrix(kAsal, iAsal).label;
+                      }
+
+                      setTahapRisikoRujukan(tahapRujukan);
+                      
             } catch (err) {
                 console.error("❌ Gagal fetch info risiko:", err);
                 // ... (reset states)
@@ -181,6 +213,36 @@ export default function TambahLogModal({
         risikoInfo,
         risikoId,
     ]);
+// 🔁 Auto-refresh Tahap Risiko Rujukan bila Tahun/Separuh Tahun berubah
+useEffect(() => {
+    if (!risikoId || !formData.tahun_pemantauan || !formData.separuh_tahun_pemantauan) return;
+
+    const fetchTahapRisikoRujukanTerkini = async () => {
+        try {
+            const res = await api.get(`/pemantauan-risiko/${risikoId}/tahap-rujukan`, {
+                params: {
+                    tahun: formData.tahun_pemantauan,
+                    separuh: formData.separuh_tahun_pemantauan,
+                },
+            });
+            const data = res.data || {};
+            
+            // fallback kalau tiada data
+            let tahap = data.tahap_risiko_rujukan;
+            if (!tahap || tahap === "Tiada Data") {
+                const kAsal = parseInt(risikoInfo?.kebarangkalian_selepas || risikoInfo?.kebarangkalian_asal || 1, 10);
+                const iAsal = parseInt(risikoInfo?.impak_selepas || risikoInfo?.impak_asal || 1, 10);
+                tahap = getRiskMatrix(kAsal, iAsal).label;
+            }
+
+            setTahapRisikoRujukan(tahap);
+        } catch (err) {
+            console.error("❌ Gagal auto-refresh tahap risiko rujukan:", err);
+        }
+    };
+
+    fetchTahapRisikoRujukanTerkini();
+}, [formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, risikoId]);
 
 
     const handleChange = (e) => {
@@ -302,7 +364,9 @@ export default function TambahLogModal({
                             <div className="tambahlog-row" style={{marginTop:'10px', paddingBottom:'5px', borderBottom:'1px solid #ccc'}}>
                                 <div className="tambahlog-item" style={{ flex: '1 1 100%', alignItems: 'center' }}>
                                     <label>Tahap Risiko Rujukan (Log Terakhir):</label>
-                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: getRiskMatrix(0,0).color }}>
+                                    
+                                     {/* ⭐ PERBAIKI: Menggunakan fungsi getColorByTahapRisikoLabel untuk dapatkan warna sebenar */}
+                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: getColorByTahapRisikoLabel(tahapRisikoRujukan) }}>
                                         {tahapRisikoRujukan || "Memuatkan..."}
                                     </span>
                                 </div>
@@ -443,13 +507,13 @@ export default function TambahLogModal({
                                     <label>Keberkesanan (Auto-set):</label>
                                     {/* ⭐ DIGANTI DENGAN INPUT TEKS YANG DINYAHDAYAKAN */}
                                     <input 
-                                       type="text"
-                                       name="keberkesanan"
-                                       value={`${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`}
-                                       readOnly
-                                       disabled
-                                       style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
-                                    />
+                                       type="text"
+                                       name="keberkesanan"
+                                       value={`${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`}
+                                       readOnly
+                                       disabled
+                                       style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
+                                    />
                                 </div>
                             </div>
                         </div>
