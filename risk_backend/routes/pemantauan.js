@@ -153,8 +153,9 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
 
 /* =======================================================
    🟡 GET: Semak Kewujudan Tahun & Separuh Tahun
-   + Pastikan tahun pemantauan >= tahun risiko
-   + Jika tahun sama, separuh pemantauan >= separuh risiko
+   + Pastikan tahun pemantauan > tahun risiko
+   + Jika tahun sama, separuh pemantauan > separuh risiko
+   + Tahun/separuh sama atau lebih awal ❌ tidak dibenarkan
    ENDPOINT: /pemantauan-risiko/check-duplicate
    Query: ?risiko_id=1&tahun=2025&separuh=1
 ======================================================= */
@@ -183,25 +184,20 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     const tahunPemantauan = parseInt(tahun, 10);
     const separuhPemantauan = parseInt(separuh, 10);
 
-    // 🔹 2. Semak jika tahun pemantauan kurang dari tahun risiko
-    if (tahunPemantauan < risikoTahun) {
+    // 🔹 2. Semak jika tahun atau separuh tahun sama / lebih awal
+    if (
+      tahunPemantauan < risikoTahun ||
+      (tahunPemantauan === risikoTahun && separuhPemantauan <= risikoSeparuh)
+    ) {
       return res.json({
         duplicate: false,
         invalid: true,
-        message: "Tahun pemantauan tidak boleh lebih awal daripada tahun risiko."
+        message:
+          "Tahun atau separuh tahun pemantauan tidak boleh sama atau lebih awal daripada risiko asal.",
       });
     }
 
-    // 🔹 3. Jika tahun sama, semak separuh tahun
-    if (tahunPemantauan === risikoTahun && separuhPemantauan < risikoSeparuh) {
-      return res.json({
-        duplicate: false,
-        invalid: true,
-        message: "Separuh tahun pemantauan tidak boleh lebih awal daripada separuh tahun risiko."
-      });
-    }
-
-    // 🔹 4. Semak duplikasi (tahun & separuh tahun sama)
+    // 🔹 3. Semak duplikasi (tahun & separuh tahun sama dengan log sedia ada)
     const checkQuery = `
       SELECT COUNT(*) AS count 
       FROM LogPemantauan 
@@ -209,27 +205,33 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
       AND tahun_pemantauan = $2 
       AND separuh_tahun_pemantauan = $3
     `;
-    const { rows } = await pool.query(checkQuery, [risiko_id, tahunPemantauan, separuhPemantauan]);
+    const { rows } = await pool.query(checkQuery, [
+      risiko_id,
+      tahunPemantauan,
+      separuhPemantauan,
+    ]);
     const duplicate = parseInt(rows[0].count, 10) > 0;
 
-    // 🔹 5. Balas hasil
+    // 🔹 4. Balas hasil
     if (duplicate) {
       return res.json({
         duplicate: true,
         invalid: false,
-        message: "Log pemantauan untuk tahun & separuh tahun ini telah wujud."
+        message:
+          "Log pemantauan untuk tahun & separuh tahun ini telah wujud.",
       });
     }
 
     res.json({
       duplicate: false,
       invalid: false,
-      message: "Pemantauan sah untuk ditambah."
+      message: "Pemantauan sah untuk ditambah.",
     });
-
   } catch (err) {
     console.error("❌ Ralat GET /check-duplicate:", err);
-    res.status(500).json({ message: "Gagal menyemak data duplicate." });
+    res
+      .status(500)
+      .json({ message: "Gagal menyemak data duplicate: " + err.message });
   }
 });
 
