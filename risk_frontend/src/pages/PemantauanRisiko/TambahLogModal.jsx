@@ -84,53 +84,46 @@ export default function TambahLogModal({
   }, [isOpen, risikoId]);
 
   // 🟢 Auto semak bila tahun / separuh tahun berubah
-  useEffect(() => {
-    const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
-    if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
-      setValidationMessage("");
-      return;
+useEffect(() => {
+  const { tahun_pemantauan, separuh_tahun_pemantauan } = formData;
+  if (!tahun_pemantauan || !separuh_tahun_pemantauan || !risikoId) {
+    setValidationMessage("");
+    return;
+  }
+
+  const semak = async () => {
+    try {
+      const res = await api.get(`/pemantauan-risiko/check-duplicate`, {
+        params: {
+          risiko_id: risikoId,
+          tahun: tahun_pemantauan,
+          separuh: separuh_tahun_pemantauan,
+        },
+      });
+
+      const { duplicate, invalid, message } = res.data;
+
+      if (invalid) {
+        setValidationMessage(`❌ ${message}`);
+      } else if (duplicate) {
+        setValidationMessage(`⚠️ ${message}`);
+      } else {
+        setValidationMessage(`✅ ${message}`);
+      }
+    } catch (err) {
+      console.error("❌ Ralat semakan:", err);
+      setValidationMessage("⚠️ Gagal menyemak data. Cuba lagi.");
     }
+  };
 
-    const semak = async () => {
-      // 1️⃣ Semak kalau kurang dari risiko asal
-      if (risikoInfo) {
-        const asalTahun = parseInt(risikoInfo.tahun);
-        const asalSeparuh = parseInt(risikoInfo.separuh_tahun);
-        const tahunBaru = parseInt(tahun_pemantauan);
-        const separuhBaru = parseInt(separuh_tahun_pemantauan);
+  semak();
+}, [
+  formData.tahun_pemantauan,
+  formData.separuh_tahun_pemantauan,
+  risikoInfo,
+  risikoId,
+]);
 
-        if (
-          tahunBaru < asalTahun ||
-          (tahunBaru === asalTahun && separuhBaru < asalSeparuh)
-        ) {
-          setValidationMessage("❌ Separuh tahun tidak boleh kurang daripada risiko asal.");
-          return;
-        }
-      }
-
-      // 2️⃣ Semak duplicate di backend
-      try {
-       const res = await api.get(`/pemantauan-risiko/check-duplicate`, {
-  params: {
-    risiko_id: risikoId,
-    tahun: tahun_pemantauan,
-    separuh: separuh_tahun_pemantauan,
-  },
-});
-if (res.data.duplicate) {
-  setValidationMessage("⚠️ Tahun dan separuh tahun ini sudah wujud dalam log.");
-} else {
-  setValidationMessage("✅ Tahun dan separuh tahun ini boleh digunakan.");
-}
-
-      } catch (err) {
-        console.error("❌ Ralat semakan:", err);
-        setValidationMessage("⚠️ Gagal semak data. Cuba lagi.");
-      }
-    };
-
-    semak();
-  }, [formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, risikoInfo, risikoId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
