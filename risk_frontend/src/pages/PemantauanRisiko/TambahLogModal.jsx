@@ -350,7 +350,7 @@ useEffect(() => {
                   </select>
                 </div>
                 <div className="tambahlog-item">
-                  <span className="tambahlog-score-label">Tahap Risiko:</span>
+                  <span className="tambahlog-score-label">Skor Risiko:</span>
                   <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
                 </div>
               </div>
