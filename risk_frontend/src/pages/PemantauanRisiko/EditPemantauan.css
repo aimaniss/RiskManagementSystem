@@ -256,7 +256,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .pemantauan-score-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   text-transform: none;
@@ -387,11 +387,11 @@
     min-width: 100%;
   }
   .log-pemantauan-table th {
-    font-size: 12px;
+    font-size: 10px;
     padding: 8px 4px;
   }
   .log-pemantauan-table td {
-    font-size: 12px;
+    font-size: 10px;
     padding: 6px 4px;
   }
 }
@@ -403,19 +403,20 @@
 .log-pemantauan-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  margin: 10px 0 0 0;
+  font-size: 10px;
+  margin: 0;
+  min-width: 1500px;
 }
 
 .log-pemantauan-table th {
-  background-color: #e5e7eb;
-  color: #1f2937;
-  font-weight: 700;
-  padding: 10px 8px;
+  background-color: #e0e5eb;
+  color: #2f3336;
+  font-weight: 600;
+  padding: 8px 8px;
   text-align: center;
   border: 1px solid #d1d5db;
   vertical-align: middle;
-  text-transform: none; /* Tiada huruf besar */
+  text-transform: none;
 }
 
 .log-pemantauan-table td {
@@ -425,7 +426,7 @@
   vertical-align: top;
   color: #374151;
   word-break: break-word;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.4;
 }
 
@@ -479,7 +480,7 @@
 /* Kolum PELAN TINDAKAN - DISETKAN SAMA SAIZ DENGAN KOLUM CATATAN (18%) */
 .log-pemantauan-table th:nth-child(3),
 .log-pemantauan-table td:nth-child(3) {
-  max-width: 250px;
+  max-width: 300px;
   width: 18%; /* Set kepada 18% */
   text-align: left;
 }
@@ -495,6 +496,17 @@
   width: 1%;
 }
 
+.log-pemantauan-table td:nth-child(10) {
+  max-width: 25px;
+  width: 8%;
+  text-align: center;
+}
+
+.log-pemantauan-table td:nth-child(11) {
+  max-width: 25px;
+  width: 14%;
+  text-align: center;
+}
 .pemantauan-button-circle {
   border: none;
   border-radius: 50%;

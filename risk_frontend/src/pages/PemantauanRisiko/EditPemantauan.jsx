@@ -386,7 +386,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                         
                                         {/* Strategi Kawalan */}
                                         <div className="pemantauan-data-line-block">
-                                            <span className="pemantauan-label-mon">Strategi Kawalan:</span>
+                                            <span className="pemantauan-label-mon">Jenis Kawalan:</span>
                                             <span className="pemantauan-data-mon">{data.jenisKawalan || "Tiada Data Rawatan"}</span>
                                         </div>
                                         
@@ -403,7 +403,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
 
                                         {/* Tempoh Jangkaan Siap */}
                                         <div className="pemantauan-data-line-block">
-                                            <span className="pemantauan-label-mon">Tempoh Jangkaan Siap:</span>
+                                            <span className="pemantauan-label-mon">Tempoh Jangkaan Siap Tindakan:</span>
                                             <span className="pemantauan-data-mon">{data.tempohSiap || "-"}</span>
                                         </div>
 
@@ -433,7 +433,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                         </button>
 
                         </div>
-                        <div style={{ padding: '20px' }}>
+                        <div style={{ padding: '4px' }}>
                             {isLoadingLog ? (
                                 <div style={{ textAlign: 'center', padding: '50px' }}>
                                     <Loader2 size={32} className="spin" />
@@ -449,12 +449,12 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                                                 <th>Pelan Tindakan</th>
                                                 <th>Kekerapan Pemantauan</th> 
                                                 <th>Kakitangan Bertanggungjawab</th>
-                                                <th>K'kalian Skor</th> 
-                                                <th>Impak Skor</th>
-                                                <th>Tahap Risiko</th>
+                                                <th>Skor Kebarangkalian</th> 
+                                                <th>Skor Impak</th>
+                                                <th>Skor Risiko</th>
                                                 <th>Keberkesanan</th>
                                                 <th>Status Pemantauan</th>
-                                                <th>Kelulusan (Bil No)</th> 
+                                                <th>Kelulusan </th> 
                                                 <th>Catatan</th>
                                                 <th>Tindakan</th>
                                             </tr>
