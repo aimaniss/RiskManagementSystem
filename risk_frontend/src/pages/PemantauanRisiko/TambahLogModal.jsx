@@ -204,7 +204,7 @@ useEffect(() => {
           </div>
 
           <div className="tambahlog-body">
-           {/* 1. Maklumat Risiko */}
+           {/* Maklumat Risiko */}
 <div className="tambahlog-box">
   <div className="tambahlog-box-header">Maklumat Risiko</div>
   <div className="tambahlog-row">
@@ -237,7 +237,7 @@ useEffect(() => {
 </div>
 
 
-            {/* 2. Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
+            {/*Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
             <div className="tambahlog-box">  
               <div className="tambahlog-box-header tambahlog-header-with-btn">
                 <span>Maklumat Pemantauan</span>
@@ -343,7 +343,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* 3. Penilaian dan Keberkesanan Tindakan */}
+            {/*Penilaian dan Keberkesanan Tindakan */}
             <div className="tambahlog-box">
               <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
               <div className="tambahlog-row">
@@ -375,7 +375,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* 4. Status Pemantauan */}
+            {/*Status Pemantauan */}
             <div className="tambahlog-box">
               <div className="tambahlog-box-header">Status Pemantauan</div>
               <div className="tambahlog-row">
@@ -392,7 +392,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* 5. Catatan */}
+            {/*Catatan */}
             <div className="tambahlog-box">
               <div className="tambahlog-box-header">Catatan</div>
               <label>Sila masukkan catatan pemantauan:</label>
