@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react"; // ⬅️ Tambah BookOpen
+import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react"; 
 import api from "../../api/api";
 import "./TambahLogModal.css";
 
-// 💡 Anggap PanduanModal berada di lokasi yang boleh diakses
-// Sila ubah laluan (path) jika perlu!
-import PanduanModal from '../Panduan/Panduan'; // ⬅️ Tambah import PanduanModal
+import PanduanModal from '../Panduan/Panduan'; 
 
 
 // Risk matrix (tahap risiko selepas kawalan)
 const riskMatrix = {
-  1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
-    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
+  1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+    2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
+    3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
+    4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
+    5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
 };
 
 const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
@@ -28,7 +26,7 @@ export default function TambahLogModal({
 }) {
   const currentYear = new Date().getFullYear();
   const [isLoading, setIsLoading] = useState(false);
-  const [isPanduanOpen, setIsPanduanOpen] = useState(false); // ⬅️ State untuk PanduanModal
+  const [isPanduanOpen, setIsPanduanOpen] = useState(false); // State untuk PanduanModal
 
   // Auto-populate No. Rujukan & Risiko
   const [risikoTeks, setRisikoTeks] = useState("");
@@ -208,7 +206,7 @@ useEffect(() => {
           <div className="tambahlog-body">
            {/* 1. Maklumat Risiko */}
 <div className="tambahlog-box">
-  <div className="tambahlog-box-header">1. Maklumat Risiko</div>
+  <div className="tambahlog-box-header">Maklumat Risiko</div>
   <div className="tambahlog-row">
     <div className="tambahlog-item">
       <label>No. Rujukan Risiko:</label>
@@ -240,10 +238,9 @@ useEffect(() => {
 
 
             {/* 2. Maklumat Pemantauan (Tahun, Separuh Tahun, Kelulusan, Pelan Tindakan, Kakitangan, Kekerapan) */}
-            <div className="tambahlog-box">
-                {/* ⬅️ PERUBAHAN DI SINI: Letak butang Panduan di sebelah kanan header */}
+            <div className="tambahlog-box">  
               <div className="tambahlog-box-header tambahlog-header-with-btn">
-                <span>2. Maklumat Pemantauan</span>
+                <span>Maklumat Pemantauan</span>
                 <button type="button" className="tambahlog-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
                   <BookOpen size={16} style={{ marginRight: '6px' }} />
                   Panduan
@@ -263,7 +260,7 @@ useEffect(() => {
                   </select>
                 </div>
                 <div className="tambahlog-item">
-                  <label>Kelulusan (No. Bil):</label>
+                  <label>Kelulusan:</label>
                   <input type="text" name="no_bil_kelulusan" value={formData.no_bil_kelulusan} onChange={handleChange} />
                 </div>
               </div>
@@ -282,7 +279,7 @@ useEffect(() => {
               )}
 
               {/* Pelan Tindakan Pemantauan */}
-              <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan</div>
+              <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan:</div>
               {formData.pelan_tindakan_list.map((item, index) => {
                 const listName = "pelan_tindakan_list";
                 const key = "butiran_aktiviti";
@@ -310,7 +307,7 @@ useEffect(() => {
               })}
 
               {/* Kakitangan Bertanggungjawab */}
-              <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab</div>
+              <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab:</div>
               {formData.kakitangan_list.map((item, index) => {
                 const listName = "kakitangan_list";
                 const key = "butiran_kakitangan";
@@ -320,7 +317,7 @@ useEffect(() => {
                       type="text"
                       value={item[key]}
                       onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                      placeholder={`Nama Kakitangan ${index + 1}`}
+                      placeholder={`Kakitangan Bertanggungjawab ${index + 1}`}
                       required
                     />
                     {formData[listName].length > 1 && (
@@ -348,7 +345,7 @@ useEffect(() => {
 
             {/* 3. Penilaian dan Keberkesanan Tindakan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">3. Penilaian dan Keberkesanan Tindakan</div>
+              <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
               <div className="tambahlog-row">
                 <div className="tambahlog-item">
                   <label>Skor Kebarangkalian:</label>
@@ -363,7 +360,7 @@ useEffect(() => {
                   </select>
                 </div>
                 <div className="tambahlog-item">
-                  <span className="tambahlog-score-label">Tahap Risiko:</span>
+                  <span className="tambahlog-score-label">Skor Risiko:</span>
                   <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
                 </div>
               </div>
@@ -380,7 +377,7 @@ useEffect(() => {
 
             {/* 4. Status Pemantauan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">4. Status Pemantauan</div>
+              <div className="tambahlog-box-header">Status Pemantauan</div>
               <div className="tambahlog-row">
                 <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
                   <label>Status Pemantauan Semasa:</label>
@@ -397,7 +394,7 @@ useEffect(() => {
 
             {/* 5. Catatan */}
             <div className="tambahlog-box">
-              <div className="tambahlog-box-header">5. Catatan</div>
+              <div className="tambahlog-box-header">Catatan</div>
               <label>Sila masukkan catatan pemantauan:</label>
               <textarea name="catatan" value={formData.catatan} onChange={handleChange} rows="5" />
             </div>
@@ -412,11 +409,11 @@ useEffect(() => {
           </div>
         </form>
         
-        {/* ⬅️ Tambah PanduanModal di sini */}
+        
         <PanduanModal 
           isOpen={isPanduanOpen} 
           onClose={() => setIsPanduanOpen(false)} 
-          // Anda boleh tentukan content atau jenis panduan di sini
+     
           title="Panduan Log Pemantauan"
           content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
         />
