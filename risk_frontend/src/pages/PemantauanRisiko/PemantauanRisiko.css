@@ -1,10 +1,320 @@
-/* Import fonts yang dikehendaki */
+/* Import fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 /* ======================================================= */
-/* 1. Modal Overlay and Container Styles */
+/* 1. Khas untuk Komponen SenaraiPemantauanRisiko.jsx */
 /* ======================================================= */
-.rawatan-modal-overlay {
+
+.senaraipemantauan-container {
+  padding: 16px;
+  max-width: 100%;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  /* KRITIKAL: Menyembunyikan horizontal scrollbar pada halaman utama */
+  overflow-x: hidden;
+}
+
+.senaraipemantauan-container h1 {
+  font-size: 1.44rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1f2937;
+}
+
+/* Summary Cards */
+.senaraipemantauan-cards-container {
+  display: flex;
+  /* KEMASKINI: Kurangkan gap untuk lebih ruang */
+  gap: 12px;
+  margin-bottom: 20px;
+  /* KRITIKAL: Pastikan kad kekal dalam satu baris pada skrin lebar */
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.senaraipemantauan-info-card {
+  /* KRITIKAL: Ubah flex: 1 1 1 kepada nilai yang lebih kecil, contoh: 1 1 100px.
+    Ini memastikan 3 kad muat dan berkongsi ruang sama rata.
+    flex: grow shrink basis. */
+  flex: 1 1 100px;
+  min-width: 0; /* Penting untuk membenarkan pengecutan */
+  background-color: #f3f4f6;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.senaraipemantauan-info-card h3 {
+  /* KEMASKINI: Kurangkan saiz font tajuk */
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.senaraipemantauan-info-card p {
+  /* KEMASKINI: Kurangkan saiz font data */
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.senaraipemantauan-success-card {
+  background-color: #d1fae5;
+}
+.senaraipemantauan-success-card p {
+  color: #065f46;
+}
+
+.senaraipemantauan-danger-card {
+  background-color: #fee2e2;
+}
+.senaraipemantauan-danger-card p {
+  color: #991b1b;
+}
+
+/* Filters (Layout kekal sama) */
+.senaraipemantauan-filter-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.senaraipemantauan-filter-select {
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 🔴 SCROLL BAR DI ATAS JADUAL (Mirror Scrollbar) */
+.senaraipemantauan-scroll-top-bar {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 15px;
+  margin-bottom: -1px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  background-color: #f9fafb;
+}
+/* KEMASKINI: MIN-WIDTH MIRROR SCROLLBAR (1200px) */
+.senaraipemantauan-scroll-top-bar > div {
+  min-width: 1200px;
+  height: 1px;
+}
+
+/* Table Wrapper UTAMA */
+.senaraipemantauan-table-wrapper {
+  /* KRITIKAL: Ubah daripada 'hidden' kepada 'scroll'
+    Ini membolehkan scroll mendatar sebenar berlaku dalam wrapper,
+    yang kemudiannya disegerakkan dengan mirror scrollbar di atas. */
+  overflow-x: scroll;
+  overflow-y: hidden;
+  max-height: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.senaraipemantauan-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 10px;
+  /* KEMASKINI: Lebar minimum jadual (1200px) */
+  min-width: 1200px;
+}
+
+/* 🔴 STICKY HEADER (TH) */
+.senaraipemantauan-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.senaraipemantauan-table thead th {
+  padding: 10px 8px;
+  text-align: center;
+  font-weight: 700;
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 2px solid #005696;
+}
+
+.senaraipemantauan-table tbody td {
+  padding: 8px;
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  white-space: normal;
+}
+.senaraipemantauan-table tbody tr td:first-child {
+  border-left: none;
+}
+.senaraipemantauan-table tbody tr td:last-child {
+  border-right: none;
+}
+.senaraipemantauan-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 🔴 KOLUM STICKY (Bekukan dua kolum pertama) */
+
+/* Kolum Pertama (Bil.) */
+.senaraipemantauan-table thead th:nth-child(1),
+.senaraipemantauan-table tbody tr td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 45px;
+}
+.senaraipemantauan-table thead th:nth-child(1) {
+  z-index: 3;
+  background-color: #0074c8;
+}
+.senaraipemantauan-table tbody tr td:nth-child(1) {
+  background-color: #f9fafb;
+  color: #1f2937;
+  font-weight: 500;
+}
+/* Menetapkan warna latar belakang apabila hover/row dipilih */
+.senaraipemantauan-table tbody tr:hover td:nth-child(1) {
+  background-color: #f2f2f2;
+}
+
+/* Kolum Kedua (No Rujukan) */
+.senaraipemantauan-table thead th:nth-child(2),
+.senaraipemantauan-table tbody tr td:nth-child(2) {
+  position: sticky;
+  left: 45px;
+  z-index: 1;
+}
+.senaraipemantauan-table thead th:nth-child(2) {
+  z-index: 3;
+  background-color: #0074c8;
+}
+.senaraipemantauan-table tbody tr td:nth-child(2) {
+  background-color: white;
+  color: #1f2937;
+  font-weight: 500;
+  border-left: 1px solid #e5e7eb;
+}
+/* Menetapkan warna latar belakang apabila hover/row dipilih */
+.senaraipemantauan-table tbody tr:hover td:nth-child(2) {
+  background-color: #fafafa;
+}
+
+/* PENAMBAHAN UNTUK LEBAR KOLUM (Dipertingkat) */
+
+/* Kolum Pelan Tindakan Pemantauan Risiko (Lajur ke-9) */
+.senaraipemantauan-table thead th:nth-child(9),
+.senaraipemantauan-table tbody tr td:nth-child(9) {
+  min-width: 180px;
+  width: 180px;
+  max-width: 180px;
+}
+
+/* Kolum Catatan (Lajur ke-12) */
+.senaraipemantauan-table thead th:nth-child(12),
+.senaraipemantauan-table tbody tr td:nth-child(12) {
+  min-width: 150px;
+  width: 150px;
+  max-width: 150px;
+}
+
+/* Header Thead - Zon Gelap (Data Daftar) - PENGUBAHSUAIAN WARNA */
+.senaraipemantauan-dark-zone-header {
+  background-color: #005696;
+  color: white;
+}
+
+.senaraipemantauan-dark-zone-subheader {
+  background-color: #0074c8;
+  color: white;
+  font-weight: 600;
+  border-bottom: none;
+}
+
+/* Header Thead - Zon Cerah (Pemantauan) - PENGUBAHSUAIAN WARNA */
+.senaraipemantauan-light-zone-header {
+  background-color: #cce7ff;
+  color: #004d88;
+}
+
+.senaraipemantauan-light-zone-subheader {
+  background-color: #8cbbff;
+  color: #004d88;
+  font-weight: 600;
+  border-bottom: none;
+}
+
+/* Risk Box (Skor) (Tiada Perubahan) */
+.senaraipemantauan-center {
+  text-align: center;
+}
+
+.senaraipemantauan-risk-box {
+  color: white;
+  font-weight: 700;
+  border-radius: 4px;
+  display: inline-block;
+  padding: 3px 6px;
+  min-width: 24px;
+}
+
+/* Actions/Tindakan Button (Tiada Perubahan) */
+.senaraipemantauan-icon-edit-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.senaraipemantauan-icon-edit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.senaraipemantauan-icon-edit-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Loading & No Data (Tiada Perubahan) */
+.senaraipemantauan-loading,
+.senaraipemantauan-no-data {
+  text-align: center;
+  padding: 16px;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.senaraipemantauan-spin {
+  animation: senaraipemantauan-spinner 1s linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes senaraipemantauan-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ======================================================= */
+/* 2. Modal Overlay and Container Styles (Dikekalkan) */
+/* ======================================================= */
+.senaraipemantauan-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -14,15 +324,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* DITINGKATKAN: Memastikan ia menutup top navbar */
+  z-index: 9999;
   font-family: "Inter", sans-serif;
 }
 
-.rawatan-modal-container {
+.senaraipemantauan-modal-container {
   background: white;
   border-radius: 10px;
   width: 95%;
-  max-width: 900px;
+  max-width: 720px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -31,17 +341,17 @@
 }
 
 /* ======================================================= */
-/* 2. Header Styles */
+/* 3. Header Styles (Dikekalkan) */
 /* ======================================================= */
-.rawatan-box-header-main {
+.senaraipemantauan-box-header-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  background-color: #1e3a8a; /* Blue 800 */
+  padding: 12px 16px;
+  background-color: #1e3a8a;
   color: white;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.88rem;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   position: sticky;
@@ -49,27 +359,27 @@
   z-index: 10;
 }
 
-.rawatan-close-btn {
+.senaraipemantauan-close-btn {
   background: none;
   border: none;
   color: white;
   cursor: pointer;
-  padding: 5px;
+  padding: 4px;
   border-radius: 4px;
   transition: background-color 0.2s;
 }
 
-.rawatan-close-btn:hover {
+.senaraipemantauan-close-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.rawatan-panduan-btn {
-  background-color: #3b82f6; /* Blue 500 */
+.senaraipemantauan-panduan-btn {
+  background-color: #3b82f6;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -77,150 +387,148 @@
   font-weight: 600;
 }
 
-.rawatan-panduan-btn:hover {
-  background-color: #2563eb; /* Blue 600 */
+.senaraipemantauan-panduan-btn:hover {
+  background-color: #2563eb;
 }
 
 /* ======================================================= */
-/* 3. General Box & Read-Only Display Styles */
+/* 4. General Box & Read-Only Display Styles (Dikekalkan) */
 /* ======================================================= */
 
-.rawatan-box {
-  margin: 15px 20px;
+.senaraipemantauan-box {
+  margin: 12px 16px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.rawatan-box-header {
-  background-color: #f3f4f6; /* Gray 100 */
-  padding: 10px 18px;
+.senaraipemantauan-box-header {
+  background-color: #f3f4f6;
+  padding: 8px 14px;
   font-weight: 600;
   color: #1f2937;
-  font-size: 0.95rem;
+  font-size: 0.76rem;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Header Khusus untuk Maklumat Risiko, Rawatan & Pemantauan */
-/* Catatan: 'rawatan-risk-header' digunakan untuk Maklumat Risiko dan kini Pemantauan Risiko */
-.rawatan-risk-header {
-  background-color: #fef3c7; /* Kuning Pudar */
-  color: #92400e; /* Teks coklat gelap */
-  /* Tambah flex di JSX untuk butang Panduan */
+/* Header Khusus untuk Maklumat Risiko, Rawatan & Pemantauan (Dikekalkan) */
+.senaraipemantauan-risk-header {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
-/* Header Rawatan (Rawatan Risiko) - Biru Tua */
-.rawatan-monitoring-header {
-  background-color: #004071; /* Biru Tua/Navy */
+/* Header Rawatan (Rawatan Risiko) - Biru Tua (Dikekalkan) */
+.senaraipemantauan-monitoring-header {
+  background-color: #004071;
   color: white;
 }
 
-.rawatan-flex-row {
+.senaraipemantauan-flex-row {
   display: flex;
   flex-wrap: wrap;
-  padding: 10px 18px;
-  gap: 15px;
+  padding: 8px 14px;
+  gap: 12px;
   background-color: white;
 }
 
-.rawatan-flex-item {
+.senaraipemantauan-flex-item {
   flex: 1 1 200px;
-  min-width: 250px;
+  min-width: 200px;
 }
 
-.rawatan-list-section {
+.senaraipemantauan-list-section {
   padding-top: 0;
 }
 
-.rawatan-label-inline {
-  font-size: 12px;
+.senaraipemantauan-label-inline {
+  font-size: 10px;
   font-weight: 600;
-  color: #6b7280; /* Gray 500 */
+  color: #6b7280;
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
-.rawatan-data-inline {
-  font-size: 14px;
+.senaraipemantauan-data-inline {
+  font-size: 11px;
   color: #1f2937;
   font-weight: 500;
   display: block;
 }
 
-.rawatan-list-item {
-  margin-bottom: 5px;
+.senaraipemantauan-list-item {
+  margin-bottom: 4px;
   padding-left: 0;
 }
 
 /* ======================================================= */
-/* 4. Score Display Styles (Penilaian Risiko) */
+/* 5. Score Display Styles (Penilaian Risiko) (Dikekalkan) */
 /* ======================================================= */
-.rawatan-score-row {
+.senaraipemantauan-score-row {
   justify-content: space-around;
   align-items: center;
 }
 
-.rawatan-score-card {
+.senaraipemantauan-score-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 10px 5px;
-  min-width: 120px;
+  padding: 8px 4px;
+  min-width: 96px;
   flex: 1 1 150px;
 }
 
-.rawatan-score-label {
-  font-size: 12px;
+.senaraipemantauan-score-label {
+  font-size: 10px;
   font-weight: 600;
   color: #4b5563;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
-.rawatan-score-data {
-  font-size: 1.5rem;
+.senaraipemantauan-score-data {
+  font-size: 1.2rem;
   font-weight: 700;
   color: #1f2937;
 }
 
-.rawatan-risk-score-text {
-  font-size: 1rem;
-  padding: 4px 10px;
+.senaraipemantauan-risk-score-text {
+  font-size: 0.8rem;
+  padding: 3px 8px;
   border-radius: 4px;
-  min-width: 100px;
+  min-width: 80px;
   display: inline-block;
   color: white !important;
 }
 
 /* ======================================================= */
-/* 5. Rawatan Read-Only Display (Khas untuk EditPemantauan) */
+/* 6. Rawatan Read-Only Display (Khas untuk EditPemantauan) (Dikekalkan) */
 /* ======================================================= */
-.rawatan-data-display-section {
-  padding: 15px 18px 18px 18px;
-  background-color: #f9fafb; /* Latar belakang berbeza untuk Rawatan Read-Only */
+.senaraipemantauan-data-display-section {
+  padding: 12px 14px 14px 14px;
+  background-color: #f9fafb;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   border: 1px solid #e5e7eb;
-  margin-bottom: 5px;
-}
-
-.rawatan-data-line-block {
-  margin-bottom: 12px;
-}
-
-.rawatan-label-mon {
-  font-size: 12px;
-  font-weight: 600;
-  color: #4b5563;
-  display: block;
   margin-bottom: 4px;
 }
 
-.rawatan-data-mon {
-  font-size: 13px;
+.senaraipemantauan-data-line-block {
+  margin-bottom: 10px;
+}
+
+.senaraipemantauan-label-mon {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4b5563;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.senaraipemantauan-data-mon {
+  font-size: 10px;
   font-weight: 500;
   color: #1f2937;
   display: block;
@@ -228,78 +536,78 @@
 }
 
 /* ======================================================= */
-/* 6. Pemantauan Form Input Styles */
+/* 7. Pemantauan Form Input Styles (Dikekalkan) */
 /* ======================================================= */
 
-.rawatan-label {
-  font-size: 13px;
+.senaraipemantauan-label {
+  font-size: 10px;
   font-weight: 600;
   color: #374151;
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
-.rawatan-label-required::after {
+.senaraipemantauan-label-required::after {
   content: " *";
-  color: #ef4444; /* Red 500 */
+  color: #ef4444;
 }
 
-.rawatan-input,
-.rawatan-select {
+.senaraipemantauan-input,
+.senaraipemantauan-select {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-family: "Inter", sans-serif;
-  font-size: 14px;
+  font-size: 11px;
   box-sizing: border-box;
   transition: border-color 0.2s;
   background-color: white;
 }
 
-.rawatan-input:focus,
-.rawatan-select:focus {
+.senaraipemantauan-input:focus,
+.senaraipemantauan-select:focus {
   border-color: #3b82f6;
   outline: none;
   box-shadow: 0 0 0 1px #3b82f6;
 }
 
-.rawatan-textarea {
+.senaraipemantauan-textarea {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-family: "Inter", sans-serif;
-  font-size: 13px;
+  font-size: 10px;
   box-sizing: border-box;
   transition: border-color 0.2s;
   resize: vertical;
 }
 
-.rawatan-textarea:focus {
+.senaraipemantauan-textarea:focus {
   border-color: #3b82f6;
   outline: none;
   box-shadow: 0 0 0 1px #3b82f6;
 }
 
 /* ======================================================= */
-/* 7. Save Button Styles */
+/* 8. Save Button Styles (Dikekalkan) */
 /* ======================================================= */
 
-.rawatan-save-btn-wrapper {
+.senaraipemantauan-save-btn-wrapper {
   text-align: center;
-  margin-top: 20px;
-  padding-top: 15px;
+  margin-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid #e5e7eb;
 }
 
-.rawatan-save-btn-dark-blue {
-  background-color: #1e3a8a; /* Blue 800 */
+.senaraipemantauan-save-btn-dark-blue {
+  background-color: #1e3a8a;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -308,35 +616,44 @@
   justify-content: center;
 }
 
-.rawatan-save-btn-dark-blue:hover:not(:disabled) {
-  background-color: #172554; /* Blue 900 */
+.senaraipemantauan-save-btn-dark-blue:hover:not(:disabled) {
+  background-color: #172554;
 }
 
-.rawatan-save-btn-dark-blue:disabled {
-  background-color: #9ca3af; /* Gray 400 */
+.senaraipemantauan-save-btn-dark-blue:disabled {
+  background-color: #9ca3af;
   cursor: not-allowed;
 }
 
 /* ======================================================= */
-/* 8. Media Queries for Responsiveness */
+/* 9. Media Queries for Responsiveness (Diubahsuai untuk kad) */
 /* ======================================================= */
 @media (max-width: 768px) {
-  .rawatan-modal-container {
-    width: 100%;
-    margin: 10px;
+  /* Benarkan kad untuk dibalut pada skrin yang sangat kecil jika perlu */
+  .senaraipemantauan-cards-container {
+    flex-wrap: wrap;
   }
-  .rawatan-flex-item {
+  .senaraipemantauan-info-card {
+    /* Paksa kad ambil 100% lebar pada skrin kecil jika dibalut */
+    flex: 1 1 100%;
+  }
+
+  .senaraipemantauan-modal-container {
+    width: 100%;
+    margin: 8px;
+  }
+  .senaraipemantauan-flex-item {
     min-width: 100%;
     flex: 1 1 100%;
   }
-  .rawatan-score-row {
+  .senaraipemantauan-score-row {
     flex-direction: column;
   }
-  .rawatan-score-card {
+  .senaraipemantauan-score-card {
     width: 100%;
     border-bottom: 1px dashed #e5e7eb;
   }
-  .rawatan-score-card:last-child {
+  .senaraipemantauan-score-card:last-child {
     border-bottom: none;
   }
 }

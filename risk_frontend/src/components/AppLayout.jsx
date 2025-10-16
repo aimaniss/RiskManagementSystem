@@ -20,9 +20,9 @@ export default function AppLayout({ children }) {
   return (
     <div className="app-wrapper" style={{ display: "flex" }}>
       <Sidebar />
-      <div style={{ marginLeft: "240px", flex: 1 }}>
+      <div style={{ marginLeft: "210px", flex: 1 }}>
         <Navbar />
-        <div style={{ padding: "80px 20px 20px 20px" }}>
+        <div style={{ padding: "60px 20px 20px 20px" }}>
           {React.Children.map(children, (child) =>
             React.cloneElement(child, { setModalOpen: handleModalToggle })
           )}

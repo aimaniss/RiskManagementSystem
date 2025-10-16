@@ -22,7 +22,7 @@ import { useState } from "react";
 
 
 function App() {
-  const [refreshRisiko, setRefreshRisiko] = useState(0); // trigger untuk SenaraiRisiko
+  const [refreshRisiko, setRefreshRisiko] = useState(0); 
 
   const handleRefreshRisiko = () => setRefreshRisiko(prev => prev + 1);
 
