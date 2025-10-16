@@ -26,7 +26,7 @@
 
 /* Container (Diseragamkan) */
 .pemantauan-modal-container {
-  background: #fff;
+  background: #f4f6f8;
   border-radius: 10px;
   border: none;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -337,7 +337,7 @@
   color: #dc2626;
 }
 .pemantauan-data-line-block {
-   margin-bottom: 20px; 
+  margin-bottom: 20px;
 }
 .pemantauan-data-display-section {
   padding: 18px 0;
@@ -404,7 +404,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  min-width: 1300px;
   margin: 10px 0 0 0;
 }
 
@@ -527,9 +526,8 @@
   transition: background-color 0.2s;
   display: flex !important;
   align-items: center !important;
-  border: none !important; 
-  cursor: pointer !important; 
-
+  border: none !important;
+  cursor: pointer !important;
 }
 .pemantauan-add-log-btn:hover {
   background-color: #005fa3 !important;
