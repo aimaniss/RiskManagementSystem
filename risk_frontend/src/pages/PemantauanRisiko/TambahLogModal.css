@@ -106,37 +106,36 @@
 }
 
 .tambahlog-row-compact .tambahlog-item {
-  flex-direction: row; 
-  align-items: center; 
+  flex-direction: row;
+  align-items: center;
 }
 
 .tambahlog-row-compact .tambahlog-item label {
-  margin-bottom: 0; 
-  margin-right: 8px; 
-  white-space: nowrap; 
+  margin-bottom: 0;
+  margin-right: 8px;
+  white-space: nowrap;
 }
 
 .tambahlog-row-compact .tambahlog-item .tambahlog-textonly {
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 
 .tambahlog-item.tambahlog-tahap-rujukan {
-    flex: unset; 
-    width: auto;
-    flex-direction: row; 
-    align-items: center;
+  flex: unset;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
 }
 
 .tambahlog-item.tambahlog-tahap-rujukan label {
-    margin-right: 15px; 
-    margin-bottom: 0;
-    white-space: nowrap;
-    
+  margin-right: 15px;
+  margin-bottom: 0;
+  white-space: nowrap;
 }
 
 .tambahlog-inline-data {
-    display: inline-flex; /* Guna flex untuk align badge center kalau perlu */
-    align-items: center;
+  display: inline-flex; /* Guna flex untuk align badge center kalau perlu */
+  align-items: center;
 }
 
 .tambahlog-risk-badge {
@@ -152,7 +151,6 @@
   font-size: 0.9rem;
   text-transform: uppercase;
 }
-
 
 /* Flex Layout (untuk Tahun, Separuh Tahun, No Bil, Skor Risiko, Keberkesanan) */
 .tambahlog-row {
