@@ -102,29 +102,31 @@ function PemantauanRisiko() {
     const handleCloseModal = () => { setIsModalOpen(false); setSelectedRiskForEdit(null); fetchData(); }; // Tambah fetchData() untuk refresh data
     
     // 🔴 FUNGSI BARU/DIKEMASKINI: Muatkan log sejarah dengan skor sebelum/selepas berurutan
-    const handleEdit = async (risikoSenarai) => { 
-        setLoadingModal(true);
-        try {
-            // 🚀 Panggil endpoint baru untuk mendapatkan sejarah log lengkap
-            const res = await api.get(`/pemantauan-risiko/${risikoSenarai.risiko_id}/sejarah-baru`);
-            const sejarahLog = res.data;
+    const handleEdit = async (risikoSenarai) => {
+  try {
+    setLoadingModal(true);
+    // Panggil API yang mengembalikan PUNCA & KESAN
+    const res = await api.get(`/rawatan/${risikoSenarai.risiko_id}`);
+    const fullRiskData = res.data;
 
-            // Gabungkan data terkini (risikoSenarai) dengan data sejarah log lengkap
-            const riskDataForModal = {
-                ...risikoSenarai,
-                sejarah_log: sejarahLog, // Masukkan data sejarah log baru
-            };
-            
-            setSelectedRiskForEdit(riskDataForModal);
-            setIsModalOpen(true);
+    // Gabungkan data terkini + data penuh dari rawatan
+    const dataUntukModal = {
+      ...risikoSenarai,
+      ...fullRiskData,
+      punca_risiko_data: Array.isArray(fullRiskData.punca) ? fullRiskData.punca : [],
+      kesan_risiko_data: Array.isArray(fullRiskData.kesan) ? fullRiskData.kesan : [],
+      skor_kebarangkalian_sebelum: fullRiskData.skor_kebarangkalian,
+      skor_impak_sebelum: fullRiskData.skor_impak,
+    };
 
-        } catch(err) {
-            console.error("❌ Ralat memuatkan sejarah log:", err);
-            // Optionally show error to user
-        } finally {
-            setLoadingModal(false);
-        }
-    };
+    setSelectedRiskForEdit(dataUntukModal);
+    setIsModalOpen(true);
+  } catch (err) {
+    console.error(`Ralat memuat data risiko lengkap ${risikoSenarai.risiko_id}:`, err);
+  } finally {
+    setLoadingModal(false);
+  }
+};
 
     const handleRefreshData = useCallback(() => { fetchData(); }, [fetchData]);
 
