@@ -34,7 +34,7 @@ function PemantauanRisiko() {
     const [separuhFilter, setSeparuhFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [loading, setLoading] = useState(true);
-    const [subsidiariList, setSubsidiariList] = useState([{subsidiari_id:1, nama_subsidiari:"Subsidiari A"}, {subsidiari_id:2, nama_subsidiari:"Subsidiari B"}]);
+    const [subsidiariList, setSubsidiariList] = useState([]);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRiskForEdit, setSelectedRiskForEdit] = useState(null);
@@ -96,7 +96,22 @@ function PemantauanRisiko() {
         finally { setLoading(false); }
     }, []);
 
-    const fetchSubsidiariList = async () => { /* Logic untuk fetch subsidiari */ };
+    
+    const fetchSubsidiariList = useCallback(async () => {
+    try {
+      const res = await api.get("/subsidiari");
+      // Pastikan format betul
+      if (Array.isArray(res.data)) {
+        setSubsidiariList(res.data);
+      } else {
+        console.warn("⚠️ Format respons subsidiari tidak dijangka:", res.data);
+      }
+    } catch (err) {
+      console.error("❌ Ralat memuat senarai subsidiari:", err);
+    }
+  }, []);
+
+
     const handleCloseModal = () => { setIsModalOpen(false); setSelectedRiskForEdit(null); fetchData(); };
     
     const handleEdit = async (risikoSenarai) => {
