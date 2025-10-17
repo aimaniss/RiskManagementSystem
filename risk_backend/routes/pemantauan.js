@@ -19,16 +19,34 @@ router.get("/", verifyToken, async (req, res) => {
 
     let query = `
       WITH PemantauanTerkini AS (
-        SELECT
-          pm.log_id, pm.risiko_id, pm.tarikh_pemantauan, pm.tahun_pemantauan, pm.separuh_tahun_pemantauan,
-          pm.skor_kebarangkalian_selepas, pm.skor_impak_selepas, pm.status_pemantauan, pm.catatan,
-          pm.keberkesanan, pm.no_bil_kelulusan,
-          ROW_NUMBER() OVER (
-            PARTITION BY pm.risiko_id 
-            ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
-          ) as rn
-        FROM LogPemantauan pm
-      ),
+          SELECT
+            pm.log_id,
+            pm.risiko_id,
+            pm.tarikh_pemantauan,
+            pm.tahun_pemantauan,
+            pm.separuh_tahun_pemantauan,
+            pm.skor_kebarangkalian_selepas,
+            pm.skor_impak_selepas,
+            -- ✅ Guna LAG() untuk ambil skor sebelum dari log sebelumnya atau risiko asal
+            COALESCE(
+              LAG(pm.skor_kebarangkalian_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
+              r.skor_kebarangkalian
+            ) AS skor_kebarangkalian_sebelum,
+            COALESCE(
+              LAG(pm.skor_impak_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
+              r.skor_impak
+            ) AS skor_impak_sebelum,
+            pm.status_pemantauan,
+            pm.catatan,
+            pm.keberkesanan,
+            pm.no_bil_kelulusan,
+            ROW_NUMBER() OVER (
+              PARTITION BY pm.risiko_id 
+              ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
+            ) AS rn
+          FROM LogPemantauan pm
+          JOIN Risiko r ON pm.risiko_id = r.risiko_id
+        ),
       ButiranTerkini AS (
         SELECT 
           pt.log_id,
@@ -46,8 +64,9 @@ router.get("/", verifyToken, async (req, res) => {
         s.nama_subsidiari,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
-        r.skor_kebarangkalian AS skor_kebarangkalian_sebelum,
-        r.skor_impak AS skor_impak_sebelum,
+        COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
+        COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
+
         pt.tahun_pemantauan,
         pt.separuh_tahun_pemantauan,
         bt.pelan_tindakan_terkini,
@@ -334,6 +353,68 @@ const logRes = await pool.query(logQuery, params);
   }
 });
 
+
+/* =======================================================
+   🟢 GET: Sejarah Log untuk satu Risiko (dengan logik Skor Sebelum/Selepas Berurutan)
+   ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah-baru
+   Digunakan untuk paparan sejarah di mana Skor Sebelum setiap log diambil dari Skor Selepas log sebelumnya atau Skor Asal Risiko.
+======================================================= */
+router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
+  try {
+    const { risiko_id } = req.params;
+    const risikoIdInt = parseInt(risiko_id, 10);
+
+    // 1. Dapatkan Skor Risiko Asal (Skor Sebelum untuk log pertama) - DISATUKAN SEBARIS
+    const risikoQuery = `SELECT skor_kebarangkalian AS k_asal, skor_impak AS i_asal FROM Risiko WHERE risiko_id = $1`;
+    
+    const risikoResult = await pool.query(risikoQuery, [risikoIdInt]); // Baris 355 dalam log error anda
+
+    if (risikoResult.rows.length === 0) {
+      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+    }
+
+    const { k_asal, i_asal } = risikoResult.rows[0];
+
+    // 2. Dapatkan Semua Log Pemantauan - DISATUKAN SEBARIS
+    const logQuery = `SELECT lp.log_id, lp.tahun_pemantauan, lp.separuh_tahun_pemantauan, lp.skor_kebarangkalian_selepas, lp.skor_impak_selepas, lp.keberkesanan, lp.status_pemantauan, lp.catatan, lp.no_bil_kelulusan, lp.kekerapan_pemantauan, lp.tarikh_pemantauan, lp.tarikh_kemaskini, (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log, (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id) AS kakitangan_log FROM LogPemantauan lp WHERE lp.risiko_id = $1 ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC, lp.tarikh_pemantauan ASC`;
+    
+    const { rows: logRows } = await pool.query(logQuery, [risikoIdInt]);
+
+    // 3. Proses Logika Skor Sebelum/Selepas Berurutan
+    let skorSebelumK = k_asal;
+    let skorSebelumI = i_asal;
+    
+    const sejarahLog = logRows.map(log => {
+      // Nilai skor selepas semasa. 
+      const skorSelepasK = log.skor_kebarangkalian_selepas;
+      const skorSelepasI = log.skor_impak_selepas;
+
+      const logSejarah = {
+        ...log,
+        // Tetapkan Skor Sebelum untuk log semasa
+        skor_kebarangkalian_sebelum: skorSebelumK,
+        skor_impak_sebelum: skorSebelumI,
+      };
+
+      // Kemas kini skorSebelum untuk iterasi log yang seterusnya
+      if (skorSelepasK !== null && skorSelepasI !== null) {
+        skorSebelumK = skorSelepasK;
+        skorSebelumI = skorSelepasI;
+      }
+      
+      return logSejarah;
+    });
+
+    // 4. Susun semula dari yang paling BARU ke yang paling LAMA untuk paparan UI
+    const sejarahLogTerbalik = sejarahLog.reverse();
+
+    res.json(sejarahLogTerbalik);
+
+  } catch (err) {
+    console.error("❌ Ralat GET /:risiko_id/sejarah-baru:", err);
+    res.status(500).json({ message: "Gagal memuatkan sejarah pemantauan." });
+  }
+});
 
 
 /* =======================================================

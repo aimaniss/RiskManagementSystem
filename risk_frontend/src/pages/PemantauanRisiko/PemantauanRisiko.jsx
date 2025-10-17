@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react"; 
+import { useState, useEffect, useCallback } from "react"; 
 import api from "../../api/api"; // Andaikan ini fail konfigurasi axios
 import { Pencil, Loader2 } from "lucide-react"; 
-import EditPemantauan from "./EditPemantauan"; // Andaikan ini komponen modal
-import "./PemantauanRisiko.css"; // Import CSS yang sangat penting!
+import EditPemantauan from "./EditPemantauan"; // Andaikan ini komponen modal untuk kemaskini log terkini
+import "./PemantauanRisiko.css"; // Import CSS
 
 // =======================================================
 // UTILITIES (Dikekalkan)
@@ -15,7 +15,11 @@ const riskMatrix = {
     5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
 };
 
-const getRiskData = (k,i) => riskMatrix[k]?.[i] || {label:"-", color:"#f1f5f9"};
+const getRiskData = (k,i) => {
+    const kk = Math.min(Math.max(parseInt(k) || 1, 1), 5);
+    const ii = Math.min(Math.max(parseInt(i) || 1, 1), 5);
+    return riskMatrix[kk]?.[ii] || {label:"-", color:"#9ca3af"};
+};
 const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
 const getSeparuhTahunLabel = (separuh) => separuh === 1 ? "Pertama" : separuh === 2 ? "Kedua" : "-";
 
@@ -27,91 +31,101 @@ function PemantauanRisiko() {
     const [separuhFilter, setSeparuhFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [loading, setLoading] = useState(true);
-    const [subsidiariList, setSubsidiariList] = useState([]);
+    // Nota: Dalam aplikasi sebenar, senarai subsidiari perlu dimuatkan dari API yang sesuai.
+    const [subsidiariList, setSubsidiariList] = useState([{subsidiari_id:1, nama_subsidiari:"Subsidiari A"}, {subsidiari_id:2, nama_subsidiari:"Subsidiari B"}]);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRiskForEdit, setSelectedRiskForEdit] = useState(null); 
+    // 💡 Digunakan untuk kawal butang edit semasa memuatkan data sejarah
     const [loadingModal, setLoadingModal] = useState(false); 
     
-   
+    
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rawatan"); 
+            
+            // 🚀 Memanggil endpoint yang telah diagregatkan oleh backend (risiko + log terkini)
+            const res = await api.get("/pemantauan-risiko"); 
             const rawData = res.data;
             
-            const processedData = await Promise.all(rawData.map(async d => {
-                // ... logik pemprosesan data ...
+            const processedData = rawData.map(d => {
+                
+                // 1. Skor Risiko SEBELUM (Skor Asal dari jadual Risiko)
                 const {label: skorDaftarLabel, color: skorDaftarColor} = getRiskData(
-                    parseInt(d.skor_kebarangkalian) || 0,
-                    parseInt(d.skor_impak) || 0
+                    parseInt(d.skor_kebarangkalian_sebelum) || 0,
+                    parseInt(d.skor_impak_sebelum) || 0
                 );
                 
-                let pemantauanData = {};
-                let tahapRisikoTerkini = skorDaftarLabel;
-                let riskColorTerkini = skorDaftarColor;
-                
-                try {
-                    // Cuba dapatkan data pemantauan terkini
-                    const resPemantauan = await api.get(`/pemantauan/${d.risiko_id}`); 
-                    const latestPemantauan = resPemantauan.data;
-                    
-                    if (latestPemantauan) {
-                        const k = parseInt(latestPemantauan.skor_kebarangkalian_selepas) || parseInt(d.skor_kebarangkalian) || 0;
-                        const i = parseInt(latestPemantauan.skor_impak_selepas) || parseInt(d.skor_impak) || 0;
-                        
-                        const {label, color} = getRiskData(k, i);
-                        tahapRisikoTerkini = label;
-                        riskColorTerkini = color;
-                        
-                        pemantauanData = {
-                            tahun_pemantauan: latestPemantauan.tahun_pemantauan,
-                            separuh_tahun_pemantauan: latestPemantauan.separuh_tahun_pemantauan,
-                            // Asumsi pelan_tindakan_log adalah array dan perlu digabungkan
-                            pelan_tindakan_pemantauan: Array.isArray(latestPemantauan.pelan_tindakan_log) 
-                                ? latestPemantauan.pelan_tindakan_log.map(p => p.butiran_log).join('; ') 
-                                : "-",
-                            status_pemantauan_terkini: latestPemantauan.status_pemantauan, 
-                            catatan: latestPemantauan.catatan_pemantauan,
-                            skor_kebarangkalian_terkini: latestPemantauan.skor_kebarangkalian_selepas,
-                            skor_impak_terkini: latestPemantauan.skor_impak_selepas,
-                        };
-                    }
-                } catch (err) {
-                    if (err.response?.status !== 404) {
-                        console.error(`Ralat memuat pemantauan untuk risiko ${d.risiko_id}:`, err);
-                    }
-                    // Abaikan ralat 404, anggap tiada pemantauan
-                }
+                // 2. Skor Risiko TERKINI / SELEPAS (Ambil dari field COALESCE di SQL)
+                const {label: tahapRisikoTerkini, color: riskColorTerkini} = getRiskData(
+                    parseInt(d.skor_kebarangkalian_terkini) || 0,
+                    parseInt(d.skor_impak_terkini) || 0
+                );
                 
                 return {
                     ...d, 
-                    id: d.risiko_id, 
-                    risiko_id: d.risiko_id, 
+                    id: d.id, // risiko_id dari SQL AS id
+                    risiko_id: d.id, 
                     tahun_asal: d.tahun, 
                     separuh_tahun_asal: d.separuh_tahun,
-                    skor_kebarangkalian_sebelum: d.skor_kebarangkalian, 
-                    skor_impak_sebelum: d.skor_impak,
+                    
+                    // Skor Pendaftaran
+                    skor_kebarangkalian_sebelum: d.skor_kebarangkalian_sebelum, 
+                    skor_impak_sebelum: d.skor_impak_sebelum,
                     tahap_risiko_daftar: skorDaftarLabel, 
                     risk_color_daftar: skorDaftarColor,  
-                    ...pemantauanData,
-                    tahap_risiko: tahapRisikoTerkini, 
+                    
+                    // Data Pemantauan Terkini
+                    tahun_pemantauan: d.tahun_pemantauan,
+                    separuh_tahun_pemantauan: d.separuh_tahun_pemantauan,
+                    // Pelan tindakan adalah array, gabungkan untuk paparan
+                    pelan_tindakan_pemantauan: Array.isArray(d.pelan_tindakan_terkini) 
+                        ? d.pelan_tindakan_terkini.filter(p => p).join('; ') 
+                        : (d.pelan_tindakan_terkini || "-"), 
+                    status_pemantauan_terkini: d.status_pemantauan_terkini || "Tiada Pemantauan", 
+                    catatan: d.catatan,
+                    skor_kebarangkalian_terkini: d.skor_kebarangkalian_terkini,
+                    skor_impak_terkini: d.skor_impak_terkini,
+                    tahap_risiko: tahapRisikoTerkini, // Ini kini adalah Skor Selepas Terkini
                     risk_color: riskColorTerkini,  
-                    status_pemantauan_terkini: pemantauanData.status_pemantauan_terkini || "Tiada Pemantauan", 
                 };
-            }));
+            });
 
             setData(processedData);
-        } catch(err){ console.error("Ralat memuat data risiko/rawatan:", err); }
+        } catch(err){ 
+            console.error("❌ Ralat memuat data pemantauan risiko:", err); 
+        }
         finally { setLoading(false); }
     }, []);
 
-    const fetchSubsidiariList = async () => { setSubsidiariList([{subsidiari_id:1, nama_subsidiari:"Subsidiari A"}, {subsidiari_id:2, nama_subsidiari:"Subsidiari B"}]) };
+    const fetchSubsidiariList = async () => { /* Logic untuk fetch subsidiari */ };
     const handleCloseModal = () => { setIsModalOpen(false); setSelectedRiskForEdit(null); fetchData(); }; // Tambah fetchData() untuk refresh data
+    
+    // 🔴 FUNGSI BARU/DIKEMASKINI: Muatkan log sejarah dengan skor sebelum/selepas berurutan
     const handleEdit = async (risikoSenarai) => { 
-        setSelectedRiskForEdit(risikoSenarai);
-        setIsModalOpen(true);
+        setLoadingModal(true);
+        try {
+            // 🚀 Panggil endpoint baru untuk mendapatkan sejarah log lengkap
+            const res = await api.get(`/pemantauan-risiko/${risikoSenarai.risiko_id}/sejarah-baru`);
+            const sejarahLog = res.data;
+
+            // Gabungkan data terkini (risikoSenarai) dengan data sejarah log lengkap
+            const riskDataForModal = {
+                ...risikoSenarai,
+                sejarah_log: sejarahLog, // Masukkan data sejarah log baru
+            };
+            
+            setSelectedRiskForEdit(riskDataForModal);
+            setIsModalOpen(true);
+
+        } catch(err) {
+            console.error("❌ Ralat memuatkan sejarah log:", err);
+            // Optionally show error to user
+        } finally {
+            setLoadingModal(false);
+        }
     };
+
     const handleRefreshData = useCallback(() => { fetchData(); }, [fetchData]);
 
     
@@ -129,20 +143,24 @@ function PemantauanRisiko() {
 
     const filteredData = data.filter(d=>{
         const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari===subsidiariFilter;
-        const matchTahun = !tahunFilter || String(d.tahun_asal || d.tahun)===tahunFilter; 
-        const matchSeparuh = !separuhFilter || String(d.separuh_tahun_asal || d.separuh_tahun)===separuhFilter; 
+        // Gunakan tahun/separuh_tahun dari log pemantauan jika ada, atau tahun asal.
+        const d_tahun = d.tahun_pemantauan || d.tahun_asal || d.tahun;
+        const d_separuh = d.separuh_tahun_pemantauan || d.separuh_tahun_asal || d.separuh_tahun;
+        
+        const matchTahun = !tahunFilter || String(d_tahun)===tahunFilter; 
+        const matchSeparuh = !separuhFilter || String(d_separuh)===separuhFilter; 
         const matchStatus = !statusFilter || d.status_pemantauan_terkini===statusFilter;
         return matchSubsidiari && matchTahun && matchSeparuh && matchStatus;
     });
     
-    // JUMLAH KOLUM: 13 (6 Daftar + 1 Terdahulu + 6 Pemantauan)
+    // 🔴 Jumlah lajur: 6 (Pendaftaran) + 1 (Skor Sebelum) + 5 (Log Pemantauan) + 1 (Tindakan) = 13
     const COL_SPAN = 13; 
 
     return (
         <div className="senaraipemantauan-container">
             <h1>Pemantauan Risiko</h1>
 
-            {/* Summary Cards (Dikekalkan) */}
+            {/* ... Summary Cards (Dikekalkan) ... */}
             <div className="senaraipemantauan-cards-container">
                 <div className="senaraipemantauan-info-card">
                     <h3>Jumlah Risiko Dipantau</h3>
@@ -158,7 +176,7 @@ function PemantauanRisiko() {
                 </div>
             </div>
 
-            {/* Filters (Dikekalkan) */}
+            {/* ... Filters (Dikekalkan) ... */}
             <div className="senaraipemantauan-filter-container">
                 <select className="senaraipemantauan-filter-select" value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
                     <option value="">-- Semua Subsidiari --</option>
@@ -169,7 +187,7 @@ function PemantauanRisiko() {
 
                 <select className="senaraipemantauan-filter-select" value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
                     <option value="">-- Semua Tahun --</option>
-                    {[...new Set(data.map(d=>d.tahun))].filter(t => t).sort((a,b)=>b-a).map(t=>(
+                    {[...new Set(data.map(d=>d.tahun || d.tahun_pemantauan))].filter(t => t).sort((a,b)=>b-a).map(t=>(
                         <option key={t} value={t}>{t}</option>
                     ))}
                 </select>
@@ -188,23 +206,18 @@ function PemantauanRisiko() {
                 </select>
             </div>
 
-            {/* BAR SCROLL ATAS - 🔴 DIBUANG */}
-            <div className="senaraipemantauan-scroll-top-bar">
-                <div style={{minWidth: '1200px', height: '1px'}}></div>
-            </div>
-
             {/* Table Wrapper UTAMA (Mengendalikan scroll mendatar) */}
             <div className="senaraipemantauan-table-wrapper">
                 <table className="senaraipemantauan-table">
                     <thead>
-                        {/* BARIS 1: TAJUK UTAMA (Dikekalkan) */}
+                        {/* BARIS 1: TAJUK UTAMA */}
                         <tr>
                             <th colSpan="6" className="senaraipemantauan-dark-zone-header">Data Pendaftaran Risiko</th> 
-                            <th rowSpan="2" className="senaraipemantauan-dark-zone-header">Skor Risiko Terdahulu</th>
-                            <th colSpan="6" className="senaraipemantauan-light-zone-header">Pemantauan Risiko</th> 
+                            <th rowSpan="2" className="senaraipemantauan-dark-zone-header">Skor Risiko Sebelum</th>
+                            <th colSpan="6" className="senaraipemantauan-light-zone-header">Log Pemantauan Terkini</th> 
                         </tr>
                         
-                        {/* BARIS 2: SUB-TAJUK KOLUM (Dikekalkan) */}
+                        {/* BARIS 2: SUB-TAJUK KOLUM */}
                         <tr className="senaraipemantauan-table-separator"> 
                             <th className="senaraipemantauan-dark-zone-subheader">Bil.</th>
                             <th className="senaraipemantauan-dark-zone-subheader">No Rujukan</th>
@@ -216,7 +229,7 @@ function PemantauanRisiko() {
                             <th className="senaraipemantauan-light-zone-subheader">Tahun & Separuh Tahun Pemantauan</th>
                             <th className="senaraipemantauan-light-zone-subheader">Pelan Tindakan Pemantauan Risiko</th>
                             <th className="senaraipemantauan-light-zone-subheader">Status Pemantauan Terkini</th>
-                            <th className="senaraipemantauan-light-zone-subheader">Skor Risiko Terkini</th>
+                            <th className="senaraipemantauan-light-zone-subheader">Skor Risiko Selepas</th>
                             <th className="senaraipemantauan-light-zone-subheader">Catatan</th>
                             <th className="senaraipemantauan-light-zone-subheader">Tindakan</th>
                         </tr>
@@ -227,27 +240,27 @@ function PemantauanRisiko() {
                         ) : filteredData.length>0 ? (
                             filteredData.map((d,i)=>(
                                 <tr key={d.id}>
-                                    {/* KOLUM DATA */}
+                                    {/* KOLUM DATA PENDAFTARAN */}
                                     <td>{i+1}</td>
                                     <td>{d.no_rujukan}</td>
                                     <td>{`${d.tahun_asal || d.tahun || "-"} - ${getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}`}</td>
                                     <td>{d.nama_subsidiari}</td>
-                                    <td>{d.kategori || "-"}</td>
+                                    <td>{d.kategori_risiko || "-"}</td> 
                                     <td>{d.risiko}</td> 
                                     
-                                    {/* SKOR RISIKO TERDAHULU */}
+                                    {/* SKOR RISIKO SEBELUM (Skor Asal Pendaftaran) */}
                                     <td className="senaraipemantauan-center">
                                         <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color_daftar}}>
                                             {shortForm(d.tahap_risiko_daftar)}
                                         </div>
                                     </td>
                                     
-                                    {/* DATA PEMANTAUAN TERKINI */}
+                                    {/* DATA LOG PEMANTAUAN TERKINI */}
                                     <td>{d.tahun_pemantauan ? `${d.tahun_pemantauan} - ${getSeparuhTahunLabel(d.separuh_tahun_pemantauan)}` : "-"}</td>
                                     <td>{d.pelan_tindakan_pemantauan || "-"}</td>
                                     <td>{d.status_pemantauan_terkini || "-"}</td>
                                     
-                                    {/* SKOR RISIKO TERKINI */}
+                                    {/* SKOR RISIKO SELEPAS */}
                                     <td className="senaraipemantauan-center">
                                         <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color}}>
                                             {shortForm(d.tahap_risiko)}
@@ -255,9 +268,16 @@ function PemantauanRisiko() {
                                     </td>
                                     
                                     <td>{d.catatan || "-"}</td>
+                                    
+                                    {/* KEMASKINI PEMANTAUAN */}
                                     <td className="senaraipemantauan-center">
-                                        <button className="senaraipemantauan-icon-edit-btn" onClick={() => handleEdit(d)} title="Lihat/Kemaskini Pemantauan" disabled={loadingModal}>
-                                            <Pencil size={18} />
+                                        <button 
+                                            className="senaraipemantauan-icon-edit-btn" 
+                                            onClick={() => handleEdit(d)} 
+                                            title="Lihat/Kemaskini Pemantauan" 
+                                            disabled={loadingModal}
+                                        >
+                                            {loadingModal ? <Loader2 size={18} className="senaraipemantauan-spin" /> : <Pencil size={18} />}
                                         </button>
                                     </td>
                                 </tr>
@@ -273,6 +293,7 @@ function PemantauanRisiko() {
             {isModalOpen && selectedRiskForEdit && ( 
                 <EditPemantauan
                     isOpen={isModalOpen}
+                    // Pastikan komponen EditPemantauan menerima objek yang telah dilampirkan sejarah log
                     risk={selectedRiskForEdit} 
                     onClose={handleCloseModal}
                     onLogSave={handleRefreshData}
