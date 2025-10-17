@@ -18,8 +18,8 @@
   border-radius: 10px;
   border: 1px solid #e3e5e8;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
-  width: 95%;
-  max-width: 1200px;
+  width: 85%;
+  max-width: 1000px;
   overflow-y: auto;
   padding: 0;
   max-height: 90vh;
@@ -30,7 +30,6 @@
   max-width: 100%;
   margin: 0 auto;
   font-family: "Inter", sans-serif;
-  /* Menyembunyikan horizontal scrollbar pada halaman utama */
   overflow-x: hidden;
 }
 
@@ -104,17 +103,10 @@
   cursor: pointer;
 }
 
-/* SCROLL BAR DI ATAS JADUAL - DIBUANG TERUS */
-.senaraipemantauan-scroll-top-bar {
-  display: none;
-}
-
 /* Table Wrapper UTAMA */
 .senaraipemantauan-table-wrapper {
-  /* 🔴 PERUBAHAN KRITIKAL: Buang overflow-x: scroll */
-  overflow-x: hidden;
+  overflow-x: auto; /* Dicadangkan 'auto' untuk mengendalikan jadual lebar */
   overflow-y: hidden;
-  max-height: none;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -124,20 +116,17 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 10px;
-  /* 🔴 PERUBAHAN KRITIKAL: Buang min-width agar jadual mampat ke dalam skrin */
-  /* min-width: 1200px; */
+  font-size: 12px; /* Saiz fon sedikit besar untuk kebolehbacaan */
+  table-layout: auto; /* Membolehkan pelayar melaras lajur */
 }
 
 /* HEADER & BODY STYLES */
-/* STICKY HEADER - Dibuang kerana tiada scroll menegak */
 .senaraipemantauan-table thead {
   position: static;
   top: auto;
   z-index: 1;
 }
 
-/* FIX: Tambah Latar Belakang pada keseluruhan tbody untuk konsistensi */
 .senaraipemantauan-table tbody {
   background-color: white;
 }
@@ -158,16 +147,13 @@
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
-  /* Penting agar teks boleh wrap, memandangkan tiada scroll */
-  white-space: normal;
+  white-space: normal; /* Penting agar teks boleh wrap */
 }
 
-/* Border Adjustment for the last row's bottom border */
+/* Border Adjustment */
 .senaraipemantauan-table tbody tr:last-child td {
   border-bottom: none;
 }
-
-/* Border Adjustment for the first/last column's side borders */
 .senaraipemantauan-table tbody tr td:first-child {
   border-left: none;
 }
@@ -180,25 +166,26 @@
   background-color: #f9f9f9;
 }
 
-/* 🔴 KOLUM STICKY - DIBUANG SEPENUHNYA */
+/* 🟢 PERUBAHAN: DIBUANG SEMUA `width` TETAP PADA LAJUR */
+/* Sebarang `width` dialih keluar untuk membenarkan saiz automatik. */
 
 /* Kolum Pertama (Bil.) */
 .senaraipemantauan-table thead th:nth-child(1),
 .senaraipemantauan-table tbody tr td:nth-child(1) {
-  position: static; /* 🔴 PERUBAHAN: Buang sticky */
+  position: static;
   left: auto;
   z-index: auto;
-  width: 45px; /* Kekalkan lebar minimum */
+  min-width: 10px;
+  text-align: center;
 }
 .senaraipemantauan-table thead th:nth-child(1) {
   background-color: #0074c8;
 }
 .senaraipemantauan-table tbody tr td:nth-child(1) {
-  background-color: #f9fafb; /* Latar Belakang Default Bil. (Light Grey) */
+  background-color: #f9fafb;
   color: #1f2937;
   font-weight: 500;
 }
-/* Menetapkan warna latar belakang apabila hover/row dipilih */
 .senaraipemantauan-table tbody tr:hover td:nth-child(1) {
   background-color: #f2f2f2;
 }
@@ -206,7 +193,8 @@
 /* Kolum Kedua (No Rujukan) */
 .senaraipemantauan-table thead th:nth-child(2),
 .senaraipemantauan-table tbody tr td:nth-child(2) {
-  position: static; /* 🔴 PERUBAHAN: Buang sticky */
+  position: static;
+  width: 160px;
   left: auto;
   z-index: auto;
 }
@@ -224,51 +212,43 @@
   background-color: #f2f2f2;
 }
 
-/* Tahun & Separuh Tahun Daftar (Kolum 3) */
 .senaraipemantauan-table thead th:nth-child(3),
 .senaraipemantauan-table tbody tr td:nth-child(3) {
-  width: 100px; /* Lebar tetap yang kecil */
+  text-align: center;
+  justify-content: baseline;
+}
+.senaraipemantauan-table thead th:nth-child(4),
+.senaraipemantauan-table tbody tr td:nth-child(4) {
+  text-align: center;
+  justify-content: baseline;
 }
 
-/* Skor Risiko Terdahulu (Kolum 7) */
-.senaraipemantauan-table thead th:nth-child(7),
-.senaraipemantauan-table tbody tr td:nth-child(7) {
-  width: 60px;
+.senaraipemantauan-table thead th:nth-child(5),
+.senaraipemantauan-table tbody tr td:nth-child(5) {
+  text-align: center;
+  justify-content: baseline;
 }
 
-/* Tahun & Separuh Tahun Pemantauan (Kolum 8) */
-.senaraipemantauan-table thead th:nth-child(8),
-.senaraipemantauan-table tbody tr td:nth-child(8) {
-  width: 100px;
+.senaraipemantauan-table thead th:nth-child(6),
+.senaraipemantauan-table tbody tr td:nth-child(6) {
+  width: 450px;
+  text-justify: auto;
+  text-align: justify;
 }
-
-/* Skor Risiko Terkini (Kolum 11) */
-.senaraipemantauan-table thead th:nth-child(11),
-.senaraipemantauan-table tbody tr td:nth-child(11) {
-  width: 60px;
-}
-
-/* Tindakan (Kolum 13) */
-.senaraipemantauan-table thead th:nth-child(13),
-.senaraipemantauan-table tbody tr td:nth-child(13) {
-  width: 60px;
-}
-
-/* HEADER COLOR ZONES (Dikekalkan) */
 .senaraipemantauan-dark-zone-header {
-  background-color: #005696; /* Dark Blue */
+  background-color: #005696;
   color: white;
 }
 .senaraipemantauan-dark-zone-subheader {
-  background-color: #0074c8; /* Medium Blue */
+  background-color: #0074c8;
   color: white;
 }
 .senaraipemantauan-light-zone-header {
-  background-color: #0099ff; /* Light Blue */
+  background-color: #0099ff;
   color: white;
 }
 .senaraipemantauan-light-zone-subheader {
-  background-color: #33b5ff; /* Lighter Blue */
+  background-color: #33b5ff;
   color: white;
 }
 
