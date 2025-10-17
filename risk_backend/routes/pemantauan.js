@@ -10,7 +10,7 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 /* =======================================================
-   🟢 GET: Semua Risiko + Pemantauan Terkini
+   🟢 GET: Semua Risiko + Pemantauan Terkini (DIPERBAIKI)
    ENDPOINT: /pemantauan-risiko
 ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
@@ -18,35 +18,38 @@ router.get("/", verifyToken, async (req, res) => {
     const user = req.user;
 
     let query = `
-      WITH PemantauanTerkini AS (
-          SELECT
-            pm.log_id,
-            pm.risiko_id,
-            pm.tarikh_pemantauan,
-            pm.tahun_pemantauan,
-            pm.separuh_tahun_pemantauan,
-            pm.skor_kebarangkalian_selepas,
-            pm.skor_impak_selepas,
-            -- ✅ Guna LAG() untuk ambil skor sebelum dari log sebelumnya atau risiko asal
-            COALESCE(
-              LAG(pm.skor_kebarangkalian_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
-              r.skor_kebarangkalian
-            ) AS skor_kebarangkalian_sebelum,
-            COALESCE(
-              LAG(pm.skor_impak_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
-              r.skor_impak
-            ) AS skor_impak_sebelum,
-            pm.status_pemantauan,
-            pm.catatan,
-            pm.keberkesanan,
-            pm.no_bil_kelulusan,
-            ROW_NUMBER() OVER (
-              PARTITION BY pm.risiko_id 
-              ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
-            ) AS rn
-          FROM LogPemantauan pm
-          JOIN Risiko r ON pm.risiko_id = r.risiko_id
-        ),
+      WITH RisikoAdaRawatan AS (
+        SELECT DISTINCT risiko_id
+        FROM rawatan_risiko
+      ),
+      PemantauanTerkini AS (
+        SELECT
+          pm.log_id,
+          pm.risiko_id,
+          pm.tarikh_pemantauan,
+          pm.tahun_pemantauan,
+          pm.separuh_tahun_pemantauan,
+          pm.skor_kebarangkalian_selepas,
+          pm.skor_impak_selepas,
+          COALESCE(
+            LAG(pm.skor_kebarangkalian_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
+            r.skor_kebarangkalian
+          ) AS skor_kebarangkalian_sebelum,
+          COALESCE(
+            LAG(pm.skor_impak_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
+            r.skor_impak
+          ) AS skor_impak_sebelum,
+          pm.status_pemantauan,
+          pm.catatan,
+          pm.keberkesanan,
+          pm.no_bil_kelulusan,
+          ROW_NUMBER() OVER (
+            PARTITION BY pm.risiko_id 
+            ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
+          ) AS rn
+        FROM LogPemantauan pm
+        JOIN Risiko r ON pm.risiko_id = r.risiko_id
+      ),
       ButiranTerkini AS (
         SELECT 
           pt.log_id,
@@ -64,19 +67,28 @@ router.get("/", verifyToken, async (req, res) => {
         s.nama_subsidiari,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
-        COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
-        COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
+        
+        -- DIUBAH: Sentiasa ambil skor asal sebagai "Skor Risiko Sebelum" dari jadual Risiko
+        r.skor_kebarangkalian AS skor_kebarangkalian_sebelum,
+        r.skor_impak AS skor_impak_sebelum,
 
+        -- Bahagian Log Pemantauan Terkini
         pt.tahun_pemantauan,
         pt.separuh_tahun_pemantauan,
         bt.pelan_tindakan_terkini,
         bt.kakitangan_terkini,
-        COALESCE(pt.status_pemantauan, 'Tiada Pemantauan') AS status_pemantauan_terkini, 
+        
+        
+        COALESCE(pt.status_pemantauan, 'Buka') AS status_pemantauan_terkini, 
         pt.catatan,
         pt.no_bil_kelulusan,
-        COALESCE(pt.skor_kebarangkalian_selepas, r.skor_kebarangkalian) AS skor_kebarangkalian_terkini,
-        COALESCE(pt.skor_impak_selepas, r.skor_impak) AS skor_impak_terkini
+        
+        -- DIUBAH: Hanya tunjukkan skor 'selepas' (terkini) JIKA ada rekod pemantauan. Jika tidak, pulangkan NULL.
+        CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_kebarangkalian_selepas ELSE NULL END AS skor_kebarangkalian_terkini,
+        CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini
+
       FROM Risiko r
+      JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
@@ -97,6 +109,7 @@ router.get("/", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Gagal memuatkan data pemantauan: " + err.message });
   }
 });
+
 
 /* =======================================================
    🟢 GET: Butiran Risiko Berdasarkan Risiko ID

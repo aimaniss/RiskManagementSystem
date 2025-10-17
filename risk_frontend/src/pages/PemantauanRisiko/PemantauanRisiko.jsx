@@ -15,13 +15,21 @@ const riskMatrix = {
     5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
 };
 
-const getRiskData = (k,i) => {
-    const kk = Math.min(Math.max(parseInt(k) || 1, 1), 5);
-    const ii = Math.min(Math.max(parseInt(i) || 1, 1), 5);
-    return riskMatrix[kk]?.[ii] || {label:"-", color:"#9ca3af"};
+const getRiskData = (k, i) => {
+  // Jika tiada nilai (null, undefined, 0), tunjuk Tiada Data
+  if (!k || !i) {
+    return { label: "Tiada Data", color: "#9ca3af" }; // Kelabu
+  }
+
+  // Pastikan dalam julat 1–5
+  const kk = Math.min(Math.max(parseInt(k), 1), 5);
+  const ii = Math.min(Math.max(parseInt(i), 1), 5);
+
+  // Jika valid, ambil dari riskMatrix
+  return riskMatrix[kk]?.[ii] || { label: "-", color: "#9ca3af" };
 };
-const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
-const getSeparuhTahunLabel = (separuh) => separuh === 1 ? "Pertama" : separuh === 2 ? "Kedua" : "-";
+const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"";
+const getSeparuhTahunLabel = (separuh) => separuh === 1 ? "Pertama" : separuh === 2 ? "Kedua" : "";
 
 
 function PemantauanRisiko() { 
@@ -64,7 +72,7 @@ function PemantauanRisiko() {
                 
                 return {
                     ...d, 
-                    id: d.id, // risiko_id dari SQL AS id
+                    id: d.id, 
                     risiko_id: d.id, 
                     tahun_asal: d.tahun, 
                     separuh_tahun_asal: d.separuh_tahun,
@@ -81,8 +89,8 @@ function PemantauanRisiko() {
                     // Pelan tindakan adalah array, gabungkan untuk paparan
                     pelan_tindakan_pemantauan: Array.isArray(d.pelan_tindakan_terkini) 
                         ? d.pelan_tindakan_terkini.filter(p => p).join('; ') 
-                        : (d.pelan_tindakan_terkini || "-"), 
-                    status_pemantauan_terkini: d.status_pemantauan_terkini || "Tiada Pemantauan", 
+                        : (d.pelan_tindakan_terkini || ""), 
+                    status_pemantauan_terkini: d.status_pemantauan_terkini || "Buka", 
                     catatan: d.catatan,
                     skor_kebarangkalian_terkini: d.skor_kebarangkalian_terkini,
                     skor_impak_terkini: d.skor_impak_terkini,
@@ -202,9 +210,11 @@ function PemantauanRisiko() {
 
                 <select className="senaraipemantauan-filter-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
                     <option value="">-- Semua Status --</option>
-                    <option value="Selesai">Selesai</option>
-                    <option value="Tertunggak">Tertunggak</option>
-                    <option value="Tiada Pemantauan">Tiada Pemantauan</option>
+                    <option value="Buka">Buka</option>
+                    <option value="Sedang Dilaksanakan">Sedang Dilaksanakan</option>
+                    <option value="Pemantauan">Pemantauan</option>
+                    <option value="Selesai">Selesai</option>
+                     <option value="Tutup">Tutup</option>
                 </select>
             </div>
 
@@ -245,9 +255,9 @@ function PemantauanRisiko() {
                                     {/* KOLUM DATA PENDAFTARAN */}
                                     <td>{i+1}</td>
                                     <td>{d.no_rujukan}</td>
-                                    <td>{`${d.tahun_asal || d.tahun || "-"} - ${getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}`}</td>
+                                    <td>{`${d.tahun_asal || d.tahun || ""} - ${getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}`}</td>
                                     <td>{d.nama_subsidiari}</td>
-                                    <td>{d.kategori_risiko || "-"}</td> 
+                                    <td>{d.kategori_risiko || ""}</td> 
                                     <td>{d.risiko}</td> 
                                     
                                     {/* SKOR RISIKO SEBELUM (Skor Asal Pendaftaran) */}
@@ -258,9 +268,9 @@ function PemantauanRisiko() {
                                     </td>
                                     
                                     {/* DATA LOG PEMANTAUAN TERKINI */}
-                                    <td>{d.tahun_pemantauan ? `${d.tahun_pemantauan} - ${getSeparuhTahunLabel(d.separuh_tahun_pemantauan)}` : "-"}</td>
-                                    <td>{d.pelan_tindakan_pemantauan || "-"}</td>
-                                    <td>{d.status_pemantauan_terkini || "-"}</td>
+                                    <td>{d.tahun_pemantauan ? `${d.tahun_pemantauan} - ${getSeparuhTahunLabel(d.separuh_tahun_pemantauan)}` : ""}</td>
+                                    <td>{d.pelan_tindakan_pemantauan || ""}</td>
+                                    <td>{d.status_pemantauan_terkini || ""}</td>
                                     
                                     {/* SKOR RISIKO SELEPAS */}
                                     <td className="senaraipemantauan-center">
@@ -269,7 +279,7 @@ function PemantauanRisiko() {
                                         </div>
                                     </td>
                                     
-                                    <td>{d.catatan || "-"}</td>
+                                    <td>{d.catatan || ""}</td>
                                     
                                     {/* KEMASKINI PEMANTAUAN */}
                                     <td className="senaraipemantauan-center">
