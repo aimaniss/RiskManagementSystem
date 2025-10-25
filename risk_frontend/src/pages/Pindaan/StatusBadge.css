@@ -1,0 +1,28 @@
+/* --- Salinan Pembolehubah Global --- */
+:root {
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
+    --color-warning: #f97316;
+    --color-grey: #64748b;
+}
+
+/* --- Komponen StatusBadge --- */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    display: inline-block;
+    background-color: var(--color-grey); /* Default */
+}
+.status-badge[data-status="Menunggu Kelulusan"] {
+    background-color: var(--color-warning);
+}
+.status-badge[data-status="Diluluskan"] {
+    background-color: var(--color-success);
+}
+.status-badge[data-status="Ditolak"] {
+    background-color: var(--color-danger);
+}

@@ -1,0 +1,181 @@
+/* --- Pembolehubah Global (Global Variables) --- */
+/* Blok ini MESTI KEKAL global dan tidak boleh diskopkan */
+:root {
+  --theme-color: #0074c8;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #f97316;
+  --color-info: #3b82f6;
+  --color-grey: #64748b;
+  --border-color: #e2e8f0;
+  --bg-light: #f8fafc;
+  --bg-light-grey: #f1f5f9;
+}
+
+/* --- Gaya Borang Umum (Skop) --- */
+.pindaan-risiko-wrapper .form-input,
+.pindaan-risiko-wrapper .form-select,
+.pindaan-risiko-wrapper .form-textarea {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.pindaan-risiko-wrapper .form-textarea {
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.pindaan-risiko-wrapper .form-group {
+  margin-bottom: 16px;
+}
+.pindaan-risiko-wrapper .form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.pindaan-risiko-wrapper .form-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.pindaan-risiko-wrapper .form-list-item .form-input {
+  flex: 1;
+  margin-right: 8px;
+}
+
+/* --- Gaya Butang (Skop) --- */
+.pindaan-risiko-wrapper .btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+.pindaan-risiko-wrapper .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pindaan-risiko-wrapper .btn-primary {
+  background: var(--theme-color);
+  color: white;
+}
+.pindaan-risiko-wrapper .btn-success {
+  background: var(--color-success);
+  color: white;
+}
+.pindaan-risiko-wrapper .btn-danger {
+  background: var(--color-danger);
+  color: white;
+}
+.pindaan-risiko-wrapper .btn-info {
+  background: var(--color-info);
+  color: white;
+}
+.pindaan-risiko-wrapper .btn-default {
+  background: white;
+  color: #333;
+  border: 1px solid #ccc;
+}
+.pindaan-risiko-wrapper .btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.pindaan-risiko-wrapper .btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+}
+.pindaan-risiko-wrapper .btn-icon-danger {
+  color: var(--color-danger);
+}
+.pindaan-risiko-wrapper .btn-icon-success {
+  color: var(--color-success);
+}
+
+/* --- Gaya Halaman Utama (Skop) --- */
+.pindaan-risiko-wrapper .pindaan-container {
+  padding: 20px;
+  font-family: "Roboto", sans-serif;
+  background: var(--bg-light);
+  min-height: 100vh;
+}
+
+.pindaan-risiko-wrapper .pindaan-header {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.pindaan-risiko-wrapper .pindaan-box {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Gaya header yang anda tambah sebelum ini (Skop) */
+.pindaan-risiko-wrapper .pindaan-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.pindaan-risiko-wrapper .pindaan-box-header .pindaan-subheader {
+  margin-bottom: 0;
+}
+.pindaan-risiko-wrapper .filter-container {
+  margin-bottom: 16px;
+}
+
+/* --- Gaya Jadual Halaman Utama (Skop) --- */
+.pindaan-risiko-wrapper .pindaan-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pindaan-risiko-wrapper .pindaan-table-header th,
+.pindaan-risiko-wrapper .pindaan-table th {
+  background: var(--bg-light-grey);
+  color: #334155;
+  border-bottom: 2px solid var(--border-color);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pindaan-risiko-wrapper .pindaan-td,
+.pindaan-risiko-wrapper .pindaan-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+  color: #475569;
+}
+.pindaan-risiko-wrapper .table-message {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-grey);
+}
+.pindaan-risiko-wrapper .table-message-error {
+  color: var(--color-danger);
+}
+.pindaan-risiko-wrapper .pindaan-table tbody tr:last-child td {
+  border-bottom: none;
+}
