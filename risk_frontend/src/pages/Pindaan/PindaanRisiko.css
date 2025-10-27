@@ -1,5 +1,4 @@
 /* --- Pembolehubah Global (Global Variables) --- */
-/* Blok ini MESTI KEKAL global dan tidak boleh diskopkan */
 :root {
   --theme-color: #0074c8;
   --color-success: #16a34a;
@@ -8,7 +7,7 @@
   --color-info: #3b82f6;
   --color-grey: #64748b;
   --border-color: #e2e8f0;
-  --bg-light: #f8fafc;
+  --bg-light: #ffffff; /* Latar belakang putih */
   --bg-light-grey: #f1f5f9;
 }
 
@@ -23,12 +22,11 @@
   box-sizing: border-box;
   width: 100%;
 }
-
+/* ... (Gaya borang lain kekal sama) ... */
 .pindaan-risiko-wrapper .form-textarea {
   min-height: 80px;
   font-family: inherit;
 }
-
 .pindaan-risiko-wrapper .form-group {
   margin-bottom: 16px;
 }
@@ -62,11 +60,11 @@
   font-size: 14px;
   transition: opacity 0.2s;
 }
+/* ... (Gaya butang lain kekal sama) ... */
 .pindaan-risiko-wrapper .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .pindaan-risiko-wrapper .btn-primary {
   background: var(--theme-color);
   color: white;
@@ -92,7 +90,6 @@
   padding: 6px 12px;
   font-size: 12px;
 }
-
 .pindaan-risiko-wrapper .btn-icon {
   background: none;
   border: none;
@@ -114,23 +111,89 @@
   background: var(--bg-light);
   min-height: 100vh;
 }
-
 .pindaan-risiko-wrapper .pindaan-header {
   font-size: 24px;
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 16px;
 }
-
 .pindaan-risiko-wrapper .pindaan-box {
   background: white;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Gaya header yang anda tambah sebelum ini (Skop) */
+/* --- Gaya Kad Statistik (BARU) --- */
+.pindaan-risiko-wrapper .stats-card-container {
+  display: grid;
+  /* Papar 3 lajur pada skrin besar, 1 lajur pada skrin kecil */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pindaan-risiko-wrapper .stats-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pindaan-risiko-wrapper .stats-card-icon-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pindaan-risiko-wrapper .stats-card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.pindaan-risiko-wrapper .stats-card-title {
+  font-size: 14px;
+  color: var(--color-grey);
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.pindaan-risiko-wrapper .stats-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Warna Latar Ikon */
+.pindaan-risiko-wrapper .stats-card-menunggu .stats-card-icon-bg {
+  background-color: #fffbeb; /* Kuning Cair */
+}
+.pindaan-risiko-wrapper .stats-card-menunggu .stats-icon {
+  color: var(--color-warning);
+}
+.pindaan-risiko-wrapper .stats-card-diluluskan .stats-card-icon-bg {
+  background-color: #f0fdf4; /* Hijau Cair */
+}
+.pindaan-risiko-wrapper .stats-card-diluluskan .stats-icon {
+  color: var(--color-success);
+}
+.pindaan-risiko-wrapper .stats-card-ditolak .stats-card-icon-bg {
+  background-color: #fef2f2; /* Merah Cair */
+}
+.pindaan-risiko-wrapper .stats-card-ditolak .stats-icon {
+  color: var(--color-danger);
+}
+
+/* --- Gaya Header Kotak Pindaan --- */
 .pindaan-risiko-wrapper .pindaan-box-header {
   display: flex;
   justify-content: space-between;
@@ -140,8 +203,20 @@
 .pindaan-risiko-wrapper .pindaan-box-header .pindaan-subheader {
   margin-bottom: 0;
 }
-.pindaan-risiko-wrapper .filter-container {
+
+/* === GAYA PENAPIS DIKEMASKINI === */
+.pindaan-risiko-wrapper .filters-wrapper {
+  display: flex; /* Letak bersebelahan */
+  flex-wrap: wrap; /* Benarkan 'wrap' jika skrin kecil */
+  gap: 16px; /* Jarak antara penapis */
   margin-bottom: 16px;
+}
+.pindaan-risiko-wrapper .filters-wrapper .form-select {
+  flex: 1; /* Kongsi ruang sama rata */
+  min-width: 220px; /* Lebar minimum sebelum 'wrap' */
+  width: auto;
+  padding: 8px 12px; /* Dikecilkan */
+  font-size: 14px;
 }
 
 /* --- Gaya Jadual Halaman Utama (Skop) --- */
@@ -149,18 +224,21 @@
   width: 100%;
   border-collapse: collapse;
 }
+/* === HEADER JADUAL DIKEMASKINI === */
 .pindaan-risiko-wrapper .pindaan-table-header th,
 .pindaan-risiko-wrapper .pindaan-table th {
-  background: var(--bg-light-grey);
-  color: #334155;
-  border-bottom: 2px solid var(--border-color);
+  background: var(--theme-color); /* Latar belakang biru */
+  color: white; /* Teks putih */
+  border-bottom: 1px solid var(--theme-color);
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  text-transform: none; /* Tidak lagi 'uppercase' */
+  letter-spacing: 0; /* Jarak huruf normal */
 }
+
+/* ... (Gaya jadual lain kekal sama) ... */
 .pindaan-risiko-wrapper .pindaan-td,
 .pindaan-risiko-wrapper .pindaan-table td {
   padding: 12px;

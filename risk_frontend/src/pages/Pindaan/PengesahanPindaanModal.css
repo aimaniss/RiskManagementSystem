@@ -1,0 +1,137 @@
+/* Guna font yang sama */
+.pengesahan-modal-overlay {
+  font-family: "Inter", sans-serif;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65); /* Jadikan lebih gelap sedikit */
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Pastikan ia di atas modal pertama */
+  padding: 20px;
+}
+
+.pengesahan-modal-dialog {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  width: 95%;
+  max-width: 600px; /* Saiz sederhana untuk pengesahan */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: pengesahan-slide-up 0.2s ease-out;
+}
+
+@keyframes pengesahan-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pengesahan-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pengesahan-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.pengesahan-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+}
+.pengesahan-modal-close:hover {
+  background: #e5e7eb;
+}
+
+.pengesahan-modal-content {
+  padding: 18px 24px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.pengesahan-modal-content p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.pengesahan-modal-footer {
+  padding: 14px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+/* Guna semula kelas 'btn' dari CSS utama anda */
+/* Jika ia tidak berfungsi, salin gaya .btn dari PindaanFormModal.css */
+/* .btn { ... } */
+/* .btn-default { ... } */
+/* .btn-primary { ... } */
+
+/* --- Jadual Perbandingan --- */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.88rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.comparison-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.comparison-table .col-perkara {
+  width: 50%;
+}
+.comparison-table .col-sebelum,
+.comparison-table .col-selepas {
+  width: 25%;
+  text-align: center;
+}
+
+.comparison-table .data-sebelum {
+  color: #dc2626; /* Merah */
+  font-weight: 600;
+  text-decoration: line-through;
+  background: #fef2f2;
+}
+
+.comparison-table .data-selepas {
+  color: #16a34a; /* Hijau */
+  font-weight: 700;
+  background: #f0fdf4;
+}
