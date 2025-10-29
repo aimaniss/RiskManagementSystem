@@ -141,7 +141,6 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
   }
 });
 
-
 // ----------------------------------------------------------------------
 
 /**
@@ -153,7 +152,8 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
 router.post("/:risk_id", verifyToken, async (req, res) => {
   const { risk_id } = req.params;
   const { justifikasi, perubahan } = req.body;
-  const { pengguna_id, nama_peranan } = req.user;
+  // Ambil ID INTEGER dari req.user. Pastikan nama 'pengguna_id' betul
+  const { pengguna_id: userIntegerId, nama_peranan } = req.user;
   let { data_sebelum, data_selepas } = perubahan;
   const { penilaian, keberkesanan } = justifikasi;
   const client = await pool.connect();
@@ -167,45 +167,65 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
     data_sebelum = typeof data_sebelum === 'object' && data_sebelum !== null ? data_sebelum : {};
     data_selepas = typeof data_selepas === 'object' && data_selepas !== null ? data_selepas : {};
 
+    // Dapatkan data asal LENGKAP dari DB
+    const originalRiskRes = await client.query(
+        `SELECT skor_kebarangkalian, skor_impak FROM risiko WHERE risiko_id = $1`,
+        [risk_id]
+    );
+    const originalLogRes = await client.query(
+        `SELECT skor_kebarangkalian_selepas, skor_impak_selepas
+         FROM logpemantauan
+         WHERE risiko_id = $1
+         ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC
+         LIMIT 1`,
+        [risk_id]
+    );
+    const completeOriginalData = {
+        skor_kebarangkalian: originalRiskRes.rows[0]?.skor_kebarangkalian ?? null,
+        skor_impak: originalRiskRes.rows[0]?.skor_impak ?? null,
+        skor_kebarangkalian_selepas: originalLogRes.rows[0]?.skor_kebarangkalian_selepas ?? null,
+        skor_impak_selepas: originalLogRes.rows[0]?.skor_impak_selepas ?? null,
+    };
+
+    // Bina keadaan akhir LENGKAP
+    const completeFinalData = {
+        skor_kebarangkalian: data_selepas.skor_kebarangkalian ?? completeOriginalData.skor_kebarangkalian,
+        skor_impak: data_selepas.skor_impak ?? completeOriginalData.skor_impak,
+        skor_kebarangkalian_selepas: data_selepas.skor_kebarangkalian_selepas ?? completeOriginalData.skor_kebarangkalian_selepas,
+        skor_impak_selepas: data_selepas.skor_impak_selepas ?? completeOriginalData.skor_impak_selepas,
+    };
+
+    // Kira skor risiko & tambah ke data_sebelum/selepas JIKA perlu
     const RISIKO_FIELDS_INPUT = ["skor_kebarangkalian", "skor_impak"];
     const LOG_FIELDS_INPUT = ["skor_kebarangkalian_selepas", "skor_impak_selepas"];
+    let hasPenilaianInputChange = RISIKO_FIELDS_INPUT.some(key => key in data_selepas);
+    let hasKeberkesananInputChange = LOG_FIELDS_INPUT.some(key => key in data_selepas);
 
-    let hasPenilaianScoreChange = RISIKO_FIELDS_INPUT.some(key => key in data_selepas);
-    let hasKeberkesananScoreChange = LOG_FIELDS_INPUT.some(key => key in data_selepas);
-
-    if (hasPenilaianScoreChange) {
-      const k_penilaian_sebelum = data_sebelum?.skor_kebarangkalian;
-      const i_penilaian_sebelum = data_sebelum?.skor_impak;
-      if (k_penilaian_sebelum != null || i_penilaian_sebelum != null) {
-          data_sebelum.skor_risiko_penilaian = getRiskShortLabelFromMatrix(k_penilaian_sebelum, i_penilaian_sebelum, riskMatrixDetails);
-      }
-      const k_penilaian_selepas = data_selepas?.skor_kebarangkalian ?? k_penilaian_sebelum;
-      const i_penilaian_selepas = data_selepas?.skor_impak ?? i_penilaian_sebelum;
-      if (k_penilaian_selepas != null || i_penilaian_selepas != null) {
-          data_selepas.skor_risiko_penilaian = getRiskShortLabelFromMatrix(k_penilaian_selepas, i_penilaian_selepas, riskMatrixDetails);
-      }
+    if (hasPenilaianInputChange) {
+        const beforeScore = getRiskShortLabelFromMatrix(completeOriginalData.skor_kebarangkalian, completeOriginalData.skor_impak, riskMatrixDetails);
+        const afterScore = getRiskShortLabelFromMatrix(completeFinalData.skor_kebarangkalian, completeFinalData.skor_impak, riskMatrixDetails);
+        if (beforeScore !== afterScore || ('skor_kebarangkalian' in data_selepas) || ('skor_impak' in data_selepas) ) {
+             data_sebelum.skor_risiko_penilaian = beforeScore;
+             data_selepas.skor_risiko_penilaian = afterScore;
+        }
+    }
+    if (hasKeberkesananInputChange) {
+        const beforeScore = getRiskShortLabelFromMatrix(completeOriginalData.skor_kebarangkalian_selepas, completeOriginalData.skor_impak_selepas, riskMatrixDetails);
+        const afterScore = getRiskShortLabelFromMatrix(completeFinalData.skor_kebarangkalian_selepas, completeFinalData.skor_impak_selepas, riskMatrixDetails);
+         if (beforeScore !== afterScore || ('skor_kebarangkalian_selepas' in data_selepas) || ('skor_impak_selepas' in data_selepas) ) {
+             data_sebelum.skor_risiko_keberkesanan = beforeScore;
+             data_selepas.skor_risiko_keberkesanan = afterScore;
+         }
     }
 
-    if (hasKeberkesananScoreChange) {
-         const k_keb_sebelum = data_sebelum?.skor_kebarangkalian_selepas;
-         const i_keb_sebelum = data_sebelum?.skor_impak_selepas;
-         if (k_keb_sebelum != null || i_keb_sebelum != null) {
-             data_sebelum.skor_risiko_keberkesanan = getRiskShortLabelFromMatrix(k_keb_sebelum, i_keb_sebelum, riskMatrixDetails);
-         }
-         const k_keb_selepas = data_selepas?.skor_kebarangkalian_selepas ?? k_keb_sebelum;
-         const i_keb_selepas = data_selepas?.skor_impak_selepas ?? i_keb_sebelum;
-         if (k_keb_selepas != null || i_keb_selepas != null) {
-            data_selepas.skor_risiko_keberkesanan = getRiskShortLabelFromMatrix(k_keb_selepas, i_keb_selepas, riskMatrixDetails);
-         }
-     }
-
+    // --- Logik Lulus Auto Admin ---
     if (nama_peranan === "Admin") {
       status_permohonan = "Diluluskan";
-      pengguna_id_pelulus = pengguna_id;
+      pengguna_id_pelulus = userIntegerId; // Simpan ID INTEGER Admin
       tarikh_diproses = new Date();
 
-      let hasRisikoChanges = hasPenilaianScoreChange;
-      let hasLogChanges = hasKeberkesananScoreChange;
+      let hasRisikoChanges = hasPenilaianInputChange || penilaian;
+      let hasLogChanges = hasKeberkesananInputChange || keberkesanan;
 
       const risikoUpdates = {};
       const logUpdates = {};
@@ -219,9 +239,7 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
       }
       if (penilaian) {
           risikoUpdates.justifikasi_pindaan_penilaian = penilaian;
-          hasRisikoChanges = true;
       }
-
 
       if (hasLogChanges) {
           if ('skor_kebarangkalian_selepas' in data_selepas) logUpdates.skor_kebarangkalian_selepas = data_selepas.skor_kebarangkalian_selepas;
@@ -232,16 +250,12 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
       }
       if (keberkesanan) {
           logUpdates.justifikasi_pindaan_pemantauan = keberkesanan;
-          hasLogChanges = true;
       }
 
       // 1. Kemas kini Jadual RISIKO
       if (hasRisikoChanges && Object.keys(risikoUpdates).length > 0) {
-        const setClause = Object.keys(risikoUpdates)
-          .map((key, index) => `"${key}" = $${index + 1}`)
-          .join(", ");
-        const values = Object.values(risikoUpdates);
-        values.push(risk_id);
+        const setClause = Object.keys(risikoUpdates).map((key, index) => `"${key}" = $${index + 1}`).join(", ");
+        const values = Object.values(risikoUpdates); values.push(risk_id);
         const updateQuery = `UPDATE "risiko" SET ${setClause} WHERE risiko_id = $${values.length};`;
         await client.query(updateQuery, values);
       }
@@ -252,42 +266,33 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
           `SELECT log_id FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC LIMIT 1`,
           [risk_id]
         );
-
         if (latestLogRes.rowCount > 0) {
           const log_id_terkini = latestLogRes.rows[0].log_id;
+          logUpdates.updated_by_pemantauan = userIntegerId; // ID INTEGER Admin
           logUpdates.update_at_pemantauan = 'NOW()';
-          logUpdates.updated_by_pemantauan = pengguna_id;
 
-          const setClause = Object.keys(logUpdates)
-            .map((key, index) => `"${key}" = ${key === 'update_at_pemantauan' ? logUpdates[key] : `$${index + 1}`}`)
-            .join(", ");
-
-          const values = Object.values(logUpdates).filter(val => val !== 'NOW()');
-          values.push(log_id_terkini);
-
+          const setClause = Object.keys(logUpdates).map((key, index) => `"${key}" = ${key === 'update_at_pemantauan' ? logUpdates[key] : `$${index + 1}`}`).join(", ");
+          const values = Object.values(logUpdates).filter(val => val !== 'NOW()'); values.push(log_id_terkini);
           const updateLogQuery = `UPDATE logpemantauan SET ${setClause} WHERE log_id = $${values.length}`;
           await client.query(updateLogQuery, values);
-        } else {
-             console.warn(`Tiada log pemantauan sedia ada untuk risiko ID ${risk_id}. Pindaan keberkesanan tidak dikemaskini.`);
-        }
+        } else { console.warn(`Tiada log pemantauan sedia ada untuk risiko ID ${risk_id}. Pindaan keberkesanan tidak dikemaskini.`); }
       }
-    }
+    } // --- Tamat Lulus Auto Admin ---
 
     // 3. Simpan rekod permohonan (semua pengguna)
-    //    Pastikan column 'komen_pelulus' dan 'sebab_ditolak' wujud atau sesuaikan query
     const insertQuery = `INSERT INTO permohonan_pindaan (
         risiko_id, pengguna_id_pemohon, status_permohonan,
         data_sebelum, data_selepas,
         justifikasi_penilaian, justifikasi_keberkesanan,
-        pengguna_id_pelulus, tarikh_diproses, created_at
-        -- Komen Pelulus & Sebab Ditolak akan diisi semasa PUT
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING *;
+        pengguna_id_pelulus, tarikh_diproses, created_at,
+        sebab_ditolak
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NULL) RETURNING *;
     `;
     const newPermohonan = await client.query(insertQuery, [
-      risk_id, pengguna_id, status_permohonan,
-      data_sebelum, data_selepas,
+      risk_id, userIntegerId, status_permohonan, // Guna ID INTEGER pemohon
+      data_sebelum, data_selepas, // Hantar objek JSON yang telah dikira skor
       penilaian || null, keberkesanan || null,
-      pengguna_id_pelulus, tarikh_diproses
+      pengguna_id_pelulus, tarikh_diproses // pengguna_id_pelulus adalah INTEGER Admin jika auto-lulus
     ]);
 
     await client.query("COMMIT");
@@ -298,7 +303,8 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("❌ Ralat POST /pindaan/:risk_id:", err);
-    res.status(500).json({ message: "Gagal memproses permohonan: " + err.message });
+    if (err.code === '42804') { res.status(500).json({ message: `Gagal memproses permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.` }); }
+    else { res.status(500).json({ message: "Gagal memproses permohonan: " + err.message }); }
   } finally {
     client.release();
   }
@@ -309,7 +315,7 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
 
 /**
  * -------------------------------------------------------
- * 🔍 GET: Dapatkan Senarai Permohonan Pindaan (Peranan-based Visibility)
+ * 🔍 GET: Dapatkan Senarai Permohonan Pindaan (Termasuk Data Pemantauan Terkini)
  * ENDPOINT: /api/pindaan/
  * -------------------------------------------------------
  */
@@ -318,18 +324,33 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
     const { status, subsidiari_id } = req.query;
     const user = req.user;
 
-    let query = `SELECT
+    let query = `
+      WITH LogTerkini AS (
+        SELECT
+          lp.risiko_id,
+          lp.tahun_pemantauan,
+          lp.separuh_tahun_pemantauan,
+          ROW_NUMBER() OVER (PARTITION BY lp.risiko_id ORDER BY lp.tahun_pemantauan DESC, lp.tarikh_pemantauan DESC) as rn
+        FROM logpemantauan lp
+      )
+      SELECT
         p.*,
         r.no_rujukan,
         r.risiko,
+        r.tahun AS tahun_daftar,
+        r.separuh_tahun AS separuh_tahun_daftar,
         u.nama_penuh AS nama_pemohon,
-        s.nama_subsidiari
+        s.nama_subsidiari,
+        lt.tahun_pemantauan,
+        lt.separuh_tahun_pemantauan
       FROM permohonan_pindaan p
       JOIN "risiko" r ON p.risiko_id = r.risiko_id
-      JOIN pengguna u ON p.pengguna_id_pemohon = u.pengguna_id
-        LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      JOIN pengguna u ON p.pengguna_id_pemohon = u.pengguna_id -- Pastikan pengguna_id_pemohon adalah INTEGER
+      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN LogTerkini lt ON p.risiko_id = lt.risiko_id AND lt.rn = 1
       WHERE 1=1
     `;
+
     const params = [];
     let paramIndex = 1;
 
@@ -348,12 +369,20 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
     query += ` ORDER BY p.created_at DESC;`;
 
     const { rows } = await pool.query(query, params);
-    res.json(rows);
+
+    const results = rows.map(row => ({
+        ...row,
+        tahun: row.tahun_daftar,
+        separuh_tahun: row.separuh_tahun_daftar,
+    }));
+
+    res.json(results);
+
   } catch (err) {
     console.error("❌ Ralat GET /pindaan:", err);
-    if (err.code === '42601') {
-      return res.status(500).json({ message: "Ralat Sintaks SQL (42601) di BE. Sila semak semula pertanyaan SQL." });
-    }
+    if (err.code === '42601') { return res.status(500).json({ message: "Ralat Sintaks SQL (42601) di BE." }); }
+    else if (err.code === '42P01') { return res.status(500).json({ message: `Ralat Pangkalan Data (42P01): ${err.message}.` }); }
+    else if (err.code === '42703') { return res.status(500).json({ message: `Ralat Pangkalan Data (42703): Lajur tidak dikenali - ${err.message}.` });}
     res.status(500).json({ message: "Gagal memuatkan senarai permohonan." });
   }
 });
@@ -368,8 +397,8 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
  */
 router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (req, res) => {
   const { pindaan_id } = req.params;
-  const { komen_pelulus } = req.body; // Ambil komen dari frontend
-  const { pengguna_id } = req.user; // ID Admin yang meluluskan
+  // Ambil ID INTEGER Admin dari req.user
+  const { pengguna_id: adminIntegerId } = req.user;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -377,9 +406,9 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
     const permohonanRes = await client.query(
       "SELECT * FROM permohonan_pindaan WHERE pindaan_id = $1 AND status_permohonan = 'Menunggu Kelulusan'", [pindaan_id]
     );
-    if (permohonanRes.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
+    if (permohonanRes.rowCount === 0) { /* ... error handling ... */
+        await client.query("ROLLBACK");
+        return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
     }
 
     const permohonan = permohonanRes.rows[0];
@@ -388,31 +417,22 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
     let hasRisikoChanges = ['skor_kebarangkalian', 'skor_impak'].some(key => key in data_selepas) || justifikasi_penilaian;
     let hasLogChanges = ['skor_kebarangkalian_selepas', 'skor_impak_selepas'].some(key => key in data_selepas) || justifikasi_keberkesanan;
 
-    // 1. Kemas kini Jadual RISIKO (jika ada perubahan penilaian)
-    if (hasRisikoChanges) {
+    // 1. Kemas kini Jadual RISIKO
+    if (hasRisikoChanges) { /* ... Kod UPDATE Risiko kekal sama ... */
         const risikoUpdates = {};
         if ('skor_kebarangkalian' in data_selepas) risikoUpdates.skor_kebarangkalian = data_selepas.skor_kebarangkalian;
         if ('skor_impak' in data_selepas) risikoUpdates.skor_impak = data_selepas.skor_impak;
-        if ('skor_risiko_penilaian' in data_selepas) {
-             const calculatedRiskScore = data_selepas.skor_risiko_penilaian;
-             risikoUpdates.skor_risiko = calculatedRiskScore !== '-' ? calculatedRiskScore : null;
-        }
+        if ('skor_risiko_penilaian' in data_selepas) { const calculatedRiskScore = data_selepas.skor_risiko_penilaian; risikoUpdates.skor_risiko = calculatedRiskScore !== '-' ? calculatedRiskScore : null; }
         if (justifikasi_penilaian) risikoUpdates.justifikasi_pindaan_penilaian = justifikasi_penilaian;
-
         if (Object.keys(risikoUpdates).length > 0) {
-             const setClause = Object.keys(risikoUpdates)
-               .map((key, index) => `"${key}" = $${index + 1}`)
-               .join(", ");
-             const values = Object.values(risikoUpdates);
-             values.push(risiko_id);
+             const setClause = Object.keys(risikoUpdates).map((key, index) => `"${key}" = $${index + 1}`).join(", ");
+             const values = Object.values(risikoUpdates); values.push(risiko_id);
              const updateQuery = `UPDATE "risiko" SET ${setClause} WHERE risiko_id = $${values.length};`;
              await client.query(updateQuery, values);
-        } else {
-            console.log(`Tiada medan risiko spesifik untuk dikemaskini bagi risiko ID ${risiko_id} semasa kelulusan.`);
-        }
+        } else { console.log(`Tiada medan risiko spesifik untuk dikemaskini bagi risiko ID ${risiko_id} semasa kelulusan.`); }
     }
 
-    // 2. KEMAS KINI REKOD LOGPEMANTAUAN SEDIA ADA (jika ada perubahan keberkesanan)
+    // 2. KEMAS KINI REKOD LOGPEMANTAUAN SEDIA ADA
     if (hasLogChanges) {
         const latestLogRes = await client.query(
          `SELECT log_id FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC LIMIT 1`,
@@ -425,16 +445,13 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
 
             if ('skor_kebarangkalian_selepas' in data_selepas) logUpdates.skor_kebarangkalian_selepas = data_selepas.skor_kebarangkalian_selepas;
             if ('skor_impak_selepas' in data_selepas) logUpdates.skor_impak_selepas = data_selepas.skor_impak_selepas;
-            if ('skor_risiko_keberkesanan' in data_selepas) {
-                 const calculatedRiskScoreLog = data_selepas.skor_risiko_keberkesanan;
-                 logUpdates.skor_risiko_pemantauan = calculatedRiskScoreLog !== '-' ? calculatedRiskScoreLog : null;
-            }
+            if ('skor_risiko_keberkesanan' in data_selepas) { const calculatedRiskScoreLog = data_selepas.skor_risiko_keberkesanan; logUpdates.skor_risiko_pemantauan = calculatedRiskScoreLog !== '-' ? calculatedRiskScoreLog : null; }
             if (justifikasi_keberkesanan) logUpdates.justifikasi_pindaan_pemantauan = justifikasi_keberkesanan;
 
+            // Guna ID INTEGER Admin untuk updated_by_pemantauan
+            logUpdates.updated_by_pemantauan = adminIntegerId;
             logUpdates.update_at_pemantauan = 'NOW()';
-            logUpdates.updated_by_pemantauan = pengguna_id; // Admin yg meluluskan
 
-            // Hanya laksana UPDATE jika ada medan untuk diubah selain update_at/by
             const fieldsToUpdate = Object.keys(logUpdates).filter(k => k !== 'update_at_pemantauan' && k !== 'updated_by_pemantauan');
 
             if (fieldsToUpdate.length > 0) {
@@ -455,18 +472,14 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
         }
     }
 
-    // 3. Kemas kini status permohonan itu sendiri
-    // ▼▼▼ PERUBAHAN: Alih keluar komen_pelulus jika column tidak wujud ▼▼▼
+    // 3. Kemas kini status permohonan itu sendiri (tanpa komen_pelulus)
     const updatePermohonanQuery = `UPDATE permohonan_pindaan SET
         status_permohonan = 'Diluluskan',
-        pengguna_id_pelulus = $1,
+        pengguna_id_pelulus = $1, -- Guna ID INTEGER Admin
         tarikh_diproses = NOW()
-        -- komen_pelulus = $3 -- Alih keluar baris ini jika column tidak wujud
       WHERE pindaan_id = $2 RETURNING *;
     `;
-    // Hanya hantar 2 parameter jika komen_pelulus dialih keluar
-    const updatedPermohonan = await client.query(updatePermohonanQuery, [pengguna_id, pindaan_id]);
-    // ▲▲▲ TAMAT PERUBAHAN ▲▲▲
+    const updatedPermohonan = await client.query(updatePermohonanQuery, [adminIntegerId, pindaan_id]); // Guna ID INTEGER Admin
 
     await client.query("COMMIT");
     res.json({ message: "Permohonan berjaya diluluskan.", data: updatedPermohonan.rows[0] });
@@ -474,7 +487,8 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("❌ Ralat PUT /pindaan/:pindaan_id/approve:", err);
-    res.status(500).json({ message: "Gagal meluluskan permohonan: " + err.message });
+     if (err.code === '42804') { res.status(500).json({ message: `Gagal meluluskan permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.` }); }
+     else { res.status(500).json({ message: "Gagal meluluskan permohonan: " + err.message }); }
   } finally {
     client.release();
   }
@@ -490,24 +504,26 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
 router.put("/:pindaan_id/reject", verifyToken, authorizeRoles("Admin"), async (req, res) => {
   const { pindaan_id } = req.params;
   const { komen_pelulus } = req.body;
-  const { pengguna_id } = req.user;
+  // Ambil ID INTEGER Admin dari req.user
+  const { pengguna_id: adminIntegerId } = req.user;
   try {
-    // Guna 'sebab_ditolak'
+    // Guna 'sebab_ditolak' dan ID INTEGER Admin
     const updateQuery = `UPDATE permohonan_pindaan SET
         status_permohonan = 'Ditolak',
-        pengguna_id_pelulus = $1,
+        pengguna_id_pelulus = $1, -- Simpan ID INTEGER Admin
         tarikh_diproses = NOW(),
         sebab_ditolak = $3
       WHERE pindaan_id = $2 AND status_permohonan = 'Menunggu Kelulusan' RETURNING *;
     `;
-    const { rows } = await pool.query(updateQuery, [pengguna_id, pindaan_id, komen_pelulus || null]);
+    const { rows } = await pool.query(updateQuery, [adminIntegerId, pindaan_id, komen_pelulus || null]); // Guna ID INTEGER Admin
     if (rows.length === 0) {
       return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
     }
     res.json({ message: "Permohonan telah ditolak.", data: rows[0] });
   } catch (err) {
     console.error("❌ Ralat PUT /pindaan/:pindaan_id/reject:", err);
-    res.status(500).json({ message: "Gagal menolak permohonan: " + err.message });
+     if (err.code === '42804') { res.status(500).json({ message: `Gagal menolak permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.` }); }
+     else { res.status(500).json({ message: "Gagal menolak permohonan: " + err.message }); }
   }
 });
 
