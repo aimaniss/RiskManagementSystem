@@ -64,7 +64,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
           pm.status_pemantauan,
           pm.catatan,
           pm.keberkesanan,
-          pm.justifikasi_pindaan_pemantauan, -- <- PERLU ADA DI SINI
+          pm.justifikasi_pindaan_pemantauan, -- <- KEKAL: Ambil dari DB
           pm.no_bil_kelulusan,
           ROW_NUMBER() OVER (
             PARTITION BY pm.risiko_id 
@@ -94,8 +94,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
         r.skor_kebarangkalian AS skor_kebarangkalian_sebelum,
         r.skor_impak AS skor_impak_sebelum,
         
-        -- ▼ PERUBAHAN 1: Ambil justifikasi penilaian dari jadual Risiko ▼
-        r.justifikasi_pindaan_penilaian,
+        r.justifikasi_pindaan_penilaian, -- <- KEKAL: Ambil justifikasi penilaian
 
         pt.tahun_pemantauan,
         pt.separuh_tahun_pemantauan,
@@ -105,8 +104,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
         COALESCE(pt.status_pemantauan, 'Buka') AS status_pemantauan_terkini, 
         pt.catatan,
 
-        -- ▼ PERUBAHAN 2: Ambil justifikasi pemantauan & namakan ia 'keberkesanan' ▼
-        pt.justifikasi_pindaan_pemantauan AS keberkesanan,
+        pt.justifikasi_pindaan_pemantauan AS keberkesanan, -- <- KEKAL: Alias untuk frontend
 
         pt.no_bil_kelulusan,
        
@@ -121,7 +119,6 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
     `;
     const params = [];
-    // Menapis risiko berdasarkan subsidiari pengguna jika Staff atau Ketua Subsidiari
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`;
       params.push(user.subsidiari_id);
@@ -161,7 +158,6 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
     let pengguna_id_pelulus = null;
     let tarikh_diproses = null;
 
-    // Jika Admin, luluskan secara automatik dan kemas kini data risiko
     if (nama_peranan === "Admin") {
       status_permohonan = "Diluluskan"; 
       pengguna_id_pelulus = pengguna_id;
@@ -212,55 +208,61 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
         await client.query(updateQuery, values);
       }
 
-      // 2. INSERT REKOD BARU ke Jadual LOGPEMANTAUAN (Logik INSERT)
+      // ▼▼▼ PERUBAHAN BESAR: Logik 'INSERT' ditukar ke 'UPDATE' ▼▼▼
+      // 2. KEMAS KINI REKOD LOGPEMANTAUAN SEDIA ADA (Logik UPDATE)
       if (hasLogChanges) {
         
-        // A. Dapatkan data tahun/separuh tahun dari risiko
-        const riskRes = await client.query("SELECT tahun, separuh_tahun FROM risiko WHERE risiko_id = $1", [risk_id]);
-        if (riskRes.rowCount === 0) throw new Error("Risiko tidak dijumpai.");
-        const { tahun, separuh_tahun } = riskRes.rows[0];
+        // A. Dapatkan log_id TERKINI untuk risiko ini
+        const latestLogRes = await client.query(
+          `SELECT log_id, skor_kebarangkalian_selepas, skor_impak_selepas 
+           FROM LogPemantauan 
+           WHERE risiko_id = $1 
+           ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC 
+           LIMIT 1`,
+          [risk_id]
+        );
+
+        if (latestLogRes.rowCount === 0) {
+          throw new Error("Log pemantauan terkini (rn=1) tidak dijumpai untuk dikemas kini. Pindaan tidak dapat diteruskan.");
+        }
+        
+        const latestLog = latestLogRes.rows[0];
+        const log_id_terkini = latestLog.log_id;
 
         // B. Kira skor risiko baru
-        const k_selepas = logUpdates.skor_kebarangkalian_selepas;
-        const i_selepas = logUpdates.skor_impak_selepas;
+        const k_selepas = logUpdates.skor_kebarangkalian_selepas ?? latestLog.skor_kebarangkalian_selepas; 
+        const i_selepas = logUpdates.skor_impak_selepas ?? latestLog.skor_impak_selepas;
+        
         const riskLevelDetails = getRiskStylingFromMatrix(k_selepas, i_selepas, riskMatrixDetails);
         const skor_risiko_level = riskLevelDetails.shortLabel;
 
-        // C. Bina query INSERT
-        const insertLogQuery = `INSERT INTO logpemantauan (
-            risiko_id, tarikh_pemantauan, tahun_pemantauan, separuh_tahun_pemantauan,
-            skor_kebarangkalian_selepas, skor_impak_selepas,
-            skor_risiko_pemantauan,
-            status_pemantauan, justifikasi_pindaan_pemantauan,
-            created_at_pemantauan, created_by_pemantauan 
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10) RETURNING log_id;
+        // C. Bina query UPDATE
+        const updateLogQuery = `
+          UPDATE logpemantauan SET
+            skor_kebarangkalian_selepas = $1,
+            skor_impak_selepas = $2,
+            skor_risiko_pemantauan = $3,
+            justifikasi_pindaan_pemantauan = $4,
+            update_at_pemantauan = NOW(),
+            updated_by_pemantauan = $5
+          WHERE 
+            log_id = $6
         `;
         
-        // D. Laksanakan query INSERT
-        const logResult = await client.query(insertLogQuery, [
-            risk_id,
-            new Date(),
-            tahun, 
-            separuh_tahun,
+        // D. Laksanakan query UPDATE
+        await client.query(updateLogQuery, [
             k_selepas || null,
             i_selepas || null,
             skor_risiko_level,
-            'Selesai', // Pindaan diluluskan
-            keberkesanan,
-            pengguna_id // Admin yang meluluskan auto
+            keberkesanan, // 'keberkesanan' dari justifikasi body
+            pengguna_id, // Admin yang auto-approve
+            log_id_terkini
         ]);
         
-        const log_id_baru = logResult.rows[0].log_id;
-        
-        // ▼ PERUBAHAN 3: Kod ini dinyahaktifkan (dijadikan komen) ▼
-        /*
-        // E. INSERT rekod baru ke PelanTindakanPemantauan (tanpa created_at)
-        await client.query(
-          `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti) VALUES ($1, $2)`,
-          [log_id_baru, 'Pindaan Penilaian/Keberkesanan Diluluskan oleh Admin']
-        );
-        */
+        // E. INSERT ke PelanTindakanPemantauan tidak lagi berlaku
+        // (Seperti yang diminta dalam perbualan sebelumnya)
       }
+      // ▲▲▲ TAMAT PERUBAHAN BESAR ▲▲▲
     }
 
     // 3. Simpan rekod permohonan (semua pengguna)
@@ -428,57 +430,62 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
         await client.query(updateQuery, values);
     }
 
+    // ▼▼▼ PERUBAHAN BESAR: Logik 'INSERT' ditukar ke 'UPDATE' ▼▼▼
     // ===================================================================
-    // 2. INSERT REKOD BARU ke Jadual LOGPEMANTAUAN (Logik INSERT)
+    // 2. KEMAS KINI REKOD LOGPEMANTAUAN SEDIA ADA (Logik UPDATE)
     // ===================================================================
     if (hasLogChanges) {
       
-      // A. Dapatkan data tahun/separuh tahun dari risiko
-      const riskRes = await client.query("SELECT tahun, separuh_tahun FROM risiko WHERE risiko_id = $1", [risiko_id]);
-      if (riskRes.rowCount === 0) throw new Error("Risiko tidak dijumpai.");
-      const { tahun, separuh_tahun } = riskRes.rows[0];
+      // A. Dapatkan log_id TERKINI untuk risiko ini
+      const latestLogRes = await client.query(
+        `SELECT log_id, skor_kebarangkalian_selepas, skor_impak_selepas 
+         FROM LogPemantauan 
+         WHERE risiko_id = $1 
+         ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC 
+         LIMIT 1`,
+        [risiko_id] // risiko_id from permohonan
+      );
+
+      if (latestLogRes.rowCount === 0) {
+        throw new Error("Log pemantauan terkini (rn=1) tidak dijumpai untuk dikemas kini. Pindaan tidak dapat diluluskan.");
+      }
+      
+      const latestLog = latestLogRes.rows[0];
+      const log_id_terkini = latestLog.log_id;
 
       // B. Kira skor risiko baru
-      const k_selepas = logUpdates.skor_kebarangkalian_selepas;
-      const i_selepas = logUpdates.skor_impak_selepas;
+      const k_selepas = logUpdates.skor_kebarangkalian_selepas ?? latestLog.skor_kebarangkalian_selepas; 
+      const i_selepas = logUpdates.skor_impak_selepas ?? latestLog.skor_impak_selepas;
+      
       const riskLevelDetails = getRiskStylingFromMatrix(k_selepas, i_selepas, riskMatrixDetails);
       const skor_risiko_level = riskLevelDetails.shortLabel;
 
-      // C. Bina query INSERT
-      const insertLogQuery = `INSERT INTO logpemantauan (
-          risiko_id, tarikh_pemantauan, tahun_pemantauan, separuh_tahun_pemantauan,
-          skor_kebarangkalian_selepas, skor_impak_selepas,
-          skor_risiko_pemantauan,
-          status_pemantauan, justifikasi_pindaan_pemantauan,
-          created_at_pemantauan, created_by_pemantauan 
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10) RETURNING log_id;
+      // C. Bina query UPDATE
+      const updateLogQuery = `
+        UPDATE logpemantauan SET
+          skor_kebarangkalian_selepas = $1,
+          skor_impak_selepas = $2,
+          skor_risiko_pemantauan = $3,
+          justifikasi_pindaan_pemantauan = $4,
+          update_at_pemantauan = NOW(),
+          updated_by_pemantauan = $5
+        WHERE 
+          log_id = $6
       `;
       
-      // D. Laksanakan query INSERT
-      const logResult = await client.query(insertLogQuery, [
-          risiko_id,
-          new Date(),
-          tahun, 
-          separuh_tahun,
+      // D. Laksanakan query UPDATE
+      await client.query(updateLogQuery, [
           k_selepas || null,
           i_selepas || null,
           skor_risiko_level,
-          'Selesai', // Pindaan diluluskan
-          justifikasi_keberkesanan,
-          pengguna_id_pemohon // ID pengguna asal yang memohon
+          justifikasi_keberkesanan, // 'justifikasi_keberkesanan' dari permohonan table
+          pengguna_id_pemohon, // ID pengguna asal yang memohon
+          log_id_terkini
       ]);
       
-      const log_id_baru = logResult.rows[0].log_id;
-      
-      // ▼ PERUBAHAN 4: Kod ini dinyahaktifkan (dijadikan komen) ▼
-      /*
-      // E. INSERT rekod baru ke PelanTindakanPemantauan (tanpa created_at)
-      await client.query(
-        `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti) VALUES ($1, $2)`,
-        [log_id_baru, 'Pindaan Penilaian/Keberkesanan Diluluskan oleh Admin']
-      );
-      */
+      // E. INSERT ke PelanTindakanPemantauan tidak lagi berlaku
     }
+    // ▲▲▲ TAMAT PERUBAHAN BESAR ▲▲▲
     // --- (TAMAT) Logik Kemas Kini Risiko dan LogPemantauan ---
 
     // 3. Kemas kini status permohonan itu sendiri
@@ -512,7 +519,7 @@ router.put("/:pindaan_id/reject", verifyToken, authorizeRoles("Admin"), async (r
   const { komen_pelulus } = req.body; 
   const { pengguna_id } = req.user;
   try {
-    const updateQuery = `UPDATE permohonan_pindaan SET status_permohonan = 'Ditolak', pengguna_id_pelulus = $1, tarikh_diproses = NOW(), komen_pelulus = $3
+    const updateQuery = `UPDATE permohonan_pindaan SET status_permohonan = 'Ditolak', pengguna_id_pelulus = $1, tarikh_diproses = NOW(), sebab_ditolak = $3
       WHERE pindaan_id = $2 AND status_permohonan = 'Menunggu Kelulusan' RETURNING *;
     `; 
     const { rows } = await pool.query(updateQuery, [pengguna_id, pindaan_id, komen_pelulus || null]);
