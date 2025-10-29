@@ -11,8 +11,8 @@ router.post("/", verifyToken, async (req, res) => {
     const {
       noRujukan, tahun, separuhTahun, subsidiari,
       kategori, bahagian, risiko,
-      skorKebarangkalian, skorImpak, skorRisiko,
-      statusRisiko, tahapRisiko, punca, kesan
+      skorKebarangkalian, skorImpak, skorRisiko, // 'skorRisiko' kini "ST", "T", dll.
+      statusRisiko, punca, kesan
     } = req.body;
 
     const allowedRoles = ["Admin", "Executive", "Staff", "Ketua Subsidiari"];
@@ -26,14 +26,15 @@ router.post("/", verifyToken, async (req, res) => {
       }
     }
 
+    // Kod di bawah ini (baris 30+ dalam ralat anda) telah dibersihkan
     const result = await pool.query(
       `INSERT INTO risiko
       (no_rujukan, tahun, separuh_tahun, subsidiari, kategori, bahagian, risiko, 
-       skor_kebarangkalian, skor_impak, skor_risiko, status_risiko, tahap_risiko)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING risiko_id`,
       [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian, risiko,
-       skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, tahapRisiko]
+       skorKebarangkalian, skorImpak, skorRisiko, statusRisiko]
     );
 
     const risikoId = result.rows[0].risiko_id;
@@ -73,7 +74,7 @@ router.get("/", verifyToken, async (req, res) => {
         s.nama_subsidiari AS subsidiari, s.subsidiari_id,
         d.bahagian, d.kategori, d.risiko,
         d.skor_kebarangkalian, d.skor_impak, d.skor_risiko,
-        d.status_risiko, d.tahap_risiko,
+        d.status_risiko, 
         ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=d.risiko_id) AS punca,
         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=d.risiko_id) AS kesan
       FROM risiko d
@@ -117,7 +118,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
       noRujukan, tahun, separuhTahun, subsidiari,
       kategori, bahagian, risiko,
       skorKebarangkalian, skorImpak, skorRisiko,
-      statusRisiko, tahapRisiko
+      statusRisiko
     } = req.body;
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
@@ -126,14 +127,15 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
       }
     }
 
+    // Typo 'f' telah dibuang dari query di bawah
     await pool.query(
       `UPDATE risiko SET
         no_rujukan=$1, tahun=$2, separuh_tahun=$3, subsidiari=$4, kategori=$5, bahagian=$6,
         risiko=$7, skor_kebarangkalian=$8, skor_impak=$9, skor_risiko=$10,
-        status_risiko=$11, tahap_risiko=$12
-       WHERE risiko_id=$13`,
+        status_risiko=$11
+       WHERE risiko_id=$12`,
       [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian,
-       risiko, skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, tahapRisiko, risikoId]
+       risiko, skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, risikoId]
     );
 
     res.json({ message: "Risiko berjaya dikemaskini" });
