@@ -93,28 +93,28 @@ const RiskScoringBlock = ({
             <div className="pemantauan-flex-row pemantauan-original-score-row">
                  <span className="pemantauan-original-title">Skor Asal Rujukan:</span>
                  <div className="pemantauan-flex-item pemantauan-original-item">
-                     <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
-                     <span className="pemantauan-data-inline pemantauan-textonly">
-                         {displayOriginalScoreNumber(originalLikelihood)}
-                     </span>
+                      <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
+                      <span className="pemantauan-data-inline pemantauan-textonly">
+                           {displayOriginalScoreNumber(originalLikelihood)}
+                      </span>
                  </div>
                  <div className="pemantauan-flex-item pemantauan-original-item">
-                     <label className="pemantauan-label-inline">Skor Impak:</label>
-                     <span className="pemantauan-data-inline pemantauan-textonly">
-                         {displayOriginalScoreNumber(originalImpact)}
-                     </span>
+                      <label className="pemantauan-label-inline">Skor Impak:</label>
+                      <span className="pemantauan-data-inline pemantauan-textonly">
+                           {displayOriginalScoreNumber(originalImpact)}
+                      </span>
                  </div>
                  <div className="pemantauan-flex-item pemantauan-original-item">
-                     <label className="pemantauan-label-inline">Skor Risiko:</label>
-                     <span
-                        className="pemantauan-data-inline risk-score-badge"
-                        style={{
-                            backgroundColor: originalScoreDetails.color,
-                            color: originalScoreDetails.textColor,
-                        }}
-                     >
-                         {originalScoreDetails.shortLabel}
-                     </span>
+                      <label className="pemantauan-label-inline">Skor Risiko:</label>
+                      <span
+                           className="pemantauan-data-inline risk-score-badge"
+                           style={{
+                               backgroundColor: originalScoreDetails.color,
+                               color: originalScoreDetails.textColor,
+                           }}
+                      >
+                           {originalScoreDetails.shortLabel}
+                      </span>
                  </div>
             </div>
 
@@ -181,8 +181,12 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                 separuh_tahun: risk.separuh_tahun,
                 skor_kebarangkalian: risk.skor_kebarangkalian_sebelum,
                 skor_impak: risk.skor_impak_sebelum,
-                skor_kebarangkalian_semasa: risk.skor_kebarangkalian_terkini,
-                skor_impak_semasa: risk.skor_impak_terkini,
+                
+                // --- DIUBAH: Guna `_selepas` sejajar dengan 'logpemantauan' ---
+                skor_kebarangkalian_selepas: risk.skor_kebarangkalian_terkini,
+                skor_impak_selepas: risk.skor_impak_terkini,
+                // --- TAMAT PERUBAHAN ---
+
                 tahun_pemantauan: risk.tahun_pemantauan,
                 separuh_tahun_pemantauan: risk.separuh_tahun_pemantauan,
             };
@@ -193,17 +197,17 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         }
     }, [risk, isOpen]);
 
-    // --- DIUBAH: Fungsi semakan data ---
     // Fungsi untuk check jika ada skor penilaian asal
     const hasInitialAssessmentScore = useMemo(() => {
         return originalData.skor_kebarangkalian != null || originalData.skor_impak != null;
     }, [originalData]);
 
+    // --- DIUBAH: Semak guna `_selepas` ---
     // Fungsi untuk check jika ada data pemantauan (skor semasa ATAU tahun)
     const hasMonitoringData = useMemo(() => {
         return originalData.tahun_pemantauan != null ||
-               originalData.skor_kebarangkalian_semasa != null ||
-               originalData.skor_impak_semasa != null;
+               originalData.skor_kebarangkalian_selepas != null ||
+               originalData.skor_impak_selepas != null;
     }, [originalData]);
     // --- TAMAT PERUBAHAN ---
 
@@ -211,7 +215,6 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = (e) => {
-        // ... (Logik handleSubmit kekal sama) ...
         e.preventDefault();
         const currentData = { ...formData };
 
@@ -244,7 +247,10 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         }
 
         const hasPenilaianChanges = 'skor_kebarangkalian' in after || 'skor_impak' in after;
-        const hasKeberkesananChanges = 'skor_kebarangkalian_semasa' in after || 'skor_impak_semasa' in after;
+        
+        // --- DIUBAH: Semak perubahan `_selepas` ---
+        const hasKeberkesananChanges = 'skor_kebarangkalian_selepas' in after || 'skor_impak_selepas' in after;
+        // --- TAMAT PERUBAHAN ---
 
         // Validasi Justifikasi hanya jika blok skor yang berkaitan DIPAPARKAN
         if (hasInitialAssessmentScore && hasPenilaianChanges && !justifikasiPenilaian.trim()) {
@@ -270,7 +276,6 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
     };
 
      const handleConfirmSubmit = async () => {
-         // ... (Logik handleConfirmSubmit kekal sama) ...
         if (!dataToConfirm) return;
         const { justifikasi, perubahan } = dataToConfirm;
         setIsSubmitting(true);
@@ -312,7 +317,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                             </div>
                         </div>
 
-                        {/* --- DIUBAH: Rendering Bersyarat untuk Blok Penilaian --- */}
+                        {/* --- Rendering Bersyarat untuk Blok Penilaian --- */}
                         {hasInitialAssessmentScore && (
                             <RiskScoringBlock
                                 title="Penilaian Risiko (Pengenalpastian)"
@@ -330,17 +335,17 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                             />
                         )}
 
-                        {/* --- DIUBAH: Rendering Bersyarat untuk Blok Keberkesanan --- */}
+                        {/* --- DIUBAH: Blok Keberkesanan kini guna `_selepas` --- */}
                         {hasMonitoringData && (
                             <RiskScoringBlock
                                 title="Keberkesanan Tindakan (Pemantauan)"
-                                originalLikelihood={originalData.skor_kebarangkalian_semasa}
-                                originalImpact={originalData.skor_impak_semasa}
-                                likelihoodValue={formData.skor_kebarangkalian_semasa}
-                                impactValue={formData.skor_impak_semasa}
+                                originalLikelihood={originalData.skor_kebarangkalian_selepas}
+                                originalImpact={originalData.skor_impak_selepas}
+                                likelihoodValue={formData.skor_kebarangkalian_selepas}
+                                impactValue={formData.skor_impak_selepas}
                                 onScoreChange={handleChange}
-                                likelihoodName="skor_kebarangkalian_semasa"
-                                impactName="skor_impak_semasa"
+                                likelihoodName="skor_kebarangkalian_selepas"
+                                impactName="skor_impak_selepas"
                                 monitoringTahun={formData.tahun_pemantauan}
                                 monitoringSeparuh={formData.separuh_tahun_pemantauan}
                                 justifikasiValue={justifikasiKeberkesanan}
@@ -349,8 +354,10 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                                 justifikasiPlaceholder="Sila isi justifikasi jika anda meminda skor Keberkesanan Tindakan..."
                             />
                         )}
+                        {/* --- TAMAT PERUBAHAN --- */}
 
-                        {/* --- DIUBAH: Papar mesej jika tiada blok skor langsung --- */}
+
+                        {/* --- Papar mesej jika tiada blok skor langsung --- */}
                         {!hasInitialAssessmentScore && !hasMonitoringData && (
                             <div className="pemantauan-box" style={{ padding: '14px 16px', marginBottom: '16px', textAlign: 'center', color: '#6b7280' }}>
                                 Tiada data skor penilaian atau pemantauan tersedia untuk risiko ini.
@@ -358,7 +365,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                         )}
 
                         {/* Footer Modal (Butang) */}
-                        {/* --- DIUBAH: Sembunyikan butang Hantar jika tiada apa boleh dipinda --- */}
+                        {/* --- Sembunyikan butang Hantar jika tiada apa boleh dipinda --- */}
                         {(hasInitialAssessmentScore || hasMonitoringData) && (
                             <div className="modal-footer">
                                 <button type="button" onClick={onClose} className="btn btn-default">Batal</button>
@@ -370,8 +377,8 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                          {/* Jika tiada skor langsung, hanya tunjuk butang Tutup */}
                         {!hasInitialAssessmentScore && !hasMonitoringData && (
                              <div className="modal-footer">
-                                <button type="button" onClick={onClose} className="btn btn-default">Tutup</button>
-                            </div>
+                                 <button type="button" onClick={onClose} className="btn btn-default">Tutup</button>
+                             </div>
                         )}
                     </form>
                 </div>
