@@ -236,8 +236,6 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
                 r.skor_kebarangkalian,
                 r.skor_impak,
                 r.skor_risiko,
-                r.status_risiko,
-                r.tahap_risiko,
                 rr.rawatan_id,
                 rr.jenis_kawalan,
                 rr.tempoh_siap AS tempoh_jangkaan_siap,

@@ -9,7 +9,7 @@ import MohonPindaanModal from "./MohonPindaanModal";
 import PindaanFormModal from "./PindaanFormModal";
 import PindaanDetailsModal from "./PindaanDetailsModal";
 
-// Gaya CSS
+// Gaya CSS (Pastikan anda ada fail ini!)
 import "./PindaanRisiko.css";
 
 // --- MATRIKS RISIKO ---
@@ -34,7 +34,8 @@ function PindaanRisiko() {
   const [subsidiariList, setSubsidiariList] = useState([]);
   
   // State untuk penapis
-  const [filterStatus, setFilterStatus] = useState("Menunggu Kelulusan"); // "Pending" dari API
+  // Gunakan nilai API terus ('Pending', 'Approved', 'Rejected')
+  const [filterStatus, setFilterStatus] = useState("Pending"); 
   const [filterSubsidiari, setFilterSubsidiari] = useState("Semua"); 
 
   // State untuk Kad Statistik (Admin)
@@ -68,13 +69,13 @@ function PindaanRisiko() {
           3: "Ketua Subsidiari",
           4: "Staff",
         };
-        // Gunakan nama_peranan seperti dalam backend anda
+        // Gunakan nama_peranan seperti dalam backend anda
         role = decoded.nama_peranan || roleMapping[decoded.peranan_id] || "Unauthorized";
         userId = decoded.id || decoded.pengguna_id; // Pastikan selaras dengan token
         userSubsId = decoded.subsidiari_id;
 
-        // Peranan yang dibenarkan mungkin hanya Admin? Sila sesuaikan.
-        if (role !== "Admin" && role !== "Executive") {
+        // Peranan yang dibenarkan mungkin hanya Admin? Sila sesuaikan.
+        if (role !== "Admin" && role !== "Executive" && role !== "Ketua Subsidiari" && role !== "Staff") {
           role = "Unauthorized";
         }
       } catch (err) {
@@ -90,15 +91,14 @@ function PindaanRisiko() {
     setCurrentUserSubsidiariId(userSubsId);
 
     if (role === "Admin" || role === "Executive") {
-      // Sesuaikan 'filterStatus' untuk padan dengan API (cth: "Pending")
-      // "Menunggu Kelulusan" ditukar kepada "Pending" jika API guna "Pending"
-      const initialStatus = filterStatus === "Menunggu Kelulusan" ? "Pending" : filterStatus;
-      fetchAmendments(role, userId, initialStatus, filterSubsidiari);
+      // Tetapkan status awal kepada 'Pending'
+      fetchAmendments(role, userId, "Pending", filterSubsidiari);
       fetchSubsidiariList();
       if (role === "Admin") {
         fetchAmendmentStats(); 
       }
     } else {
+      // Jika Staff/Ketua Subsidiari, mereka hanya mohon, tiada senarai kelulusan
       setLoadingAmendments(false);
     }
   }, []); // Hanya run sekali semasa load
@@ -133,11 +133,11 @@ function PindaanRisiko() {
     setLoadingRisks(true);
     setAllRisks([]);
     try {
-      // --- DIBETULKAN --- Memanggil endpoint yang betul
+      // Memanggil endpoint yang betul
       const response = await api.get("/pindaan/risks-for-amendment"); 
 
       const risksWithDetails = response.data.map((r) => ({
-        ...r, // Data dari API kini lengkap (termasuk data pemantauan)
+        ...r, 
         tahap_risiko: calculateTahapRisiko(
           r.skor_kebarangkalian,
           r.skor_impak
@@ -158,18 +158,15 @@ function PindaanRisiko() {
     setAmendmentsError(null);
     try {
       const params = {};
-      // Pastikan nilai status selaras dengan API (cth: 'Pending', 'Approved', 'Rejected')
+      // Pastikan nilai status selaras dengan API ('Pending', 'Approved', 'Rejected')
       if (statusFilter !== "Semua") params.status = statusFilter;
       
       if (role === "Admin" && subsidiariFilter !== "Semua") {
         params.subsidiari_id = subsidiariFilter;
       }
-      
-      // Jika Executive, API /pindaan akan tapis by pengguna_id_pemohon
-      // (Berdasarkan kod pindaan.js, endpoint GET /pindaan hanya untuk Admin)
-      // Anda mungkin perlu sesuaikan API backend jika Executive juga perlu fetch
-      // atau tapis di frontend seperti logik 'filteredForExecutive'
-
+      
+      // Endpoint /pindaan untuk Admin dan Executive (API bertanggungjawab memberi semua data
+      // jika tiada penapisan ID pengguna dihantar).
       const response = await api.get("/pindaan", { params }); 
       setAmendments(response.data || []);
     } catch (err) {
@@ -186,20 +183,19 @@ function PindaanRisiko() {
     if (currentUserRole === "Admin" || currentUserRole === "Executive") {
       fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
     }
-  }, [filterStatus, filterSubsidiari, currentUserRole, currentUserId]); // Tambah currentUserId
+  }, [filterStatus, filterSubsidiari, currentUserRole, currentUserId]); 
 
   // --- Handlers ---
   const handlePindaanSubmitted = async (justifikasi, perubahanDicadang) => {
     const risikoId = selectedRiskForPindaan.risiko_id || selectedRiskForPindaan.id;
     if (!risikoId) return alert("⚠️ ID Risiko tidak sah.");
     const payload = {
-      // risk_id diambil dari URL, justifikasi & perubahan dari body
       justifikasi,
       perubahan: perubahanDicadang,
     };
     try {
-      // API endpoint ialah /api/pindaan/:risk_id
-      await api.post(`/pindaan/${risikoId}`, payload); // --- DIBETULKAN (endpoint API) ---
+      // API endpoint ialah /api/pindaan/:risk_id
+      await api.post(`/pindaan/${risikoId}`, payload); 
       alert(
         `Permohonan Pindaan ${
           currentUserRole === "Admin" ? "dicipta dan diluluskan secara automatik" : "berjaya dihantar"
@@ -207,10 +203,12 @@ function PindaanRisiko() {
       );
       setIsPindaanModalOpen(false);
       setSelectedRiskForPindaan(null);
-      // Muat semula data
-      fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
-      if (currentUserRole === "Admin") {
-        fetchAmendmentStats(); // Muat semula statistik
+      // Muat semula data (hanya jika Executive/Admin)
+      if (currentUserRole === "Admin" || currentUserRole === "Executive") {
+        fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
+        if (currentUserRole === "Admin") {
+          fetchAmendmentStats(); 
+        }
       }
     } catch (err) {
       console.error("Gagal hantar permohonan:", err.response?.data || err);
@@ -228,16 +226,14 @@ function PindaanRisiko() {
   };
 
   const handleApprovalAction = async (pindaanId, action, komen) => {
-    // 'action' kini ialah 'meluluskan' atau 'menolak'
-    const statusAction = action === "meluluskan" ? "approve" : "reject";
+    // 'action' ialah 'meluluskan' atau 'menolak'
+    const statusAction = action === "meluluskan" ? "approve" : "reject";
     const endpoint = `/pindaan/${pindaanId}/${statusAction}`;
     
-    // API backend anda (PUT /reject) tidak mengambil 'komen' dalam body
-    // API backend anda (PUT /approve) juga tidak mengambil 'komen'
-    // Jika perlu hantar komen, anda mesti ubah API backend
-    const payload = {}; // { komen_pelulus: komen };
+    // Payload, bergantung kepada API backend anda
+    const payload = { komen_pelulus: komen }; 
     
-    try {
+    try {
       await api.put(endpoint, payload);
       alert(`Permohonan #${pindaanId} berjaya ${action}.`);
       setIsDetailsModalOpen(false);
@@ -280,10 +276,16 @@ function PindaanRisiko() {
     }
     return "#f1f5f9"; 
   };
+    
+  // Logik untuk siapa yang boleh melihat halaman ini (Admin atau Executive)
+  const canViewPage = currentUserRole === "Admin" || currentUserRole === "Executive";
+  // Logik untuk siapa yang boleh memohon pindaan (Semua)
+  const canApplyForAmendment = ["Admin", "Executive", "Ketua Subsidiari", "Staff"].includes(currentUserRole);
 
   if (currentUserRole === null)
     return <div className="pindaan-container">⏳ Memeriksa kebenaran akses...</div>;
-  if (currentUserRole === "Unauthorized")
+    
+  if (!canApplyForAmendment)
     return <div className="pindaan-container">🚫 Anda tidak dibenarkan mengakses halaman ini.</div>;
 
   return (
@@ -295,35 +297,58 @@ function PindaanRisiko() {
         <StatsCardSection stats={amendmentStats} loading={loadingStats} />
       )}
 
-      {/* --- SEKSYEN SENARAI PINDAAN --- */}
-      <AmendmentsListSection
-        userRole={currentUserRole}
-        currentUserId={currentUserId}
-        // Props Penapis
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        filterSubsidiari={filterSubsidiari}
-        setFilterSubsidiari={setFilterSubsidiari}
-        subsidiariList={subsidiariList}
-        // Props Jadual
-        loading={loadingAmendments}
-        error={amendmentsError}
-        amendments={amendments}
-        handleViewDetails={handleViewDetails}
-        // Props Butang
-        onMohonPindaanClick={() => {
-          fetchAllRisks(); // Ini kini memanggil API yang betul
-          setIsSelectRiskModalOpen(true);
-        }}
-        isMohonPindaanLoading={loadingRisks}
-      />
+      {/* --- SEKSYEN SENARAI PINDAAN (HANYA ADMIN/EXECUTIVE) --- */}
+      {canViewPage ? (
+        <AmendmentsListSection
+          userRole={currentUserRole}
+          currentUserId={currentUserId}
+          // Props Penapis
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          filterSubsidiari={filterSubsidiari}
+          setFilterSubsidiari={setFilterSubsidiari}
+          subsidiariList={subsidiariList}
+          // Props Jadual
+          loading={loadingAmendments}
+          error={amendmentsError}
+          amendments={amendments}
+          handleViewDetails={handleViewDetails}
+          // Props Butang
+          onMohonPindaanClick={() => {
+            fetchAllRisks(); 
+            setIsSelectRiskModalOpen(true);
+          }}
+          isMohonPindaanLoading={loadingRisks}
+        />
+      ) : (
+        // Paparan untuk Staff/Ketua Subsidiari yang hanya boleh Mohon Pindaan
+        <div className="pindaan-box">
+            <div className="pindaan-box-header" style={{justifyContent: 'flex-end'}}>
+                <button
+                    onClick={() => {
+                        fetchAllRisks(); 
+                        setIsSelectRiskModalOpen(true);
+                    }}
+                    className="btn btn-primary"
+                    disabled={loadingRisks}
+                >
+                    {loadingRisks ? "Memuatkan Risiko..." : (
+                        <>
+                            <FilePenLine size={18} /> Mohon Pindaan
+                        </>
+                    )}
+                </button>
+            </div>
+            <p className="table-message">Anda hanya dibenarkan memohon pindaan, bukan melihat atau meluluskan senarai permohonan.</p>
+        </div>
+      )}
 
       {/* --- Modals --- */}
       {isSelectRiskModalOpen && (
         <MohonPindaanModal
           isOpen={isSelectRiskModalOpen}
           onClose={() => setIsSelectRiskModalOpen(false)}
-          risks={allRisks} // Data 'allRisks' kini lengkap
+          risks={allRisks} 
           subsidiariList={subsidiariList}
           userRole={currentUserRole}
           userSubsidiariId={currentUserSubsidiariId}
@@ -346,7 +371,7 @@ function PindaanRisiko() {
           amendment={selectedAmendment}
           userRole={currentUserRole}
           onClose={() => setIsDetailsModalOpen(false)}
-          onAction={handleApprovalAction} // hantar ID permohonan
+          onAction={handleApprovalAction} 
         />
       )}
     </div>
@@ -396,7 +421,7 @@ function StatsCardSection({ stats, loading }) {
 }
 
 
-// --- Komponen Senarai Pindaan (DENGAN PEMBETULAN) ---
+// --- Komponen Senarai Pindaan (LOGIK EXECUTIVE DIUBAH) ---
 function AmendmentsListSection({
   userRole,
   currentUserId,
@@ -415,22 +440,22 @@ function AmendmentsListSection({
   onMohonPindaanClick,
   isMohonPindaanLoading,
 }) {
-  const filteredForExecutive = useMemo(() => {
-    // --- DIBETULKAN --- Menggunakan 'pengguna_id_pemohon'
-    if (userRole === "Executive" && currentUserId) {
-      return amendments.filter((a) => a.pengguna_id_pemohon === currentUserId);
-    }
-    return amendments;
-  }, [amendments, userRole, currentUserId]);
+  
+  // **PERUBAHAN DI SINI:** Executive kini melihat semua data (amendments) 
+  // tanpa penapisan ID pengguna.
+  const displayAmendments = useMemo(() => {
+    return amendments; 
+  }, [amendments]);
 
-  const columnCount = userRole === "Admin" ? 6 : 5;
+  // 8 lajur untuk Admin (dengan Pemohon), 7 lajur untuk Executive (tanpa Pemohon)
+  const columnCount = userRole === "Admin" ? 8 : 7; 
 
   return (
     <div className="pindaan-box">
       <div className="pindaan-box-header">
         <h2 className="pindaan-subheader">
           {userRole === "Executive"
-            ? "Sejarah Permohonan Pindaan Saya"
+            ? "Senarai Semua Permohonan Pindaan" // Tajuk baru
             : "Senarai Permohonan Untuk Kelulusan"}
         </h2>
         <button
@@ -446,14 +471,14 @@ function AmendmentsListSection({
         </button>
       </div>
 
-      {/* Bekas Penapis */}
+      {/* Bekas Penapis (Kekal sama) */}
       <div className="filters-wrapper">
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="form-select"
         >
-          {/* --- DIBETULKAN --- Nilai 'value' mesti selaras dengan API */}
+          {/* Nilai 'value' selaras dengan API */}
           <option value="Pending">Menunggu Kelulusan</option>
           <option value="Approved">Diluluskan</option>
           <option value="Rejected">Ditolak</option>
@@ -467,8 +492,7 @@ function AmendmentsListSection({
             className="form-select"
           >
             <option value="Semua">Semua Subsidiari</option>
-            {/* --- DIBETULKAN --- Menggunakan 'subsidiari_id' dan 'nama_subsidiari' */}
-            {subsidiariList.map((subs) => (
+            {subsidiariList.map((subs) => (
               <option key={subs.subsidiari_id} value={subs.subsidiari_id}>
                 {subs.nama_subsidiari}
               </option>
@@ -482,6 +506,8 @@ function AmendmentsListSection({
           <tr>
             <th>Bil.</th>
             <th>No Rujukan</th>
+            <th>Risiko</th> 
+            <th>Subsidiari</th> 
             {userRole === "Admin" && <th>Pemohon</th>}
             <th>Tarikh Mohon</th>
             <th>Status</th>
@@ -501,18 +527,19 @@ function AmendmentsListSection({
                 ⚠️ {error}
               </td>
             </tr>
-          ) : filteredForExecutive.length === 0 ? (
+          ) : displayAmendments.length === 0 ? (
             <tr>
               <td colSpan={columnCount} className="table-message">
                 🚫 Tiada data.
               </td>
             </tr>
           ) : (
-          // --- DIBETULKAN --- Paparan data diselaraskan dengan API 'pindaan.js'
-            filteredForExecutive.map((amend, index) => (
+            displayAmendments.map((amend, index) => (
               <tr key={amend.pindaan_id}>
                 <td>{index + 1}</td>
                 <td>{amend.no_rujukan || "N/A"}</td>
+                <td>{amend.risiko || "N/A"}</td> 
+                <td>{amend.nama_subsidiari || "N/A"}</td> 
                 {userRole === "Admin" && (
                   <td>{amend.nama_pemohon || "N/A"}</td>
                 )}

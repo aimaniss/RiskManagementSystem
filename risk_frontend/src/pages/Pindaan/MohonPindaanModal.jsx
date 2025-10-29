@@ -25,12 +25,12 @@ const getRiskDetails = (likelihood, impact) => {
 
     // Semak jika k_val atau i_val ASAL adalah NaN. Jika ya, guna default.
     let details = (!isNaN(k_val) && !isNaN(i_val) && riskMatrix[k] && riskMatrix[k][i])
-                    ? riskMatrix[k][i]
-                    : { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
+                     ? riskMatrix[k][i]
+                     : { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
 
     const score = (!isNaN(k_val) && !isNaN(i_val))
-                    ? k_val * i_val
-                    : '-';
+                     ? k_val * i_val
+                     : '-';
     // --- TAMAT PERUBAHAN ---
 
     // Kembalikan details tanpa score (kerana tidak digunakan untuk paparan)
@@ -97,7 +97,8 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
         return tempRisks;
     }, [risks, search, subsidiariFilter, tahunFilter, separuhFilter]);
 
-    const columnCount = 10;
+    // {/* --- PERUBAHAN: Bilangan kolum bertambah dari 10 ke 12 --- */}
+    const columnCount = 12;
 
     if (!isOpen) return null;
 
@@ -140,8 +141,10 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             <thead>
                                 <tr>
                                     <th className="modal-th" rowSpan="2">Bil</th>
-                                    <th className="modal-th" colSpan="4">Pengenalpastian Risiko</th>
-                                    <th className="modal-th" colSpan="4">Pemantauan Terkini</th>
+                                    {/* --- PERUBAHAN: colSpan 4 -> 5 --- */}
+                                    <th className="modal-th" colSpan="5">Pengenalpastian Risiko</th>
+                                    {/* --- PERUBAHAN: colSpan 4 -> 5 --- */}
+                                    <th className="modal-th" colSpan="5">Pemantauan Terkini</th>
                                     <th className="modal-th" rowSpan="2">Tindakan</th>
                                 </tr>
                                 <tr>
@@ -149,9 +152,13 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                     <th className="modal-th th-wrap">Tahun & Separuh</th>
                                     <th className="modal-th">Risiko</th>
                                     <th className="modal-th th-wrap">Skor Asal</th>
+                                    {/* --- PERUBAHAN: Kolum baru ditambah --- */}
+                                    <th className="modal-th th-wrap">Justifikasi Penilaian</th>
                                     <th className="modal-th th-wrap">Tahun & Separuh</th>
                                     <th className="modal-th th-wrap">Pelan Tindakan</th>
                                     <th className="modal-th th-wrap">Skor Semasa</th>
+                                    {/* --- PERUBAHAN: Kolum baru ditambah --- */}
+                                    <th className="modal-th th-wrap">Justifikasi Keberkesanan</th>
                                     <th className="modal-th th-wrap">Status</th>
                                 </tr>
                             </thead>
@@ -192,6 +199,12 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                 >
                                                     {skorAsal.shortLabel} {/* Hanya papar shortLabel */}
                                                 </td>
+                                                
+                                                {/* --- PERUBAHAN: Data Justifikasi Asal dipaparkan --- */}
+                                                <td className="modal-td td-justifikasi" title={risk.justifikasi_pindaan_penilaian}>
+                                                    {risk.justifikasi_pindaan_penilaian || '-'}
+                                                </td>
+
                                                 <td className="modal-td">
                                                     {risk.tahun_pemantauan || '-'} {risk.separuh_tahun_pemantauan === 1 ? 'Pertama' : (risk.separuh_tahun_pemantauan === 2 ? 'Kedua' : '')}
                                                 </td>
@@ -205,6 +218,13 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                 >
                                                     {skorSemasa.shortLabel} {/* Hanya papar shortLabel */}
                                                 </td>
+
+                                                {/* --- PERUBAHAN: Data Justifikasi Semasa dipaparkan --- */}
+                                                {/* Anda mungkin perlu guna risk.catatan jika itu yang dimaksudkan */}
+                                                <td className="modal-td td-justifikasi" title={risk.keberkesanan}>
+                                                    {risk.keberkesanan || '-'}
+                                                </td>
+
                                                 <td className="modal-td">
                                                     {risk.status_pemantauan_terkini || '-'}
                                                 </td>
