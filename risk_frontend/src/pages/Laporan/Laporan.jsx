@@ -1,276 +1,230 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from 'react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import './LaporanRisiko.css';
 
-function LaporanRisiko() {
-  const [selectedCompany, setSelectedCompany] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedHalf, setSelectedHalf] = useState("");
+const API_BASE = '/api';
 
-  const companies = ["UKMH Holdings", "Subsidiari A", "Subsidiari B"];
-  const years = ["2023", "2024", "2025"];
-  const halves = ["Separuh Tahun 1", "Separuh Tahun 2"];
+export default function LaporanRisiko() {
+  const [loading, setLoading] = useState(false);
+  const [subsidiaries, setSubsidiaries] = useState([]);
+  const [filters, setFilters] = useState({
+    subsidiary: 'all',
+    yearFrom: new Date().getFullYear() - 1,
+    yearTo: new Date().getFullYear(),
+    search: '',
+  });
+  const [risks, setRisks] = useState([]);
+  const printableRef = useRef(null);
 
-  const reports = []; // nanti fetch dari DB
+  useEffect(() => {
+    fetchSubsidiaries();
+    fetchRisks();
+  }, []);
+
+  useEffect(() => {
+    fetchRisks();
+  }, [filters.subsidiary, filters.yearFrom, filters.yearTo]);
+
+  async function fetchSubsidiaries() {
+    try {
+      const res = await fetch(`${API_BASE}/subsidiaries`);
+      if (!res.ok) throw new Error('failed');
+      const data = await res.json();
+      setSubsidiaries([{ id: 'all', name: 'Semua Subsidiari' }, ...data]);
+    } catch (err) {
+      setSubsidiaries([
+        { id: 'all', name: 'Semua Subsidiari' },
+        { id: 'subs1', name: 'Subsidiari A' },
+        { id: 'subs2', name: 'Subsidiari B' },
+      ]);
+    }
+  }
+
+  async function fetchRisks() {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.subsidiary !== 'all') params.set('subsidiary', filters.subsidiary);
+      params.set('year_from', filters.yearFrom);
+      params.set('year_to', filters.yearTo);
+
+      const res = await fetch(`${API_BASE}/risks?${params.toString()}`);
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+      setRisks(data);
+    } catch (err) {
+      setRisks(sampleData(filters.yearFrom, filters.yearTo));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function sampleData(yearFrom, yearTo) {
+    return [
+      {
+        id: 1,
+        title: 'Kebocoran data pelanggan',
+        subsidiary: 'Subsidiari A',
+        level: 'Tinggi',
+        category: 'Keselamatan',
+        date_registered: `${yearTo}-03-10`,
+        owner: 'Encik Ahmad',
+      },
+      {
+        id: 2,
+        title: 'Kelewatan penghantaran',
+        subsidiary: 'Subsidiari B',
+        level: 'Sederhana',
+        category: 'Operasi',
+        date_registered: `${yearFrom}-07-21`,
+        owner: 'Puan Siti',
+      },
+    ];
+  }
+
+  function handleFilterChange(e) {
+    const { name, value } = e.target;
+    setFilters((s) => ({ ...s, [name]: value }));
+  }
+
+  function printSingle(risk) {
+    const printWindow = window.open('', '_blank');
+    const html = `
+      <html>
+        <head>
+          <title>Laporan Risiko - ${risk.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            td { border: 1px solid #999; padding: 8px; }
+          </style>
+        </head>
+        <body>
+          <h2>Laporan Risiko Individu</h2>
+          <table>
+            <tr><td><b>Nama Risiko</b></td><td>${risk.title}</td></tr>
+            <tr><td><b>Subsidiari</b></td><td>${risk.subsidiary}</td></tr>
+            <tr><td><b>Kategori</b></td><td>${risk.category}</td></tr>
+            <tr><td><b>Tahap Risiko</b></td><td>${risk.level}</td></tr>
+            <tr><td><b>Tarikh Daftar</b></td><td>${risk.date_registered}</td></tr>
+            <tr><td><b>Pemilik Risiko</b></td><td>${risk.owner}</td></tr>
+          </table>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  }
+
+  async function downloadSinglePDF(risk) {
+    const container = document.createElement('div');
+    container.className = 'pdf-container';
+    container.innerHTML = `
+      <div style="padding:20px; font-family:Arial;">
+        <h2 style="text-align:center;">Laporan Risiko Individu</h2>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr><td><b>Nama Risiko</b></td><td>${risk.title}</td></tr>
+          <tr><td><b>Subsidiari</b></td><td>${risk.subsidiary}</td></tr>
+          <tr><td><b>Kategori</b></td><td>${risk.category}</td></tr>
+          <tr><td><b>Tahap Risiko</b></td><td>${risk.level}</td></tr>
+          <tr><td><b>Tarikh Daftar</b></td><td>${risk.date_registered}</td></tr>
+          <tr><td><b>Pemilik Risiko</b></td><td>${risk.owner}</td></tr>
+        </table>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const canvas = await html2canvas(container);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (canvas.height * width) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+    pdf.save(`Laporan_Risiko_${risk.id}.pdf`);
+    document.body.removeChild(container);
+  }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Roboto, sans-serif" }}>
-      {/* Page Title */}
-      <h1
-        style={{
-          fontSize: "24px",
-          fontWeight: "700",
-          color: "#0f172a",
-          marginBottom: "16px",
-        }}
-      >
-        Laporan Risiko
-      </h1>
+    <div className="laporan-container">
+      <h2 className="laporan-title">📊 Laporan Risiko</h2>
 
-      {/* Filter Section */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-          marginBottom: "20px",
-        }}
-      >
-        <select
-          value={selectedCompany}
-          onChange={(e) => setSelectedCompany(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Syarikat</option>
-          {companies.map((c, i) => (
-            <option key={i}>{c}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Tahun</option>
-          {years.map((y, i) => (
-            <option key={i}>{y}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedHalf}
-          onChange={(e) => setSelectedHalf(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            border: "2px solid transparent",
-            borderRadius: "8px",
-            fontSize: "14px",
-            background:
-              "linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #2563eb, #7c3aed) border-box",
-          }}
-        >
-          <option value="">Pilih Separuh Tahun</option>
-          {halves.map((h, i) => (
-            <option key={i}>{h}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Summary Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "16px",
-          marginBottom: "20px",
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#2563eb" }}>12</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Jumlah Laporan</p>
+      {/* Filter */}
+      <div className="filter-card">
+        <div className="filter-group">
+          <label>Subsidiari</label>
+          <select name="subsidiary" value={filters.subsidiary} onChange={handleFilterChange}>
+            {subsidiaries.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#16a34a" }}>7</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Laporan Selesai</p>
+        <div className="filter-group">
+          <label>Dari Tahun</label>
+          <input type="number" name="yearFrom" value={filters.yearFrom} onChange={handleFilterChange} />
         </div>
 
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "32px", margin: 0, color: "#f97316" }}>5</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>Laporan Belum Selesai</p>
+        <div className="filter-group">
+          <label>Hingga Tahun</label>
+          <input type="number" name="yearTo" value={filters.yearTo} onChange={handleFilterChange} />
+        </div>
+
+        <div className="filter-group">
+          <label>Cari</label>
+          <input
+            type="text"
+            name="search"
+            placeholder="Cari risiko..."
+            value={filters.search}
+            onChange={handleFilterChange}
+          />
         </div>
       </div>
 
-      {/* Reports Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "separate",
-            borderSpacing: "0",
-            fontSize: "14px",
-            background: "#ffffff",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}
-        >
-          <thead
-            style={{
-              background: "linear-gradient(90deg, #2563eb, #7c3aed)",
-              color: "white",
-            }}
-          >
-            <tr>
-              {[
-                "No Laporan",
-                "Tahun",
-                "Separuh Tahun",
-                "Nama Syarikat",
-                "Tarikh Laporan",
-                "Status",
-                "Penyedia",
-                "Tindakan",
-              ].map((col, idx) => (
-                <th
-                  key={idx}
-                  style={{
-                    padding: "12px",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    borderBottom: "1px solid rgba(255,255,255,0.2)",
-                  }}
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody style={{ background: "#ffffff", color: "#334155" }}>
-            {reports.length === 0 ? (
+      {/* Table */}
+      <div className="table-card" ref={printableRef}>
+        {loading ? (
+          <p>Memuatkan data...</p>
+        ) : (
+          <table className="risk-table">
+            <thead>
               <tr>
-                <td
-                  colSpan="8"
-                  style={{
-                    textAlign: "center",
-                    padding: "24px",
-                    background: "#ffffff",
-                    color: "#94a3b8",
-                    borderTop: "1px solid #e2e8f0",
-                    fontSize: "15px",
-                    fontWeight: "500",
-                  }}
-                >
-                  🚫 Tiada laporan dijumpai
-                </td>
+                <th>Nama Risiko</th>
+                <th>Subsidiari</th>
+                <th>Kategori</th>
+                <th>Tahap</th>
+                <th>Tarikh Daftar</th>
+                <th>Pemilik Risiko</th>
+                <th>Tindakan</th>
               </tr>
-            ) : (
-              reports.map((report, i) => (
-                <tr
-                  key={i}
-                  style={{
-                    background: i % 2 === 0 ? "#ffffff" : "#f8fafc",
-                    transition: "0.2s",
-                  }}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.background = "#f1f5f9")
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.background =
-                      i % 2 === 0 ? "#ffffff" : "#f8fafc")
-                  }
-                >
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.noLaporan}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.tahun}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.separuhTahun}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.namaSyarikat}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.tarikh}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.status}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    {report.penyedia}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "center" }}>
-                    <button
-                      style={{
-                        marginRight: "8px",
-                        cursor: "pointer",
-                        color: "#2563eb",
-                        border: "none",
-                        background: "none",
-                        fontSize: "16px",
-                      }}
-                    >
-                      🔍
-                    </button>
-                    <button
-                      style={{
-                        cursor: "pointer",
-                        color: "#ef4444",
-                        border: "none",
-                        background: "none",
-                        fontSize: "16px",
-                      }}
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {risks
+                .filter((r) => r.title.toLowerCase().includes(filters.search.toLowerCase()))
+                .map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.title}</td>
+                    <td>{r.subsidiary}</td>
+                    <td>{r.category}</td>
+                    <td>{r.level}</td>
+                    <td>{r.date_registered}</td>
+                    <td>{r.owner}</td>
+                    <td className="action-icons">
+                      <button title="Cetak" onClick={() => printSingle(r)}>🖨️</button>
+                      <button title="Muat Turun PDF" onClick={() => downloadSinglePDF(r)}>⬇️</button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 }
-
-export default LaporanRisiko;
