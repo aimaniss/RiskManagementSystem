@@ -1,9 +1,9 @@
-/* Import fonts yang dikehendaki */
+/* Import fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-/* ======= GAYA BORANG PINDAAN (BAHAGIAN 1) ======= */
-/* Ini adalah gaya asas untuk modal, borang, dan butang */
+/* ======= GAYA UMUM MODAL (Discope ke .pindaan-form-modal-dialog) ======= */
 
+/* Overlay kekal global jika semua modal guna */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -18,22 +18,19 @@
   box-sizing: border-box;
 }
 
-.modal-dialog.modal-form {
+/* Dialog modal khusus untuk borang ini */
+.pindaan-form-modal-dialog {
   background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   width: 95%;
-  max-width: 600px; /* Saiz lalai */
+  max-width: 1100px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: pindaan-slide-up 0.25s ease-out;
-}
-
-/* === (DIKEMASKINI) Saiz lebih besar untuk borang ini === */
-.modal-dialog.modal-form.modal-form-large {
-  max-width: 1100px; /* <--- Lebar modal */
+  font-family: "Inter", sans-serif; /* Pastikan font family terpakai */
 }
 
 @keyframes pindaan-slide-up {
@@ -47,7 +44,8 @@
   }
 }
 
-.modal-header {
+/* Scope Header, Content, Footer ke modal ini */
+.pindaan-form-modal-dialog .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -56,7 +54,7 @@
   background: #f9fafb;
 }
 
-.modal-close-x {
+.pindaan-form-modal-dialog .modal-close-x {
   background: none;
   border: none;
   cursor: pointer;
@@ -67,21 +65,33 @@
   align-items: center;
   justify-content: center;
 }
-.modal-close-x:hover {
+.pindaan-form-modal-dialog .modal-close-x:hover {
   background: #e5e7eb;
   color: #1f2937;
 }
 
-.modal-content.modal-form-body {
+.pindaan-form-modal-dialog .modal-content.modal-form-body {
   padding: 18px 24px;
   overflow-y: auto;
   background: #ffffff;
 }
 
-.form-group {
+.pindaan-form-modal-dialog .modal-footer {
+  padding: 14px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  margin-top: 0; /* Pastikan tiada margin atas tambahan */
+}
+
+/* ======= GAYA ELEMEN BORANG (Discope ke modal ini) ======= */
+
+.pindaan-form-modal-dialog .form-group {
   margin-bottom: 16px;
 }
-.form-group label {
+.pindaan-form-modal-dialog .form-group label {
   display: block;
   font-weight: 600;
   color: #374151;
@@ -89,9 +99,9 @@
   font-size: 0.88rem;
 }
 
-.form-input,
-.form-textarea,
-.form-select {
+.pindaan-form-modal-dialog .form-input,
+.pindaan-form-modal-dialog .form-textarea,
+.pindaan-form-modal-dialog .form-select {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #cbd5e1;
@@ -101,60 +111,55 @@
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
+.pindaan-form-modal-dialog .form-input:focus,
+.pindaan-form-modal-dialog .form-textarea:focus,
+.pindaan-form-modal-dialog .form-select:focus {
   border-color: #0074c8;
   box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.2);
   outline: none;
 }
-.form-textarea {
+.pindaan-form-modal-dialog .form-textarea {
   min-height: 80px;
   resize: vertical;
 }
 
-/* === (DIBUANG) Gaya '.form-textarea-readonly' telah dibuang === */
-
-/* === (BARU) Gaya untuk Info Risiko/Subsidiari === */
-.form-info-row {
+/* Gaya Info Risiko/Subsidiari (Discope) */
+.pindaan-form-modal-dialog .form-info-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 20px;
-  margin-bottom: 20px; /* Jarak sebelum blok skor */
-  padding: 14px;
-  background-color: #f8fafc; /* Latar belakang cerah */
+  gap: 15px 60px; /* Jarak antara item */
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  align-items: flex-start;
 }
-.form-info-item {
+.pindaan-form-modal-dialog .form-info-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex-grow: 1;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12px; /* Jarak label & data */
+  flex-grow: 0;
+  flex-shrink: 0;
 }
-.form-info-label {
+.pindaan-form-modal-dialog .form-info-label {
   font-weight: 600;
-  color: #374151; /* Warna label dari .form-group */
+  color: #4b5563;
   font-size: 0.88rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.form-info-data {
+.pindaan-form-modal-dialog .form-info-data {
   font-weight: 500;
   color: #1f2937;
   font-size: 0.9rem;
   line-height: 1.4;
-  word-break: break-word; /* Pastikan teks panjang tidak merosakkan layout */
+  word-break: break-word;
+  text-align: left;
 }
 
-.modal-footer {
-  padding: 14px 24px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-/* Butang Asas */
+/* Butang (Andaikan gaya global) */
 .btn {
   padding: 8px 16px;
   border-radius: 6px;
@@ -185,68 +190,185 @@
   background: #005fa3;
 }
 
-/* ======= GAYA BLOK SKOR (BAHAGIAN 2) ======= */
-/* Ini adalah gaya yang DISALIN dari fail CSS anda */
-
-.pemantauan-box {
-  margin: 0 0 15px 0;
+/* ======= GAYA BLOK SKOR (Discope ke modal ini) ======= */
+.pindaan-form-modal-dialog .pemantauan-box {
+  margin: 0 0 20px 0; /* Tambah margin bawah sedikit */
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: white;
   overflow: hidden;
+  padding: 14px 16px; /* Letak padding di sini */
 }
 
-/* Header Seksyen untuk Blok Skor */
-.pemantauan-box-header {
+.pindaan-form-modal-dialog .pemantauan-box-header {
   background-color: transparent;
   color: #005fa3;
-  padding: 0;
+  padding: 0 0 4px 0; /* Padding bawah sahaja */
   font-weight: 600;
   font-size: 0.95rem;
   border-bottom: 2px solid #cce1f5;
-  margin-bottom: 10px;
-  padding-bottom: 4px;
+  margin-bottom: 12px; /* Jarak selepas header */
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Layout Flex Row */
-.pemantauan-flex-row {
+/* Layout Flex Row (Umum untuk skor) */
+.pindaan-form-modal-dialog .pemantauan-flex-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px 20px;
+  gap: 12px 15px;
   padding: 0;
   margin-top: 0;
+  align-items: flex-end; /* Jajar bawah label & input/badge */
 }
 
-/* Setiap Item dalam Flex Row */
-.pemantauan-flex-item {
-  flex: 1 1 200px; /* 200px minimum */
+/* Setiap Item dalam Flex Row (Umum untuk skor) */
+.pindaan-form-modal-dialog .pemantauan-flex-item {
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: 180px;
+  min-width: 150px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Label & Data Inline */
-.pemantauan-label-inline {
+/* Label (Umum untuk skor & info) */
+.pindaan-form-modal-dialog .pemantauan-label-inline {
   font-weight: 600;
   color: #374151;
   margin-bottom: 0;
   display: block;
   font-size: 0.88rem;
-  text-transform: none;
 }
 
-/* Data display read-only (untuk Skor & Status) */
-.pemantauan-data-inline.pemantauan-textonly {
-  padding: 8px 12px; /* Samakan dengan .form-select */
+/* Data read-only (Tahun/Separuh & Skor Asal K/I) */
+.pindaan-form-modal-dialog .pemantauan-data-inline.pemantauan-textonly {
+  padding: 8px 12px;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   color: #1f2937;
   font-weight: 500;
   width: 100%;
-  font-size: 0.9rem; /* Samakan dengan .form-select */
+  font-size: 0.9rem;
   box-sizing: border-box;
+}
+
+/* Baris Info Pemantauan (Tahun/Separuh) */
+.pindaan-form-modal-dialog .pemantauan-info-row {
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: #555;
+  justify-content: flex-start;
+}
+.pindaan-form-modal-dialog .pemantauan-info-row .pemantauan-flex-item {
+  margin-right: 15px;
+  flex-basis: 180px;
+  flex-grow: 0;
+}
+.pindaan-form-modal-dialog .pemantauan-info-row .pemantauan-label-inline {
+  font-weight: bold;
+}
+
+/* Baris Skor Asal Rujukan */
+.pindaan-form-modal-dialog .pemantauan-original-score-row {
+  padding-top: 0;
+  border-top: none;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: #555;
+  justify-content: flex-start;
+}
+.pindaan-form-modal-dialog
+  .pemantauan-info-row
+  + .pemantauan-original-score-row {
+  padding-top: 10px;
+}
+
+.pindaan-form-modal-dialog .pemantauan-original-title {
+  font-weight: bold;
+  margin-right: 15px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.pindaan-form-modal-dialog .pemantauan-original-item {
+  margin-right: 15px;
+  flex-grow: 0;
+  flex-basis: auto;
+  display: flex;
+  align-items: center;
+}
+.pindaan-form-modal-dialog .pemantauan-original-item .pemantauan-label-inline {
+  font-weight: normal;
+  min-width: auto;
+  text-align: left;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+/* Nilai Skor Asal K/I (Nombor) */
+.pindaan-form-modal-dialog
+  .pemantauan-original-item
+  .pemantauan-data-inline.pemantauan-textonly {
+  font-weight: bold;
+  min-width: 30px;
+  text-align: center;
+  padding: 3px 8px;
+  box-sizing: content-box;
+  width: auto;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+}
+/* Badge untuk Skor Risiko Asal (R/S/T/ST) */
+.pindaan-form-modal-dialog .pemantauan-original-item .risk-score-badge {
+  margin-left: 0;
+}
+
+/* Badge Skor Risiko (Umum) */
+.pindaan-form-modal-dialog .risk-score-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 30px;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+/* Penjajaran item skor baru (Dropdown & Badge) */
+.pindaan-form-modal-dialog
+  .pemantauan-flex-row:not(.pemantauan-original-score-row):not(
+    .pemantauan-info-row
+  )
+  .pemantauan-flex-item {
+  flex-basis: 180px;
+  flex-grow: 0;
+}
+/* Badge Skor Risiko Baru */
+.pindaan-form-modal-dialog
+  .pemantauan-flex-row:not(.pemantauan-original-score-row):not(
+    .pemantauan-info-row
+  )
+  .risk-score-badge {
+  width: 100%;
+  margin-left: 0;
+  padding: 8px 12px;
+  box-sizing: border-box; /* Samakan padding/saiz dengan dropdown */
+}
+
+/* Jarak untuk Justifikasi */
+.pindaan-form-modal-dialog .form-group {
+  margin-top: 16px; /* Pastikan ada jarak atas */
+  margin-bottom: 0; /* Buang margin bawah jika di akhir blok */
+}
+.pindaan-form-modal-dialog .form-group label {
+  font-weight: bold; /* Label justifikasi bold */
 }

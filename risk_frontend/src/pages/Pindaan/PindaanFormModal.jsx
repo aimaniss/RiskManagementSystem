@@ -1,25 +1,36 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { X } from "lucide-react";
-import './PindaanFormModal.css';
+import './PindaanFormModal.css'; // Pastikan CSS dimuatkan
 
-// --- (BARU) Import modal pengesahan ---
-import PengesahanPindaanModal from './PengesahanPindaanModal'; 
+// Import modal pengesahan
+import PengesahanPindaanModal from './PengesahanPindaanModal';
 
 // --- (MULA) FUNGSI HELPER & KOMPONEN SKOR ---
 
-const getRiskDetails = (likelihood, impact) => {
-    // ... (kod sedia ada anda, tidak perlu ubah)
-    const l = parseInt(likelihood, 10);
-    const i = parseInt(impact, 10);
-    if (isNaN(l) || isNaN(i) || l < 1 || l > 5 || i < 1 || i > 5) {
-        return { score: '-' };
-    }
-    const score = l * i;
-    return { score };
+// Matriks Risiko LENGKAP
+const riskMatrixDetails = {
+    1: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
+    2: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
+    3: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
+    4: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
+    5: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
 };
 
+// Fungsi: Dapatkan butiran LENGKAP dari matriks
+const getRiskStylingFromMatrix = (likelihood, impact, matrix) => {
+    const k_val = parseInt(likelihood, 10);
+    const i_val = parseInt(impact, 10);
+    if (!isNaN(k_val) && !isNaN(i_val) &&
+        k_val >= 1 && k_val <= 5 && i_val >= 1 && i_val <= 5 &&
+        matrix[k_val] && matrix[k_val][i_val])
+    {
+        return matrix[k_val][i_val];
+    }
+    return { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
+};
+
+// Komponen Dropdown Skor
 const SkorSelect = ({ name, value, onChange }) => (
-    // ... (kod sedia ada anda, tidak perlu ubah)
     <select name={name} value={value || ''} onChange={onChange} className="form-select">
         <option value="">-- Pilih --</option>
         <option value="1">1 - Sangat Rendah</option>
@@ -30,10 +41,16 @@ const SkorSelect = ({ name, value, onChange }) => (
     </select>
 );
 
-const RiskScoringBlock = ({ 
-    title, 
-    likelihoodValue, impactValue, 
-    onScoreChange, likelihoodName, impactName,
+// Komponen Blok Skor
+const RiskScoringBlock = ({
+    title,
+    originalLikelihood,
+    originalImpact,
+    likelihoodValue,
+    impactValue,
+    onScoreChange,
+    likelihoodName,
+    impactName,
     justifikasiValue,
     onJustifikasiChange,
     justifikasiLabel,
@@ -41,48 +58,92 @@ const RiskScoringBlock = ({
     monitoringTahun,
     monitoringSeparuh
 }) => {
-    // ... (kod sedia ada anda, tidak perlu ubah)
-    const { score } = useMemo(() => {
-        return getRiskDetails(likelihoodValue, impactValue);
+    const originalScoreDetails = useMemo(() => {
+        return getRiskStylingFromMatrix(originalLikelihood, originalImpact, riskMatrixDetails);
+    }, [originalLikelihood, originalImpact]);
+
+    const currentScoreDetails = useMemo(() => {
+        return getRiskStylingFromMatrix(likelihoodValue, impactValue, riskMatrixDetails);
     }, [likelihoodValue, impactValue]);
-    
+
     const separuhTahunText = monitoringSeparuh === 1 ? 'Pertama' : monitoringSeparuh === 2 ? 'Kedua' : '-';
+    const displayOriginalScoreNumber = (scoreValue) => scoreValue ?? '-';
 
     return (
-        <div className="pemantauan-box" style={{ padding: '14px 16px', marginBottom: '16px' }}>
+        <div className="pemantauan-box">
             <div className="pemantauan-box-header">
                 <span>{title}</span>
             </div>
-            
-            <div className="pemantauan-flex-row" style={{ marginTop: '10px' }}>
-                
-                {monitoringTahun && (
-                    <>
-                        <div className="pemantauan-flex-item">
-                            <label className="pemantauan-label-inline">Tahun Pemantauan:</label>
-                            <input type="text" readOnly value={monitoringTahun || '-'} className="pemantauan-data-inline pemantauan-textonly" />
-                        </div>
-                        <div className="pemantauan-flex-item">
-                            <label className="pemantauan-label-inline">Separuh Tahun:</label>
-                            <input type="text" readOnly value={separuhTahunText} className="pemantauan-data-inline pemantauan-textonly" />
-                        </div>
-                    </>
-                )}
-                
+
+            {/* Info Pemantauan (jika ada) */}
+            {monitoringTahun && (
+                <div className="pemantauan-flex-row pemantauan-info-row">
+                    <div className="pemantauan-flex-item">
+                        <label className="pemantauan-label-inline">Tahun Pemantauan:</label>
+                        <input type="text" readOnly value={monitoringTahun || '-'} className="pemantauan-data-inline pemantauan-textonly" />
+                    </div>
+                    <div className="pemantauan-flex-item">
+                        <label className="pemantauan-label-inline">Separuh Tahun:</label>
+                        <input type="text" readOnly value={separuhTahunText} className="pemantauan-data-inline pemantauan-textonly" />
+                    </div>
+                </div>
+            )}
+
+            {/* Skor Asal Rujukan */}
+            <div className="pemantauan-flex-row pemantauan-original-score-row">
+                 <span className="pemantauan-original-title">Skor Asal Rujukan:</span>
+                 <div className="pemantauan-flex-item pemantauan-original-item">
+                     <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
+                     <span className="pemantauan-data-inline pemantauan-textonly">
+                         {displayOriginalScoreNumber(originalLikelihood)}
+                     </span>
+                 </div>
+                 <div className="pemantauan-flex-item pemantauan-original-item">
+                     <label className="pemantauan-label-inline">Skor Impak:</label>
+                     <span className="pemantauan-data-inline pemantauan-textonly">
+                         {displayOriginalScoreNumber(originalImpact)}
+                     </span>
+                 </div>
+                 <div className="pemantauan-flex-item pemantauan-original-item">
+                     <label className="pemantauan-label-inline">Skor Risiko:</label>
+                     <span
+                        className="pemantauan-data-inline risk-score-badge"
+                        style={{
+                            backgroundColor: originalScoreDetails.color,
+                            color: originalScoreDetails.textColor,
+                        }}
+                     >
+                         {originalScoreDetails.shortLabel}
+                     </span>
+                 </div>
+            </div>
+
+            {/* Skor Boleh Ubah (Baru) */}
+            <div className="pemantauan-flex-row">
                 <div className="pemantauan-flex-item">
-                    <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
+                    <label className="pemantauan-label-inline">Skor Kebarangkalian (Baru):</label>
                     <SkorSelect name={likelihoodName} value={likelihoodValue} onChange={onScoreChange} />
                 </div>
                 <div className="pemantauan-flex-item">
-                    <label className="pemantauan-label-inline">Skor Impak:</label>
+                    <label className="pemantauan-label-inline">Skor Impak (Baru):</label>
                     <SkorSelect name={impactName} value={impactValue} onChange={onScoreChange} />
                 </div>
                 <div className="pemantauan-flex-item">
-                    <label className="pemantauan-label-inline">Skor Risiko:</label>
-                    <input type="text" readOnly value={score} className="pemantauan-data-inline pemantauan-textonly" style={{ textAlign: 'center' }} aria-label="Skor Risiko (dikira)" />
+                    <label className="pemantauan-label-inline">Skor Risiko (Baru):</label>
+                    <span
+                        className="pemantauan-data-inline risk-score-badge"
+                        style={{
+                            backgroundColor: currentScoreDetails.color,
+                            color: currentScoreDetails.textColor,
+                        }}
+                        aria-label="Skor Risiko Baru (dikira)"
+                    >
+                        {currentScoreDetails.shortLabel}
+                    </span>
                 </div>
             </div>
 
+            {/* Justifikasi */}
             <div className="form-group" style={{ marginTop: '16px', marginBottom: '0' }}>
                 <label style={{ fontWeight: 'bold' }}>{justifikasiLabel}</label>
                 <textarea
@@ -105,50 +166,56 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
     const [formData, setFormData] = useState({});
     const [justifikasiPenilaian, setJustifikasiPenilaian] = useState("");
     const [justifikasiKeberkesanan, setJustifikasiKeberkesanan] = useState("");
-    
-    // 'isSubmitting' kini dikawal di sini untuk kedua-dua modal
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // --- (BARU) State untuk modal pengesahan ---
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [dataToConfirm, setDataToConfirm] = useState(null); // { perubahan, justifikasi }
+    const [dataToConfirm, setDataToConfirm] = useState(null);
 
     useEffect(() => {
         if (risk && isOpen) {
-            // ... (kod sedia ada anda, tidak perlu ubah)
-            const original = {
+            const initialValues = {
                 no_rujukan: risk.no_rujukan,
                 risiko: risk.risiko,
-                subsidiari: risk.subsidiari || 'N/A',
+                subsidiari: risk.nama_subsidiari || risk.subsidiari || 'N/A',
                 bahagian: risk.bahagian,
                 tahun: risk.tahun,
                 separuh_tahun: risk.separuh_tahun,
-                skor_kebarangkalian: risk.skor_kebarangkalian,
-                skor_impak: risk.skor_impak,
-                skor_kebarangkalian_semasa: risk.skor_kebarangkalian_semasa,
-                skor_impak_semasa: risk.skor_impak_semasa,
+                skor_kebarangkalian: risk.skor_kebarangkalian_sebelum,
+                skor_impak: risk.skor_impak_sebelum,
+                skor_kebarangkalian_semasa: risk.skor_kebarangkalian_terkini,
+                skor_impak_semasa: risk.skor_impak_terkini,
                 tahun_pemantauan: risk.tahun_pemantauan,
                 separuh_tahun_pemantauan: risk.separuh_tahun_pemantauan,
             };
-            setOriginalData(original);
-            setFormData(original);
+            setOriginalData(initialValues);
+            setFormData(initialValues);
             setJustifikasiPenilaian("");
             setJustifikasiKeberkesanan("");
         }
     }, [risk, isOpen]);
 
+    // --- DIUBAH: Fungsi semakan data ---
+    // Fungsi untuk check jika ada skor penilaian asal
+    const hasInitialAssessmentScore = useMemo(() => {
+        return originalData.skor_kebarangkalian != null || originalData.skor_impak != null;
+    }, [originalData]);
+
+    // Fungsi untuk check jika ada data pemantauan (skor semasa ATAU tahun)
+    const hasMonitoringData = useMemo(() => {
+        return originalData.tahun_pemantauan != null ||
+               originalData.skor_kebarangkalian_semasa != null ||
+               originalData.skor_impak_semasa != null;
+    }, [originalData]);
+    // --- TAMAT PERUBAHAN ---
+
+
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    /**
-     * --- (DIKEMASKINI) ---
-     * 'handleSubmit' kini hanya membuat validasi dan membuka modal pengesahan.
-     */
     const handleSubmit = (e) => {
+        // ... (Logik handleSubmit kekal sama) ...
         e.preventDefault();
-        const currentData = { ...formData }; 
+        const currentData = { ...formData };
 
         const findChanges = (original, current) => {
-            // ... (kod sedia ada anda, tidak perlu ubah)
             const before = {};
             const after = {};
             const allKeys = new Set([...Object.keys(original), ...Object.keys(current)]);
@@ -157,14 +224,17 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                 'tahun_pemantauan', 'separuh_tahun_pemantauan'
             ];
             allKeys.forEach(key => {
-                if (readOnlyKeys.includes(key)) return; 
-                if (JSON.stringify(original[key]) !== JSON.stringify(current[key])) {
-                    before[key] = original[key] ?? null;
-                    after[key] = current[key] ?? null;
+                if (readOnlyKeys.includes(key)) return;
+                const originalValue = original[key] ?? null;
+                const currentValue = current[key] ?? null;
+                if (originalValue !== currentValue) {
+                    before[key] = originalValue;
+                    after[key] = currentValue;
                 }
             });
             return { before, after };
         };
+
 
         const { before, after } = findChanges(originalData, currentData);
 
@@ -176,133 +246,144 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         const hasPenilaianChanges = 'skor_kebarangkalian' in after || 'skor_impak' in after;
         const hasKeberkesananChanges = 'skor_kebarangkalian_semasa' in after || 'skor_impak_semasa' in after;
 
-        if (hasPenilaianChanges && !justifikasiPenilaian.trim()) {
+        // Validasi Justifikasi hanya jika blok skor yang berkaitan DIPAPARKAN
+        if (hasInitialAssessmentScore && hasPenilaianChanges && !justifikasiPenilaian.trim()) {
             alert("Sila isi justifikasi untuk Pindaan Penilaian.");
             return;
         }
-        if (hasKeberkesananChanges && !justifikasiKeberkesanan.trim()) {
+        if (hasMonitoringData && hasKeberkesananChanges && !justifikasiKeberkesanan.trim()) {
             alert("Sila isi justifikasi untuk Pindaan Keberkesanan.");
             return;
         }
-        
+
         const justifikasiObj = {};
         if (hasPenilaianChanges) justifikasiObj.penilaian = justifikasiPenilaian.trim();
         if (hasKeberkesananChanges) justifikasiObj.keberkesanan = justifikasiKeberkesanan.trim();
 
         const perubahanDicadang = { data_sebelum: before, data_selepas: after };
-        
-        // --- (DIKEMASKINI) Simpan data & buka modal pengesahan ---
+
         setDataToConfirm({
             perubahan: perubahanDicadang,
             justifikasi: justifikasiObj
         });
         setIsConfirmModalOpen(true);
-        // Jangan hantar lagi
     };
-    
-    /**
-     * --- (BARU) ---
-     * Fungsi ini akan dipanggil oleh modal pengesahan untuk hantaran data sebenar.
-     */
-    const handleConfirmSubmit = () => {
-        if (!dataToConfirm) return;
 
+     const handleConfirmSubmit = async () => {
+         // ... (Logik handleConfirmSubmit kekal sama) ...
+        if (!dataToConfirm) return;
         const { justifikasi, perubahan } = dataToConfirm;
-        
-        setIsSubmitting(true); // Mula 'loading'
-        
-        // Panggil fungsi prop 'onPindaanSubmitted' yang sebenar
-        onPindaanSubmitted(justifikasi, perubahan)
-            .then(() => {
-                // Jika berjaya, tutup kedua-dua modal
-                setIsConfirmModalOpen(false);
-                onClose(); // Fungsi 'onClose' dari props (untuk tutup PindaanFormModal)
-            })
-            .catch((err) => {
-                // Jika gagal, papar ralat dan kekal di modal pengesahan
-                console.error("Gagal hantar pindaan:", err);
-                alert("Gagal menghantar permohonan. Sila cuba lagi.");
-            })
-            .finally(() => {
-                setIsSubmitting(false); // Berhenti 'loading'
-            });
+        setIsSubmitting(true);
+        try {
+            await onPindaanSubmitted(justifikasi, perubahan);
+            setIsConfirmModalOpen(false);
+            onClose();
+        } catch (err) {
+            console.error("Gagal hantar pindaan dari PindaanFormModal:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const submitButtonText = userRole === "Admin" ? "Hantar & Luluskan Terus" : "Hantar Permohonan";
 
     if (!isOpen) return null;
 
-    return (
-        // --- (DIKEMASKINI) Guna React Fragment (<>) ---
-        <> 
+     return (
+        <>
             <div className="modal-overlay">
-                <div className="modal-dialog modal-form modal-form-large">
+                <div className="modal-dialog modal-form modal-form-large pindaan-form-modal-dialog">
                     <div className="modal-header">
-                        <h3 style={{ margin: 0, fontSize: '18px' }}>Borang Pindaan: {risk.no_rujukan}</h3>
-                        {/* Butang 'X' kini ditutup oleh 'onClose' */}
+                        <h3 style={{ margin: 0, fontSize: '18px' }}>Borang Pindaan: {risk?.no_rujukan || 'N/A'}</h3>
                         <button onClick={onClose} className="modal-close-x" aria-label="Tutup Borang"><X size={24} /></button>
                     </div>
-                    
+
                     <form onSubmit={handleSubmit} className="modal-content modal-form-body">
-                        
+
+                        {/* Baris Info Risiko & Subsidiari */}
                         <div className="form-info-row">
-                            <div className="form-info-item" style={{ flexBasis: '60%' }}>
+                            <div className="form-info-item">
                                 <span className="form-info-label">Risiko:</span>
                                 <span className="form-info-data">{formData.risiko || '-'}</span>
                             </div>
-                            <div className="form-info-item" style={{ flexBasis: '40%' }}>
+                            <div className="form-info-item">
                                 <span className="form-info-label">Subsidiari:</span>
                                 <span className="form-info-data">{formData.subsidiari || '-'}</span>
                             </div>
                         </div>
-                        
-                        <RiskScoringBlock
-                            title="Penilaian Risiko (Pengenalpastian)"
-                            likelihoodValue={formData.skor_kebarangkalian}
-                            impactValue={formData.skor_impak}
-                            onScoreChange={handleChange}
-                            likelihoodName="skor_kebarangkalian"
-                            impactName="skor_impak"
-                            justifikasiValue={justifikasiPenilaian}
-                            onJustifikasiChange={e => setJustifikasiPenilaian(e.target.value)}
-                            justifikasiLabel="Justifikasi Pindaan Penilaian:"
-                            justifikasiPlaceholder="Sila isi justifikasi jika anda meminda skor Penilaian Risiko..."
-                        />
-                        
-                        <RiskScoringBlock
-                            title="Keberkesanan Tindakan (Pemantauan)"
-                            likelihoodValue={formData.skor_kebarangkalian_semasa}
-                            impactValue={formData.skor_impak_semasa}
-                            onScoreChange={handleChange}
-                            likelihoodName="skor_kebarangkalian_semasa"
-                            impactName="skor_impak_semasa"
-                            monitoringTahun={formData.tahun_pemantauan}
-                            monitoringSeparuh={formData.separuh_tahun_pemantauan}
-                            justifikasiValue={justifikasiKeberkesanan}
-                            onJustifikasiChange={e => setJustifikasiKeberkesanan(e.target.value)}
-                            justifikasiLabel="Justifikasi Pindaan Keberkesanan:"
-                            justifikasiPlaceholder="Sila isi justifikasi jika anda meminda skor Keberkesanan Tindakan..."
-                        />
-                        
-                        <div className="modal-footer" style={{ marginTop: '0' }}>
-                            {/* Butang Batal kini ditutup oleh 'onClose' */}
-                            <button type="button" onClick={onClose} className="btn btn-default">Batal</button>
-                            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                                {/* Teks butang kekal sama, ia kini membuka modal pengesahan */}
-                                {submitButtonText}
-                            </button>
-                        </div>
+
+                        {/* --- DIUBAH: Rendering Bersyarat untuk Blok Penilaian --- */}
+                        {hasInitialAssessmentScore && (
+                            <RiskScoringBlock
+                                title="Penilaian Risiko (Pengenalpastian)"
+                                originalLikelihood={originalData.skor_kebarangkalian}
+                                originalImpact={originalData.skor_impak}
+                                likelihoodValue={formData.skor_kebarangkalian}
+                                impactValue={formData.skor_impak}
+                                onScoreChange={handleChange}
+                                likelihoodName="skor_kebarangkalian"
+                                impactName="skor_impak"
+                                justifikasiValue={justifikasiPenilaian}
+                                onJustifikasiChange={e => setJustifikasiPenilaian(e.target.value)}
+                                justifikasiLabel="Justifikasi Pindaan Penilaian:"
+                                justifikasiPlaceholder="Sila isi justifikasi jika anda meminda skor Penilaian Risiko..."
+                            />
+                        )}
+
+                        {/* --- DIUBAH: Rendering Bersyarat untuk Blok Keberkesanan --- */}
+                        {hasMonitoringData && (
+                            <RiskScoringBlock
+                                title="Keberkesanan Tindakan (Pemantauan)"
+                                originalLikelihood={originalData.skor_kebarangkalian_semasa}
+                                originalImpact={originalData.skor_impak_semasa}
+                                likelihoodValue={formData.skor_kebarangkalian_semasa}
+                                impactValue={formData.skor_impak_semasa}
+                                onScoreChange={handleChange}
+                                likelihoodName="skor_kebarangkalian_semasa"
+                                impactName="skor_impak_semasa"
+                                monitoringTahun={formData.tahun_pemantauan}
+                                monitoringSeparuh={formData.separuh_tahun_pemantauan}
+                                justifikasiValue={justifikasiKeberkesanan}
+                                onJustifikasiChange={e => setJustifikasiKeberkesanan(e.target.value)}
+                                justifikasiLabel="Justifikasi Pindaan Keberkesanan:"
+                                justifikasiPlaceholder="Sila isi justifikasi jika anda meminda skor Keberkesanan Tindakan..."
+                            />
+                        )}
+
+                        {/* --- DIUBAH: Papar mesej jika tiada blok skor langsung --- */}
+                        {!hasInitialAssessmentScore && !hasMonitoringData && (
+                            <div className="pemantauan-box" style={{ padding: '14px 16px', marginBottom: '16px', textAlign: 'center', color: '#6b7280' }}>
+                                Tiada data skor penilaian atau pemantauan tersedia untuk risiko ini.
+                            </div>
+                        )}
+
+                        {/* Footer Modal (Butang) */}
+                        {/* --- DIUBAH: Sembunyikan butang Hantar jika tiada apa boleh dipinda --- */}
+                        {(hasInitialAssessmentScore || hasMonitoringData) && (
+                            <div className="modal-footer">
+                                <button type="button" onClick={onClose} className="btn btn-default">Batal</button>
+                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Menghantar...' : submitButtonText}
+                                </button>
+                            </div>
+                        )}
+                         {/* Jika tiada skor langsung, hanya tunjuk butang Tutup */}
+                        {!hasInitialAssessmentScore && !hasMonitoringData && (
+                             <div className="modal-footer">
+                                <button type="button" onClick={onClose} className="btn btn-default">Tutup</button>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>
 
-            {/* --- (BARU) Modal Pengesahan diletak di sini --- */}
+            {/* Modal Pengesahan */}
             <PengesahanPindaanModal
                 isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)} // 'Batal' di modal ke-2
-                onConfirm={handleConfirmSubmit} // 'Sahkan' di modal ke-2
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={handleConfirmSubmit}
                 perubahan={dataToConfirm?.perubahan}
-                isSubmitting={isSubmitting} // Kongsi state 'isSubmitting'
+                isSubmitting={isSubmitting}
             />
         </>
     );
