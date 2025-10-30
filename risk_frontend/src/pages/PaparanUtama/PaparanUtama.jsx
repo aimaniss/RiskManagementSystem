@@ -1,13 +1,38 @@
 import { useState } from "react";
-import DashboardHeader from "./DashboardHeader.jsx";
-import DashboardBoxes from "./DashboardBoxes.jsx";
 import FilterModal from "./FilterModal.jsx";
+// Import komponen dashboard anda
+import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx"; // Anda perlu cipta fail ini
+import DashboardSubsidiari from "./DashboardSubsidiari.jsx";   // Anda perlu cipta fail ini
 import "./PaparanUtama.css";
-import LogoUKMH from "../../assets/images/Light Background/UKMH_light.png";
+
+// Komponen Header Minimal yang memaparkan tajuk dan butang Filter
+const MinimalHeader = ({ setShowModal }) => (
+  <div className="minimal-header">
+    <h2>Paparan Utama</h2>
+    {/* Butang Filter untuk membuka Modal */}
+    <button onClick={() => setShowModal(true)}>
+      Filter
+    </button>
+  </div>
+);
+
+// Fungsi untuk memilih dan memaparkan dashboard yang betul
+const DashboardRenderer = ({ filterValues }) => {
+  // Logic: Jika subsidiari adalah "Semua Subsidiari" (nilai default), tunjuk Dashboard Keseluruhan
+  // Jika tidak, tunjuk Dashboard Subsidiari
+
+  if (filterValues.subsidiari === "Semua Subsidiari") {
+    return <DashboardKeseluruhan filterValues={filterValues} />;
+  } else {
+    // Apabila subsidiari tertentu dipilih (cth: "UKMH Holdings", "UKMH Edutech", dsb.)
+    return <DashboardSubsidiari filterValues={filterValues} />;
+  }
+};
 
 export default function PaparanUtama() {
   const [filterValues, setFilterValues] = useState({
-    subsidiari: "Semua Subsidiari",
+    // Perhatikan nilai default untuk 'subsidiari'
+    subsidiari: "Semua Subsidiari", 
     tahunAsas: "2024",
     separuhAsas: "H1",
     tahunBanding: "2025",
@@ -16,19 +41,17 @@ export default function PaparanUtama() {
 
   const [showModal, setShowModal] = useState(false);
 
-  const boxes = [
-    { title: "Jumlah Risiko", value: 0 },
-    { title: "Risiko Aktif", value: 0 },
-    { title: "Jenis Kawalan", value: 0 },
-    { title: "Status Pemantauan", value: 0 },
-    { title: "Kategori Risiko", value: 0 },
-    { title: "Status Risiko", value: 0 },
-  ];
-
   return (
     <div className="PaparanUtama">
-      <DashboardHeader setShowModal={setShowModal} />
-      <DashboardBoxes boxes={boxes} logo={LogoUKMH} />
+      {/* 1. Header dan Butang Filter */}
+      <MinimalHeader setShowModal={setShowModal} />
+
+      {/* 2. Dashboard akan dipaparkan di bawah */}
+      <div className="dashboard-content">
+        <DashboardRenderer filterValues={filterValues} />
+      </div>
+
+      {/* 3. Modal Filter (Hanya dipaparkan jika showModal adalah true) */}
       {showModal && (
         <FilterModal
           filterValues={filterValues}
