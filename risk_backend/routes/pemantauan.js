@@ -69,8 +69,8 @@ router.get("/", verifyToken, async (req, res) => {
         r.risiko AS risiko,
         
         -- DIUBAH: Sentiasa ambil skor asal sebagai "Skor Risiko Sebelum" dari jadual Risiko
-        r.skor_kebarangkalian AS skor_kebarangkalian_sebelum,
-        r.skor_impak AS skor_impak_sebelum,
+        COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
+        COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
 
         -- Bahagian Log Pemantauan Terkini
         pt.tahun_pemantauan,
