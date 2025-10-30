@@ -206,7 +206,7 @@ export default function DashboardKeseluruhan({
           <div className="image-caption">Unit Pematuhan & Pengurusan Risiko</div>
         </div>
         <div className="header-right-title">
-          <div className="comparison-title">Perbandingan Separuh Tahun Pertama</div>
+          <div className="comparison-title">Perbandingan Separuh Tahun </div>
           <div className="comparison-years">
             H1 {prevYear} <span className="vs">vs</span> H1 {baseYear}
           </div>
