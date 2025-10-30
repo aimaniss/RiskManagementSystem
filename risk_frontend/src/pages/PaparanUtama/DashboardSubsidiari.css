@@ -1,0 +1,136 @@
+.dashboard-subsidiari {
+  padding: 20px;
+  background-color: #f9fafc;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+  color: #222;
+}
+
+.dash-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.dash-header h2 {
+  color: #0074c8;
+  margin-bottom: 5px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+}
+
+.summary-card h4 {
+  font-size: 15px;
+  color: #0074c8;
+  margin-bottom: 8px;
+}
+
+.year-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.tahun-toggle {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tahun-toggle button {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 14px;
+  margin: 0 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tahun-toggle button.active {
+  background: #0074c8;
+  color: #fff;
+  border-color: #0074c8;
+}
+
+.tahun-toggle button:hover {
+  background: #0074c8;
+  color: #fff;
+}
+
+.perincian-section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.no-rujukan-select {
+  margin-bottom: 20px;
+}
+
+.no-rujukan-select select {
+  margin-left: 8px;
+  padding: 4px 8px;
+}
+
+.perincian-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.perincian-grid div {
+  background: #f4f6f8;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.perincian-grid pre {
+  white-space: pre-wrap;
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+.empty-note {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+.chart-section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.chart-section h3 {
+  color: #0074c8;
+  margin-bottom: 10px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
