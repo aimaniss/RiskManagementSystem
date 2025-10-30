@@ -223,21 +223,21 @@ function PemantauanRisiko() {
                 <table className="senaraipemantauan-table">
                     <thead>
                         <tr>
-                            <th colSpan="6" className="senaraipemantauan-dark-zone-header">Data Pendaftaran Risiko</th>
+                            <th colSpan="6" className="senaraipemantauan-dark-zone-header">Pengenalpastian Risiko</th>
                             <th rowSpan="2" className="senaraipemantauan-dark-zone-header">Skor Risiko Sebelum</th>
-                            <th colSpan="6" className="senaraipemantauan-light-zone-header">Log Pemantauan Terkini</th>
+                            <th colSpan="6" className="senaraipemantauan-light-zone-header">Pemantauan Risiko</th>
                         </tr>
                         
                         <tr className="senaraipemantauan-table-separator">
                             <th className="senaraipemantauan-dark-zone-subheader">Bil.</th>
                             <th className="senaraipemantauan-dark-zone-subheader">No Rujukan</th>
                             <th className="senaraipemantauan-dark-zone-subheader">Tahun & Separuh Tahun</th>
-                            <th className="senaraipemantauan-dark-zone-subheader">Nama Subsidiari</th>
+                            <th className="senaraipemantauan-dark-zone-subheader">Subsidiari</th>
                             <th className="senaraipemantauan-dark-zone-subheader">Kategori Risiko</th>
                             <th className="senaraipemantauan-dark-zone-subheader">Risiko</th>
                             
                             <th className="senaraipemantauan-light-zone-subheader">Tahun & Separuh Tahun</th>
-                            <th className="senaraipemantauan-light-zone-subheader">Pemantauan Risiko</th>
+                            <th className="senaraipemantauan-light-zone-subheader">Pelan Tindakan </th>
                             <th className="senaraipemantauan-light-zone-subheader">Status Pemantauan</th>
                             <th className="senaraipemantauan-light-zone-subheader">Skor Risiko Selepas</th>
                             <th className="senaraipemantauan-light-zone-subheader">Catatan</th>
