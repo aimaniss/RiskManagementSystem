@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, BookOpen } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./DaftarRisiko.css";
+import PanduanModal from '../Panduan/Panduan'; 
 
 function DaftarRisiko() {
   const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ function DaftarRisiko() {
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [subsidiariList, setSubsidiariList] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPanduanOpen, setIsPanduanOpen] = useState(false); // State untuk modal panduan
 
   // Ambil userRole dari JWT token
   const token = localStorage.getItem("token");
@@ -145,16 +147,14 @@ function DaftarRisiko() {
         skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
         punca: puncaList.filter(p => p.trim() !== ""),
         kesan: kesanList.filter(k => k.trim() !== ""),
-        
-        // --- PERUBAHAN DI SINI ---
-        // 1. Tukar 'skorRisiko' (yang asalnya nombor) kepada singkatan (cth: "ST")
-        //    Ini akan disimpan dalam kolum 'skor_risiko' (varchar) anda.
+        
+       
         skorRisiko: getRiskAbbreviation(formData.tahapRisiko)
     };
 
-    // --- PERUBAHAN DI SINI ---
-    // 2. Buang 'tahapRisiko' (yang berisi "Sangat Tinggi") dari data yang akan dihantar.
-    delete finalData.tahapRisiko;
+    // --- PERUBAHAN DI SINI ---
+    // 2. Buang 'tahapRisiko' (yang berisi "Sangat Tinggi") dari data yang akan dihantar.
+    delete finalData.tahapRisiko;
 
 
     setIsSubmitting(true);
@@ -198,9 +198,21 @@ try {
     <div className="daftar-risiko-container">
       <h2>Daftar Risiko</h2>
       <form onSubmit={handleSubmit}>
+
         {/* Maklumat Risiko */}
         <div className="box">
-          <div className="box-header">Maklumat Risiko</div>
+          <div className="box-header pemantauan-risk-header"> 
+            <span>Maklumat Risiko</span>
+            <button 
+              type="button" 
+              className="pemantauan-panduan-btn" 
+              onClick={() => setIsPanduanOpen(true)}
+            >
+              <BookOpen size={16} style={{ marginRight: '6px' }} />
+              Panduan
+            </button>
+          </div>
+
           <div style={{ padding:"16px", display:"grid", gap:"14px" }}>
             <div style={{ display:"flex", gap:"12px" }}>
               <label className="label">No Rujukan:</label>
@@ -295,7 +307,7 @@ try {
         <label className="label">Skor Kebarangkalian:</label>
         <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
           <option value="">-- Pilih --</option>
-          {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
+        {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
         </select>
       </div>
 
@@ -311,12 +323,12 @@ try {
         <label className="label">Skor Risiko:</label>
         <input 
           type="text" 
-          // Paparkan singkatan (cth: "ST") pada UI
+          // Paparkan singkatan (cth: "ST") pada UI
           value={getRiskAbbreviation(formData.tahapRisiko)} 
           readOnly 
           className="input risk-score" 
           style={{ background: riskColor, textAlign:"center" }} 
-        />
+       />
       </div>
 
       <div className="risk-field">
@@ -346,6 +358,10 @@ try {
           </button>
         </div>
       </form>
+
+      {/* Kod untuk panggil Modal Panduan */}
+      {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+
     </div>
   );
 }
