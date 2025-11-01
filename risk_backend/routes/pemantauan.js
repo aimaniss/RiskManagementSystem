@@ -37,7 +37,7 @@ const getRiskLevel = (k, i) => {
 };
 
 /* =======================================================
-  🟢 GET: Semua Risiko + Pemantauan Terkini (⭐️ DIKEMASKINI ⭐️)
+  🟢 GET: Semua Risiko + Pemantauan Terkini (Kekal Sama)
   ENDPOINT: /pemantauan-risiko
 ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
@@ -58,7 +58,7 @@ router.get("/", verifyToken, async (req, res) => {
           pm.separuh_tahun_pemantauan,
           pm.skor_kebarangkalian_selepas,
           pm.skor_impak_selepas,
-          pm.skor_risiko_pemantauan, -- ⭐️ BARU
+          pm.skor_risiko_pemantauan,
           COALESCE(
             LAG(pm.skor_kebarangkalian_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
             r.skor_kebarangkalian
@@ -98,11 +98,8 @@ router.get("/", verifyToken, async (req, res) => {
         r.risiko AS risiko,
         r.justifikasi_pindaan_penilaian,
         
-        -- Skor Risiko Sebelum
         COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
         COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
-
-        -- Bahagian Log Pemantauan Terkini
         pt.tahun_pemantauan,
         pt.separuh_tahun_pemantauan,
         bt.pelan_tindakan_terkini,
@@ -113,10 +110,9 @@ router.get("/", verifyToken, async (req, res) => {
         pt.no_bil_kelulusan,
         pt.justifikasi_pindaan_pemantauan,
         
-        -- Skor Risiko Selepas (Terkini)
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_kebarangkalian_selepas ELSE NULL END AS skor_kebarangkalian_terkini,
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini,
-        pt.skor_risiko_pemantauan -- ⭐️ BARU
+        pt.skor_risiko_pemantauan
 
       FROM Risiko r
       JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
@@ -179,7 +175,7 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-  🟢 GET: Sejarah Log untuk satu Risiko (⭐️ DIKEMASKINI ⭐️)
+  🟢 GET: Sejarah Log untuk satu Risiko (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah
 ======================================================= */
 router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
@@ -194,7 +190,7 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
         lp.separuh_tahun_pemantauan,
         lp.skor_kebarangkalian_selepas,
         lp.skor_impak_selepas,
-        lp.skor_risiko_pemantauan, -- ⭐️ BARU
+        lp.skor_risiko_pemantauan,
         lp.keberkesanan,
         lp.status_pemantauan,
         lp.catatan,
@@ -303,7 +299,6 @@ router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
   try {
     const { risiko_id } = req.params;
 
-    // Risk matrix (hanya label)
     const riskMatrixLocal = {
       1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
       2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
@@ -389,7 +384,7 @@ router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
 
 
 /* =======================================================
-  🟢 GET: Sejarah Log (sejarah-baru) (⭐️ DIKEMASKINI ⭐️)
+  🟢 GET: Sejarah Log (sejarah-baru) (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah-baru
 ======================================================= */
 router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
@@ -406,14 +401,13 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
 
     const { k_asal, i_asal } = risikoResult.rows[0];
 
-    // ⭐️ DIUBAH: Nama kolum dibetulkan & tambah skor_risiko_pemantauan
     const logQuery = `
       SELECT 
         lp.log_id, lp.tahun_pemantauan, lp.separuh_tahun_pemantauan, 
         lp.skor_kebarangkalian_selepas, lp.skor_impak_selepas, 
-        lp.skor_risiko_pemantauan, -- ⭐️ BARU
+        lp.skor_risiko_pemantauan,
         lp.keberkesanan, lp.status_pemantauan, lp.catatan, 
-        lp.justifikasi_pindaan_pemantauan, -- ⭐️ DIUBAH
+        lp.justifikasi_pindaan_pemantauan,
         lp.no_bil_kelulusan, lp.kekerapan_pemantauan, 
         lp.tarikh_pemantauan, lp.tarikh_kemaskini, 
         (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log, 
@@ -457,7 +451,7 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
 
 
 /* =======================================================
-  ➕ POST: Tambah Log Pemantauan Baru (⭐️ DIKEMASKINI ⭐️)
+  ➕ POST: Tambah Log Pemantauan Baru (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/log
 ======================================================= */
 router.post("/log", verifyToken, async (req, res) => {
@@ -472,7 +466,7 @@ router.post("/log", verifyToken, async (req, res) => {
       keberkesanan,
       status_pemantauan,
       catatan,
-      justifikasi_pindaan_pemantauan, // ⭐️ DIUBAH
+      justifikasi_pindaan_pemantauan,
       no_bil_kelulusan,
       kekerapan_pemantauan,
       pelan_tindakan_list,
@@ -483,13 +477,11 @@ router.post("/log", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Sila isi semua medan wajib (risiko, tahun, status)." });
     }
 
-    // ⭐️ BARU: Kira skor risiko
     const skor_risiko_pemantauan = getRiskLevel(skor_kebarangkalian_selepas, skor_impak_selepas);
 
     const risikoIdInt = parseInt(risiko_id, 10);
     await client.query("BEGIN");
 
-    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logInsertQuery = `
       INSERT INTO LogPemantauan (
         risiko_id, tahun_pemantauan, separuh_tahun_pemantauan,
@@ -501,7 +493,6 @@ router.post("/log", verifyToken, async (req, res) => {
       RETURNING *;
     `;
 
-    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logResult = await client.query(logInsertQuery, [
       risikoIdInt, tahun_pemantauan, separuh_tahun_pemantauan,
       skor_kebarangkalian_selepas, skor_impak_selepas, keberkesanan,
@@ -513,7 +504,6 @@ router.post("/log", verifyToken, async (req, res) => {
     const newLog = logResult.rows[0];
     const new_log_id = newLog.log_id;
 
-    // Pelan Tindakan
     if (pelan_tindakan_list?.length) {
       for (const item of pelan_tindakan_list) {
         await client.query(
@@ -523,7 +513,6 @@ router.post("/log", verifyToken, async (req, res) => {
       }
     }
 
-    // Kakitangan
     if (kakitangan_list?.length) {
       for (const item of kakitangan_list) {
         await client.query(
@@ -548,29 +537,49 @@ router.post("/log", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-  ❌ DELETE: Padam Log Pemantauan (Kekal Sama)
+  ❌ DELETE: Padam Log Pemantauan (⭐️ DIKEMASKINI ⭐️)
   ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
 router.delete("/log/:log_id", verifyToken, async (req, res) => {
-  try {
-    const { log_id } = req.params;
+  // ⭐️ BARU: Guna 'client' untuk transaksi
+  const client = await pool.connect(); 
+  const { log_id } = req.params;
 
-    const check = await pool.query("SELECT log_id FROM LogPemantauan WHERE log_id = $1", [log_id]);
+  try {
+    const check = await client.query("SELECT log_id FROM LogPemantauan WHERE log_id = $1", [log_id]);
     if (check.rowCount === 0) {
       return res.status(404).json({ message: "Rekod pemantauan tidak dijumpai." });
     }
 
-    await pool.query("DELETE FROM LogPemantauan WHERE log_id = $1", [log_id]);
+    // ⭐️ BARU: Mula transaksi
+    await client.query("BEGIN");
+
+    // ⭐️ BARU: 1. Padam 'children' dahulu
+    await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
+    await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
+    
+    // ⭐️ BARU: 2. Padam 'parent'
+    await client.query("DELETE FROM LogPemantauan WHERE log_id = $1", [log_id]);
+
+    // ⭐️ BARU: Tamat transaksi
+    await client.query("COMMIT");
 
     res.json({ message: "Log pemantauan berjaya dipadam." });
+
   } catch (err) {
+    // ⭐️ BARU: Rollback jika gagal
+    await client.query("ROLLBACK");
     console.error("❌ Ralat DELETE /log/:log_id:", err);
     res.status(500).json({ message: "Gagal memadam log pemantauan: " + err.message });
+  } finally {
+    // ⭐️ BARU: Lepaskan client
+    client.release();
   }
 });
 
+
 /* =======================================================
-  PUT: Kemaskini Log Pemantauan (⭐️ DIKEMASKINI ⭐️)
+  PUT: Kemaskini Log Pemantauan (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
 router.put("/log/:log_id", verifyToken, async (req, res) => {
@@ -586,7 +595,7 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
     keberkesanan,
     status_pemantauan,
     catatan,
-    justifikasi_pindaan_pemantauan, // ⭐️ DIUBAH
+    justifikasi_pindaan_pemantauan,
     no_bil_kelulusan,
     kekerapan_pemantauan,
     pelan_tindakan_list,
@@ -595,7 +604,6 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
     kakitangan_log,
   } = req.body;
 
-  // ⭐️ BARU: Kira skor risiko
   const skor_risiko_pemantauan = getRiskLevel(skor_kebarangkalian_selepas, skor_impak_selepas);
 
   const finalPelanList = (pelan_tindakan_list?.length ? pelan_tindakan_list : pelan_tindakan_log) || [];
@@ -609,8 +617,6 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
     console.log("📩 PUT /log/:log_id diterima:", { log_id, risiko_id });
     await client.query("BEGIN");
 
-    // 1️⃣ Kemaskini LogPemantauan
-    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logUpdateQuery = `
       UPDATE LogPemantauan
       SET 
@@ -625,12 +631,11 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
         no_bil_kelulusan = $9,
         kekerapan_pemantauan = $10,
         justifikasi_pindaan_pemantauan = $11, 
-        skor_risiko_pemantauan = $12, -- ⭐️ BARU
+        skor_risiko_pemantauan = $12,
         tarikh_kemaskini = NOW()
-      WHERE log_id = $13; -- ⭐️ DIUBAH
+      WHERE log_id = $13;
     `;
 
-    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logValues = [
       risiko_id,
       tahun_pemantauan,
@@ -653,7 +658,6 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Log tidak dijumpai" });
     }
 
-    // ... (Logik Pelan Tindakan & Kakitangan kekal sama) ...
     await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
     await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
     
