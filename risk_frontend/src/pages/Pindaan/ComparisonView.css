@@ -1,37 +1,100 @@
-/* --- Salinan Pembolehubah Global --- */
+/* --- Salinan Pembolehubah Global (DISERAGAMKAN V9) --- */
 :root {
-    --color-success: #16a34a;
-    --color-grey: #64748b;
-    --border-color: #e2e8f0;
-    --bg-light-grey: #f1f5f9;
+  /* Warna dari palet Pemantauan */
+  --color-success: #16a34a; /* Kekalkan hijau asal untuk status 'after' */
+  --color-grey: #4b5563; /* Teks TD dari Pemantauan */
+  --color-grey-dark: #374151; /* Teks Label dari Pemantauan */
+  --border-color: #e5e7eb; /* Border dari Pemantauan */
+  --bg-light-blue-header: #f0f9ff; /* Header TH dari Pemantauan */
+  --bg-light-blue-hover: #e0f2fe; /* Hover TR dari Pemantauan */
 }
 
-/* --- Komponen ComparisonView --- */
+/* --- Komponen ComparisonView (DISERAGAMKAN V9) --- */
+
 .comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    font-size: 13px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 13px;
+  /* UBAH SUAI: Font dari Pemantauan */
+  font-family: "Inter", sans-serif;
+
+  /* UBAH SUAI: Tambah border+radius untuk 'box' style seperti V9 */
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden; /* Penting untuk kesan radius */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
+
+/* Buang gaya 'thead tr' lama, diganti oleh .comparison-th */
 .comparison-table thead tr {
-    background: var(--bg-light-grey);
+  background: transparent;
 }
-.comparison-th, .comparison-td {
-    padding: 8px;
-    text-align: left;
-    border: 1px solid var(--border-color);
+
+/* UBAH SUAI: Gaya TH diseragamkan (dari .log-pemantauan-table th) */
+.comparison-th {
+  background-color: var(--bg-light-blue-header);
+  color: #005fa3; /* Teks biru gelap dari Pemantauan */
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color); /* Hanya TH ada border-top */
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+
+  /* Buang border sisi */
+  border-left: none;
+  border-right: none;
 }
+
+/* UBAH SUAI: Gaya TD diseragamkan (dari .log-pemantauan-table td) */
+.comparison-td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color); /* Hanya border bawah */
+  vertical-align: middle;
+  color: var(--color-grey);
+  background-color: #fff;
+  line-height: 1.5;
+
+  /* Buang border sisa */
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+/* UBAH SUAI: Selaraskan gaya key */
 .comparison-td-key {
-    font-weight: 500;
+  font-weight: 600;
+  color: var(--color-grey-dark);
 }
-.changed-row {
-    background: #eff6ff;
+
+/* UBAH SUAI: Tambah hover dari Pemantauan */
+.comparison-table tbody tr:hover .comparison-td {
+  background-color: var(--bg-light-blue-hover);
 }
+
+/* --- Gaya Perubahan (Kekal, tapi guna pembolehubah baru) --- */
+
+/* Latar belakang untuk baris berubah (Kini diset pada TD) */
+.comparison-table tbody tr.changed-row .comparison-td {
+  background: #eff6ff; /* Kekalkan biru muda spesifik ini untuk highlight */
+}
+
+/* NOTA: Hover untuk .changed-row sudah diuruskan oleh 
+  rule hover global di atas (.comparison-table tbody tr:hover .comparison-td) 
+  dan akan mengatasi latar belakang #eff6ff apabila di-hover.
+*/
+
 .changed-row .comparison-td-before {
-    text-decoration: line-through;
-    color: var(--color-grey);
+  text-decoration: line-through;
+  color: var(--color-grey);
 }
+
 .changed-row .comparison-td-after {
-    font-weight: bold;
-    color: var(--color-success);
+  font-weight: bold;
+  color: var(--color-success);
 }

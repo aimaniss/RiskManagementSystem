@@ -35,7 +35,7 @@ app.use("/api/tahun", tahunRoutes);
 app.use("/api/rawatan", rawatanRoutes);
 app.use('/api/pemantauan-risiko', pemantauanRoutes);
 app.use("/api/pindaan", pindaanRoutes);
-app.use("/api/log-aktiviti", logAktivitiRoutes);
+app.use("/api/log_aktiviti", logAktivitiRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 

@@ -1,99 +1,150 @@
-/* Panduan.css (KOD PENUH KEMASKINI - Pembetulan Matriks + Estetik Grid) */
+/* Panduan.css (GAYA DISERAGAMKAN V9 - Diubah suai dari Pemantauan Modal) */
 
-/* GAYA OVERLAY MODAL */
+/* Import Font & Box Sizing Scope (Dari Pemantauan) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+.rawatan-modal-overlay,
+.panduan-container * {
+  font-family: "Inter", sans-serif;
+  font-size: 0.88rem;
+  box-sizing: border-box;
+}
+
+/* GAYA OVERLAY MODAL (Dari Pemantauan) */
 .rawatan-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Warna Kelabu Jernih */
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  /* UBAH SUAI: Latar belakang & blur dari Pemantauan */
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  /* Sembunyikan scrollbar luaran pada overlay */
-  overflow-y: hidden;
+  /* UBAH SUAI: Padding dari Pemantauan */
+  padding: 20px;
 }
 
-/* CONTAINER MODAL */
+/* CONTAINER MODAL (Dari Pemantauan) */
 .panduan-container {
-  width: 90%;
-  max-width: 1000px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-
-  /* TETAPAN KETINGGIAN UNTUK SCROLLBAR DALAMAN */
-  height: 95vh;
-  max-height: 95vh;
-
-  margin: 2.5vh 0;
-  overflow: hidden;
+  /* UBAH SUAI: Latar belakang, saiz, bayang & sempadan dari Pemantauan */
+  background: #f4f6f8;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: 1200px; /* Guna saiz Pemantauan */
+  width: 95%; /* Guna saiz Pemantauan */
+  overflow-y: auto;
+  padding: 0;
+  max-height: 90vh; /* Guna saiz Pemantauan */
   display: flex;
   flex-direction: column;
+  /* UBAH SUAI: Animasi dari Pemantauan */
+  animation: tambahlog-slide-up 0.25s ease-out;
 }
 
-/* HEADER */
+/* Animasi Slide Up (Dari Pemantauan) */
+@keyframes tambahlog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* HEADER (Dari Pemantauan) */
 .panduan-header {
+  /* UBAH SUAI: Gaya header biru utama dari Pemantauan */
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 30px;
-  background-color: #3b82f6;
-  color: white;
-  border-bottom: 1px solid #2563eb;
-  flex-shrink: 0;
-  z-index: 60;
+  letter-spacing: normal;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* Buang border-bottom lama */
+  border-bottom: none;
 }
 
 .panduan-title {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
+  /* Saiz fon diselaraskan dengan header pemantauan */
+  font-size: 1rem;
+  font-weight: 600;
 }
 
+/* Close button (Dari Pemantauan) */
 .panduan-close-btn {
   background: none;
   border: none;
   color: white;
   cursor: pointer;
-  padding: 8px;
-  transition: background-color 0.2s;
-  border-radius: 50%;
+  padding: 3px;
+  border-radius: 4px;
+  transition: 0.2s;
+  width: auto;
+  height: auto;
+  font-size: 16px;
 }
 
 .panduan-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  transform: none;
 }
 
-/* KANDUNGAN */
+/* KANDUNGAN (Dari Pemantauan) */
 .panduan-content {
-  padding: 30px;
-  flex-grow: 1;
-  /* SCROLLBAR CONTENT: Hanya muncul di sini */
+  /* UBAH SUAI: Latar & padding dari pemantauan-modal-body */
+  padding: 18px;
+  background: #fafafa;
   overflow-y: auto;
-  overflow-x: hidden;
+  flex-grow: 1;
 }
 
+/* GAYA SEKSYEN (Diubah suai jadi 'Box' dari Pemantauan) */
 .panduan-section {
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  /* UBAH SUAI: Dijadikan 'Box' seperti .pemantauan-box */
+  margin: 0 0 15px 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+  padding: 14px 16px;
+  /* Buang gaya lama */
+  padding-bottom: 14px;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .panduan-section:last-of-type {
-  border-bottom: none;
   margin-bottom: 0;
+  border-bottom: 1px solid #e5e7eb; /* Kekalkan border untuk box terakhir */
 }
 
+/* TAJUK SEKSYEN (Dari .pemantauan-box-header) */
 .panduan-section-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1f2937;
+  /* UBAH SUAI: Gaya header biru dari .pemantauan-box-header */
+  background-color: transparent;
+  color: #005fa3;
+  padding: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 2px solid #cce1f5;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 0;
-  margin-bottom: 18px;
 }
 
 .panduan-subtitle {
@@ -104,30 +155,52 @@
   margin-bottom: 12px;
 }
 
-/* GAYA JADUAL STANDARD */
+/* GAYA JADUAL STANDARD (Dari .log-pemantauan-table) */
 .panduan-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-  border: 1px solid #d1d5db;
-}
-
-.panduan-table thead tr {
-  background-color: #f3f4f6;
+  border-collapse: collapse; /* Guna collapse */
+  font-size: 13px; /* Saiz fon baru */
+  margin: 0;
+  min-width: 100%;
+  border: none; /* Buang border luar lama */
 }
 
 .panduan-table th,
 .panduan-table td {
-  padding: 12px 15px;
+  /* UBAH SUAI: Jajahan & padding baru */
+  padding: 12px 16px;
   text-align: left;
-  border: 1px solid #e5e7eb;
   vertical-align: middle;
+  /* UBAH SUAI: Hanya border bawah */
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .panduan-table th {
-  background-color: #e5e7eb;
+  /* UBAH SUAI: Header biru cerah dari Pemantauan */
+  background-color: #f0f9ff;
+  color: #005fa3;
   font-weight: 600;
-  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panduan-table td {
+  color: #4b5563;
+  background-color: #fff;
+  line-height: 1.5;
+}
+
+/* Buang zebra stripes */
+.panduan-table tr:nth-child(even) {
+  background-color: #fff;
+}
+/* Hover effect baru */
+.panduan-table tr:hover td {
+  background-color: #e0f2fe;
 }
 
 .panduan-table-key {
@@ -158,63 +231,65 @@
 .risk-matrix-wrapper {
   overflow-x: auto;
   padding-left: 0;
+  /* UBAH SUAI: Tambah border diseragamkan */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 10px;
 }
 
 .risk-matrix {
   width: 100%;
   border-collapse: collapse;
-  /* MENETAPKAN BORDER LUARAN: Kelabu gelap */
-  border: 2px solid #6b7280;
+  /* UBAH SUAI: Border luar diseragamkan */
+  border: 1px solid #e5e7eb;
   table-layout: auto;
   min-width: 600px;
 }
 
-/* MENETAPKAN BORDER DALAMAN: Kelabu cerah */
+/* UBAH SUAI: Border dalam diseragamkan */
 .risk-matrix th,
 .risk-matrix td {
-  border: 1px solid #9ca3af;
+  border: 1px solid #e5e7eb;
   vertical-align: middle;
   padding: 0;
 }
 
-/* Header Kiri (KEBARANGKALIAN) */
-.risk-matrix th.matrix-header-kiri {
-  background-color: #e5e7eb !important; /* Kelabu Cerah */
-  font-weight: bold;
-  color: #1f2937;
-  text-align: center;
-  width: 150px;
-  min-width: 140px;
-  font-size: 0.9rem;
-  /* Keluarkan padding untuk keseragaman border atas */
-  padding: 0;
-  height: 45px;
-}
-
-/* Header Impak (X-Axis Utama) */
+/* Header Kiri (KEBARANGKALIAN) & Header Impak (X-Axis Utama) */
+.risk-matrix th.matrix-header-kiri,
 .risk-matrix th.matrix-x-axis {
-  text-align: center !important;
-  background-color: #e5e7eb !important; /* Kelabu Cerah */
-  font-weight: bold;
-  color: #1f2937;
-  font-size: 0.9rem;
-  /* Keluarkan padding untuk keseragaman border atas */
-  padding: 0;
+  /* UBAH SUAI: Header disamakan dengan .panduan-table */
+  background-color: #f0f9ff !important;
+  color: #005fa3 !important;
+  font-weight: 600;
+  text-align: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  height: 45px;
+  padding: 10px;
 }
 
-/* Label Impak (X-Axis - Baris 2) */
-.risk-matrix th.matrix-x-label-impak {
+/* Label Impak (X-Axis - Baris 2) & Label Kebarangkalian Y-Axis */
+.risk-matrix th.matrix-x-label-impak,
+.risk-matrix th.matrix-y-score-label {
   text-align: center !important;
   font-weight: 600;
-  background-color: #f9fafb; /* Latar Belakang Putih/Kelabu Sangat Cerah */
+  /* UBAH SUAI: Guna latar belakang putih biasa */
+  background-color: #ffffff;
   color: #1f2937;
-  padding: 5px 0;
+  padding: 5px;
   font-size: 0.8rem;
   height: 45px;
-  line-height: 1.1;
-  width: 17%;
-  vertical-align: top; /* Jajarkan teks ke atas sedikit */
+  vertical-align: middle;
 }
+
+/* Label Kebarangkalian Y-Axis (Spesifik) */
+.risk-matrix th.matrix-y-score-label {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: normal;
+}
+
 /* Memastikan setiap perkataan Impak turun baris */
 .matrix-x-label-impak .impak-text {
   line-height: 1;
@@ -231,17 +306,6 @@
   display: block;
 }
 
-/* Label Kebarangkalian Y-Axis */
-.risk-matrix th.matrix-y-score-label {
-  display: table-cell;
-  text-align: left;
-  padding: 8px 10px;
-  height: 50px;
-  box-sizing: border-box;
-  font-weight: normal;
-  background-color: #f9fafb; /* Latar Belakang Putih/Kelabu Sangat Cerah */
-  color: #1f2937;
-}
 /* Label Teks Kebarangkalian */
 .matrix-y-score-label .kebarangkalian-text {
   font-size: 0.85rem;
@@ -263,53 +327,70 @@
   font-size: 0.85rem;
   text-align: center;
   height: 50px;
-  /* Teks putih apabila warna latar cerah (RENDAH: Teal/Hijau) */
   color: white;
+  /* UBAH SUAI: Border dalaman lebih cerah */
+  border: 1px solid #e5e7eb;
 }
 
-/* FOOTER */
+/* FOOTER (Kekal, latar belakang sudah sepadan) */
 .panduan-footer {
-  padding: 18px 30px;
+  padding: 14px 18px; /* Padankan dengan padding header */
   text-align: right;
   border-top: 1px solid #e0e0e0;
-  background-color: #f9fafb;
+  background-color: #f4f6f8; /* Samakan dengan latar container */
   flex-shrink: 0;
   z-index: 60;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
-/* Button Style */
+/* Button Style (Dari .pemantauan-add-log-btn) */
 .rawatan-save-btn {
-  padding: 10px 20px;
-  background-color: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
+  /* UBAH SUAI: Gaya butang biru diseragamkan */
+  background-color: #0074c8 !important;
+  border-color: #005fa3 !important;
+  color: white !important;
+  padding: 5px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
   transition: background-color 0.2s;
+  display: inline-flex !important; /* Ubah dari flex ke inline-flex */
+  align-items: center !important;
+  border: none !important;
+  cursor: pointer !important;
 }
 
 .rawatan-save-btn:hover {
-  background-color: #059669;
+  background-color: #005fa3 !important;
 }
 
-/* Media Queries */
+/* Media Queries (Menggabungkan gaya responsif) */
+
+/* Breakpoint 900px asal dikekalkan untuk grid */
 @media (max-width: 900px) {
-  .panduan-container {
-    max-width: 95%;
-    margin: 2.5vh auto;
-  }
   .panduan-grid-2 {
     grid-template-columns: 1fr;
   }
 }
+
+/* Breakpoint 768px dari Pemantauan (Digabungkan ke 600px) */
+@media (max-width: 768px) {
+  /* Tiada perubahan spesifik diperlukan di sini, ditangani oleh 600px */
+}
+
 @media (max-width: 600px) {
+  /* UBAH SUAI: Gaya mudah alih dari Pemantauan */
+  .rawatan-modal-overlay {
+    padding: 0;
+  }
   .panduan-container {
     width: 100%;
     margin: 0;
     border-radius: 0;
     height: 100vh;
     max-height: 100vh;
+    font-size: 14px;
   }
   .panduan-content {
     padding: 15px;
@@ -330,7 +411,7 @@
     height: 40px;
   }
   .risk-matrix th.matrix-header-kiri {
-    width: 100px; /* Kecilkan sedikit lebar lajur kiri pada mudah alih */
+    width: 100px;
     min-width: 100px;
   }
 }

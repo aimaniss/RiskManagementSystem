@@ -1,15 +1,16 @@
 // =======================================================
 // 📁 routes/log_aktiviti.js
-// Modul: Log Aktiviti Pengguna
 // =======================================================
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+// ⭐️ DIUBAH: 'catatAktiviti' tidak lagi diimport kerana tidak digunakan
+import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
+// import { catatAktiviti } from "../utils/catatAktiviti.js"; // <- DIBUANG
 
 const router = express.Router();
 
 // =======================================================
-// 🟢 GET /api/log-aktiviti - DENGAN PENAPISAN DINAMIK
+// 🟢 GET /api/log_aktiviti - (Kekal Sama)
 // =======================================================
 router.get("/", verifyToken, async (req, res) => {
   const {
@@ -17,56 +18,48 @@ router.get("/", verifyToken, async (req, res) => {
     tarikhAkhir,
     peranan,
     subsidiari,
-    aktiviti_teks, // Dari frontend
+    aktiviti_teks,
   } = req.query;
 
   const queryParams = [];
   const whereClauses = [];
   let paramIndex = 1;
 
-  // 1️⃣ Penapisan Tarikh Mula
+  // ... (Logik filter anda kekal sama) ...
   if (tarikhMula) {
     whereClauses.push(`la.tarikh_masa >= $${paramIndex++}`);
     queryParams.push(tarikhMula);
   }
-
-  // 2️⃣ Penapisan Tarikh Akhir (+1 hari)
   if (tarikhAkhir) {
     const endDay = new Date(tarikhAkhir);
     endDay.setDate(endDay.getDate() + 1);
     whereClauses.push(`la.tarikh_masa < $${paramIndex++}`);
     queryParams.push(endDay.toISOString());
   }
-
-  // 3️⃣ Penapisan Peranan
   if (peranan) {
     whereClauses.push(`r.nama_peranan = $${paramIndex++}`);
     queryParams.push(peranan);
   }
-
-  // 4️⃣ Penapisan Subsidiari
   if (subsidiari) {
     whereClauses.push(`s.nama_subsidiari = $${paramIndex++}`);
     queryParams.push(subsidiari);
   }
-
-  // 5️⃣ Penapisan Teks Aktiviti (LIKE)
   if (aktiviti_teks) {
     whereClauses.push(`la.aktiviti ILIKE $${paramIndex++}`);
     queryParams.push(`%${aktiviti_teks}%`);
   }
 
-  // =======================================================
-  // 🔹 Query Utama SQL
-  // =======================================================
+  // Query (Kekal Sama - pastikan 'ringkasan' ada)
   let sqlQuery = `
     SELECT
       la.id AS log_id,
       p.pengguna_id AS user_id,
+      p.staff_id,
       p.nama_penuh AS nama_pengguna,
       r.nama_peranan AS peranan_pengguna,
       s.nama_subsidiari AS subsidiari,
       la.aktiviti,
+      la.ringkasan,
       la.perincian,
       la.tarikh_masa
     FROM log_aktiviti la
@@ -78,7 +71,6 @@ router.get("/", verifyToken, async (req, res) => {
   if (whereClauses.length > 0) {
     sqlQuery += ` WHERE ${whereClauses.join(" AND ")}`;
   }
-
   sqlQuery += ` ORDER BY la.tarikh_masa DESC;`;
 
   try {
@@ -89,5 +81,70 @@ router.get("/", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Gagal mengambil data log dari server." });
   }
 });
+
+// =======================================================
+// 🔴 DELETE /api/log_aktiviti/:id - (⭐️ DIKEMASKINI ⭐️)
+// =======================================================
+// Hanya 'Admin' boleh memadam log
+router.delete("/:id", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+  const { id } = req.params; 
+
+  try {
+    
+    const { rowCount } = await pool.query(
+      "DELETE FROM log_aktiviti WHERE id = $1",
+      [id]
+    );
+
+    // 2. Semak jika log wujud
+    if (rowCount === 0) {
+      return res.status(404).json({ error: "Log tidak dijumpai." });
+    }
+
+  
+
+    res.status(200).json({ message: "Log berjaya dipadam." });
+
+  } catch (err) {
+    
+    if (err.code === '23503') { 
+        console.error("❌ Ralat FK semasa memadam log:", err.detail);
+        return res.status(400).json({ error: "Log ini tidak boleh dipadam kerana ia mempunyai rekod berkaitan." });
+    }
+    console.error("❌ Ralat semasa memadam log:", err);
+    res.status(500).json({ error: "Gagal memadam log dari server." });
+  }
+});
+
+
+// =======================================================
+// 🔴 DELETE /api/log_aktiviti/ (⭐️ ROUTE BARU - Padam Julat Tarikh ⭐️)
+// =======================================================
+router.delete("/", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+  // Ambil dari 'query parameters'
+  const { tarikhMula, tarikhAkhir } = req.query;
+
+  if (!tarikhMula || !tarikhAkhir) {
+    return res.status(400).json({ error: "Tarikh mula dan tarikh akhir diperlukan." });
+  }
+
+  try {
+    // Sediakan tarikh akhir (+1 hari)
+    const endDay = new Date(tarikhAkhir);
+    endDay.setDate(endDay.getDate() + 1);
+    
+    const { rowCount } = await pool.query(
+      "DELETE FROM log_aktiviti WHERE tarikh_masa >= $1 AND tarikh_masa < $2",
+      [tarikhMula, endDay.toISOString()]
+    );
+
+    res.status(200).json({ message: `Padam berjaya. ${rowCount} rekod log telah dipadam.` });
+
+  } catch (err) {
+    console.error("❌ Ralat semasa memadam log mengikut julat:", err);
+    res.status(500).json({ error: "Gagal memadam log dari server." });
+  }
+});
+
 
 export default router;

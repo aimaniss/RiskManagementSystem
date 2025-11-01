@@ -6,14 +6,17 @@ import pool from "../config/db.js";
  * Mencatat aktiviti pengguna ke dalam pangkalan data log_aktiviti.
  * @param {string} pengguna_id - ID pengguna yang menjalankan aktiviti.
  * @param {string} aktiviti - Ringkasan tindakan (cth: 'Tambah Risiko', 'Lulus Pindaan').
- * @param {string} perincian - Perincian penuh tindakan.
+ * @param {string} ringkasan - Teks pendek untuk paparan jadual.
+ * @param {string} perincian - Perincian penuh tindakan untuk modal.
  */
-const catatAktiviti = async (pengguna_id, aktiviti, perincian) => {
+const catatAktiviti = async (pengguna_id, aktiviti, ringkasan, perincian) => {
+    // ⭐️ DIUBAH: Tambah 'ringkasan' dan $4
     const sql = `
-        INSERT INTO log_aktiviti (pengguna_id, aktiviti, perincian, tarikh_masa)
-        VALUES ($1, $2, $3, NOW())
+        INSERT INTO log_aktiviti (pengguna_id, aktiviti, ringkasan, perincian, tarikh_masa)
+        VALUES ($1, $2, $3, $4, NOW())
     `;
-    const values = [pengguna_id, aktiviti, perincian];
+    // ⭐️ DIUBAH: Tambah 'ringkasan'
+    const values = [pengguna_id, aktiviti, ringkasan, perincian];
 
     try {
         await pool.query(sql, values);
