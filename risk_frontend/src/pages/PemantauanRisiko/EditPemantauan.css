@@ -122,7 +122,7 @@
 }
 
 /* HEADER RAWATAN/MONITORING & LOG PEMANTAUAN RISIKO 
-    (Disamakan dengan header biasa, dan menimpa hijau menggunakan !important)
+     (Disamakan dengan header biasa, dan menimpa hijau menggunakan !important)
 */
 .pemantauan-monitoring-header {
   /* Menjadikannya seperti header Penilaian Risiko Awal */
@@ -501,7 +501,7 @@
 
 /* Jajarkan lajur Tindakan ke tengah */
 .log-pemantauan-table th:last-child,
-.log-pamantauan-table td:last-child {
+.log-pemantauan-table td:last-child {
   text-align: center;
   width: 1%; /* Elakkan ia jadi terlalu besar */
   white-space: nowrap;

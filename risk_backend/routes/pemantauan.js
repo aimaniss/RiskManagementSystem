@@ -9,9 +9,36 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+// =======================================================
+// ⭐️ LOGIK RISK MATRIX (Disalin dari Frontend) ⭐️
+// =======================================================
+const riskMatrix = {
+  1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+  2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+  3: {1:{label:"R"}, 2:{label:"S"}, 3:{label:"S"}, 4:{label:"T"}, 5:{label:"T"}},
+  4: {1:{label:"S"}, 2:{label:"S"}, 3:{label:"T"}, 4:{label:"T"}, 5:{label:"ST"}},
+  5: {1:{label:"S"}, 2:{label:"T"}, 3:{label:"T"}, 4:{label:"ST"}, 5:{label:"ST"}},
+};
+
+/**
+ * Mengira tahap risiko (ST, T, S, R) berdasarkan skor.
+ * @param {number | string} k - Skor Kebarangkalian
+ * @param {number | string} i - Skor Impak
+ * @returns {string | null} - Mengembalikan label (cth: "ST") atau null
+ */
+const getRiskLevel = (k, i) => {
+  const kk = parseInt(k);
+  const ii = parseInt(i);
+  // Hanya kira jika kedua-dua skor sah
+  if (kk >= 1 && kk <= 5 && ii >= 1 && ii <= 5) {
+    return riskMatrix[kk][ii].label;
+  }
+  return null; // Kembalikan null jika skor tidak sah
+};
+
 /* =======================================================
-   🟢 GET: Semua Risiko + Pemantauan Terkini (DIPERBAIKI)
-   ENDPOINT: /pemantauan-risiko
+  🟢 GET: Semua Risiko + Pemantauan Terkini (⭐️ DIKEMASKINI ⭐️)
+  ENDPOINT: /pemantauan-risiko
 ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
   try {
@@ -31,6 +58,7 @@ router.get("/", verifyToken, async (req, res) => {
           pm.separuh_tahun_pemantauan,
           pm.skor_kebarangkalian_selepas,
           pm.skor_impak_selepas,
+          pm.skor_risiko_pemantauan, -- ⭐️ BARU
           COALESCE(
             LAG(pm.skor_kebarangkalian_selepas) OVER (PARTITION BY pm.risiko_id ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan),
             r.skor_kebarangkalian
@@ -43,6 +71,7 @@ router.get("/", verifyToken, async (req, res) => {
           pm.catatan,
           pm.keberkesanan,
           pm.no_bil_kelulusan,
+          pm.justifikasi_pindaan_pemantauan,
           ROW_NUMBER() OVER (
             PARTITION BY pm.risiko_id 
             ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
@@ -67,8 +96,9 @@ router.get("/", verifyToken, async (req, res) => {
         s.nama_subsidiari,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
+        r.justifikasi_pindaan_penilaian,
         
-        -- DIUBAH: Sentiasa ambil skor asal sebagai "Skor Risiko Sebelum" dari jadual Risiko
+        -- Skor Risiko Sebelum
         COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
         COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
 
@@ -78,14 +108,15 @@ router.get("/", verifyToken, async (req, res) => {
         bt.pelan_tindakan_terkini,
         bt.kakitangan_terkini,
         
-        
         COALESCE(pt.status_pemantauan, 'Buka') AS status_pemantauan_terkini, 
         pt.catatan,
         pt.no_bil_kelulusan,
+        pt.justifikasi_pindaan_pemantauan,
         
-        -- DIUBAH: Hanya tunjukkan skor 'selepas' (terkini) JIKA ada rekod pemantauan. Jika tidak, pulangkan NULL.
+        -- Skor Risiko Selepas (Terkini)
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_kebarangkalian_selepas ELSE NULL END AS skor_kebarangkalian_terkini,
-        CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini
+        CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini,
+        pt.skor_risiko_pemantauan -- ⭐️ BARU
 
       FROM Risiko r
       JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
@@ -112,8 +143,8 @@ router.get("/", verifyToken, async (req, res) => {
 
 
 /* =======================================================
-   🟢 GET: Butiran Risiko Berdasarkan Risiko ID
-   ENDPOINT: /pemantauan-risiko/:risiko_id/info
+  🟢 GET: Butiran Risiko Berdasarkan Risiko ID (Kekal Sama)
+  ENDPOINT: /pemantauan-risiko/:risiko_id/info
 ======================================================= */
 router.get("/:risiko_id/info", verifyToken, async (req, res) => {
   try {
@@ -127,6 +158,7 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
         r.risiko,
         r.tahun AS tahun_risiko_asal,
         r.separuh_tahun AS separuh_tahun_risiko_asal,
+        r.justifikasi_pindaan_penilaian,
         s.nama_subsidiari
       FROM Risiko r
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
@@ -147,8 +179,8 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   🟢 GET: Sejarah Log untuk satu Risiko
-   ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah
+  🟢 GET: Sejarah Log untuk satu Risiko (⭐️ DIKEMASKINI ⭐️)
+  ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah
 ======================================================= */
 router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
   try {
@@ -162,9 +194,11 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
         lp.separuh_tahun_pemantauan,
         lp.skor_kebarangkalian_selepas,
         lp.skor_impak_selepas,
+        lp.skor_risiko_pemantauan, -- ⭐️ BARU
         lp.keberkesanan,
         lp.status_pemantauan,
         lp.catatan,
+        lp.justifikasi_pindaan_pemantauan,
         lp.no_bil_kelulusan,
         lp.kekerapan_pemantauan, 
         lp.tarikh_pemantauan,
@@ -186,12 +220,8 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
 
 
 /* =======================================================
-   🟡 GET: Semak Kewujudan Tahun & Separuh Tahun
-   + Pastikan tahun pemantauan > tahun risiko
-   + Jika tahun sama, separuh pemantauan > separuh risiko
-   + Tahun/separuh sama atau lebih awal ❌ tidak dibenarkan
-   ENDPOINT: /pemantauan-risiko/check-duplicate
-   Query: ?risiko_id=1&tahun=2025&separuh=1
+  🟡 GET: Semak Kewujudan Tahun & Separuh Tahun (Kekal Sama)
+  ENDPOINT: /pemantauan-risiko/check-duplicate
 ======================================================= */
 router.get("/check-duplicate", verifyToken, async (req, res) => {
   try {
@@ -201,7 +231,6 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Parameter tidak lengkap." });
     }
 
-    // 🔹 1. Dapatkan tahun & separuh_tahun risiko asal
     const risikoQuery = `
       SELECT tahun, separuh_tahun 
       FROM risiko 
@@ -218,7 +247,6 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     const tahunPemantauan = parseInt(tahun, 10);
     const separuhPemantauan = parseInt(separuh, 10);
 
-    // 🔹 2. Semak jika tahun atau separuh tahun sama / lebih awal
     if (
       tahunPemantauan < risikoTahun ||
       (tahunPemantauan === risikoTahun && separuhPemantauan <= risikoSeparuh)
@@ -231,7 +259,6 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
       });
     }
 
-    // 🔹 3. Semak duplikasi (tahun & separuh tahun sama dengan log sedia ada)
     const checkQuery = `
       SELECT COUNT(*) AS count 
       FROM LogPemantauan 
@@ -246,7 +273,6 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     ]);
     const duplicate = parseInt(rows[0].count, 10) > 0;
 
-    // 🔹 4. Balas hasil
     if (duplicate) {
       return res.json({
         duplicate: true,
@@ -270,60 +296,57 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   🟢 GET: Tahap Risiko Rujukan (Log Terakhir atau Risiko Asal)
-   ENDPOINT: /pemantauan-risiko/:risiko_id/tahap-rujukan
+  🟢 GET: Tahap Risiko Rujukan (Kekal Sama)
+  ENDPOINT: /pemantauan-risiko/:risiko_id/tahap-rujukan
 ======================================================= */
 router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
   try {
     const { risiko_id } = req.params;
 
-    // Risk matrix 5x5
-    const riskMatrix = {
-      1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-      2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-      3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
-      4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
-      5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
+    // Risk matrix (hanya label)
+    const riskMatrixLocal = {
+      1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+      2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+      3: {1:{label:"R"}, 2:{label:"S"}, 3:{label:"S"}, 4:{label:"T"}, 5:{label:"T"}},
+      4: {1:{label:"S"}, 2:{label:"S"}, 3:{label:"T"}, 4:{label:"T"}, 5:{label:"ST"}},
+      5: {1:{label:"S"}, 2:{label:"T"}, 3:{label:"T"}, 4:{label:"ST"}, 5:{label:"ST"}},
     };
 
-    const getRiskLevel = (k, i) => {
+    const getRiskLevelLocal = (k, i) => {
       const kk = Math.min(Math.max(parseInt(k || 1), 1), 5);
       const ii = Math.min(Math.max(parseInt(i || 1), 1), 5);
-      return (riskMatrix[kk] && riskMatrix[kk][ii]) 
-        ? riskMatrix[kk][ii] 
-        : { label: "Tiada", color: "#9ca3af" };
+      return (riskMatrixLocal[kk] && riskMatrixLocal[kk][ii]) 
+        ? riskMatrixLocal[kk][ii] 
+        : { label: "Tiada" };
     };
 
-    // 1️⃣ Cuba dapatkan log terakhir (selepas kawalan)
-   // 1️⃣ Cuba dapatkan log terakhir SEBELUM tahun & separuh semasa (jika diberi)
-const { tahun, separuh } = req.query;
+    const { tahun, separuh } = req.query;
 
-let logQuery = `
-  SELECT skor_kebarangkalian_selepas AS k, skor_impak_selepas AS i
-  FROM logpemantauan
-  WHERE risiko_id = $1
-`;
-const params = [risiko_id];
+    let logQuery = `
+      SELECT skor_kebarangkalian_selepas AS k, skor_impak_selepas AS i
+      FROM logpemantauan
+      WHERE risiko_id = $1
+    `;
+    const params = [risiko_id];
 
-if (tahun && separuh) {
-  logQuery += `
-    AND (
-      tahun_pemantauan < $2
-      OR (tahun_pemantauan = $2 AND separuh_tahun_pemantauan < $3)
-    )
-    ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC, tarikh_pemantauan DESC
-    LIMIT 1
-  `;
-  params.push(parseInt(tahun, 10), parseInt(separuh, 10));
-} else {
-  logQuery += `
-    ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC
-    LIMIT 1
-  `;
-}
+    if (tahun && separuh) {
+      logQuery += `
+        AND (
+          tahun_pemantauan < $2
+          OR (tahun_pemantauan = $2 AND separuh_tahun_pemantauan < $3)
+        )
+        ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC, tarikh_pemantauan DESC
+        LIMIT 1
+      `;
+      params.push(parseInt(tahun, 10), parseInt(separuh, 10));
+    } else {
+      logQuery += `
+        ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC
+        LIMIT 1
+      `;
+    }
 
-const logRes = await pool.query(logQuery, params);
-
+    const logRes = await pool.query(logQuery, params);
 
     let k = 1, i = 1, sumber = "risiko";
 
@@ -332,7 +355,6 @@ const logRes = await pool.query(logQuery, params);
       i = logRes.rows[0].i;
       sumber = "log";
     } else {
-      // 2️⃣ Tiada log? guna data asal dari jadual risiko
       const risikoRes = await pool.query(
         `SELECT skor_kebarangkalian AS k, skor_impak AS i
          FROM risiko
@@ -349,7 +371,7 @@ const logRes = await pool.query(logQuery, params);
       sumber = "risiko";
     }
 
-    const tahap = getRiskLevel(k, i);
+    const tahap = getRiskLevelLocal(k, i);
 
     res.json({
       risiko_id,
@@ -357,7 +379,6 @@ const logRes = await pool.query(logQuery, params);
       skor_kebarangkalian: k,
       skor_impak: i,
       tahap_risiko_rujukan: tahap.label,
-      warna: tahap.color,
     });
 
   } catch (err) {
@@ -368,71 +389,76 @@ const logRes = await pool.query(logQuery, params);
 
 
 /* =======================================================
-   🟢 GET: Sejarah Log untuk satu Risiko (dengan logik Skor Sebelum/Selepas Berurutan)
-   ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah-baru
-   Digunakan untuk paparan sejarah di mana Skor Sebelum setiap log diambil dari Skor Selepas log sebelumnya atau Skor Asal Risiko.
+  🟢 GET: Sejarah Log (sejarah-baru) (⭐️ DIKEMASKINI ⭐️)
+  ENDPOINT: /pemantauan-risiko/:risiko_id/sejarah-baru
 ======================================================= */
 router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
-  try {
-    const { risiko_id } = req.params;
-    const risikoIdInt = parseInt(risiko_id, 10);
+  try {
+    const { risiko_id } = req.params;
+    const risikoIdInt = parseInt(risiko_id, 10);
 
-    // 1. Dapatkan Skor Risiko Asal (Skor Sebelum untuk log pertama) - DISATUKAN SEBARIS
-    const risikoQuery = `SELECT skor_kebarangkalian AS k_asal, skor_impak AS i_asal FROM Risiko WHERE risiko_id = $1`;
-    
-    const risikoResult = await pool.query(risikoQuery, [risikoIdInt]); // Baris 355 dalam log error anda
+    const risikoQuery = `SELECT skor_kebarangkalian AS k_asal, skor_impak AS i_asal FROM Risiko WHERE risiko_id = $1`;
+    const risikoResult = await pool.query(risikoQuery, [risikoIdInt]); 
 
-    if (risikoResult.rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
-    }
+    if (risikoResult.rows.length === 0) {
+      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+    }
 
-    const { k_asal, i_asal } = risikoResult.rows[0];
+    const { k_asal, i_asal } = risikoResult.rows[0];
 
-    // 2. Dapatkan Semua Log Pemantauan - DISATUKAN SEBARIS
-    const logQuery = `SELECT lp.log_id, lp.tahun_pemantauan, lp.separuh_tahun_pemantauan, lp.skor_kebarangkalian_selepas, lp.skor_impak_selepas, lp.keberkesanan, lp.status_pemantauan, lp.catatan, lp.no_bil_kelulusan, lp.kekerapan_pemantauan, lp.tarikh_pemantauan, lp.tarikh_kemaskini, (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log, (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id) AS kakitangan_log FROM LogPemantauan lp WHERE lp.risiko_id = $1 ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC, lp.tarikh_pemantauan ASC`;
-    
-    const { rows: logRows } = await pool.query(logQuery, [risikoIdInt]);
+    // ⭐️ DIUBAH: Nama kolum dibetulkan & tambah skor_risiko_pemantauan
+    const logQuery = `
+      SELECT 
+        lp.log_id, lp.tahun_pemantauan, lp.separuh_tahun_pemantauan, 
+        lp.skor_kebarangkalian_selepas, lp.skor_impak_selepas, 
+        lp.skor_risiko_pemantauan, -- ⭐️ BARU
+        lp.keberkesanan, lp.status_pemantauan, lp.catatan, 
+        lp.justifikasi_pindaan_pemantauan, -- ⭐️ DIUBAH
+        lp.no_bil_kelulusan, lp.kekerapan_pemantauan, 
+        lp.tarikh_pemantauan, lp.tarikh_kemaskini, 
+        (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log, 
+        (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id) AS kakitangan_log 
+      FROM LogPemantauan lp 
+      WHERE lp.risiko_id = $1 
+      ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC, lp.tarikh_pemantauan ASC
+    `;
+    
+    const { rows: logRows } = await pool.query(logQuery, [risikoIdInt]);
 
-    // 3. Proses Logika Skor Sebelum/Selepas Berurutan
-    let skorSebelumK = k_asal;
-    let skorSebelumI = i_asal;
-    
-    const sejarahLog = logRows.map(log => {
-      // Nilai skor selepas semasa. 
-      const skorSelepasK = log.skor_kebarangkalian_selepas;
-      const skorSelepasI = log.skor_impak_selepas;
+    let skorSebelumK = k_asal;
+    let skorSebelumI = i_asal;
+    
+    const sejarahLog = logRows.map(log => {
+      const skorSelepasK = log.skor_kebarangkalian_selepas;
+      const skorSelepasI = log.skor_impak_selepas;
 
-      const logSejarah = {
-        ...log,
-        // Tetapkan Skor Sebelum untuk log semasa
-        skor_kebarangkalian_sebelum: skorSebelumK,
-        skor_impak_sebelum: skorSebelumI,
-      };
+      const logSejarah = {
+        ...log,
+        skor_kebarangkalian_sebelum: skorSebelumK,
+        skor_impak_sebelum: skorSebelumI,
+      };
 
-      // Kemas kini skorSebelum untuk iterasi log yang seterusnya
-      if (skorSelepasK !== null && skorSelepasI !== null) {
-        skorSebelumK = skorSelepasK;
-        skorSebelumI = skorSelepasI;
-      }
-      
-      return logSejarah;
-    });
+      if (skorSelepasK !== null && skorSelepasI !== null) {
+        skorSebelumK = skorSelepasK;
+        skorSebelumI = skorSelepasI;
+      }
+      
+      return logSejarah;
+    });
 
-    // 4. Susun semula dari yang paling BARU ke yang paling LAMA untuk paparan UI
-    const sejarahLogTerbalik = sejarahLog.reverse();
+    const sejarahLogTerbalik = sejarahLog.reverse();
+    res.json(sejarahLogTerbalik);
 
-    res.json(sejarahLogTerbalik);
-
-  } catch (err) {
-    console.error("❌ Ralat GET /:risiko_id/sejarah-baru:", err);
-    res.status(500).json({ message: "Gagal memuatkan sejarah pemantauan." });
-  }
+  } catch (err) {
+    console.error("❌ Ralat GET /:risiko_id/sejarah-baru:", err);
+    res.status(500).json({ message: "Gagal memuatkan sejarah pemantauan." });
+  }
 });
 
 
 /* =======================================================
-   ➕ POST: Tambah Log Pemantauan Baru
-   ENDPOINT: /pemantauan-risiko/log
+  ➕ POST: Tambah Log Pemantauan Baru (⭐️ DIKEMASKINI ⭐️)
+  ENDPOINT: /pemantauan-risiko/log
 ======================================================= */
 router.post("/log", verifyToken, async (req, res) => {
   const client = await pool.connect();
@@ -446,6 +472,7 @@ router.post("/log", verifyToken, async (req, res) => {
       keberkesanan,
       status_pemantauan,
       catatan,
+      justifikasi_pindaan_pemantauan, // ⭐️ DIUBAH
       no_bil_kelulusan,
       kekerapan_pemantauan,
       pelan_tindakan_list,
@@ -456,23 +483,31 @@ router.post("/log", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Sila isi semua medan wajib (risiko, tahun, status)." });
     }
 
+    // ⭐️ BARU: Kira skor risiko
+    const skor_risiko_pemantauan = getRiskLevel(skor_kebarangkalian_selepas, skor_impak_selepas);
+
     const risikoIdInt = parseInt(risiko_id, 10);
     await client.query("BEGIN");
 
+    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logInsertQuery = `
       INSERT INTO LogPemantauan (
         risiko_id, tahun_pemantauan, separuh_tahun_pemantauan,
         skor_kebarangkalian_selepas, skor_impak_selepas, keberkesanan,
-        status_pemantauan, catatan, no_bil_kelulusan, kekerapan_pemantauan
+        status_pemantauan, catatan, no_bil_kelulusan, kekerapan_pemantauan,
+        justifikasi_pindaan_pemantauan, skor_risiko_pemantauan
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11, $12)
       RETURNING *;
     `;
 
+    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logResult = await client.query(logInsertQuery, [
       risikoIdInt, tahun_pemantauan, separuh_tahun_pemantauan,
       skor_kebarangkalian_selepas, skor_impak_selepas, keberkesanan,
-      status_pemantauan, catatan, no_bil_kelulusan, kekerapan_pemantauan
+      status_pemantauan, catatan, no_bil_kelulusan, kekerapan_pemantauan,
+      justifikasi_pindaan_pemantauan, // $11
+      skor_risiko_pemantauan // $12
     ]);
 
     const newLog = logResult.rows[0];
@@ -513,20 +548,18 @@ router.post("/log", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   ❌ DELETE: Padam Log Pemantauan Berdasarkan log_id
-   ENDPOINT: /pemantauan-risiko/log/:log_id
+  ❌ DELETE: Padam Log Pemantauan (Kekal Sama)
+  ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
 router.delete("/log/:log_id", verifyToken, async (req, res) => {
   try {
     const { log_id } = req.params;
 
-    // Semak kewujudan log
     const check = await pool.query("SELECT log_id FROM LogPemantauan WHERE log_id = $1", [log_id]);
     if (check.rowCount === 0) {
       return res.status(404).json({ message: "Rekod pemantauan tidak dijumpai." });
     }
 
-    // Hapus (cascade delete akan padam pelan tindakan & kakitangan)
     await pool.query("DELETE FROM LogPemantauan WHERE log_id = $1", [log_id]);
 
     res.json({ message: "Log pemantauan berjaya dipadam." });
@@ -537,50 +570,47 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   PUT: Kemaskini Log Pemantauan
-   ENDPOINT: /pemantauan-risiko/log/:log_id
+  PUT: Kemaskini Log Pemantauan (⭐️ DIKEMASKINI ⭐️)
+  ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
 router.put("/log/:log_id", verifyToken, async (req, res) => {
   const client = await pool.connect();
   const { log_id } = req.params;
 
   const {
-  risiko_id,
-  tahun_pemantauan,
-  separuh_tahun_pemantauan,
-  skor_kebarangkalian_selepas,
-  skor_impak_selepas,
-  keberkesanan,
-  status_pemantauan,
-  catatan,
-  no_bil_kelulusan,
-  kekerapan_pemantauan,
-  pelan_tindakan_list,
-  kakitangan_list,
-  pelan_tindakan_log,
-  kakitangan_log,
-} = req.body;
+    risiko_id,
+    tahun_pemantauan,
+    separuh_tahun_pemantauan,
+    skor_kebarangkalian_selepas,
+    skor_impak_selepas,
+    keberkesanan,
+    status_pemantauan,
+    catatan,
+    justifikasi_pindaan_pemantauan, // ⭐️ DIUBAH
+    no_bil_kelulusan,
+    kekerapan_pemantauan,
+    pelan_tindakan_list,
+    kakitangan_list,
+    pelan_tindakan_log,
+    kakitangan_log,
+  } = req.body;
 
-// Gunakan fallback jika list asal tiada
-const finalPelanList = (pelan_tindakan_list?.length ? pelan_tindakan_list : pelan_tindakan_log) || [];
-const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitangan_log) || [];
+  // ⭐️ BARU: Kira skor risiko
+  const skor_risiko_pemantauan = getRiskLevel(skor_kebarangkalian_selepas, skor_impak_selepas);
+
+  const finalPelanList = (pelan_tindakan_list?.length ? pelan_tindakan_list : pelan_tindakan_log) || [];
+  const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitangan_log) || [];
 
   if (!log_id || !risiko_id) {
     return res.status(400).json({ message: "Log ID dan Risiko ID diperlukan" });
   }
 
   try {
-    // 🔍 Debug log: pastikan data sampai dari frontend
-    console.log("📩 PUT /log/:log_id diterima:", {
-      log_id,
-      risiko_id,
-      pelan_tindakan_list,
-      kakitangan_list,
-    });
-
+    console.log("📩 PUT /log/:log_id diterima:", { log_id, risiko_id });
     await client.query("BEGIN");
 
     // 1️⃣ Kemaskini LogPemantauan
+    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logUpdateQuery = `
       UPDATE LogPemantauan
       SET 
@@ -594,11 +624,13 @@ const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitan
         catatan = $8,
         no_bil_kelulusan = $9,
         kekerapan_pemantauan = $10,
+        justifikasi_pindaan_pemantauan = $11, 
+        skor_risiko_pemantauan = $12, -- ⭐️ BARU
         tarikh_kemaskini = NOW()
-      WHERE log_id = $11
-      RETURNING *;
+      WHERE log_id = $13; -- ⭐️ DIUBAH
     `;
 
+    // ⭐️ DIUBAH: Tambah 'justifikasi_pindaan_pemantauan' dan 'skor_risiko_pemantauan'
     const logValues = [
       risiko_id,
       tahun_pemantauan,
@@ -610,7 +642,9 @@ const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitan
       catatan,
       no_bil_kelulusan,
       kekerapan_pemantauan,
-      log_id,
+      justifikasi_pindaan_pemantauan, // $11
+      skor_risiko_pemantauan, // $12
+      log_id, // $13
     ];
 
     const logResult = await client.query(logUpdateQuery, logValues);
@@ -619,44 +653,37 @@ const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitan
       return res.status(404).json({ message: "Log tidak dijumpai" });
     }
 
-    // 2️⃣ Padam data lama (supaya update bersih)
+    // ... (Logik Pelan Tindakan & Kakitangan kekal sama) ...
     await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
     await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
-// 3️⃣ Tambah semula Pelan Tindakan
-if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
-  for (const item of finalPelanList) {
-    const butiran = (typeof item === "string")
-      ? item.trim()
-      : (item?.butiran_aktiviti || "").trim();
-
-    if (!butiran) continue; // skip kosong
-
-    await client.query(
-      `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti)
-       VALUES ($1, $2)`,
-      [log_id, butiran]
-    );
-  }
-}
-
-// 4️⃣ Tambah semula Kakitangan
-if (Array.isArray(finalKakitanganList) && finalKakitanganList.length > 0) {
-  for (const item of finalKakitanganList) {
-    const butiran = (typeof item === "string")
-      ? item.trim()
-      : (item?.butiran_kakitangan || "").trim();
-
-    if (!butiran) continue;
-
-    await client.query(
-      `INSERT INTO KakitanganPemantauan (log_id, butiran_kakitangan)
-       VALUES ($1, $2)`,
-      [log_id, butiran]
-    );
-  }
-}
     
-
+    if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
+      for (const item of finalPelanList) {
+        const butiran = (typeof item === "string")
+          ? item.trim()
+          : (item?.butiran_aktiviti || "").trim();
+        if (!butiran) continue; 
+        await client.query(
+          `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti)
+           VALUES ($1, $2)`,
+          [log_id, butiran]
+        );
+      }
+    }
+    if (Array.isArray(finalKakitanganList) && finalKakitanganList.length > 0) {
+      for (const item of finalKakitanganList) {
+        const butiran = (typeof item === "string")
+          ? item.trim()
+          : (item?.butiran_kakitangan || "").trim();
+        if (!butiran) continue;
+        await client.query(
+          `INSERT INTO KakitanganPemantauan (log_id, butiran_kakitangan)
+           VALUES ($1, $2)`,
+          [log_id, butiran]
+        );
+      }
+    }
+    
     await client.query("COMMIT");
 
     res.json({
