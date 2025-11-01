@@ -13,7 +13,6 @@
   z-index: 9999;
   padding: 24px;
 }
-
 .pemantauan-modal-container {
   background: #ffffff;
   border-radius: 10px;
@@ -26,89 +25,144 @@
   max-height: 90vh;
 }
 
-/* === MAIN CONTAINER === */
+/* === MAIN CONTAINER (DIKEKALKAN) === */
 .senaraipemantauan-container {
   padding: 24px;
   max-width: 100%;
   margin: 0 auto;
   font-family: "Inter", sans-serif;
   overflow-x: hidden;
-  background-color: #f9fafb; /* Latar belakang kelabu lembut */
+  background-color: #f9fafb;
   min-height: 100vh;
 }
-
-/* DIKEMASKINI: Tajuk h1 */
 .senaraipemantauan-container h1 {
-  font-size: 2rem; /* Dibesarkan */
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 24px; /* Selaraskan dengan padding container */
-  color: #005fa3; /* DIUBAH: Selaraskan dengan tema biru */
+  margin-bottom: 24px;
+  color: #005fa3;
 }
 
-/* === SUMMARY CARDS (DIKEMASKINI UNTUK KEMAS) === */
+/* === SUMMARY CARDS (DIKEKALKAN) === */
 .senaraipemantauan-cards-container {
   display: flex;
-  gap: 16px; /* Jarak konsisten */
+  gap: 16px;
   margin-bottom: 24px;
-  flex-wrap: wrap; /* DIUBAH: Memastikan kad 'wrap' pada skrin kecil */
+  flex-wrap: wrap;
   width: 100%;
 }
-
 .senaraipemantauan-info-card {
-  flex: 1 1 0; /* DIUBAH: flex-basis 0 untuk pengagihan sama rata */
-  min-width: 200px; /* Lebar minimum sebelum 'wrap' */
-  background-color: #ffffff; /* Ditukar ke putih */
-  padding: 16px;
+  flex: 1 1 0;
+  min-width: 200px;
+  background-color: #ffffff;
+  padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb; /* Garisan keliling */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Bayang lembut */
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
-
 .senaraipemantauan-info-card h3 {
-  font-size: 13px; /* Dibesarkan sedikit */
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   color: #4b5563;
   margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
-
 .senaraipemantauan-info-card p {
-  font-size: 26px; /* Dibesarkan sedikit */
-  font-weight: 700; /* Ditebalkan */
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+.senaraipemantauan-success-card h3,
+.senaraipemantauan-danger-card h3 {
+  color: #4b5563;
+}
+.senaraipemantauan-success-card p,
+.senaraipemantauan-danger-card p {
   color: #1f2937;
 }
 
-.senaraipemantauan-success-card h3 {
-  color: #065f46; /* DITAMBAH: Teks tajuk dijadikan hijau */
+/* === GAYAAN CARTA BAR (DIKEKALKAN) === */
+.senaraipemantauan-barchart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
 }
-.senaraipemantauan-success-card p {
-  color: #065f46; /* Digelapkan */
+.senaraipemantauan-barchart-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 25px;
+  align-items: center;
+  gap: 5px;
+}
+.senaraipemantauan-barchart-label {
+  font-size: 10px;
+  color: #4b5563;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.senaraipemantauan-barchart-bar-bg {
+  background: #f3f4f6;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+.senaraipemantauan-barchart-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease-in-out;
+}
+.senaraipemantauan-barchart-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: right;
 }
 
-.senaraipemantauan-danger-card h3 {
-  color: #b91c1c; /* DITAMBAH: Teks tajuk dijadikan merah */
-}
-.senaraipemantauan-danger-card p {
-  color: #b91c1c; /* Digelapkan */
-}
-
-/* === FILTERS (DIKEMASKINI) === */
+/* === FILTERS (DIKEKALKAN) === */
 .senaraipemantauan-filter-container {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
   width: 100%;
+  align-items: center;
 }
-
-.senaraipemantauan-filter-select {
-  padding: 8px 12px; /* Disediakan padding */
+.senaraipemantauan-filter-search {
+  padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background-color: white;
-  font-size: 14px; /* Dibesarkan */
+  font-size: 14px;
+  color: #374151;
+  flex: 1;
+  min-width: 200px;
+  max-width: 350px;
+}
+.senaraipemantauan-filter-search::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.senaraipemantauan-filter-search:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: #0074c8;
+  box-shadow: 0 0 0 1px #0074c8;
+}
+.senaraipemantauan-filter-select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 /* === TABLE WRAPPER (DIKEKALKAN) === */
@@ -117,111 +171,162 @@
   overflow-y: hidden;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Diringankan */
-  background-color: #ffffff; /* Pastikan latar belakang putih */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
 }
 
-/* === TABLE (DIKEMASKINI) === */
+/* === TABLE (DIKEKALKAN) === */
 .senaraipemantauan-table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
 }
-
 .senaraipemantauan-table tbody {
   background-color: white;
 }
 
-/* === TABLE HEADER (DIUBAH SUAI UNTUK MINIMALIST) === */
+/* === TABLE HEADER (DIKEKALKAN) === */
 .senaraipemantauan-table thead th {
-  background-color: #f0f9ff; /* DIUBAH: Latar belakang biru cerah */
-  color: #005fa3; /* DIUBAH: Teks biru gelap */
+  background-color: #f0f9ff;
+  color: #005fa3;
   font-weight: 600;
-  font-size: 12px; /* Dikecilkan untuk rupa kemas */
-  text-transform: uppercase; /* Gaya header */
+  font-size: 12px;
+  text-transform: uppercase;
   letter-spacing: 0.05em;
-
-  border-bottom: 1px solid #e5e7eb; /* Garisan bawah */
-  border-top: 1px solid #e5e7eb; /* Garisan atas */
-
+  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
   text-align: left;
-  padding: 12px 16px; /* Padding konsisten */
-
+  padding: 12px 16px;
   vertical-align: middle;
 }
 
-/* === TABLE DATA (DIKEMASKINI) === */
+/* === TABLE DATA (DIKEKALKAN) === */
 .senaraipemantauan-table tbody td {
-  padding: 12px 16px; /* Padding konsisten */
-  border-bottom: 1px solid #e5e7eb; /* Garisan pemisah */
-  color: #4b5563; /* Teks kelabu (lebih lembut) */
-  font-size: 13px; /* Saiz konsisten */
-
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #4b5563;
+  font-size: 13px;
   vertical-align: middle;
   white-space: normal;
 }
 
-/* Border Adjustment - Tiada garisan di baris terakhir */
-.senaraipemantauan-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-/* Row Hover Effect */
+/* Row Hover Effect (Dikekalkan) */
 .senaraipemantauan-table tbody tr:hover {
-  background-color: #e0f2fe; /* DIUBAH: Biru cerah untuk hover */
+  background-color: #f0f9ff;
 }
 
-/* DIBUANG: Blok Garisan 'light' (Zebra Striping) tr:nth-child(even) telah dipadam dari sini */
+/* === GAYAAN LAJUR KHAS (DIKEMASKINI) === */
 
-/* === STYLING LAJUR KHAS (DIKEMASKINI) === */
-
-/* Kolum Pertama (Bil.) */
-.senaraipemantauan-table thead th:nth-child(1) {
-  width: 1%; /* Sekecil mungkin */
-  /* text-align: center; DILARASKAN OLEH BLOK DI BAWAH */
+/* 1. Lajur Risiko kini (3) */
+.senaraipemantauan-table thead th:nth-child(3) {
+  min-width: 250px;
 }
-/* DIBUANG: Latar belakang kelabu pada tbody td:nth-child(1) */
+/* 2. Lajur No Rujukan (2) dikekalkan */
+.senaraipemantauan-table thead th:nth-child(2) {
+  min-width: 120px;
+}
+/* 3. Lajur Subsidiari (3) dibuang */
+/* .senaraipemantauan-table thead th:nth-child(3) { min-width: 150px; } <-- DIBUANG */
 
-/* Kolum Kedua (No Rujukan) */
-/* DIBUANG: Latar belakang kelabu pada tbody td:nth-child(2) */
-
-/* Lajur jajaran tengah (Bil, Tahun Asal, Skor Sebelum, Skor Selepas, Tindakan) */
-.senaraipemantauan-table thead th:nth-child(1),
-.senaraipemantauan-table thead th:nth-child(3),
-.senaraipemantauan-table thead th:nth-child(7),
-.senaraipemantauan-table thead th:nth-child(8),
-.senaraipemantauan-table thead th:nth-child(10),
-.senaraipemantauan-table thead th:nth-child(12),
-.senaraipemantauan-table tbody tr td:nth-child(1),
-.senaraipemantauan-table tbody tr td:nth-child(3),
-.senaraipemantauan-table tbody tr td:nth-child(7),
-.senaraipemantauan-table tbody tr td:nth-child(8),
-.senaraipemantauan-table tbody tr td:nth-child(10),
-.senaraipemantauan-table tbody tr td:nth-child(12) {
+/* 4. Lajur jajaran tengah (DIKEMASKINI) */
+.senaraipemantauan-table thead th:nth-child(4), /* Skor Asal */
+.senaraipemantauan-table thead th:nth-child(6), /* Skor Terkini */
+.senaraipemantauan-table thead th:nth-child(7), /* Tindakan */
+.senaraipemantauan-table tbody tr td:nth-child(4),
+.senaraipemantauan-table tbody tr td:nth-child(6),
+.senaraipemantauan-table tbody tr td:nth-child(7) {
   text-align: center;
 }
 
-/* Lajur Risiko (Lebih lebar) */
-.senaraipemantauan-table thead th:nth-child(6) {
-  min-width: 250px; /* Lebar minimum, bukan tetap */
+/* Lajur butang Kembang (Expand) (Dikekalkan) */
+.senaraipemantauan-th-expand,
+.senaraipemantauan-td-expand {
+  width: 1%;
+  padding: 4px 8px;
+  text-align: center;
+}
+.senaraipemantauan-th-tindakan {
+  width: 1%;
 }
 
-/* DIKEMASKINI: Garisan pemisah untuk Skor Risiko Sebelum (Target dibetulkan) */
-.senaraipemantauan-table thead tr:first-child th:nth-child(2), /* Ini menyasarkan TH 'Skor Risiko Sebelum' yang ada rowSpan */
-.senaraipemantauan-table tbody td:nth-child(7) {
-  /* Ini menyasarkan TD lajur ke-7 */
-  border-left: 1px solid #e5e7eb;
-  border-right: 1px solid #e5e7eb;
+/* === GAYAAN: ACCORDION/EXPAND ROW (DIKEKALKAN) === */
+.senaraipemantauan-expand-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+.senaraipemantauan-expand-btn:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+.senaraipemantauan-row-expanded td {
+  background-color: #f9fafb;
+  border-bottom-color: #e5e7eb;
+}
+.senaraipemantauan-detail-row td {
+  padding: 0;
+  background: #fdfdff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.senaraipemantauan-detail-content {
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px 24px;
+  background: #f9fafb;
+  border-top: 1px dashed #d1d5db;
+}
+.senaraipemantauan-detail-group {
+  font-size: 13px;
+}
+.senaraipemantauan-detail-group-wide {
+  grid-column: 1 / -1;
+}
+.senaraipemantauan-detail-group h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #005fa3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e0f2fe;
+  padding-bottom: 4px;
+}
+.senaraipemantauan-detail-group p {
+  margin-bottom: 6px;
+  color: #374151;
+}
+.senaraipemantauan-detail-group p strong {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 120px;
+  display: inline-block;
+}
+.senaraipemantauan-detail-group ol {
+  padding-left: 20px;
+  margin-top: 4px;
+  color: #374151;
+}
+.senaraipemantauan-detail-group li {
+  margin-bottom: 4px;
 }
 
-/* === RISK BOX STYLLES (DIKEMASKINI) === */
+/* === RISK BOX STYLES (DIKEKALKAN) === */
 .senaraipemantauan-risk-box {
   display: inline-block;
-  padding: 4px 10px; /* Dibesarkan sedikit */
+  padding: 4px 10px;
   border-radius: 6px;
   color: white;
   font-weight: 600;
-  font-size: 12px; /* Dibesarkan */
+  font-size: 12px;
   min-width: 20px;
   text-align: center;
 }
@@ -229,11 +334,11 @@
   text-align: center;
 }
 
-/* LOADING & NO DATA (Dikekalkan) */
+/* LOADING & NO DATA (DIKEKALKAN) */
 .senaraipemantauan-loading,
 .senaraipemantauan-no-data {
   text-align: center;
-  padding: 40px; /* Lebih banyak ruang */
+  padding: 40px;
   font-style: italic;
   color: #6b7280;
   font-size: 14px;
@@ -247,11 +352,11 @@
   }
 }
 
-/* === ACTION BUTTON (DIKEMASKINI KE BIRU MINIMALIST) === */
+/* === ACTION BUTTON (DIKEKALKAN) === */
 .senaraipemantauan-icon-edit-btn {
-  background: transparent; /* Tiada latar belakang */
-  color: #0074c8; /* DIUBAH: Warna ikon biru */
-  border: 1px solid #b3dfff; /* DIUBAH: Garisan biru cerah */
+  background: transparent;
+  color: #0074c8;
+  border: 1px solid #b3dfff;
   padding: 5px;
   border-radius: 6px;
   cursor: pointer;
@@ -261,9 +366,9 @@
   justify-content: center;
 }
 .senaraipemantauan-icon-edit-btn:hover {
-  background: #0074c8; /* DIUBAH: Latar biru solid */
-  color: #ffffff; /* DIUBAH: Ikon jadi putih */
-  border-color: #0074c8; /* DIUBAH: Border sama dgn background */
+  background: #0074c8;
+  color: #ffffff;
+  border-color: #0074c8;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 .senaraipemantauan-icon-edit-btn:disabled {
