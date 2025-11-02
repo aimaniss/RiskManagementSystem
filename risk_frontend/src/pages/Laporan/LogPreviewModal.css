@@ -1,0 +1,256 @@
+/* ========================================= */
+/* --- GAYA UNTUK BORANG LAPORAN (PDF) --- */
+/* ========================================= */
+
+.report-preview-page {
+  font-family: Arial, sans-serif;
+  width: 794px; /* Lebar A4 */
+  padding: 20px;
+  margin: 0 auto;
+  color: #000;
+  background-color: #fff;
+  font-size: 9px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  border-bottom: 3px solid #000;
+  padding-bottom: 10px;
+}
+
+.report-logo {
+  width: 200px;
+  height: auto;
+}
+
+.report-title {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  margin: 0;
+  padding-top: 10px;
+}
+
+/* ============================================ */
+/* JADUAL UTAMA - GUNA BORDER YANG LEBIH TEBAL */
+/* ============================================ */
+.report-main-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  margin-bottom: 10px;
+  table-layout: fixed;
+  border: 2px solid #000;
+}
+.report-main-table td {
+  border: 2px solid #000;
+  padding: 6px 8px;
+  vertical-align: middle;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+.report-main-table .label {
+  font-weight: bold;
+  background-color: #e0e0e0;
+}
+.report-main-table .value {
+  background-color: #fff;
+}
+
+/* ============================================ */
+/* JADUAL SEKSYEN - BORDER TEBAL + SPACING */
+/* ============================================ */
+.section-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  margin-bottom: 10px;
+  table-layout: fixed;
+  border: 2px solid #000;
+}
+.section-table td {
+  border: 2px solid #000;
+  padding: 6px 8px;
+  vertical-align: middle;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  min-height: 30px;
+}
+
+/* Tajuk Seksyen (1, 2, 3, 4) */
+.section-header td {
+  background-color: #666666;
+  color: white;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 8px;
+  text-align: left;
+  border: 2px solid #000;
+}
+
+/* Sub-header (RISIKO, PUNCA, KESAN, dll) */
+.sub-header td {
+  background-color: #cccccc;
+  color: #000;
+  font-weight: bold;
+  text-align: center;
+  padding: 6px 8px;
+  border: 2px solid #000;
+}
+
+/* Sub-section header (4.1, 4.2, ...) */
+.sub-section-header td {
+  background-color: #999999;
+  color: #000;
+  font-weight: bold;
+  font-size: 9px;
+  padding: 6px 8px;
+  border: 2px solid #000;
+}
+
+/* Sub-section light (PELAN TINDAKAN PEMANTAUAN RISIKO) */
+.sub-section-header-light td {
+  background-color: #eeeeee;
+  color: #000;
+  font-weight: bold;
+  font-size: 9px;
+  padding: 6px 8px;
+  border: 2px solid #000;
+}
+
+/* Highlight kuning untuk Seksyen 2 */
+.highlight-yellow {
+  background-color: #ffff99 !important;
+  text-align: center;
+}
+
+/* Padding 0 untuk nested table */
+.no-padding {
+  padding: 0 !important;
+}
+
+/* ============================================ */
+/* NESTED TABLE - BORDER NIPIS UNTUK BEZAKAN */
+/* ============================================ */
+.nested-effectiveness-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  text-align: center;
+  table-layout: fixed;
+  margin: 0;
+  border: none;
+}
+.nested-effectiveness-table td {
+  border: 1px solid #666;
+  padding: 5px 4px;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  background-color: #fff;
+}
+.nested-effectiveness-table .sub-header td {
+  font-weight: bold;
+  background-color: #cccccc;
+  padding: 5px 4px;
+  border: 1px solid #666;
+}
+
+/* ========================================= */
+/* --- GAYA MODAL PRATONTON (PREVIEW) --- */
+/* ========================================= */
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 0px;
+}
+
+.preview-modal-container {
+  background-color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 1100px;
+  height: 95vh;
+  display: flex;
+  flex-direction: column;
+  animation: modal-fade-in 0.3s ease-out;
+  box-sizing: border-box; /* PEMBETULAN TAMBAHAN */
+}
+
+.preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  border-radius: 8px 8px 0 0;
+}
+.preview-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+.preview-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.preview-modal-close:hover {
+  color: #000;
+}
+
+.preview-modal-body {
+  flex: 1;
+  background-color: #f4f4f4;
+  overflow: auto;
+  padding: 0px;
+  text-align: center;
+}
+
+.preview-modal-body embed {
+  height: 100%;
+  width: 100%;
+  border: 1px solid #ccc;
+  box-sizing: border-box; /* PEMBETULAN UTAMA */
+}
+
+.preview-modal-body p {
+  padding-top: 20px; /* Tukar dari padding-top ke padding jika perlu */
+  font-style: italic;
+  color: #666;
+}
+
+.preview-modal-footer {
+  display: none;
+}
+
+.preview-modal-footer .btn-secondary {
+  display: none;
+}

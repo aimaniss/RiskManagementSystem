@@ -1,0 +1,199 @@
+/* ========================================= */
+/* --- GAYA MODAL PILIHAN LOG --- */
+/* ========================================= */
+/* Ini adalah untuk ReportOptionsModal */
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.report-modal-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  animation: modal-fade-in 0.3s ease-out;
+}
+.report-modal-container h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+/* --- BARU: Gaya untuk Tajuk & Sub-tajuk --- */
+.report-modal-risk-details {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+.report-modal-subsidiary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #007bff;
+  margin: 0;
+}
+.report-modal-risk-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  margin: 4px 0 0 0;
+  padding: 0;
+  border: none;
+}
+/* --- TAMAT BARU --- */
+
+.report-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.report-modal-option {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+}
+.report-modal-option label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-left: 10px;
+}
+.report-modal-option input[type="radio"] {
+  transform: translateY(1px);
+}
+.report-modal-desc,
+.report-modal-status {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 5px 0 0 25px;
+}
+.report-modal-status {
+  font-style: italic;
+}
+.report-modal-range-picker {
+  margin-left: 25px;
+  margin-top: 15px;
+  display: none;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.report-modal-range-picker.visible {
+  display: flex;
+}
+.report-modal-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 150px;
+}
+.report-modal-select-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #444;
+  margin-left: 0;
+}
+.report-modal-select-group select {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+.report-modal-select-group select:disabled {
+  background-color: #f4f4f4;
+  cursor: not-allowed;
+}
+
+.report-modal-range-picker-controls {
+  margin-left: 25px;
+  margin-top: 15px;
+}
+.report-modal-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start; /* Ubah ke 'flex-start' untuk 'multiline' */
+  margin-bottom: 15px;
+}
+.report-modal-checkbox-wrapper input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  margin-top: 3px; /* Selaraskan dengan baris pertama teks */
+}
+.report-modal-checkbox-wrapper label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-left: 0;
+  color: #333;
+  line-height: 1.4;
+}
+
+/* --- BARU: Gaya untuk 'span' deskripsi di dalam label checkbox --- */
+.report-modal-checkbox-wrapper label span {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #555;
+  margin-top: 2px;
+}
+/* --- TAMAT BARU --- */
+
+/* --- DIBUANG: Gaya 'global-check' dan 'separator' dibuang --- */
+/* .report-modal-option-separator { ... } */
+/* .report-modal-checkbox-wrapper.global-check { ... } */
+
+.report-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+.report-modal-actions button {
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.report-modal-actions .btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+}
+.report-modal-actions .btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+.report-modal-actions .btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+.report-modal-actions .btn-primary:hover {
+  background-color: #0056b3;
+}
+.report-modal-actions .btn-primary:disabled {
+  background-color: #c0c0c0;
+  cursor: not-allowed;
+}

@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import React, { useState, useEffect, useMemo } from 'react';
+import ReportOptionsModal from './ReportOptionsModal';
+import LogPreviewModal from './LogPreviewModal';
 import './LaporanRisiko.css';
 
 const API_BASE = '/api';
 
+// =================================================================
+// Komponen Utama (LaporanRisiko)
+// =================================================================
 export default function LaporanRisiko() {
   const [loading, setLoading] = useState(false);
   const [subsidiaries, setSubsidiaries] = useState([]);
@@ -15,7 +18,12 @@ export default function LaporanRisiko() {
     search: '',
   });
   const [risks, setRisks] = useState([]);
-  const printableRef = useRef(null);
+
+  const [isLogOptionsOpen, setIsLogOptionsOpen] = useState(false);
+  const [isLogPreviewOpen, setIsLogPreviewOpen] = useState(false);
+  
+  const [selectedRisk, setSelectedRisk] = useState(null);
+  const [selectedRange, setSelectedRange] = useState(null);
 
   useEffect(() => {
     fetchSubsidiaries();
@@ -31,11 +39,11 @@ export default function LaporanRisiko() {
       const res = await fetch(`${API_BASE}/subsidiaries`);
       if (!res.ok) throw new Error('failed');
       const data = await res.json();
-      setSubsidiaries([{ id: 'all', name: 'Semua Subsidiari' }, ...data]);
+      setSubsidiaries([{ id: 'all', name: 'Semua SubsidiARI' }, ...data]);
     } catch (err) {
       setSubsidiaries([
         { id: 'all', name: 'Semua Subsidiari' },
-        { id: 'subs1', name: 'Subsidiari A' },
+        { id: 'subs1', name: 'UKM HOLDINGS SDN. BHD.' },
         { id: 'subs2', name: 'Subsidiari B' },
       ]);
     }
@@ -44,15 +52,7 @@ export default function LaporanRisiko() {
   async function fetchRisks() {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters.subsidiary !== 'all') params.set('subsidiary', filters.subsidiary);
-      params.set('year_from', filters.yearFrom);
-      params.set('year_to', filters.yearTo);
-
-      const res = await fetch(`${API_BASE}/risks?${params.toString()}`);
-      if (!res.ok) throw new Error('fetch failed');
-      const data = await res.json();
-      setRisks(data);
+      setRisks(sampleData(filters.yearFrom, filters.yearTo));
     } catch (err) {
       setRisks(sampleData(filters.yearFrom, filters.yearTo));
     } finally {
@@ -60,25 +60,109 @@ export default function LaporanRisiko() {
     }
   }
 
+  // --- BARU: sampleData kini mempunyai data borang penuh & log ---
   function sampleData(yearFrom, yearTo) {
     return [
       {
         id: 1,
-        title: 'Kebocoran data pelanggan',
-        subsidiary: 'Subsidiari A',
-        level: 'Tinggi',
-        category: 'Keselamatan',
-        date_registered: `${yearTo}-03-10`,
-        owner: 'Encik Ahmad',
+        title: 'Penggunaan elaun outpatient melebihi had',
+        no_rujukan: 'UKMH/0019/08',
+        subsidiary: 'UKM HOLDINGS SDN. BHD.',
+        bahagian_unit: 'SUMBER MANUSIA',
+        tahun_daftar: 2024,
+        separuh_tahun_daftar: 2, // Didaftar pada separuh tahun kedua
+        kategori_risiko: 'Kewangan',
+        kelulusan: 'MJAPR BIL. 4/2024 [12 DIS 2024] - PERKARA 1.2.3',
+        // Seksyen 1
+        punca: 'Pengiraan baki elaun outpatient dibuat secara manual',
+        kesan: 'Gaji kakitangan ditolak',
+        // Seksyen 2 (Skor Asal / Inherent)
+        skor_kebarangkalian_n: 3,
+        kebarangkalian_lian: 'Berpeluang Untuk Berlaku',
+        skor_impak_risiko: 3,
+        impak: 'Ketara',
+        skor_risiko: 5, // Skor risiko asal (sebelum kawalan)
+        status_risiko: 'Ya',
+        // Seksyen 3
+        pelan_tindakan: [
+          {
+            tindakan: 'Penggunaan sistem gaji secara menyeluruh',
+            jenis_kawalan: 'Terima',
+            tempoh_jangkaan: '2024',
+            kakitangan_bertanggungjawab: 'Sumber Manusia'
+          }
+        ],
+        // Seksyen 4 - Senarai Log (untuk dipilih)
+        logs: [
+          { 
+            tahun: 2024, separuh_tahun: 1, 
+            label: 'SEPARUH TAHUN PERTAMA (JAN - JUN) 2024',
+            kelulusan_log: 'MJAPR BIL. 2/2024',
+            pemantauan: 'Sistem gaji masih dalam pembangunan', 
+            kekerapan: 'Sukuan', 
+            kakitangan_bertanggungjawab: 'Sumber Manusia',
+            keberkesanan_tindakan: { skor_kebarangkalian: 2, kebarangkalian: 'Jarang Berlaku', skor_impak: 3, impak: 'Ketara', skor_risiko: 4, keberkesanan: 'Ya', status_pemantauan: 'Pemantauan' }
+          },
+          { 
+            tahun: 2024, separuh_tahun: 2, 
+            label: 'SEPARUH TAHUN KEDUA (JUL - DIS) 2024',
+            kelulusan_log: 'MJAPR BIL. 4/2024 [12 DIS 2024]',
+            pemantauan: 'Menyediakan sistem gaji yang menyeluruh', 
+            kekerapan: '1', 
+            kakitangan_bertanggungjawab: 'Sumber Manusia',
+            keberkesanan_tindakan: { skor_kebarangkalian: 1, kebarangkalian: 'Hampir Tidak Kelihatan', skor_impak: 3, impak: 'Ketara', skor_risiko: 3, keberkesanan: 'Ya', status_pemantauan: 'Pemantauan' }
+          }
+        ],
+        status_pemantauan: 'Aktif', // Status keseluruhan
       },
+      // Risiko 2
       {
         id: 2,
-        title: 'Kelewatan penghantaran',
+        title: 'Kelewatan penghantaran projek',
+        no_rujukan: 'R/B/005',
         subsidiary: 'Subsidiari B',
-        level: 'Sederhana',
-        category: 'Operasi',
-        date_registered: `${yearFrom}-07-21`,
-        owner: 'Puan Siti',
+        bahagian_unit: 'OPERASI',
+        tahun_daftar: yearFrom,
+        separuh_tahun_daftar: 2,
+        kategori_risiko: 'Operasi',
+        kelulusan: 'MJAPR BIL. 2/2023 [10 JUN 2023]',
+        punca: 'Kekurangan sumber manusia (vendor)',
+        kesan: 'Penalti kewangan dari pelanggan',
+        skor_kebarangkalian_n: 5,
+        kebarangkalian_lian: 'Hampir Pasti Berlaku',
+        skor_impak_risiko: 4,
+        impak: 'Signifikan',
+        skor_risiko: 8, 
+        status_risiko: 'Ya',
+        pelan_tindakan: [
+          {
+            tindakan: 'Melantik 2 vendor sandaran (backup)',
+            jenis_kawalan: 'Kurangkan',
+            tempoh_jangkaan: '2023 Q3',
+            kakitangan_bertanggungjawab: 'Pengurus Operasi'
+          }
+        ],
+        logs: [
+          { 
+            tahun: 2023, separuh_tahun: 2, 
+            label: 'SEPARUH TAHUN KEDUA 2023',
+            kelulusan_log: 'MJAPR BIL. 3/2023',
+            pemantauan: 'Vendor 1 dilantik', 
+            kekerapan: 'Bulanan', 
+            kakitangan_bertanggungjawab: 'Pengurus Operasi',
+            keberkesanan_tindakan: { skor_kebarangkalian: 4, kebarangkalian: 'Berlaku', skor_impak: 4, impak: 'Signifikan', skor_risiko: 7, keberkesanan: 'Tidak', status_pemantauan: 'Pemantauan' }
+          },
+          { 
+            tahun: 2024, separuh_tahun: 1, 
+            label: 'SEPARUH TAHUN PERTAMA 2024',
+            kelulusan_log: 'MJAPR BIL. 1/2024',
+            pemantauan: 'Vendor 2 dilantik. Projek kembali stabil.', 
+            kekerapan: 'Bulanan', 
+            kakitangan_bertanggungjawab: 'Pengurus Operasi',
+            keberkesanan_tindakan: { skor_kebarangkalian: 2, kebarangkalian: 'Jarang Berlaku', skor_impak: 4, impak: 'Signifikan', skor_risiko: 5, keberkesanan: 'Ya', status_pemantauan: 'Selesai' }
+          }
+        ],
+        status_pemantauan: 'Selesai',
       },
     ];
   }
@@ -88,143 +172,134 @@ export default function LaporanRisiko() {
     setFilters((s) => ({ ...s, [name]: value }));
   }
 
-  function printSingle(risk) {
-    const printWindow = window.open('', '_blank');
-    const html = `
-      <html>
-        <head>
-          <title>Laporan Risiko - ${risk.title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            td { border: 1px solid #999; padding: 8px; }
-          </style>
-        </head>
-        <body>
-          <h2>Laporan Risiko Individu</h2>
-          <table>
-            <tr><td><b>Nama Risiko</b></td><td>${risk.title}</td></tr>
-            <tr><td><b>Subsidiari</b></td><td>${risk.subsidiary}</td></tr>
-            <tr><td><b>Kategori</b></td><td>${risk.category}</td></tr>
-            <tr><td><b>Tahap Risiko</b></td><td>${risk.level}</td></tr>
-            <tr><td><b>Tarikh Daftar</b></td><td>${risk.date_registered}</td></tr>
-            <tr><td><b>Pemilik Risiko</b></td><td>${risk.owner}</td></tr>
-          </table>
-        </body>
-      </html>
-    `;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+  // --- FUNGSI URUS MODAL ---
+  
+  async function handleOpenReportModal(risk) {
+    setSelectedRisk(risk);
+    setIsLogOptionsOpen(true);
   }
 
-  async function downloadSinglePDF(risk) {
-    const container = document.createElement('div');
-    container.className = 'pdf-container';
-    container.innerHTML = `
-      <div style="padding:20px; font-family:Arial;">
-        <h2 style="text-align:center;">Laporan Risiko Individu</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr><td><b>Nama Risiko</b></td><td>${risk.title}</td></tr>
-          <tr><td><b>Subsidiari</b></td><td>${risk.subsidiary}</td></tr>
-          <tr><td><b>Kategori</b></td><td>${risk.category}</td></tr>
-          <tr><td><b>Tahap Risiko</b></td><td>${risk.level}</td></tr>
-          <tr><td><b>Tarikh Daftar</b></td><td>${risk.date_registered}</td></tr>
-          <tr><td><b>Pemilik Risiko</b></td><td>${risk.owner}</td></tr>
-        </table>
-      </div>
-    `;
-    document.body.appendChild(container);
-
-    const canvas = await html2canvas(container);
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-    pdf.save(`Laporan_Risiko_${risk.id}.pdf`);
-    document.body.removeChild(container);
+  function handleShowLogPreview(risk, range) {
+    setSelectedRisk(risk);
+    setSelectedRange(range);
+    setIsLogOptionsOpen(false);
+    setIsLogPreviewOpen(true);
+  }
+  
+  function handleCloseModals() {
+    setIsLogOptionsOpen(false);
+    setIsLogPreviewOpen(false);
+    setSelectedRisk(null);
+    setSelectedRange(null);
   }
 
   return (
     <div className="laporan-container">
       <h2 className="laporan-title">📊 Laporan Risiko</h2>
 
-      {/* Filter */}
       <div className="filter-card">
-        <div className="filter-group">
-          <label>Subsidiari</label>
-          <select name="subsidiary" value={filters.subsidiary} onChange={handleFilterChange}>
-            {subsidiaries.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>Dari Tahun</label>
-          <input type="number" name="yearFrom" value={filters.yearFrom} onChange={handleFilterChange} />
-        </div>
-
-        <div className="filter-group">
-          <label>Hingga Tahun</label>
-          <input type="number" name="yearTo" value={filters.yearTo} onChange={handleFilterChange} />
-        </div>
-
-        <div className="filter-group">
-          <label>Cari</label>
-          <input
-            type="text"
-            name="search"
-            placeholder="Cari risiko..."
-            value={filters.search}
-            onChange={handleFilterChange}
-          />
-        </div>
+         <div className="filter-group">
+          <label>Subsidiari</label>
+          <select name="subsidiary" value={filters.subsidiary} onChange={handleFilterChange}>
+            {subsidiaries.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Dari Tahun</label>
+          <input type="number" name="yearFrom" value={filters.yearFrom} onChange={handleFilterChange} />
+        </div>
+        <div className="filter-group">
+         <label>Hingga Tahun</label>
+          <input type="number" name="yearTo" value={filters.yearTo} onChange={handleFilterChange} />
+        </div>
+        <div className="filter-group">
+          <label>Cari</label>
+          <input
+            type="text"
+            name="search"
+            placeholder="Cari risiko..."
+            value={filters.search}
+            onChange={handleFilterChange}
+          />
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="table-card" ref={printableRef}>
+      <div className="table-card">
         {loading ? (
           <p>Memuatkan data...</p>
         ) : (
           <table className="risk-table">
             <thead>
               <tr>
+                <th>Bil</th>
+                <th>No. Rujukan</th>
                 <th>Nama Risiko</th>
+                <th>Tahun / Separuh Tahun Daftar</th>
                 <th>Subsidiari</th>
-                <th>Kategori</th>
-                <th>Tahap</th>
-                <th>Tarikh Daftar</th>
-                <th>Pemilik Risiko</th>
+                <th>Skor Risiko (Terkini)</th>
+                <th>Status Pemantauan</th>
                 <th>Tindakan</th>
               </tr>
             </thead>
             <tbody>
               {risks
                 .filter((r) => r.title.toLowerCase().includes(filters.search.toLowerCase()))
-                .map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.title}</td>
-                    <td>{r.subsidiary}</td>
-                    <td>{r.category}</td>
-                    <td>{r.level}</td>
-                    <td>{r.date_registered}</td>
-                    <td>{r.owner}</td>
-                    <td className="action-icons">
-                      <button title="Cetak" onClick={() => printSingle(r)}>🖨️</button>
-                      <button title="Muat Turun PDF" onClick={() => downloadSinglePDF(r)}>⬇️</button>
-                    </td>
-                  </tr>
-                ))}
+                .map((r, index) => {
+                  // --- BARU: Logik untuk dapatkan skor terkini ---
+                  const latestLog = r.logs && r.logs.length > 0 
+                    ? r.logs[r.logs.length - 1] 
+                    : null;
+                  
+                  const currentScore = latestLog 
+                    ? latestLog.keberkesanan_tindakan.skor_risiko 
+                    : r.skor_risiko; // Guna skor asal jika tiada log
+                  
+                  return (
+                    <tr key={r.id}>
+                      <td>{index + 1}</td>
+                      <td>{r.no_rujukan}</td>
+                      <td>{r.title}</td>
+                      <td>{`${r.tahun_daftar} / S${r.separuh_tahun_daftar}`}</td>
+                      <td>{r.subsidiary}</td>
+                      <td>{currentScore}</td>
+                      <td>{r.status_pemantauan}</td>
+                      <td className="action-icons">
+                        <button 
+                          title="Jana Laporan" 
+                          onClick={() => handleOpenReportModal(r)}
+                          className="btn-laporan-icon"
+                        >
+                          📄
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
             </tbody>
           </table>
         )}
       </div>
+      
+      {isLogOptionsOpen && selectedRisk && (
+        <ReportOptionsModal
+          risk={selectedRisk}
+          onClose={handleCloseModals}
+          logs={selectedRisk.logs || []} 
+          onShowPreview={handleShowLogPreview}
+        />
+      )}
+
+      {isLogPreviewOpen && selectedRisk && selectedRange && (
+        <LogPreviewModal
+          risk={selectedRisk}
+          range={selectedRange}
+          onClose={handleCloseModals}
+        />
+      )}
     </div>
   );
 }
