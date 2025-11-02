@@ -170,89 +170,88 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         };
         // =================================================================
 
-
-        // --- Bahagian 1 (Logo + Tajuk) ---
-        const leftMargin = 10;
-
-        const originalImgWidth = 1811;
-        const originalImgHeight = 579;
-        const imgAspectRatio = originalImgWidth / originalImgHeight; 
-    
-        const logoWidth = 35; // Lebar logo dalam mm
-        const logoHeight = logoWidth / imgAspectRatio; 
-    
-        pdf.addImage(Ukhmlogo, 'PNG', leftMargin, currentY, logoWidth, logoHeight); 
-    
-        let logoBlockEndY = currentY + logoHeight + 3; // 3mm di bawah logo
         
-        pdf.setFont(globalStyles.font, 'bold');
-        pdf.setFontSize(7); // Saiz fon subteks
-        pdf.text("Pematuhan & Pengurusan Risiko", leftMargin, logoBlockEndY);
-        
-        const subtextHeight = (7 / pdf.internal.scaleFactor) * 1.15; // Guna saiz fon 7
-        let headerBlockEndsY = logoBlockEndY + subtextHeight; 
-
-        let titleY = (currentY + headerBlockEndsY) / 2;
-        
-        pdf.setFont(globalStyles.font, 'bold');
-        pdf.setFontSize(12); 
-        pdf.text("BORANG DAFTAR RISIKO", 105, titleY, { align: 'center' });
-
-        currentY = headerBlockEndsY + 2; // 2mm gap (lebih rapat)
-
-
-        
-        // Fungsi helper kecil untuk tukar 1 -> Pertama, 2 -> Kedua
-        const formatSeparuhTahun = (val) => {
-          if (val === 1 || val === '1') return 'Pertama';
-          if (val === 2 || val === '2') return 'Kedua';
-          return val; // Kembalikan nilai asal jika bukan 1 atau 2
-        };
-
-        // --- 2. JADUAL HEADER (Jadual Pertama) ---
-        const headerTableBody = [
-          [
-            { content: 'NAMA SYARIKAT', styles: labelStyles }, 
-            { content: risk.subsidiary, colSpan: 3 }, 
-          ],
-          [
-            { content: 'TAHUN', styles: labelStyles }, 
-            risk.tahun_daftar,
-            { content: 'SEPARUH TAHUN', styles: labelStyles },
-            { content: `Separuh ${formatSeparuhTahun(risk.separuh_tahun_daftar)}` }
-          ],
-          [
-            { content: 'BAHAGIAN / UNIT', styles: labelStyles },
-            risk.bahagian_unit, 
-            { content: 'NO. RUJUKAN', styles: labelStyles },
-            risk.no_rujukan
-          ],
-          [
-            { content: 'KATEGORI RISIKO', styles: labelStyles },
-            { content: risk.kategori_risiko, colSpan: 3 } 
-          ]
-        ];
-        
-        autoTable(pdf, {
-          startY: currentY, // Akan mula selepas tajuk
-          body: headerTableBody,
-          theme: 'grid', 
-          styles: globalStyles,
-          columnStyles: {
-            0: { cellWidth: '15%' }, // Label (paling kecil)
-            1: { cellWidth: '40%' }, // Data (paling besar)
-            2: { cellWidth: '15%' }, // Label (paling kecil)
-            3: { cellWidth: '30%' }  // Data (besar)
-          }
-        });
-        
-        currentY = pdf.lastAutoTable.finalY + 8; // Jarak ditambah
-
-
-        // --- 3. JADUAL SEKSYEN 1, 2, 3 (Jadual Berasingan) ---
-        
+        // =================================================================
+        // ⭐️ Bahagian 1, 2, 3 hanya akan dipaparkan
+        // jika BUKAN mod 'Log Sahaja'
+        // =================================================================
         if (!range.isLogOnly) {
+        
+          // --- Bahagian 1 (Logo + Tajuk) ---
+          const leftMargin = 10;
 
+          const originalImgWidth = 1811;
+          const originalImgHeight = 579;
+          const imgAspectRatio = originalImgWidth / originalImgHeight; 
+      
+          const logoWidth = 35; // Lebar logo dalam mm
+          const logoHeight = logoWidth / imgAspectRatio; 
+      
+          pdf.addImage(Ukhmlogo, 'PNG', leftMargin, currentY, logoWidth, logoHeight); 
+      
+          let logoBlockEndY = currentY + logoHeight + 3; // 3mm di bawah logo
+          
+          pdf.setFont(globalStyles.font, 'bold');
+          pdf.setFontSize(7); // Saiz fon subteks
+          pdf.text("Pematuhan & Pengurusan Risiko", leftMargin, logoBlockEndY);
+          
+          const subtextHeight = (7 / pdf.internal.scaleFactor) * 1.15; // Guna saiz fon 7
+          let headerBlockEndsY = logoBlockEndY + subtextHeight; 
+
+          let titleY = (currentY + headerBlockEndsY) / 2;
+          
+          pdf.setFont(globalStyles.font, 'bold');
+          pdf.setFontSize(12); 
+          pdf.text("BORANG DAFTAR RISIKO", 105, titleY, { align: 'center' });
+
+          currentY = headerBlockEndsY + 2; // 2mm gap (lebih rapat)
+          
+          // Fungsi helper kecil untuk tukar 1 -> Pertama, 2 -> Kedua
+          const formatSeparuhTahun = (val) => {
+            if (val === 1 || val === '1') return 'Pertama';
+            if (val === 2 || val === '2') return 'Kedua';
+            return val; // Kembalikan nilai asal jika bukan 1 atau 2
+          };
+
+          // --- 2. JADUAL HEADER (Jadual Pertama) ---
+          const headerTableBody = [
+            [
+              { content: 'NAMA SYARIKAT', styles: labelStyles }, 
+              { content: risk.subsidiary, colSpan: 3 }, 
+            ],
+            [
+              { content: 'TAHUN', styles: labelStyles }, 
+              risk.tahun_daftar,
+              { content: 'SEPARUH TAHUN', styles: labelStyles },
+              { content: `Separuh ${formatSeparuhTahun(risk.separuh_tahun_daftar)}` }
+            ],
+            [
+              { content: 'BAHAGIAN / UNIT', styles: labelStyles },
+              risk.bahagian_unit, 
+              { content: 'NO. RUJUKAN', styles: labelStyles },
+              risk.no_rujukan
+            ],
+            [
+              { content: 'KATEGORI RISIKO', styles: labelStyles },
+              { content: risk.kategori_risiko, colSpan: 3 } 
+            ]
+          ];
+          
+          autoTable(pdf, {
+            startY: currentY, // Akan mula selepas tajuk
+            body: headerTableBody,
+            theme: 'grid', 
+            styles: globalStyles,
+            columnStyles: {
+              0: { cellWidth: '15%' }, 1: { cellWidth: '40%' }, 
+              2: { cellWidth: '15%' }, 3: { cellWidth: '30%' } 
+            }
+          });
+          
+          currentY = pdf.lastAutoTable.finalY + 8; // Jarak ditambah
+
+          // --- 3. JADUAL SEKSYEN 1, 2, 3 (Jadual Berasingan) ---
+          
           // JADUAL SEKSYEN 1
           autoTable(pdf, {
               startY: currentY,
@@ -309,13 +308,9 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               }
           });
           
-
           // --- Guna pdf.text() untuk Pindaan Penilaian (JIKA ADA DATA SAHAJA) ---
           currentY = pdf.lastAutoTable.finalY; // Mula rapat
-
-          // =================================================================
-          // ⭐️ DIKEMASKINI DI SINI: Hanya tunjuk jika data wujud
-          // =================================================================
+          
           if (risk.pindaan_penilaian) { 
             currentY += 3; // Jarak sikit dari jadual atas
             
@@ -342,7 +337,6 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           }
 
           currentY += 5; // Jarak ke jadual Seterusnya
-
 
           // JADUAL SEKSYEN 3
           const pelanTindakanBody = risk.pelan_tindakan.length > 0
@@ -374,28 +368,35 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               }
           });
           currentY = pdf.lastAutoTable.finalY;
+          currentY += 8; // Tambah jarak sebelum Seksyen 4
         
-        } else {
-           pdf.setFont(globalStyles.font, 'bold');
-           pdf.setFontSize(12);
-           pdf.text("LAPORAN LOG SAHAJA", 105, currentY, { align: 'center' });
-           currentY += 10;
-        }
+        } // <-- Tutup blok if (!range.isLogOnly)
 
+        
         // --- 4. JADUAL SEKSYEN 4 (LOG) ---
-        autoTable(pdf, {
-          startY: currentY + 8, // Jarak ditambah
-          head: [[{ content: '4. PEMANTAUAN', styles: headerStyles }]],
-          theme: 'grid',
-          styles: globalStyles,
-        });
-        currentY = pdf.lastAutoTable.finalY;
-
+        
+        // =================================================================
+        // ⭐️ DIKEMASKINI: Log ditapis dahulu
+        // =================================================================
         const filteredLogs = filterLogsByRange(risk.logs, range);
 
+        // =================================================================
+        // ⭐️ DIKEMASKINI: Keseluruhan Seksyen 4 hanya dipaparkan jika
+        // filteredLogs.length > 0
+        // =================================================================
         if (filteredLogs.length > 0) {
+        
+          // Lukis tajuk "4. PEMANTAUAN"
+          autoTable(pdf, {
+            startY: currentY, 
+            head: [[{ content: '4. PEMANTAUAN', styles: headerStyles }]],
+            theme: 'grid',
+            styles: globalStyles,
+          });
+          currentY = pdf.lastAutoTable.finalY;
+
+          // Mula gelung untuk setiap log
           filteredLogs.forEach((log, index) => {
-            
             
             if (currentY + logBlockHeight > pageBreakLimit) { 
               pdf.addPage();
@@ -508,9 +509,6 @@ export default function LogPreviewModal({ risk, range, onClose }) {
             
             // --- Pindaan Keberkesanan diletak di Bawah Jadual Skor (JIKA ADA DATA SAHAJA) ---
             
-            // =================================================================
-            // ⭐️ DIKEMASKINI DI SINI: Hanya tunjuk jika data wujud
-            // =================================================================
             if (log.pindaan_keberkesanan) {
               currentY += 3; // Jarak sikit dari jadual atas
               
@@ -539,14 +537,11 @@ export default function LogPreviewModal({ risk, range, onClose }) {
             currentY += 5; // Jarak antara log
           });
 
-        } else {
-          autoTable(pdf, {
-            startY: currentY,
-            body: [['Tiada log pemantauan ditemui untuk julat yang dipilih.']],
-            theme: 'grid',
-            styles: globalStyles,
-          });
-        }
+        // =================================================================
+        // ⭐️ BLOK 'ELSE' TELAH DIPADAMKAN
+        // =================================================================
+        
+        } 
         
         // --- 5. JANA PREVIEW URL ---
         const pdfBlobUrl = pdf.output('bloburl');
