@@ -8,6 +8,54 @@ import './LogPreviewModal.css';
 // =================================================================
 import Ukhmlogo from '../../assets/images/Light Background/UKMH_light.png';
 
+// =================================================================
+// ⭐️ LOGIK RISK MATRIX & WARNA
+// =================================================================
+const riskMatrix = {
+  1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+  2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
+  3: {1:{label:"R"}, 2:{label:"S"}, 3:{label:"S"}, 4:{label:"T"}, 5:{label:"T"}},
+  4: {1:{label:"S"}, 2:{label:"S"}, 3:{label:"T"}, 4:{label:"T"}, 5:{label:"ST"}},
+  5: {1:{label:"S"}, 2:{label:"T"}, 3:{label:"T"}, 4:{label:"ST"}, 5:{label:"ST"}},
+};
+
+const getRiskLevel = (k, i) => {
+  const kk = parseInt(k);
+  const ii = parseInt(i);
+  if (kk >= 1 && kk <= 5 && ii >= 1 && ii <= 5) {
+    return riskMatrix[kk][ii].label;
+  }
+  return null; 
+};
+
+// Fungsi helper baru untuk gaya warna
+const getRiskStyles = (level) => {
+  const styles = { halign: 'center' };
+  switch (level) {
+    case 'ST':
+      styles.fillColor = '#FF0000'; // Merah
+      styles.textColor = '#FFFFFF'; // Teks Putih
+      break;
+    case 'T':
+      styles.fillColor = '#FFA500'; // Oren
+      styles.textColor = '#000000'; // Teks Hitam
+      break;
+    case 'S':
+      styles.fillColor = '#FFFF00'; // Kuning
+      styles.textColor = '#000000'; // Teks Hitam
+      break;
+    case 'R':
+      styles.fillColor = '#92D050'; // Hijau
+      styles.textColor = '#000000'; // Teks Hitam
+      break;
+    default:
+      // Tiada warna jika tiada tahap (cth: 'Ya', null)
+      break;
+  }
+  return styles;
+};
+// =================================================================
+
 
 // =================================================================
 // KOMPONEN: LogPreviewModal (Pratonton Log)
@@ -97,11 +145,35 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         };
 
         // =================================================================
-        // PERUBAHAN DI SINI: Bahagian 1 (Logo + Tajuk) diubah suai
+        // ⭐️ Fungsi 'formatList'
         // =================================================================
+        const formatList = (items) => {
+          if (!Array.isArray(items)) {
+            return items || '-'; // Kembalikan teks asal jika bukan array
+          }
+          
+          // Tapis item yang kosong
+          const validItems = items.filter(item => item && String(item).trim() !== '');
+          
+          if (validItems.length === 0) {
+            return '-';
+          }
+          
+          // Jika hanya 1 item, jangan tunjuk nombor
+          if (validItems.length === 1) {
+            return validItems[0];
+          }
+          
+          // Jika lebih 1 item, guna senarai bernombor
+          // 'join' dengan '\n' (newline) untuk jarak
+          return validItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
+        };
+        // =================================================================
+
+
+        // --- Bahagian 1 (Logo + Tajuk) ---
         const leftMargin = 10;
 
-        // 1. LOGO & SUBTITLE (Left Side)
         const originalImgWidth = 1811;
         const originalImgHeight = 579;
         const imgAspectRatio = originalImgWidth / originalImgHeight; 
@@ -120,22 +192,22 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         const subtextHeight = (7 / pdf.internal.scaleFactor) * 1.15; // Guna saiz fon 7
         let headerBlockEndsY = logoBlockEndY + subtextHeight; 
 
-        // 2. TAJUK (Center/Right Side)
         let titleY = (currentY + headerBlockEndsY) / 2;
         
         pdf.setFont(globalStyles.font, 'bold');
         pdf.setFontSize(12); 
         pdf.text("BORANG DAFTAR RISIKO", 105, titleY, { align: 'center' });
 
-        // 3. KEMASKINI currentY
-        // =================================================================
-        // PERUBAHAN 1: Jarak dikurangkan lagi (dari 5 ke 3)
-        // =================================================================
-        currentY = headerBlockEndsY + 3; // 3mm gap (dirapatkan)
-        // =================================================================
-        // AKHIR PERUBAHAN HEADER
-        // =================================================================
+        currentY = headerBlockEndsY + 2; // 2mm gap (lebih rapat)
 
+
+        
+        // Fungsi helper kecil untuk tukar 1 -> Pertama, 2 -> Kedua
+        const formatSeparuhTahun = (val) => {
+          if (val === 1 || val === '1') return 'Pertama';
+          if (val === 2 || val === '2') return 'Kedua';
+          return val; // Kembalikan nilai asal jika bukan 1 atau 2
+        };
 
         // --- 2. JADUAL HEADER (Jadual Pertama) ---
         const headerTableBody = [
@@ -146,8 +218,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           [
             { content: 'TAHUN', styles: labelStyles }, 
             risk.tahun_daftar,
-            { content: 'SEPARUH TAHUN DIDAFTARKAN', styles: labelStyles },
-            { content: `${risk.tahun_daftar} - Separuh ${risk.separuh_tahun_daftar}` }
+            { content: 'SEPARUH TAHUN', styles: labelStyles },
+            { content: `Separuh ${formatSeparuhTahun(risk.separuh_tahun_daftar)}` }
           ],
           [
             { content: 'BAHAGIAN / UNIT', styles: labelStyles },
@@ -167,10 +239,10 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           theme: 'grid', 
           styles: globalStyles,
           columnStyles: {
-            0: { cellWidth: '25%' }, 
-            1: { cellWidth: '30%' },
-            2: { cellWidth: '25%' },
-            3: { cellWidth: '20%' } 
+            0: { cellWidth: '15%' }, // Label (paling kecil)
+            1: { cellWidth: '40%' }, // Data (paling besar)
+            2: { cellWidth: '15%' }, // Label (paling kecil)
+            3: { cellWidth: '30%' }  // Data (besar)
           }
         });
         
@@ -180,6 +252,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         // --- 3. JADUAL SEKSYEN 1, 2, 3 (Jadual Berasingan) ---
         
         if (!range.isLogOnly) {
+
           // JADUAL SEKSYEN 1
           autoTable(pdf, {
               startY: currentY,
@@ -188,7 +261,11 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                   [{ content: 'RISIKO', styles: subHeaderStyles }, 
                    { content: 'PUNCA', styles: subHeaderStyles }, 
                    { content: 'KESAN', styles: subHeaderStyles }],
-                  [risk.title, risk.punca, risk.kesan]
+                  [
+                   risk.title, 
+                   formatList(risk.punca), 
+                   formatList(risk.kesan)
+                  ]
               ],
               theme: 'grid',
               styles: globalStyles, 
@@ -217,7 +294,10 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: risk.kebarangkalian_lian }, 
                     { content: risk.skor_impak_risiko, styles: { halign: 'center' } },
                     { content: risk.impak }, 
-                    { content: risk.skor_risiko, styles: { halign: 'center' } },
+                    { 
+                      content: risk.skor_risiko, 
+                      styles: getRiskStyles(risk.skor_risiko) 
+                    },
                     { content: risk.status_risiko, styles: { halign: 'center' } }
                   ]
               ],
@@ -230,45 +310,49 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           });
           
 
-          // --- Guna pdf.text() untuk Pindaan Penilaian ---
+          // --- Guna pdf.text() untuk Pindaan Penilaian (JIKA ADA DATA SAHAJA) ---
           currentY = pdf.lastAutoTable.finalY; // Mula rapat
-          currentY += 3; // Jarak sikit dari jadual atas
-          
-          // =================================================================
-          // PERUBAHAN 2: Teks "PINDAAN" diselarikan. 
-          // Margin jadual (10mm) + cellPadding (1.5mm) + (anggaran 1mm)
-          // =================================================================
-          const pindaanLeftMargin = 12.5; // (asal 11.5)
-          const labelText = 'PINDAAN PENILAIAN:';
-          
-          pdf.setFont(globalStyles.font, 'bold');
-          pdf.setFontSize(globalStyles.fontSize);
-          pdf.text(labelText, pindaanLeftMargin, currentY); // Guna pindaanLeftMargin
 
-          pdf.setFont(globalStyles.font, 'normal');
-          const labelWidth = pdf.getStringUnitWidth(labelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
-          const dataXPosition = pindaanLeftMargin + labelWidth + 2; // 2mm jarak
-          
-          const dataText = risk.pindaan_penilaian || '-';
-          
-          const maxWidth = pdf.internal.pageSize.width - dataXPosition - pindaanLeftMargin;
-          const splitData = pdf.splitTextToSize(dataText, maxWidth);
-          
-          pdf.text(splitData, dataXPosition, currentY);
-          
-          const textHeight = splitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
-          currentY += textHeight;
+          // =================================================================
+          // ⭐️ DIKEMASKINI DI SINI: Hanya tunjuk jika data wujud
+          // =================================================================
+          if (risk.pindaan_penilaian) { 
+            currentY += 3; // Jarak sikit dari jadual atas
+            
+            const pindaanLeftMargin = 11.6; 
+            const labelText = 'PINDAAN PENILAIAN:';
+            
+            pdf.setFont(globalStyles.font, 'bold');
+            pdf.setFontSize(globalStyles.fontSize);
+            pdf.text(labelText, pindaanLeftMargin, currentY); 
 
-          currentY += 5; // Jarak ke jadual Seterusnya (3mm + 5mm = 8mm, jarak asal)
+            pdf.setFont(globalStyles.font, 'normal');
+            const labelWidth = pdf.getStringUnitWidth(labelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
+            const dataXPosition = pindaanLeftMargin + labelWidth + 2; // 2mm jarak
+            
+            const dataText = risk.pindaan_penilaian; // Tiada '|| -'
+            
+            const maxWidth = pdf.internal.pageSize.width - dataXPosition - pindaanLeftMargin;
+            const splitData = pdf.splitTextToSize(dataText, maxWidth);
+            
+            pdf.text(splitData, dataXPosition, currentY);
+            
+            const textHeight = splitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
+            currentY += textHeight;
+          }
+
+          currentY += 5; // Jarak ke jadual Seterusnya
 
 
           // JADUAL SEKSYEN 3
-          const pelanTindakanBody = risk.pelan_tindakan.map((pelan, idx) => [
-            `${idx + 1}. ${pelan.tindakan}`,
-            pelan.jenis_kawalan,
-            pelan.tempoh_jangkaan,
-            pelan.kakitangan_bertanggungjawab
-          ]);
+          const pelanTindakanBody = risk.pelan_tindakan.length > 0
+            ? risk.pelan_tindakan.map((pelan, idx) => [
+                formatList(pelan.tindakan), 
+                pelan.jenis_kawalan,
+                pelan.tempoh_jangkaan,
+                formatList(pelan.kakitangan_bertanggungjawab)
+              ])
+            : [['-', '-', '-', '-']]; 
           
           autoTable(pdf, {
               startY: currentY, // Guna currentY yang baru
@@ -281,7 +365,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                   { content: 'KAKITANGAN BERTANGGUNGJAWAB', styles: subHeaderStyles }
                 ]
               ],
-              body: pelanTindakanBody.length > 0 ? pelanTindakanBody : [['-', '-', '-', '-']],
+              body: pelanTindakanBody, // Guna body yang diproses
               theme: 'grid',
               styles: globalStyles,
               columnStyles: {
@@ -320,6 +404,11 @@ export default function LogPreviewModal({ risk, range, onClose }) {
 
             const k = log.keberkesanan_tindakan;
             
+            // Kira tahap risiko & warna untuk log
+            const logRiskLevel = getRiskLevel(k.skor_kebarangkalian, k.skor_impak);
+            const logRiskStyles = getRiskStyles(logRiskLevel);
+
+
             // Bahagian 1: Tajuk Log (4.1, 4.2, ...)
             autoTable(pdf, {
               startY: currentY,
@@ -357,11 +446,13 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                 { content: 'KEKERAPAN', styles: subHeaderStyles },
                 { content: 'KAKITANGAN BERTANGGUNGJAWAB', styles: subHeaderStyles }
               ]],
+              
               body: [[ 
-                log.pelan_tindakan, 
+                formatList(log.pelan_tindakan), 
                 log.kekerapan, 
-                log.kakitangan_bertanggungjawab 
+                formatList(log.kakitangan_bertanggungjawab) 
               ]],
+              
               theme: 'grid',
               styles: globalStyles,
               columnStyles: {
@@ -397,7 +488,10 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     k.kebarangkalian,
                     { content: k.skor_impak, styles: { halign: 'center' } },
                     k.impak,
-                    { content: k.skor_risiko, styles: { halign: 'center' } },
+                    { 
+                      content: logRiskLevel, 
+                      styles: logRiskStyles
+                    },
                     { content: k.keberkesanan, styles: { halign: 'center' } },
                     k.status_pemantauan
                 ]],
@@ -412,32 +506,35 @@ export default function LogPreviewModal({ risk, range, onClose }) {
             currentY = pdf.lastAutoTable.finalY;
             
             
-            // --- Pindaan Keberkesanan diletak di Bawah Jadual Skor ---
-            currentY += 3; // Jarak sikit dari jadual atas
+            // --- Pindaan Keberkesanan diletak di Bawah Jadual Skor (JIKA ADA DATA SAHAJA) ---
             
             // =================================================================
-            // PERUBAHAN 2 (Bahagian 2): Teks "PINDAAN" diselarikan. 
+            // ⭐️ DIKEMASKINI DI SINI: Hanya tunjuk jika data wujud
             // =================================================================
-            const pindaanLeftMargin = 12.5; // (asal 11.5)
-            const logLabelText = 'PINDAAN KEBERKESANAN:';
+            if (log.pindaan_keberkesanan) {
+              currentY += 3; // Jarak sikit dari jadual atas
+              
+              const pindaanLeftMargin = 11.6; 
+              const logLabelText = 'PINDAAN KEBERKESANAN:';
 
-            pdf.setFont(globalStyles.font, 'bold');
-            pdf.setFontSize(globalStyles.fontSize);
-            pdf.text(logLabelText, pindaanLeftMargin, currentY); // Guna pindaanLeftMargin
+              pdf.setFont(globalStyles.font, 'bold');
+              pdf.setFontSize(globalStyles.fontSize);
+              pdf.text(logLabelText, pindaanLeftMargin, currentY); 
 
-            pdf.setFont(globalStyles.font, 'normal');
-            
-            const logLabelWidth = pdf.getStringUnitWidth(logLabelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
-            const logDataXPosition = pindaanLeftMargin + logLabelWidth + 2; // 2mm jarak
+              pdf.setFont(globalStyles.font, 'normal');
+              
+              const logLabelWidth = pdf.getStringUnitWidth(logLabelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
+              const logDataXPosition = pindaanLeftMargin + logLabelWidth + 2; // 2mm jarak
 
-            const logDataText = log.pindaan_keberkesanan || '-';
-            const logMaxWidth = pdf.internal.pageSize.width - logDataXPosition - pindaanLeftMargin;
-            const logSplitData = pdf.splitTextToSize(logDataText, logMaxWidth);
+              const logDataText = log.pindaan_keberkesanan; // Tiada '|| -'
+              const logMaxWidth = pdf.internal.pageSize.width - logDataXPosition - pindaanLeftMargin;
+              const logSplitData = pdf.splitTextToSize(logDataText, logMaxWidth);
 
-            pdf.text(logSplitData, logDataXPosition, currentY);
+              pdf.text(logSplitData, logDataXPosition, currentY);
 
-            const logTextHeight = logSplitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
-            currentY += logTextHeight;
+              const logTextHeight = logSplitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
+              currentY += logTextHeight;
+            }
 
             currentY += 5; // Jarak antara log
           });

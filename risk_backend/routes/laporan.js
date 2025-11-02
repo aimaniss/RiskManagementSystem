@@ -167,19 +167,34 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
           rr.risiko_id,
           json_agg(
             json_build_object(
-              -- 'tindakan' datang dari 'pelan_tindakan_rawatan'
-              'tindakan', ptr.pelan_tindakan, 
+              
+              -- 'tindakan' kini adalah ARRAY (dari pelan_tindakan_rawatan)
+              'tindakan', (
+                -- =================================================================
+                -- ⭐️ PERUBAHAN DI SINI: Membuang "ORDER BY"
+                -- =================================================================
+                SELECT ARRAY_AGG(ptr.pelan_tindakan) 
+                FROM pelan_tindakan_rawatan ptr
+                WHERE ptr.rawatan_id = rr.rawatan_id
+              ), 
+              
               'jenis_kawalan', rr.jenis_kawalan,
-              'tempoh_jangkaan', rr.tempoh_siap, -- 'tempoh_siap' dari rawatan.js
+              'tempoh_jangkaan', rr.tempoh_siap,
+              
+              -- 'kakitangan_bertanggungjawab' kini adalah ARRAY (dari kakitangan_rawatan)
               'kakitangan_bertanggungjawab', (
-                SELECT STRING_AGG(krr.nama_kakitangan, ', ') 
+                -- =================================================================
+                -- ⭐️ PERUBAHAN DI SINI: Membuang "ORDER BY"
+                -- =================================================================
+                SELECT ARRAY_AGG(krr.nama_kakitangan) 
                 FROM kakitangan_rawatan krr
                 WHERE krr.rawatan_id = rr.rawatan_id 
               )
             )
+            ORDER BY rr.rawatan_id ASC 
           ) AS pelan_tindakan
+          
         FROM rawatan_risiko rr
-        LEFT JOIN pelan_tindakan_rawatan ptr ON ptr.rawatan_id = rr.rawatan_id
         WHERE rr.risiko_id = $1
         GROUP BY rr.risiko_id
       ),
@@ -200,23 +215,29 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                 END || lp.tahun_pemantauan,
               'kelulusan_log', lp.no_bil_kelulusan,
               'pindaan_keberkesanan', lp.justifikasi_pindaan_pemantauan,
+              
               'pelan_tindakan', (
-                SELECT STRING_AGG(ptp.butiran_aktiviti, E'\n') 
+                -- =================================================================
+                -- ⭐️ DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
+                -- =================================================================
+                SELECT ARRAY_AGG(ptp.butiran_aktiviti) 
                 FROM PelanTindakanPemantauan ptp 
                 WHERE ptp.log_id = lp.log_id
               ),
+              
               'kekerapan', lp.kekerapan_pemantauan,
+              
               'kakitangan_bertanggungjawab', (
-                SELECT STRING_AGG(kp.butiran_kakitangan, E'\n') 
+                -- =================================================================
+                -- ⭐️ DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
+                -- =================================================================
+                SELECT ARRAY_AGG(kp.butiran_kakitangan) 
                 FROM KakitanganPemantauan kp 
                 WHERE kp.log_id = lp.log_id
               ),
+              
               'keberkesanan_tindakan', json_build_object(
                 'skor_kebarangkalian', lp.skor_kebarangkalian_selepas,
-                
-                -- =================================================================
-                -- ⭐️ PERUBAHAN 1: Huraian 'kebarangkalian' (berdasarkan gambar)
-                -- =================================================================
                 'kebarangkalian', CASE lp.skor_kebarangkalian_selepas
                   WHEN 1 THEN 'Hampir Tiada Kemungkinan'
                   WHEN 2 THEN 'Kemungkinan Rendah'
@@ -225,12 +246,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                   WHEN 5 THEN 'Hampir Pasti'
                   ELSE 'N/A'
                 END,
-                
                 'skor_impak', lp.skor_impak_selepas,
-                
-                -- =================================================================
-                -- ⭐️ PERUBAHAN 2: Huraian 'impak' (berdasarkan gambar)
-                -- =================================================================
                 'impak', CASE lp.skor_impak_selepas
                   WHEN 1 THEN 'Tidak Ketara'
                   WHEN 2 THEN 'Boleh Diukur'
@@ -239,7 +255,6 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                   WHEN 5 THEN 'Sangat Besar'
                   ELSE 'N/A'
                 END,
-                
                 'skor_risiko', lp.skor_risiko_pemantauan,
                 'keberkesanan', lp.keberkesanan,
                 'status_pemantauan', lp.status_pemantauan
@@ -248,7 +263,6 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
           ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC
           ) AS logs
         FROM LogPemantauan lp
-        -- ⭐️ PERUBAHAN 3: JOIN ke Skala... dibuang
         WHERE lp.risiko_id = $1
         GROUP BY lp.risiko_id
       )
@@ -267,9 +281,6 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan,
         
         r.skor_kebarangkalian AS skor_kebarangkalian_n,
-        -- =================================================================
-        -- ⭐️ PERUBAHAN 4: Huraian 'kebarangkalian' ASAL (berdasarkan gambar)
-        -- =================================================================
         CASE r.skor_kebarangkalian
           WHEN 1 THEN 'Hampir Tiada Kemungkinan'
           WHEN 2 THEN 'Kemungkinan Rendah'
@@ -280,9 +291,6 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
         END AS kebarangkalian_lian, 
         
         r.skor_impak AS skor_impak_risiko,
-        -- =================================================================
-        -- ⭐️ PERUBAHAN 5: Huraian 'impak' ASAL (berdasarkan gambar)
-        -- =================================================================
         CASE r.skor_impak
           WHEN 1 THEN 'Tidak Ketara'
           WHEN 2 THEN 'Boleh Diukur'
@@ -302,8 +310,6 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
       FROM Risiko r
       
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
-      -- ⭐️ PERUBAHAN 6: JOIN ke Skala... dibuang
-      
       LEFT JOIN RawatanAsal ra ON ra.risiko_id = r.risiko_id
       LEFT JOIN LogsTerkumpul lt ON lt.risiko_id = r.risiko_id
       
