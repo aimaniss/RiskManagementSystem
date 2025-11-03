@@ -1,40 +1,54 @@
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 /* --- Pembolehubah Global (Global Variables) --- */
 :root {
+  /* DIUBAH: Selaraskan dengan palet warna rujukan */
   --theme-color: #0074c8;
+  --theme-color-dark: #005fa3;
   --color-success: #16a34a;
   --color-danger: #dc2626;
   --color-warning: #f97316;
   --color-info: #3b82f6;
-  --color-grey: #64748b;
-  --border-color: #e2e8f0;
-  --bg-light: #ffffff; /* Latar belakang putih */
-  --bg-light-grey: #f1f5f9;
+  --color-grey: #6b7280; /* DIUBAH: Selaraskan kelabu */
+  --border-color: #e5e7eb; /* DIUBAH: Selaraskan sempadan */
+  --bg-light: #ffffff;
+  --bg-page: #f9fafb; /* DIUBAH: Latar halaman */
+  --text-dark: #1f2937; /* DIUBAH: Teks gelap */
+  --text-medium: #374151; /* DIUBAH: Teks sederhana */
 }
 
 /* --- Gaya Borang Umum (Skop) --- */
 .pindaan-risiko-wrapper .form-input,
 .pindaan-risiko-wrapper .form-select,
 .pindaan-risiko-wrapper .form-textarea {
-  padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  padding: 8px 12px; /* DIUBAH: Selaraskan padding */
+  border: 1px solid #d1d5db; /* DIUBAH: Selaraskan sempadan */
+  border-radius: 6px; /* DIUBAH: Selaraskan radius */
   font-size: 14px;
   box-sizing: border-box;
   width: 100%;
+  font-family: "Inter", sans-serif; /* DIUBAH: Selaraskan fon */
 }
-/* ... (Gaya borang lain kekal sama) ... */
+.pindaan-risiko-wrapper .form-input:focus,
+.pindaan-risiko-wrapper .form-select:focus,
+.pindaan-risiko-wrapper .form-textarea:focus {
+  border-color: var(--theme-color);
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+  outline: none;
+}
 .pindaan-risiko-wrapper .form-textarea {
   min-height: 80px;
-  font-family: inherit;
 }
 .pindaan-risiko-wrapper .form-group {
   margin-bottom: 16px;
 }
 .pindaan-risiko-wrapper .form-group label {
   display: block;
-  font-weight: 500;
+  font-weight: 600; /* DIUBAH: Lebih tebal */
   margin-bottom: 6px;
-  font-size: 14px;
+  font-size: 13px; /* DIUBAH: Kecilkan sikit */
+  color: var(--text-medium); /* DIUBAH: Selaraskan warna */
 }
 .pindaan-risiko-wrapper .form-list-item {
   display: flex;
@@ -48,9 +62,9 @@
 
 /* --- Gaya Butang (Skop) --- */
 .pindaan-risiko-wrapper .btn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
+  border: 1px solid transparent; /* DIUBAH: Tambah sempadan telus */
+  border-radius: 6px; /* DIUBAH: Selaraskan radius */
+  padding: 8px 14px; /* DIUBAH: Selaraskan padding */
   cursor: pointer;
   font-weight: 600;
   display: inline-flex;
@@ -58,9 +72,8 @@
   justify-content: center;
   gap: 8px;
   font-size: 14px;
-  transition: opacity 0.2s;
+  transition: all 0.2s; /* DIUBAH: Selaraskan transisi */
 }
-/* ... (Gaya butang lain kekal sama) ... */
 .pindaan-risiko-wrapper .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -68,23 +81,34 @@
 .pindaan-risiko-wrapper .btn-primary {
   background: var(--theme-color);
   color: white;
+  border-color: var(--theme-color);
+}
+.pindaan-risiko-wrapper .btn-primary:hover {
+  background: var(--theme-color-dark);
+  border-color: var(--theme-color-dark);
 }
 .pindaan-risiko-wrapper .btn-success {
   background: var(--color-success);
   color: white;
+  border-color: var(--color-success);
 }
 .pindaan-risiko-wrapper .btn-danger {
   background: var(--color-danger);
   color: white;
+  border-color: var(--color-danger);
 }
 .pindaan-risiko-wrapper .btn-info {
   background: var(--color-info);
   color: white;
+  border-color: var(--color-info);
 }
 .pindaan-risiko-wrapper .btn-default {
-  background: white;
-  color: #333;
-  border: 1px solid #ccc;
+  background: var(--bg-light);
+  color: var(--text-medium);
+  border-color: #d1d5db; /* DIUBAH: Selaraskan */
+}
+.pindaan-risiko-wrapper .btn-default:hover {
+  background: #f9fafb;
 }
 .pindaan-risiko-wrapper .btn-sm {
   padding: 6px 12px;
@@ -106,33 +130,34 @@
 
 /* --- Gaya Halaman Utama (Skop) --- */
 .pindaan-risiko-wrapper .pindaan-container {
-  padding: 20px;
-  font-family: "Roboto", sans-serif;
-  background: var(--bg-light);
+  padding: 12px 24px; /* DIUBAH: Selaraskan */
+  max-width: 1440px; /* DIUBAH: Selaraskan */
+  margin: 0 auto; /* DIUBAH: Selaraskan */
+  font-family: "Inter", sans-serif; /* DIUBAH: Fon */
+  background: var(--bg-page); /* DIUBAH: Selaraskan */
   min-height: 100vh;
 }
 .pindaan-risiko-wrapper .pindaan-header {
-  font-size: 24px;
+  font-size: 1.5rem; /* DIUBAH: Selaraskan (24px) */
   font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 16px;
+  color: var(--theme-color-dark); /* DIUBAH: Selaraskan */
+  margin-bottom: 20px; /* DIUBAH: Selaraskan */
 }
 .pindaan-risiko-wrapper .pindaan-box {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-light);
+  border-radius: 8px; /* DIUBAH: Selaraskan */
   padding: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 20px; /* DIUBAH: Selaraskan */
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* DIUBAH: Selaraskan */
 }
 
 /* --- Gaya Kad Statistik (BARU) --- */
 .pindaan-risiko-wrapper .stats-card-container {
   display: grid;
-  /* Papar 3 lajur pada skrin besar, 1 lajur pada skrin kecil */
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px; /* DIUBAH: Selaraskan */
 }
 
 .pindaan-risiko-wrapper .stats-card {
@@ -140,10 +165,10 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  border-radius: 12px;
-  background: #fff;
+  border-radius: 8px; /* DIUBAH: Selaraskan */
+  background: var(--bg-light);
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* DIUBAH: Selaraskan */
 }
 
 .pindaan-risiko-wrapper .stats-card-icon-bg {
@@ -161,7 +186,8 @@
 }
 
 .pindaan-risiko-wrapper .stats-card-title {
-  font-size: 14px;
+  font-size: 13px; /* DIUBAH: Kecilkan */
+  font-weight: 600; /* DIUBAH: Tebalkan */
   color: var(--color-grey);
   margin-bottom: 4px;
   white-space: nowrap;
@@ -170,7 +196,7 @@
 .pindaan-risiko-wrapper .stats-card-value {
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-dark); /* DIUBAH: Selaraskan */
 }
 
 /* Warna Latar Ikon */
@@ -206,16 +232,21 @@
 
 /* === GAYA PENAPIS DIKEMASKINI === */
 .pindaan-risiko-wrapper .filters-wrapper {
-  display: flex; /* Letak bersebelahan */
-  flex-wrap: wrap; /* Benarkan 'wrap' jika skrin kecil */
-  gap: 16px; /* Jarak antara penapis */
-  margin-bottom: 16px;
+  /* DIUBAH: Ini kini adalah 'filter-card' */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 .pindaan-risiko-wrapper .filters-wrapper .form-select {
-  flex: 1; /* Kongsi ruang sama rata */
-  min-width: 220px; /* Lebar minimum sebelum 'wrap' */
-  width: auto;
-  padding: 8px 12px; /* Dikecilkan */
+  flex: 1;
+  width: 100%; /* DIUBAH: Biar grid tentukan saiz */
+  padding: 8px 12px;
   font-size: 14px;
 }
 
@@ -227,32 +258,37 @@
 /* === HEADER JADUAL DIKEMASKINI === */
 .pindaan-risiko-wrapper .pindaan-table-header th,
 .pindaan-risiko-wrapper .pindaan-table th {
-  background: var(--theme-color); /* Latar belakang biru */
-  color: white; /* Teks putih */
-  border-bottom: 1px solid var(--theme-color);
-  padding: 12px;
+  background: #f0f9ff; /* DIUBAH: Padanan rujukan */
+  color: var(--theme-color-dark); /* DIUBAH: Padanan rujukan */
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 15px; /* DIUBAH: Selaraskan */
   text-align: left;
   font-weight: 600;
-  font-size: 14px;
-  text-transform: none; /* Tidak lagi 'uppercase' */
-  letter-spacing: 0; /* Jarak huruf normal */
+  font-size: 12px; /* DIUBAH: Padanan rujukan */
+  text-transform: uppercase; /* DIUBAH: Padanan rujukan */
+  letter-spacing: 0.05em; /* DIUBAH: Padanan rujukan */
 }
 
-/* ... (Gaya jadual lain kekal sama) ... */
 .pindaan-risiko-wrapper .pindaan-td,
 .pindaan-risiko-wrapper .pindaan-table td {
-  padding: 12px;
+  padding: 12px 15px; /* DIUBAH: Selaraskan */
   border-bottom: 1px solid var(--border-color);
-  font-size: 14px;
-  color: #475569;
+  font-size: 13px; /* DIUBAH: Selaraskan */
+  color: var(--text-dark); /* DIUBAH: Teks lebih gelap */
+}
+.pindaan-risiko-wrapper .pindaan-table tbody tr:hover {
+  background-color: #f0f9ff; /* DIUBAH: Padanan rujukan */
 }
 .pindaan-risiko-wrapper .table-message {
   text-align: center;
-  padding: 24px;
+  padding: 40px; /* DIUBAH: Padanan rujukan */
+  font-style: italic; /* DIUBAH: Padanan rujukan */
   color: var(--color-grey);
+  font-size: 14px; /* DIUBAH: Padanan rujukan */
 }
 .pindaan-risiko-wrapper .table-message-error {
   color: var(--color-danger);
+  font-style: normal;
 }
 .pindaan-risiko-wrapper .pindaan-table tbody tr:last-child td {
   border-bottom: none;

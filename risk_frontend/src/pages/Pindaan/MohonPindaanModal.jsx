@@ -15,64 +15,92 @@ const getRiskDetails = (likelihood, impact) => {
         5: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
     };
 
-    // --- Logik untuk mengendalikan nilai null/undefined ---
-    const k_val = parseInt(likelihood); // Akan jadi NaN jika likelihood = null
-    const i_val = parseInt(impact); // Akan jadi NaN jika impact = null
-
-    // Hadkan nilai antara 1 dan 5. NaN akan kekal NaN.
+    const k_val = parseInt(likelihood);
+    const i_val = parseInt(impact);
     const k = Math.min(Math.max(k_val, 1), 5);
     const i = Math.min(Math.max(i_val, 1), 5);
 
-    // Semak jika k_val atau i_val ASAL adalah NaN. Jika ya, guna default.
     let details = (!isNaN(k_val) && !isNaN(i_val) && riskMatrix[k] && riskMatrix[k][i])
-                     ? riskMatrix[k][i]
-                     : { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
+                        ? riskMatrix[k][i]
+                        : { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
 
-    const score = (!isNaN(k_val) && !isNaN(i_val))
-                     ? k_val * i_val
-                     : '-';
-    // --- TAMAT PERUBAHAN ---
-
-    // Kembalikan details tanpa score (kerana tidak digunakan untuk paparan)
-    return { ...details }; // Hanya kembalikan label, shortLabel, color, textColor
+    return { ...details };
 };
 
-// --- Helper function to format action plans (array) ---
+// --- ⭐️ DIKEMASKINI: Logik untuk 'Pelan Tindakan' (numbered list) ---
 const formatPelanTindakan = (pelanArray) => {
-  if (!Array.isArray(pelanArray) || pelanArray.length === 0) {
+  // Tapis keluar item yang null atau kosong
+  const validItems = Array.isArray(pelanArray) ? pelanArray.filter(item => item) : [];
+
+  if (validItems.length === 0) {
     return '-';
   }
+
+  // Jika hanya 1 item, papar sebagai teks biasa
+  if (validItems.length === 1) {
+    return validItems[0];
+  }
+
+  // Jika lebih 1 item, papar sebagai senarai bernombor <ol>
   return (
-    <ul className="modal-list-compact">
-      {pelanArray.map((item, index) => item ? <li key={index}>{item}</li> : null)}
-    </ul>
+    <ol className="pilih-risiko-list-compact">
+      {validItems.map((item, index) => <li key={index}>{item}</li>)}
+    </ol>
   );
 };
 
 
 function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
     const { subsidiariList = [], userRole, userSubsidiariId, onRiskSelect, customClass } = props;
+    
+    // State Penapis
     const [search, setSearch] = useState("");
     const [subsidiariFilter, setSubsidiariFilter] = useState("");
     const [tahunFilter, setTahunFilter] = useState("");
     const [separuhFilter, setSeparuhFilter] = useState("");
-    const [uniqueYears, setUniqueYears] = useState([]);
+    
+    // State untuk senarai tahun yang unik bagi setiap tab
+    const [uniqueYearsPengenalpastian, setUniqueYearsPengenalpastian] = useState([]);
+    const [uniqueYearsPemantauan, setUniqueYearsPemantauan] = useState([]);
+    
+    // State Tab
+    const [activeTab, setActiveTab] = useState('pengenalpastian');
 
+    // 1. Populate data untuk dropdown apabila modal dibuka
     useEffect(() => {
         if (isOpen) {
+            // Reset semua penapis
             setSearch("");
             setSubsidiariFilter("");
             setTahunFilter("");
             setSeparuhFilter("");
-            const years = [...new Set(risks.map(r => r.tahun))].sort((a, b) => b - a);
-            setUniqueYears(years);
+            setActiveTab('pengenalpastian'); 
+            
+            // Populate tahun untuk tab "Pengenalpastian"
+            const yearsP = [...new Set(risks.map(r => r.tahun).filter(Boolean))]
+                            .sort((a, b) => b - a);
+            setUniqueYearsPengenalpastian(yearsP);
+            
+            // Populate tahun untuk tab "Pemantauan"
+            const yearsM = [...new Set(risks.map(r => r.tahun_pemantauan).filter(Boolean))]
+                            .sort((a, b) => b - a);
+            setUniqueYearsPemantauan(yearsM);
+
+            // Tetapkan penapis subsidiari jika pengguna bukan Admin
             if (["Staff", "Ketua Subsidiari"].includes(userRole) && userSubsidiariId) {
                 setSubsidiariFilter(String(userSubsidiariId));
             }
         }
-    }, [isOpen, risks, userRole, userSubsidiariId]);
+    }, [isOpen, risks, userRole, userSubsidiariId]); 
 
-    const filteredRisks = useMemo(() => {
+    // 2. Reset penapis kontekstual apabila tab ditukar
+    useEffect(() => {
+        setTahunFilter("");
+        setSeparuhFilter("");
+    }, [activeTab]);
+
+    // 3. Penapisan Global (Search & Subsidiari)
+    const baseFilteredRisks = useMemo(() => {
         let tempRisks = [...risks];
 
         if (search.trim()) {
@@ -85,36 +113,85 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
         if (subsidiariFilter) {
             tempRisks = tempRisks.filter(r => String(r.subsidiari_id) === String(subsidiariFilter));
         }
-        if (tahunFilter) {
-            tempRisks = tempRisks.filter(r => String(r.tahun) === String(tahunFilter));
-        }
-        if (separuhFilter) {
-            tempRisks = tempRisks.filter(r =>
-                (separuhFilter === 'Pertama' && r.separuh_tahun === 1) ||
-                (separuhFilter === 'Kedua' && r.separuh_tahun === 2)
+        return tempRisks;
+    }, [risks, search, subsidiariFilter]);
+
+    // 4. Penapisan Kontekstual (mengikut Tab)
+    const risksToDisplay = useMemo(() => {
+        let tempRisks = [];
+
+        if (activeTab === 'pengenalpastian') {
+            tempRisks = baseFilteredRisks; 
+
+            if (tahunFilter) {
+                tempRisks = tempRisks.filter(r => String(r.tahun) === String(tahunFilter));
+            }
+            if (separuhFilter) {
+                tempRisks = tempRisks.filter(r =>
+                    (separuhFilter === 'Pertama' && r.separuh_tahun === 1) ||
+                    (separuhFilter === 'Kedua' && r.separuh_tahun === 2)
+                );
+            }
+        } 
+        else if (activeTab === 'pemantauan') {
+            tempRisks = baseFilteredRisks.filter(risk => 
+                risk.tahun_pemantauan !== null && 
+                risk.tahun_pemantauan !== undefined
             );
+
+            if (tahunFilter) {
+                tempRisks = tempRisks.filter(r => String(r.tahun_pemantauan) === String(tahunFilter));
+            }
+            if (separuhFilter) {
+                tempRisks = tempRisks.filter(r =>
+                    (separuhFilter === 'Pertama' && r.separuh_tahun_pemantauan === 1) ||
+                    (separuhFilter === 'Kedua' && r.separuh_tahun_pemantauan === 2)
+                );
+            }
         }
         return tempRisks;
-    }, [risks, search, subsidiariFilter, tahunFilter, separuhFilter]);
+    }, [baseFilteredRisks, activeTab, tahunFilter, separuhFilter]);
 
-    // {/* --- PERUBAHAN: Bilangan kolum bertambah dari 10 ke 12 --- */}
-    const columnCount = 12;
+    // Tentukan senarai tahun yang betul untuk dropdown
+    const uniqueYearsForCurrentTab = activeTab === 'pengenalpastian' 
+        ? uniqueYearsPengenalpastian 
+        : uniqueYearsPemantauan;
+
+    const columnCount = activeTab === 'pengenalpastian' ? 7 : 9;
 
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className={`modal-dialog ${customClass || 'modal-pilih-risiko'}`}>
+        <div className="pilih-risiko-overlay">
+            <div className={`pilih-risiko-dialog ${customClass || 'modal-pilih-risiko'}`}>
 
-                <div className="modal-header">
-                    <h3 className="modal-title">Pilih Risiko Untuk Dipinda</h3>
-                    <button onClick={onClose} className="modal-close-x" aria-label="Tutup modal">
+                <div className="pilih-risiko-header">
+                    <h3 className="pilih-risiko-title">Pilih Risiko Untuk Dipinda</h3>
+                    <button onClick={onClose} className="pilih-risiko-close-x" aria-label="Tutup modal">
                         <X size={24} />
                     </button>
                 </div>
 
-                <div className="modal-content">
-                    <div className="modal-filter-container">
+                <div className="pilih-risiko-content">
+                    
+                    {/* 1. Butang Tab */}
+                    <div className="pilih-risiko-tab-container">
+                        <button
+                            className={`pilih-risiko-tab-button ${activeTab === 'pengenalpastian' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('pengenalpastian')}
+                        >
+                            Pengenalpastian Risiko
+                        </button>
+                        <button
+                            className={`pilih-risiko-tab-button ${activeTab === 'pemantauan' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('pemantauan')}
+                        >
+                            Pemantauan Terkini
+                        </button>
+                    </div>
+                    
+                    {/* 2. Filter (Dipindahkan ke bawah Tab) */}
+                    <div className="pilih-risiko-filter-container">
                         <input
                             type="text" placeholder="Cari No Rujukan / Risiko..." value={search} onChange={e => setSearch(e.target.value)} className="form-input" aria-label="Cari risiko"
                         />
@@ -123,55 +200,95 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             <option value="">-- Semua Subsidiari --</option>
                             {subsidiariList.map(s => ( <option key={s.subsidiari_id} value={s.subsidiari_id}> {s.nama_subsidiari} </option> ))}
                         </select>
+                        
                         <select
                             value={tahunFilter} onChange={e => setTahunFilter(e.target.value)} className="form-select" aria-label="Tapis mengikut tahun">
-                            <option value="">-- Tahun Asal --</option>
-                            {uniqueYears.map(t=>(<option key={t} value={t}>{t}</option>))}
+                            <option value="">-- Semua Tahun --</option>
+                            {uniqueYearsForCurrentTab.map(t=>(<option key={t} value={t}>{t}</option>))}
                         </select>
+                        
                         <select
                             value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)} className="form-select" aria-label="Tapis mengikut separuh tahun">
-                            <option value="">-- Separuh Asal --</option>
+                            <option value="">-- Semua Separuh Tahun --</option>
                             <option value="Pertama">Pertama</option>
                             <option value="Kedua">Kedua</option>
                         </select>
                     </div>
 
-                    <div className="modal-table-wrapper">
-                        <table className="modal-table">
+                    {/* 3. Jadual */}
+                    <div className="pilih-risiko-table-wrapper">
+                        <table className="pilih-risiko-table">
+
+                            {/* ⭐️ DIKEMASKINI: <colgroup> dengan saiz yang diubahsuai */}
+                            {activeTab === 'pengenalpastian' ? (
+                                <colgroup>
+                                    <col style={{ width: "40px" }} />  {/* Bil */}
+                                    <col style={{ width: "150px" }} /> {/* No Ruj - Lebar */}
+                                    <col style={{ width: "100px" }} /> {/* Tahun - Kecil */}
+                                    <col style={{ width: "auto" }} />   {/* Risiko */}
+                                    <col style={{ width: "60px" }} />  {/* Skor - Kecil */}
+                                    <col style={{ width: "250px" }} /> {/* Justifikasi - Lebar */}
+                                    <col style={{ width: "70px" }} />  {/* Tindakan */}
+                                </colgroup>
+                            ) : (
+                                <colgroup>
+                                    <col style={{ width: "40px" }} />   {/* Bil */}
+                                    <col style={{ width: "150px" }} /> {/* No Ruj - Lebar */}
+                                    <col style={{ width: "100px" }} /> {/* Tahun - Kecil */}
+                                    <col style={{ width: "auto" }} />   {/* Risiko */}
+                                    <col style={{ width: "200px" }} /> {/* Pelan */}
+                                    <col style={{ width: "60px" }} />  {/* Skor - Kecil */}
+                                    <col style={{ width: "250px" }} /> {/* Justifikasi - Lebar */}
+                                    <col style={{ width: "120px" }} /> {/* Status - Lebar */}
+                                    <col style={{ width: "70px" }} />  {/* Tindakan */}
+                                </colgroup>
+                            )}
+
                             <thead>
                                 <tr>
-                                    <th className="modal-th" rowSpan="2">Bil</th>
-                                    {/* --- PERUBAHAN: colSpan 4 -> 5 --- */}
-                                    <th className="modal-th" colSpan="5">Pengenalpastian Risiko</th>
-                                    {/* --- PERUBAHAN: colSpan 4 -> 5 --- */}
-                                    <th className="modal-th" colSpan="5">Pemantauan Terkini</th>
-                                    <th className="modal-th" rowSpan="2">Tindakan</th>
+                                    <th className="pilih-risiko-th" rowSpan="2">Bil</th>
+                                    {activeTab === 'pengenalpastian' ? (
+                                        <th className="pilih-risiko-th" colSpan="5">Pengenalpastian Risiko</th>
+                                    ) : (
+                                        <th className="pilih-risiko-th" colSpan="7">Pemantauan Terkini</th>
+                                    )}
+                                    <th className="pilih-risiko-th" rowSpan="2">Tindakan</th>
                                 </tr>
                                 <tr>
-                                    <th className="modal-th">No Rujukan</th>
-                                    <th className="modal-th th-wrap">Tahun & Separuh</th>
-                                    <th className="modal-th">Risiko</th>
-                                    <th className="modal-th th-wrap">Skor Asal</th>
-                                    {/* --- PERUBAHAN: Kolum baru ditambah --- */}
-                                    <th className="modal-th th-wrap">Justifikasi Penilaian</th>
-                                    <th className="modal-th th-wrap">Tahun & Separuh</th>
-                                    <th className="modal-th th-wrap">Pelan Tindakan</th>
-                                    <th className="modal-th th-wrap">Skor Semasa</th>
-                                    {/* --- PERUBAHAN: Kolum baru ditambah --- */}
-                                    <th className="modal-th th-wrap">Justifikasi Keberkesanan</th>
-                                    <th className="modal-th th-wrap">Status</th>
+                                    {activeTab === 'pengenalpastian' ? (
+                                        <>
+                                            <th className="pilih-risiko-th">No Rujukan</th>
+                                            <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
+                                            <th className="pilih-risiko-th">Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Skor Asal</th>
+                                            <th className="pilih-risiko-th th-wrap">Justifikasi Penilaian</th>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <th className="pilih-risiko-th">No Rujukan</th>
+                                            <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
+                                            <th className="pilih-risiko-th">Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Pelan Tindakan</th>
+                                            <th className="pilih-risiko-th th-wrap">Skor Semasa</th>
+                                            <th className="pilih-risiko-th th-wrap">Justifikasi Keberkesanan</th>
+                                            <th className="pilih-risiko-th th-wrap">Status</th>
+                                        </>
+                                    )}
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {risks.length === 0 ? (
-                                    <tr><td colSpan={columnCount} className="modal-td modal-message">Tiada data risiko tersedia.</td></tr>
-                                ) : filteredRisks.length === 0 ? (
-                                    <tr><td colSpan={columnCount} className="modal-td modal-message">Tiada risiko dijumpai dengan kriteria ini.</td></tr>
+                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada data risiko tersedia.</td></tr>
+                                ) : baseFilteredRisks.length === 0 ? ( 
+                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada risiko dijumpai dengan kriteria carian/subsidiari ini.</td></tr>
+                                ) : risksToDisplay.length === 0 ? (
+                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">
+                                        Tiada padanan dijumpai untuk penapis Tahun/Separuh Tahun ini.
+                                    </td></tr>
                                 ) : (
-                                    filteredRisks.map((risk, index) => {
+                                    risksToDisplay.map((risk, index) => {
 
-                                        // --- Guna nama prop yang betul dari API backend ---
                                         const skorAsal = getRiskDetails(
                                             risk.skor_kebarangkalian_sebelum,
                                             risk.skor_impak_sebelum
@@ -180,56 +297,72 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                             risk.skor_kebarangkalian_terkini,
                                             risk.skor_impak_terkini
                                         );
-                                        // --- TAMAT PERUBAHAN ---
-
+                                        
                                         return (
                                             <tr key={risk.id || risk.risiko_id}>
-                                                <td className="modal-td td-center">{index + 1}</td>
-                                                <td className="modal-td">{risk.no_rujukan}</td>
-                                                <td className="modal-td">
-                                                    {risk.tahun} {risk.separuh_tahun === 1 ? 'Pertama' : 'Kedua'}
-                                                </td>
-                                                <td className="modal-td td-risiko" title={risk.risiko}>
-                                                    {risk.risiko}
-                                                </td>
-                                                <td
-                                                    className="modal-td modal-td-skor"
-                                                    style={{ backgroundColor: skorAsal.color, color: skorAsal.textColor }}
-                                                    title={`Skor Asal: ${skorAsal.label}`} // Tooltip kini hanya label
-                                                >
-                                                    {skorAsal.shortLabel} {/* Hanya papar shortLabel */}
-                                                </td>
+                                                <td className="pilih-risiko-td td-center">{index + 1}</td>
                                                 
-                                                {/* --- PERUBAHAN: Data Justifikasi Asal dipaparkan --- */}
-                                                <td className="modal-td td-justifikasi" title={risk.justifikasi_pindaan_penilaian}>
-                                                    {risk.justifikasi_pindaan_penilaian || '-'}
-                                                </td>
+                                                {activeTab === 'pengenalpastian' ? (
+                                                    <>
+                                                        <td className="pilih-risiko-td">{risk.no_rujukan}</td>
+                                                        {/* ⭐️ DIKEMASKINI: Data Tahun/Separuh ditindan */}
+                                                        <td className="pilih-risiko-td td-stacked">
+                                                            <div>{risk.tahun}</div>
+                                                            <div>{risk.separuh_tahun === 1 ? 'Pertama' : 'Kedua'}</div>
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-risiko" title={risk.risiko}>
+                                                            {risk.risiko}
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-center">
+                                                            <span
+                                                                className="td-skor"
+                                                                style={{ backgroundColor: skorAsal.color, color: skorAsal.textColor }}
+                                                                title={`Skor Asal: ${skorAsal.label}`}
+                                                            >
+                                                                {skorAsal.shortLabel}
+                                                            </span>
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-justifikasi" title={risk.justifikasi_pindaan_penilaian}>
+                                                            {risk.justifikasi_pindaan_penilaian || '-'}
+                                                        </td>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <td className="pilih-risiko-td">{risk.no_rujukan}</td>
+                                                        {/* ⭐️ DIKEMASKINI: Data Tahun/Separuh ditindan */}
+                                                        <td className="pilih-risiko-td td-stacked">
+                                                            <div>{risk.tahun_pemantauan}</div>
+                                                            <div>{risk.separuh_tahun_pemantauan === 1 ? 'Pertama' : 'Kedua'}</div>
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-risiko" title={risk.risiko}>
+                                                            {risk.risiko}
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-pelan">
+                                                            {formatPelanTindakan(risk.pelan_tindakan_terkini)}
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-center">
+                                                            <span
+                                                                className="td-skor"
+                                                                style={{ 
+                                                                    backgroundColor: skorSemasa.color, 
+                                                                    color: skorSemasa.textColor 
+                                                                }}
+                                                                title={`Skor Semasa: ${skorSemasa.label}`}
+                                                            >
+                                                                {skorSemasa.shortLabel}
+                                                            </span>
+                                                        </td>
+                                                        <td className="pilih-risiko-td td-justifikasi" title={risk.keberkesanan}>
+                                                            {risk.keberkesanan || '-'}
+                                                        </td>
+                                                        <td className="pilih-risiko-td">
+                                                            {risk.status_pemantauan_terkini || '-'}
+                                                        </td>
+                                                    </>
+                                                )}
 
-                                                <td className="modal-td">
-                                                    {risk.tahun_pemantauan || '-'} {risk.separuh_tahun_pemantauan === 1 ? 'Pertama' : (risk.separuh_tahun_pemantauan === 2 ? 'Kedua' : '')}
-                                                </td>
-                                                <td className="modal-td td-pelan">
-                                                    {formatPelanTindakan(risk.pelan_tindakan_terkini)}
-                                                </td>
-                                                <td
-                                                    className="modal-td modal-td-skor"
-                                                    style={{ backgroundColor: skorSemasa.color, color: skorSemasa.textColor }}
-                                                    title={`Skor Semasa: ${skorSemasa.label}`} // Tooltip kini hanya label
-                                                >
-                                                    {skorSemasa.shortLabel} {/* Hanya papar shortLabel */}
-                                                </td>
-
-                                                {/* --- PERUBAHAN: Data Justifikasi Semasa dipaparkan --- */}
-                                                {/* Anda mungkin perlu guna risk.catatan jika itu yang dimaksudkan */}
-                                                <td className="modal-td td-justifikasi" title={risk.keberkesanan}>
-                                                    {risk.keberkesanan || '-'}
-                                                </td>
-
-                                                <td className="modal-td">
-                                                    {risk.status_pemantauan_terkini || '-'}
-                                                </td>
-                                                <td className="modal-td td-center">
-                                                    <button onClick={() => onRiskSelect(risk)} className="btn btn-sm btn-success" aria-label={`Pilih risiko ${risk.no_rujukan}`}>
+                                                <td className="pilih-risiko-td td-center">
+                                                    <button onClick={() => onRiskSelect(risk)} className="pilih-risiko-btn pilih-risiko-btn-sm pilih-risiko-btn-success" aria-label={`Pilih risiko ${risk.no_rujukan}`}>
                                                         <CheckSquare size={14} /> Pilih
                                                     </button>
                                                 </td>
@@ -241,10 +374,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                         </table>
                     </div>
                 </div>
-
-                <div className="modal-footer">
-                    <button type="button" onClick={onClose} className="btn btn-default">Tutup</button>
-                </div>
+                
             </div>
         </div>
     );
