@@ -33,12 +33,11 @@ function PindaanRisiko() {
   const [amendmentsError, setAmendmentsError] = useState(null);
   const [subsidiariList, setSubsidiariList] = useState([]);
   
-  // State untuk penapis
-  // ▼▼▼ PERUBAHAN 1: Tukar nilai 'default' agar sepadan dengan DB ▼▼▼
+  
   const [filterStatus, setFilterStatus] = useState("Menunggu Kelulusan"); 
   const [filterSubsidiari, setFilterSubsidiari] = useState("Semua"); 
 
-  // State untuk Kad Statistik (Admin)
+ 
   const [amendmentStats, setAmendmentStats] = useState({
     menunggu: 0,
     diluluskan: 0,
@@ -69,12 +68,10 @@ function PindaanRisiko() {
           3: "Ketua Subsidiari",
           4: "Staff",
         };
-        // Gunakan nama_peranan seperti dalam backend anda
+      
         role = decoded.nama_peranan || roleMapping[decoded.peranan_id] || "Unauthorized";
-        userId = decoded.id || decoded.pengguna_id; // Pastikan selaras dengan token
+        userId = decoded.id || decoded.pengguna_id; 
         userSubsId = decoded.subsidiari_id;
-
-        // Peranan yang dibenarkan mungkin hanya Admin? Sila sesuaikan.
         if (role !== "Admin" && role !== "Executive" && role !== "Ketua Subsidiari" && role !== "Staff") {
           role = "Unauthorized";
         }
@@ -91,19 +88,18 @@ function PindaanRisiko() {
     setCurrentUserSubsidiariId(userSubsId);
 
     if (role === "Admin" || role === "Executive") {
-      // ▼▼▼ PERUBAHAN 2: Tukar nilai 'default' agar sepadan dengan DB ▼▼▼
+      fetchAllRisks();
       fetchAmendments(role, userId, "Menunggu Kelulusan", filterSubsidiari);
       fetchSubsidiariList();
       if (role === "Admin") {
         fetchAmendmentStats(); 
       }
     } else {
-      // Jika Staff/Ketua Subsidiari, mereka hanya mohon, tiada senarai kelulusan
       setLoadingAmendments(false);
     }
-  }, []); // Hanya run sekali semasa load
+  }, []); 
 
-  // --- API Functions ---
+
   const fetchSubsidiariList = async () => {
     try {
       const res = await api.get("/subsidiari");
@@ -116,7 +112,7 @@ function PindaanRisiko() {
   const fetchAmendmentStats = async () => {
     setLoadingStats(true);
     try {
-      const res = await api.get("/pindaan/stats"); // Andaikan endpoint ini wujud
+      const res = await api.get("/pindaan/stats"); 
       setAmendmentStats({
         menunggu: res.data.menunggu || 0,
         diluluskan: res.data.diluluskan || 0,
@@ -133,7 +129,6 @@ function PindaanRisiko() {
     setLoadingRisks(true);
     setAllRisks([]);
     try {
-      // Memanggil endpoint yang betul
       const response = await api.get("/pindaan/risks-for-amendment"); 
 
       const risksWithDetails = response.data.map((r) => ({
@@ -158,7 +153,7 @@ function PindaanRisiko() {
     setAmendmentsError(null);
     try {
       const params = {};
-      // Pastikan nilai status selaras dengan API ('Menunggu Kelulusan', 'Diluluskan', 'Ditolak')
+      
       if (statusFilter !== "Semua") params.status = statusFilter;
       
       if (role === "Admin" && subsidiariFilter !== "Semua") {
@@ -289,7 +284,7 @@ function PindaanRisiko() {
     <div className="pindaan-container pindaan-risiko-wrapper">
       <h1 className="pindaan-header">Pindaan</h1>
 
-      {/* --- KAD STATISTIK (HANYA ADMIN) --- */}
+      
       {currentUserRole === 'Admin' && (
         <StatsCardSection stats={amendmentStats} loading={loadingStats} />
       )}
@@ -488,7 +483,7 @@ function AmendmentsListSection({
             onChange={(e) => setFilterSubsidiari(e.target.value)}
             className="form-select"
           >
-            <option value="Semua">Semua Subsidiari</option>
+            <option value="Semua">Semua Syarikat</option>
             {subsidiariList.map((subs) => (
               <option key={subs.subsidiari_id} value={subs.subsidiari_id}>
                 {subs.nama_subsidiari}
@@ -504,7 +499,7 @@ function AmendmentsListSection({
             <th>Bil.</th>
             <th>No Rujukan</th>
             <th>Risiko</th> 
-            <th>Subsidiari</th> 
+            <th>Syarikat</th> 
             {userRole === "Admin" && <th>Pemohon</th>}
             <th>Tarikh Mohon</th>
             <th>Status</th>

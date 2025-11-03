@@ -197,7 +197,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                         />
                         <select
                             value={subsidiariFilter} onChange={e => setSubsidiariFilter(e.target.value)} disabled={["Staff","Ketua Subsidiari"].includes(userRole)} className="form-select" aria-label="Tapis mengikut subsidiari">
-                            <option value="">-- Semua Subsidiari --</option>
+                            <option value="">-- Semua Syarikat --</option>
                             {subsidiariList.map(s => ( <option key={s.subsidiari_id} value={s.subsidiari_id}> {s.nama_subsidiari} </option> ))}
                         </select>
                         
@@ -260,8 +260,8 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                             <th className="pilih-risiko-th">No Rujukan</th>
                                             <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
                                             <th className="pilih-risiko-th">Risiko</th>
-                                            <th className="pilih-risiko-th th-wrap">Skor Asal</th>
-                                            <th className="pilih-risiko-th th-wrap">Justifikasi Penilaian</th>
+                                            <th className="pilih-risiko-th th-wrap">Skor Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Pindaan Penilaian</th>
                                         </>
                                     ) : (
                                         <>
@@ -269,8 +269,8 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                             <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
                                             <th className="pilih-risiko-th">Risiko</th>
                                             <th className="pilih-risiko-th th-wrap">Pelan Tindakan</th>
-                                            <th className="pilih-risiko-th th-wrap">Skor Semasa</th>
-                                            <th className="pilih-risiko-th th-wrap">Justifikasi Keberkesanan</th>
+                                            <th className="pilih-risiko-th th-wrap">Skor Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Pindaan Keberkesanan</th>
                                             <th className="pilih-risiko-th th-wrap">Status</th>
                                         </>
                                     )}
@@ -281,10 +281,10 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                 {risks.length === 0 ? (
                                     <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada data risiko tersedia.</td></tr>
                                 ) : baseFilteredRisks.length === 0 ? ( 
-                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada risiko dijumpai dengan kriteria carian/subsidiari ini.</td></tr>
+                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada risiko dijumpai dengan kriteria carianini.</td></tr>
                                 ) : risksToDisplay.length === 0 ? (
                                     <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">
-                                        Tiada padanan dijumpai untuk penapis Tahun/Separuh Tahun ini.
+                                        Tiada padanan dijumpai untuk penapis Tahun &Separuh Tahun ini.
                                     </td></tr>
                                 ) : (
                                     risksToDisplay.map((risk, index) => {
@@ -305,7 +305,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                 {activeTab === 'pengenalpastian' ? (
                                                     <>
                                                         <td className="pilih-risiko-td">{risk.no_rujukan}</td>
-                                                        {/* ⭐️ DIKEMASKINI: Data Tahun/Separuh ditindan */}
+                                                       
                                                         <td className="pilih-risiko-td td-stacked">
                                                             <div>{risk.tahun}</div>
                                                             <div>{risk.separuh_tahun === 1 ? 'Pertama' : 'Kedua'}</div>
@@ -329,7 +329,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                 ) : (
                                                     <>
                                                         <td className="pilih-risiko-td">{risk.no_rujukan}</td>
-                                                        {/* ⭐️ DIKEMASKINI: Data Tahun/Separuh ditindan */}
+                                                       
                                                         <td className="pilih-risiko-td td-stacked">
                                                             <div>{risk.tahun_pemantauan}</div>
                                                             <div>{risk.separuh_tahun_pemantauan === 1 ? 'Pertama' : 'Kedua'}</div>

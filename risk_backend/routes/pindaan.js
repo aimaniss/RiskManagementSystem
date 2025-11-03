@@ -320,7 +320,45 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * -------------------------------------------------------
+ * 📊 GET: Dapatkan Statistik Permohonan Pindaan
+ * ENDPOINT: /api/pindaan/stats
+ * -------------------------------------------------------
+ */
+router.get("/stats", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                COUNT(*) FILTER (WHERE status_permohonan = 'Menunggu Kelulusan') AS menunggu,
+                COUNT(*) FILTER (WHERE status_permohonan = 'Diluluskan') AS diluluskan,
+                COUNT(*) FILTER (WHERE status_permohonan = 'Ditolak') AS ditolak
+            FROM
+                permohonan_pindaan;
+        `;
+        
+        const { rows } = await pool.query(query);
+        
+        // Rows[0] akan mengandungi: { menunggu: '5', diluluskan: '10', ditolak: '2' }
+        // Nilai dikembalikan sebagai string, jadi kita tukarkannya kepada integer
+        const stats = {
+            menunggu: parseInt(rows[0].menunggu) || 0,
+            diluluskan: parseInt(rows[0].diluluskan) || 0,
+            ditolak: parseInt(rows[0].ditolak) || 0,
+        };
 
+        // Respons JSON akan sepadan dengan yang dicari oleh frontend: 
+        // { menunggu: 5, diluluskan: 10, ditolak: 2 }
+        res.json(stats); 
+
+    } catch (err) {
+        console.error("❌ Ralat GET /pindaan/stats:", err);
+        // Sila pastikan anda mengembalikan format ralat yang boleh ditangani jika perlu
+        res.status(500).json({ message: "Gagal memuatkan statistik pindaan." });
+    }
+});
+
+// ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 
 /**

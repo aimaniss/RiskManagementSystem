@@ -1,13 +1,30 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { X } from "lucide-react";
-import './PindaanFormModal.css'; // Pastikan CSS dimuatkan
+import './PindaanFormModal.css'; 
 
 // Import modal pengesahan
 import PengesahanPindaanModal from './PengesahanPindaanModal';
 
-// --- (MULA) FUNGSI HELPER & KOMPONEN SKOR ---
+// --- (MULA) DESKRIPSI SKOR MENGIKUT JADUAL YANG DIBERIKAN (JADUAL 2 & 3) ---
+const likelihoodDescriptions = {
+    5: "Hampir Pasti",
+    4: "Kemungkinan Tinggi",
+    3: "Berpeluang Untuk Berlaku",
+    2: "Kemungkinan Rendah",
+    1: "Hampir Tiada Kemungkinan",
+};
 
-// Matriks Risiko LENGKAP
+const impactDescriptions = {
+    5: "Sangat Besar",
+    4: "Besar",
+    3: "Ketara",
+    2: "Boleh Diukur",
+    1: "Tidak Ketara",
+};
+// --- (TAMAT) DESKRIPSI SKOR MENGIKUT JADUAL YANG DIBERIKAN ---
+
+
+// Matriks Risiko LENGKAP (Kekalkan yang sedia ada)
 const riskMatrixDetails = {
     1: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
     2: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
@@ -29,17 +46,24 @@ const getRiskStylingFromMatrix = (likelihood, impact, matrix) => {
     return { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
 };
 
-// Komponen Dropdown Skor
-const SkorSelect = ({ name, value, onChange }) => (
-    <select name={name} value={value || ''} onChange={onChange} className="form-select">
-        <option value="">-- Pilih --</option>
-        <option value="1">1 - Sangat Rendah</option>
-        <option value="2">2 - Rendah</option>
-        <option value="3">3 - Sederhana</option>
-        <option value="4">4 - Tinggi</option>
-        <option value="5">5 - Sangat Tinggi</option>
-    </select>
-);
+// Komponen Dropdown Skor (TELAH DIUBAHSUAI)
+const SkorSelect = ({ name, value, onChange, type }) => {
+    // Pilih set deskripsi berdasarkan prop 'type'
+    const descriptions = type === 'likelihood' ? likelihoodDescriptions : impactDescriptions;
+    const scores = [5, 4, 3, 2, 1]; // Urutan dari 5 ke 1
+
+    return (
+        <select name={name} value={value || ''} onChange={onChange} className="form-select">
+            <option value="">-- Pilih --</option>
+            {scores.map(score => (
+                <option key={score} value={score}>
+                    {score} - {descriptions[score]} {/* Papar skor dan deskripsi yang betul */}
+                </option>
+            ))}
+        </select>
+    );
+};
+
 
 // Komponen Blok Skor
 const RiskScoringBlock = ({
@@ -68,6 +92,13 @@ const RiskScoringBlock = ({
 
     const separuhTahunText = monitoringSeparuh === 1 ? 'Pertama' : monitoringSeparuh === 2 ? 'Kedua' : '-';
     const displayOriginalScoreNumber = (scoreValue) => scoreValue ?? '-';
+    
+    // Fungsi bantuan untuk mendapatkan deskripsi asal
+    const getOriginalDescription = (score, type) => {
+        if (!score) return "-";
+        const descMap = type === 'likelihood' ? likelihoodDescriptions : impactDescriptions;
+        return descMap[score] || 'Skor Tidak Sah';
+    };
 
     return (
         <div className="pemantauan-box">
@@ -91,29 +122,29 @@ const RiskScoringBlock = ({
 
             {/* Skor Asal Rujukan */}
             <div className="pemantauan-flex-row pemantauan-original-score-row">
-                 <span className="pemantauan-original-title">Skor Asal Rujukan:</span>
+                 <span className="pemantauan-original-title">Data Skor Rujukan:</span>
                  <div className="pemantauan-flex-item pemantauan-original-item">
                       <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
-                      <span className="pemantauan-data-inline pemantauan-textonly">
-                           {displayOriginalScoreNumber(originalLikelihood)}
+                      <span className="pemantauan-data-inline pemantauan-textonly" title={getOriginalDescription(originalLikelihood, 'likelihood')}>
+                            {displayOriginalScoreNumber(originalLikelihood)}
                       </span>
                  </div>
                  <div className="pemantauan-flex-item pemantauan-original-item">
                       <label className="pemantauan-label-inline">Skor Impak:</label>
-                      <span className="pemantauan-data-inline pemantauan-textonly">
-                           {displayOriginalScoreNumber(originalImpact)}
+                      <span className="pemantauan-data-inline pemantauan-textonly" title={getOriginalDescription(originalImpact, 'impact')}>
+                            {displayOriginalScoreNumber(originalImpact)}
                       </span>
                  </div>
                  <div className="pemantauan-flex-item pemantauan-original-item">
                       <label className="pemantauan-label-inline">Skor Risiko:</label>
                       <span
-                           className="pemantauan-data-inline risk-score-badge"
-                           style={{
-                               backgroundColor: originalScoreDetails.color,
-                               color: originalScoreDetails.textColor,
-                           }}
+                            className="pemantauan-data-inline risk-score-badge"
+                            style={{
+                                backgroundColor: originalScoreDetails.color,
+                                color: originalScoreDetails.textColor,
+                            }}
                       >
-                           {originalScoreDetails.shortLabel}
+                            {originalScoreDetails.shortLabel}
                       </span>
                  </div>
             </div>
@@ -122,21 +153,33 @@ const RiskScoringBlock = ({
             <div className="pemantauan-flex-row">
                 <div className="pemantauan-flex-item">
                     <label className="pemantauan-label-inline">Skor Kebarangkalian (Baru):</label>
-                    <SkorSelect name={likelihoodName} value={likelihoodValue} onChange={onScoreChange} />
+                    {/* Pindaan: Tambah type="likelihood" */}
+                    <SkorSelect 
+                        name={likelihoodName} 
+                        value={likelihoodValue} 
+                        onChange={onScoreChange} 
+                        type="likelihood" 
+                    />
                 </div>
                 <div className="pemantauan-flex-item">
                     <label className="pemantauan-label-inline">Skor Impak (Baru):</label>
-                    <SkorSelect name={impactName} value={impactValue} onChange={onScoreChange} />
+                    {/* Pindaan: Tambah type="impact" */}
+                    <SkorSelect 
+                        name={impactName} 
+                        value={impactValue} 
+                        onChange={onScoreChange} 
+                        type="impact" 
+                    />
                 </div>
                 <div className="pemantauan-flex-item">
                     <label className="pemantauan-label-inline">Skor Risiko (Baru):</label>
                     <span
-                        className="pemantauan-data-inline risk-score-badge"
-                        style={{
-                            backgroundColor: currentScoreDetails.color,
-                            color: currentScoreDetails.textColor,
-                        }}
-                        aria-label="Skor Risiko Baru (dikira)"
+                         className="pemantauan-data-inline risk-score-badge"
+                         style={{
+                             backgroundColor: currentScoreDetails.color,
+                             color: currentScoreDetails.textColor,
+                         }}
+                         aria-label="Skor Risiko Baru (dikira)"
                     >
                         {currentScoreDetails.shortLabel}
                     </span>
@@ -157,7 +200,7 @@ const RiskScoringBlock = ({
         </div>
     );
 };
-// --- (TAMAT) FUNGSI HELPER & KOMPONEN SKOR ---
+
 
 
 // --- KOMPONEN MODAL UTAMA ---
@@ -275,7 +318,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         setIsConfirmModalOpen(true);
     };
 
-     const handleConfirmSubmit = async () => {
+      const handleConfirmSubmit = async () => {
         if (!dataToConfirm) return;
         const { justifikasi, perubahan } = dataToConfirm;
         setIsSubmitting(true);
@@ -294,7 +337,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
 
     if (!isOpen) return null;
 
-     return (
+      return (
         <>
             <div className="modal-overlay">
                 <div className="modal-dialog modal-form modal-form-large pindaan-form-modal-dialog">
@@ -312,7 +355,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                                 <span className="form-info-data">{formData.risiko || '-'}</span>
                             </div>
                             <div className="form-info-item">
-                                <span className="form-info-label">Subsidiari:</span>
+                                <span className="form-info-label">Syarikat:</span>
                                 <span className="form-info-data">{formData.subsidiari || '-'}</span>
                             </div>
                         </div>
@@ -374,7 +417,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                                 </button>
                             </div>
                         )}
-                         {/* Jika tiada skor langsung, hanya tunjuk butang Tutup */}
+                          {/* Jika tiada skor langsung, hanya tunjuk butang Tutup */}
                         {!hasInitialAssessmentScore && !hasMonitoringData && (
                              <div className="modal-footer">
                                  <button type="button" onClick={onClose} className="btn btn-default">Tutup</button>

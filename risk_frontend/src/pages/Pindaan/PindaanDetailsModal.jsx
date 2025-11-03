@@ -6,27 +6,27 @@ import './PindaanDetailsModal.css'; // Make sure this CSS is loaded
 
 // StatusBadge Component
 const StatusBadge = ({ status }) => {
-  let badgeClass = "badge-default";
-  if (status === "Diluluskan") badgeClass = "badge-success";
-  if (status === "Ditolak") badgeClass = "badge-danger";
-  if (status === "Menunggu Kelulusan") badgeClass = "badge-warning";
+    let badgeClass = "badge-default";
+    if (status === "Diluluskan") badgeClass = "badge-success";
+    if (status === "Ditolak") badgeClass = "badge-danger";
+    if (status === "Menunggu Kelulusan") badgeClass = "badge-warning";
 
-  // Use CSS variables for colors
-  let colorVar = '--color-default-text';
-  let bgVar = '--color-default-bg';
-  let borderVar = '--color-default-border';
+    // Use CSS variables for colors
+    let colorVar = '--color-default-text';
+    let bgVar = '--color-default-bg';
+    let borderVar = '--color-default-border';
 
-  if (status === "Diluluskan") { colorVar = '--color-success-text'; bgVar = '--color-success-bg'; borderVar = '--color-success-border'; }
-  if (status === "Ditolak") { colorVar = '--color-danger-text'; bgVar = '--color-danger-bg'; borderVar = '--color-danger-border'; }
-  if (status === "Menunggu Kelulusan") { colorVar = '--color-warning-text'; bgVar = '--color-warning-bg'; borderVar = '--color-warning-border'; }
+    if (status === "Diluluskan") { colorVar = '--color-success-text'; bgVar = '--color-success-bg'; borderVar = '--color-success-border'; }
+    if (status === "Ditolak") { colorVar = '--color-danger-text'; bgVar = '--color-danger-bg'; borderVar = '--color-danger-border'; }
+    if (status === "Menunggu Kelulusan") { colorVar = '--color-warning-text'; bgVar = '--color-warning-bg'; borderVar = '--color-warning-border'; }
 
-  const style = {
-      color: `var(${colorVar})`,
-      backgroundColor: `var(${bgVar})`,
-      borderColor: `var(${borderVar})`
-  };
+    const style = {
+        color: `var(${colorVar})`,
+        backgroundColor: `var(${bgVar})`,
+        borderColor: `var(${borderVar})`
+    };
 
-  return <span className={`badge ${badgeClass}`} style={style}>{status || 'N/A'}</span>;
+    return <span className={`badge ${badgeClass}`} style={style}>{status || 'N/A'}</span>;
 };
 // --- End StatusBadge ---
 
@@ -81,38 +81,38 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                                 <span className="detail-value-inline">{amendment.no_rujukan || 'N/A'}</span>
                             </div>
                             <div className="detail-pair">
-                                <span className="detail-label-inline">Subsidiari:</span>
+                                <span className="detail-label-inline">Syarikat:</span>
                                 <span className="detail-value-inline">{namaSubsidiari}</span>
                             </div>
                         </div>
                         {/* Row 2: Risiko */}
                         <div className="detail-row">
                              <div className="detail-pair detail-pair-full">
-                                <span className="detail-label-inline">Risiko:</span>
-                                <span className="detail-value-inline">{namaRisiko}</span>
-                            </div>
+                                 <span className="detail-label-inline">Risiko:</span>
+                                 <span className="detail-value-inline">{namaRisiko}</span>
+                             </div>
                         </div>
-                         {/* Row 3: Pemohon | Tarikh Mohon */}
+                          {/* Row 3: Pemohon | Tarikh Mohon */}
                         <div className="detail-row">
                             <div className="detail-pair">
                                 <span className="detail-label-inline">Pemohon:</span>
                                 <span className="detail-value-inline">{namaPemohon || 'N/A'}</span>
                             </div>
-                             <div className="detail-pair">
-                                <span className="detail-label-inline">Tarikh Mohon:</span>
-                                <span className="detail-value-inline">{tarikhMohon}</span>
-                            </div>
-                        </div>
-                         {/* Row 4: Status Permohonan (Added here for flow) */}
-                         <div className="detail-row">
-                             <div className="detail-pair detail-pair-full">
-                                 <span className="detail-label-inline">Status Permohonan:</span>
-                                 {/* Use StatusBadge directly */}
-                                 <span className="detail-value-inline" style={{ fontWeight: 'bold' }}>
-                                     <StatusBadge status={statusPermohonan} />
-                                 </span>
+                              <div className="detail-pair">
+                                 <span className="detail-label-inline">Tarikh Mohon:</span>
+                                 <span className="detail-value-inline">{tarikhMohon}</span>
                              </div>
-                         </div>
+                        </div>
+                          {/* Row 4: Status Permohonan (Added here for flow) */}
+                          <div className="detail-row">
+                              <div className="detail-pair detail-pair-full">
+                                  <span className="detail-label-inline">Status Permohonan:</span>
+                                  {/* Use StatusBadge directly */}
+                                  <span className="detail-value-inline" style={{ fontWeight: 'bold' }}>
+                                      <StatusBadge status={statusPermohonan} />
+                                  </span>
+                              </div>
+                          </div>
                     </div>
                     {/* ▲▲▲ END TOP SECTION ▲▲▲ */}
 
@@ -137,13 +137,13 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                     <h4 className="section-title">Justifikasi Pemohon</h4>
                     {justifikasiPenilaian && (
                         <div className="justifikasi-section">
-                            <span className="justifikasi-title">Justifikasi Penilaian:</span>
+                            <span className="justifikasi-title">Justifikasi Pindaan Penilaian:</span>
                             <p className="highlight-box">{justifikasiPenilaian}</p>
                         </div>
                     )}
                     {justifikasiKeberkesanan && (
                         <div className="justifikasi-section">
-                            <span className="justifikasi-title">Justifikasi Keberkesanan:</span>
+                            <span className="justifikasi-title">Justifikasi Pindaan Keberkesanan:</span>
                             <p className="highlight-box">{justifikasiKeberkesanan}</p>
                         </div>
                     )}
@@ -156,24 +156,18 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                     {/* ======================= */}
                     {userRole === "Admin" && statusPermohonan === "Menunggu Kelulusan" && (
                         <>
-                            <h4 className="section-title">Komen Pelulus (Wajib jika ditolak)</h4>
+                            <h4 className="section-title">Justifikasi Pelulus (Wajib jika ditolak)</h4>
                             <textarea value={adminComment} onChange={e => setAdminComment(e.target.value)} className="form-textarea" placeholder="Berikan maklum balas..."/>
                         </>
                     )}
 
-                    {/* Status is now shown at the top for all roles */}
-                    {/* Removed the Executive-specific Status section */}
-
                     {/* Show reason for rejection */}
                     {statusPermohonan === "Ditolak" && sebabDitolak && (
-                         <>
-                            <h4 className="section-title">Sebab Ditolak</h4>
-                            <p className="highlight-box">{sebabDitolak}</p>
-                         </>
+                           <>
+                              <h4 className="section-title">Sebab Ditolak</h4>
+                              <p className="highlight-box">{sebabDitolak}</p>
+                           </>
                     )}
-                    {/* Placeholder for Approval Comment if that column exists
-                    {statusPermohonan === "Diluluskan" && amendment.komen_pelulus && ( ... )}
-                    */}
                 </div>
 
                 {/* --- FOOTER BUTTONS --- */}

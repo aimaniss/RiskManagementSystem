@@ -1,6 +1,23 @@
 /* Import fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
+/* --- Pembolehubah Global (Global Variables) --- */
+:root {
+  /* DIUBAH: Selaraskan dengan palet warna rujukan */
+  --theme-color: #0074c8;
+  --theme-color-dark: #005fa3;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #f97316;
+  --color-info: #3b82f6;
+  --color-grey: #6b7280;
+  --border-color: #e5e7eb;
+  --bg-light: #ffffff;
+  --bg-page: #f9fafb;
+  --text-dark: #1f2937;
+  --text-medium: #374151;
+}
+
 /* ======= GAYA UMUM MODAL (Discope ke .pindaan-form-modal-dialog) ======= */
 
 /* Overlay kekal global jika semua modal guna */
@@ -30,7 +47,8 @@
   flex-direction: column;
   overflow: hidden;
   animation: pindaan-slide-up 0.25s ease-out;
-  font-family: "Inter", sans-serif; /* Pastikan font family terpakai */
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box; /* Tambah box-sizing */
 }
 
 @keyframes pindaan-slide-up {
@@ -44,36 +62,54 @@
   }
 }
 
-/* Scope Header, Content, Footer ke modal ini */
+/* 🎨 MODAL HEADER BIRU (Telah Dikemaskini) */
 .pindaan-form-modal-dialog .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  padding: 16px 24px; /* DIUBAH: Padding lebih selesa */
+  /* --- STYLING HEADER BIRU --- */
+  background: var(--theme-color); /* BIRU TEMA */
+  color: #ffffff; /* Teks PUTIH */
+  border-bottom: none; /* Buang border bawah */
+  border-radius: 10px 10px 0 0; /* Radius hanya di atas */
 }
 
+/* Gaya Tajuk Modal */
+.pindaan-form-modal-dialog .modal-title {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700; /* Lebih tebal */
+  margin: 0;
+}
+
+/* Gaya Butang Tutup (X) */
 .pindaan-form-modal-dialog .modal-close-x {
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: #ffffff; /* DIUBAH: Ikon putih untuk kontras dengan latar biru */
   padding: 4px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.2s, background 0.2s;
+  font-size: 1.5rem; /* Saiz ikon X */
+  line-height: 1;
 }
 .pindaan-form-modal-dialog .modal-close-x:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: rgba(255, 255, 255, 0.15); /* Hover effect putih cair */
+  color: #ffffff;
+  opacity: 1;
 }
 
 .pindaan-form-modal-dialog .modal-content.modal-form-body {
   padding: 18px 24px;
   overflow-y: auto;
   background: #ffffff;
+  /* Tambah gaya asas untuk badan modal */
+  flex-grow: 1; /* Biar kandungan ambil ruang lebih */
 }
 
 .pindaan-form-modal-dialog .modal-footer {
@@ -83,7 +119,8 @@
   gap: 12px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
-  margin-top: 0; /* Pastikan tiada margin atas tambahan */
+  margin-top: 0;
+  border-radius: 0 0 10px 10px; /* Radius hanya di bawah */
 }
 
 /* ======= GAYA ELEMEN BORANG (Discope ke modal ini) ======= */
@@ -114,7 +151,7 @@
 .pindaan-form-modal-dialog .form-input:focus,
 .pindaan-form-modal-dialog .form-textarea:focus,
 .pindaan-form-modal-dialog .form-select:focus {
-  border-color: #0074c8;
+  border-color: var(--theme-color);
   box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.2);
   outline: none;
 }
@@ -127,7 +164,7 @@
 .pindaan-form-modal-dialog .form-info-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px 60px; /* Jarak antara item */
+  gap: 15px 60px;
   margin-bottom: 20px;
   padding: 16px;
   background-color: #f8fafc;
@@ -139,7 +176,7 @@
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  gap: 12px; /* Jarak label & data */
+  gap: 12px;
   flex-grow: 0;
   flex-shrink: 0;
 }
@@ -182,32 +219,32 @@
   background: #f8fafc;
 }
 .btn-primary {
-  background: #0074c8;
+  background: var(--theme-color);
   color: #ffffff;
-  border: 1px solid #0074c8;
+  border: 1px solid var(--theme-color);
 }
 .btn-primary:hover {
-  background: #005fa3;
+  background: var(--theme-color-dark);
 }
 
 /* ======= GAYA BLOK SKOR (Discope ke modal ini) ======= */
 .pindaan-form-modal-dialog .pemantauan-box {
-  margin: 0 0 20px 0; /* Tambah margin bawah sedikit */
+  margin: 0 0 20px 0;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: white;
   overflow: hidden;
-  padding: 14px 16px; /* Letak padding di sini */
+  padding: 14px 16px;
 }
 
 .pindaan-form-modal-dialog .pemantauan-box-header {
   background-color: transparent;
-  color: #005fa3;
-  padding: 0 0 4px 0; /* Padding bawah sahaja */
-  font-weight: 600;
-  font-size: 0.95rem;
+  color: var(--theme-color-dark); /* Guna warna biru gelap tema */
+  padding: 0 0 4px 0;
+  font-weight: 700; /* Lebih tebal */
+  font-size: 1rem; /* Saiz lebih besar */
   border-bottom: 2px solid #cce1f5;
-  margin-bottom: 12px; /* Jarak selepas header */
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -220,7 +257,7 @@
   gap: 12px 15px;
   padding: 0;
   margin-top: 0;
-  align-items: flex-end; /* Jajar bawah label & input/badge */
+  align-items: flex-end;
 }
 
 /* Setiap Item dalam Flex Row (Umum untuk skor) */
@@ -361,14 +398,14 @@
   width: 100%;
   margin-left: 0;
   padding: 8px 12px;
-  box-sizing: border-box; /* Samakan padding/saiz dengan dropdown */
+  box-sizing: border-box;
 }
 
 /* Jarak untuk Justifikasi */
 .pindaan-form-modal-dialog .form-group {
-  margin-top: 16px; /* Pastikan ada jarak atas */
-  margin-bottom: 0; /* Buang margin bawah jika di akhir blok */
+  margin-top: 16px;
+  margin-bottom: 0;
 }
 .pindaan-form-modal-dialog .form-group label {
-  font-weight: bold; /* Label justifikasi bold */
+  font-weight: bold;
 }
