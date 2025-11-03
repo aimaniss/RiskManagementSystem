@@ -101,7 +101,7 @@ function LogDetailModal({ log, onTutup }) {
             <span>{log.peranan_pengguna}</span>
           </div>
           <div className="log-modal-detail-item">
-            <strong>Subsidiari:</strong>
+            <strong>Syarikat:</strong>
             <span>{log.subsidiari}</span>
           </div>
           <div className="log-modal-detail-item">
@@ -416,7 +416,7 @@ function LogAktiviti() {
           <div className="log-filter-input-wrapper">
             <Building className="log-filter-input-icon" />
             <select value={filterSubsidiari} onChange={(e) => setFilterSubsidiari(e.target.value)} className="log-filter-select">
-              <option value="">Semua Subsidiari</option>
+              <option value="">Semua Syarikat</option>
               {senaraiSubsidiari.map(s => (
                 <option key={s.subsidiari_id} value={s.nama_subsidiari}>
                   {s.nama_subsidiari}
