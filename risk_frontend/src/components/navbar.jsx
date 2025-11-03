@@ -22,10 +22,77 @@ function Navbar() {
   const [newProfile, setNewProfile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
-  const dropdownRef = useRef(null);
+  
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  
+  const dropdownRef = useRef(null); 
+  const notificationRef = useRef(null);
+  
   const token = localStorage.getItem("token");
 
-  // ------------------ Fetch current user ------------------
+  // --- FUNGSI HELPER TARIKH ---
+  const formatTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} saat lalu`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minit lalu`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
+    
+    return past.toLocaleDateString('ms-MY', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  // ------------------ Fetch Notifikasi ------------------
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get("http://localhost:5000/api/notifikasi", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications(res.data);
+      setUnreadCount(res.data.filter(n => !n.dibaca).length);
+    } catch (err) {
+      console.error("Gagal fetch notifikasi:", err);
+    }
+  };
+
+  // ------------------ Handle Klik Notifikasi ------------------
+  const handleNotificationClick = () => {
+    setNotificationOpen(prev => !prev);
+    if (!notificationOpen) {
+      fetchNotifications();
+    }
+    setOpen(false); // Tutup dropdown profil
+  };
+  
+  // ------------------ Tandakan Notifikasi Telah Dibaca ------------------
+  const markAsRead = async (id, url) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/notifikasi/${id}/read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setNotifications(prev => 
+        prev.map(n => n.notifikasi_id === id ? { ...n, dibaca: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      
+      setNotificationOpen(false);
+      if (url) {
+          window.location.href = url;
+      }
+
+    } catch (err) {
+      console.error("Gagal tandakan notifikasi dibaca:", err);
+    }
+  };
+  
+  // ------------------ Fetch current user & Notifikasi Interval ------------------
   useEffect(() => {
     if (!token) return;
 
@@ -36,11 +103,7 @@ function Navbar() {
         });
 
         const roleMapping = {
-          1: "ADMIN",
-          2: "EXECUTIVE",
-          3: "KETUA SUBSIDIARI",
-          4: "STAFF",
-          5: "VIEWER",
+          1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER",
         };
 
         const u = res.data;
@@ -56,24 +119,34 @@ function Navbar() {
         });
       } catch (err) {
         console.error("Gagal fetch user:", err);
-        alert("Gagal dapatkan profil. Sila login semula.");
       }
     };
 
     fetchUser();
+    fetchNotifications();
+    
+    // Refresh notifikasi setiap 30 saat
+    const intervalId = setInterval(fetchNotifications, 30000); 
+
+    return () => clearInterval(intervalId); 
+    
   }, [token]);
 
   // ------------------ Close dropdown on outside click ------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Tutup dropdown user
       if (dropdownRef.current && !dropdownRef.current.contains(event.target))
         setOpen(false);
+      
+      // Tutup dropdown notifikasi
+      if (notificationRef.current && !notificationRef.current.contains(event.target))
+        setNotificationOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ------------------ File change ------------------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -89,7 +162,6 @@ function Navbar() {
     setRemoveProfileFlag(true);
   };
 
-  // ------------------ Update profile ------------------
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (!passwordOld && passwordNew) {
@@ -141,7 +213,12 @@ function Navbar() {
     }
   };
 
-  const openModal = () => setModalOpen(true);
+  const openModal = () => {
+    setModalOpen(true);
+    setOpen(false); 
+    setNotificationOpen(false);
+  }
+  
   const closeModal = () => {
     setModalOpen(false);
     setPasswordOld("");
@@ -152,15 +229,59 @@ function Navbar() {
     setShowPasswordOld(false);
     setShowPasswordNew(false);
   };
+  
+  // --- LOGIK PAPARAN BERSYARAT NOTIFIKASI ---
+  const allowedRoles = ["ADMIN", "EXECUTIVE"];
+  const isNotificationVisible = allowedRoles.includes(user.role);
 
   // ------------------ Render ------------------
   return (
     <>
       <div className={`navbar ${modalOpen ? "blurred" : ""}`}>
-        <div className="navbar-notification">
-          <img src={NotificationIcon} alt="Notifikasi" />
-        </div>
+        
+        {/* DROPDOWN NOTIFIKASI (Hanya dipaparkan untuk ADMIN dan EXECUTIVE) */}
+        {isNotificationVisible && (
+          <div className="navbar-notification-wrapper" ref={notificationRef}>
+            <div 
+              className="navbar-notification"
+              onClick={handleNotificationClick}
+            >
+              <img src={NotificationIcon} alt="Notifikasi" />
+              {/* Lencana notifikasi */}
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+            </div>
 
+            {notificationOpen && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <h3>Pemberitahuan ({unreadCount} Baharu)</h3>
+                </div>
+                <div className="notification-list">
+                  {notifications.length === 0 ? (
+                    <div className="no-notifications">Tiada notifikasi terkini.</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div 
+                        key={n.notifikasi_id} 
+                        className={`notification-item ${!n.dibaca ? 'unread' : ''}`}
+                        onClick={() => markAsRead(n.notifikasi_id, n.url_pautan)}
+                      >
+                        <p className="notification-message">{n.mesej}</p>
+                        <span className="notification-time">
+                          {formatTimeAgo(n.created_at)}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DROPDOWN PROFIL (Kekal untuk semua) */}
         <div className="navbar-user" ref={dropdownRef}>
           <div className="navbar-user-info">
             <div className="user-subsidiari-bold">{user.subsidiari}</div>
@@ -169,7 +290,10 @@ function Navbar() {
 
           <div
             className="profile-wrapper"
-            onClick={() => setOpen((prev) => !prev)}
+            onClick={() => {
+              setOpen((prev) => !prev);
+              setNotificationOpen(false); // Tutup notifikasi jika buka profil
+            }}
           >
             {user.profileImage ? (
               <img src={user.profileImage} alt="User" className="profile-pic" />
