@@ -569,13 +569,13 @@ export default function LogPreviewModal({ risk, range, onClose }) {
     <div className="preview-modal-overlay" onClick={onClose}>
       <div className="preview-modal-container" onClick={e => e.stopPropagation()}>
         <div className="preview-modal-header">
-          <h3>Pratonton Laporan</h3>
+          <h3>Laporan</h3>
           <button className="preview-modal-close" onClick={onClose}>&times;</button>
         </div>
         
         <div className="preview-modal-body">
           {isLoading ? (
-            <p>Menjana pratonton...</p>
+            <p>Menjana Laporan...</p>
           ) : pdfPreviewUrl ? (
             <embed 
               src={pdfPreviewUrl} 
@@ -584,7 +584,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               height="100%" 
             />
           ) : (
-            <p>Gagal memuatkan pratonton.</p>
+            <p>Gagal memuatkan laporan.</p>
           )}
         </div>
         

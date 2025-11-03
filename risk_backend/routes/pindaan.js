@@ -46,10 +46,11 @@ const getRiskShortLabelFromMatrix = (likelihood, impact, matrix) => {
 router.get("/risks-for-amendment", verifyToken, async (req, res) => {
   try {
     const user = req.user;
-    let query = `WITH RisikoAdaRawatan AS (
-        SELECT DISTINCT risiko_id
-        FROM rawatan_risiko
-      ),
+    
+    // =================================================================
+    // ⭐️ DIKEMASKINI: CTE 'RisikoAdaRawatan' dibuang
+    // =================================================================
+    let query = `WITH 
       PemantauanTerkini AS (
         SELECT
           pm.log_id,
@@ -119,17 +120,26 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini
 
       FROM Risiko r
-      JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id
+      -- =================================================================
+      -- ⭐️ DIKEMASKINI: 'JOIN RisikoAdaRawatan' dibuang
+      -- =================================================================
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
     `;
+    
+    // =================================================================
+    // ⭐️ DIKEMASKINI: Logik 'WHERE' diubah
+    // =================================================================
     const params = [];
+    let whereClause = ["r.skor_risiko IS NOT NULL"]; // Syarat baharu
+
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`;
       params.push(user.subsidiari_id);
+      whereClause.push(`CAST(r.subsidiari AS INTEGER) = $${params.length}`);
     }
 
+    query += ` WHERE ${whereClause.join(" AND ")}`;
     query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC;`;
 
     const { rows } = await pool.query(query, params);
@@ -234,7 +244,7 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
           if ('skor_kebarangkalian' in data_selepas) risikoUpdates.skor_kebarangkalian = data_selepas.skor_kebarangkalian;
           if ('skor_impak' in data_selepas) risikoUpdates.skor_impak = data_selepas.skor_impak;
           if ('skor_risiko_penilaian' in data_selepas) {
-              risikoUpdates.skor_risiko = data_selepas.skor_risiko_penilaian !== '-' ? data_selepas.skor_risiko_penilaian : null;
+               risikoUpdates.skor_risiko = data_selepas.skor_risiko_penilaian !== '-' ? data_selepas.skor_risiko_penilaian : null;
           }
       }
       if (penilaian) {
@@ -245,7 +255,7 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
           if ('skor_kebarangkalian_selepas' in data_selepas) logUpdates.skor_kebarangkalian_selepas = data_selepas.skor_kebarangkalian_selepas;
           if ('skor_impak_selepas' in data_selepas) logUpdates.skor_impak_selepas = data_selepas.skor_impak_selepas;
           if ('skor_risiko_keberkesanan' in data_selepas) {
-              logUpdates.skor_risiko_pemantauan = data_selepas.skor_risiko_keberkesanan !== '-' ? data_selepas.skor_risiko_keberkesanan : null;
+               logUpdates.skor_risiko_pemantauan = data_selepas.skor_risiko_keberkesanan !== '-' ? data_selepas.skor_risiko_keberkesanan : null;
           }
       }
       if (keberkesanan) {
@@ -263,8 +273,8 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
       // 2. KEMAS KINI REKOD LOGPEMANTAUAN SEDIA ADA
       if (hasLogChanges && Object.keys(logUpdates).length > 0) {
         const latestLogRes = await client.query(
-          `SELECT log_id FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC LIMIT 1`,
-          [risk_id]
+         `SELECT log_id FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, tarikh_pemantauan DESC LIMIT 1`,
+         [risk_id]
         );
         if (latestLogRes.rowCount > 0) {
           const log_id_terkini = latestLogRes.rows[0].log_id;
@@ -455,15 +465,15 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
             const fieldsToUpdate = Object.keys(logUpdates).filter(k => k !== 'update_at_pemantauan' && k !== 'updated_by_pemantauan');
 
             if (fieldsToUpdate.length > 0) {
-                  const setClause = Object.keys(logUpdates)
-                    .map((key, index) => `"${key}" = ${key === 'update_at_pemantauan' ? logUpdates[key] : `$${index + 1}`}`)
-                    .join(", ");
+                 const setClause = Object.keys(logUpdates)
+                   .map((key, index) => `"${key}" = ${key === 'update_at_pemantauan' ? logUpdates[key] : `$${index + 1}`}`)
+                   .join(", ");
 
-                 const values = Object.values(logUpdates).filter(val => val !== 'NOW()');
-                 values.push(log_id_terkini);
+                const values = Object.values(logUpdates).filter(val => val !== 'NOW()');
+                values.push(log_id_terkini);
 
-                 const updateLogQuery = `UPDATE logpemantauan SET ${setClause} WHERE log_id = $${values.length}`;
-                 await client.query(updateLogQuery, values);
+                const updateLogQuery = `UPDATE logpemantauan SET ${setClause} WHERE log_id = $${values.length}`;
+                await client.query(updateLogQuery, values);
             } else {
                  console.log(`Tiada medan log spesifik untuk dikemaskini bagi log ID ${log_id_terkini} semasa kelulusan.`);
             }

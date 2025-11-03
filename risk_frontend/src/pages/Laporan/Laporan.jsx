@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ReportOptionsModal from './ReportOptionsModal';
 import LogPreviewModal from './LogPreviewModal';
-// ⭐️ Import 'api' (Axios instance)
+
 import api from '../../api/api'; 
 import './LaporanRisiko.css';
 
-// =================================================================
-// ⭐️ BARU: Matriks Warna (berdasarkan kod anda)
-// =================================================================
+
 const riskMatrixColors = {
   "R": "#22c55e",  // Rendah (Hijau)
   "S": "#eab308",  // Sederhana (Kuning)
@@ -64,15 +62,15 @@ export default function LaporanRisiko() {
 
   async function fetchSubsidiaries() {
     try {
-      const defaultOption = { subsidiari_id: 'all', nama_subsidiari: 'Semua Subsidiari' };
+      const defaultOption = { subsidiari_id: 'all', nama_subsidiari: 'Semua Syarikat' };
       const res = await api.get("/subsidiari"); 
       const data = Array.isArray(res.data) ? res.data : [];
       setSubsidiaries([defaultOption, ...data]);
       
     } catch (err) {
-      console.error("❌ Gagal fetch subsidiari:", err);
+      console.error("❌ Gagal fetch syarikat:", err);
       setSubsidiaries([
-        { subsidiari_id: 'all', nama_subsidiari: 'Semua Subsidiari' },
+        { subsidiari_id: 'all', nama_subsidiari: 'Semua Syarikat' },
         { subsidiari_id: '1', nama_subsidiari: 'UKM HOLDINGS SDN. BHD.' },
         { subsidiari_id: '2', nama_subsidiari: 'Subsidiari B' },
       ]);
@@ -157,11 +155,11 @@ export default function LaporanRisiko() {
     <div className="laporan-container">
       {loadingModal && <div className="loading-overlay">Memuatkan Data Laporan...</div>}
 
-      <h2 className="laporan-title">📊 Laporan Risiko</h2>
+      <h2 className="laporan-title">Laporan Risiko</h2>
 
       <div className="filter-card">
          <div className="filter-group">
-          <label>Subsidiari</label>
+          <label>Syarikat</label>
           <select name="subsidiary" value={filters.subsidiary} onChange={handleFilterChange}>
             {subsidiaries.map((s) => (
               <option key={s.subsidiari_id} value={s.subsidiari_id}>
@@ -211,8 +209,8 @@ export default function LaporanRisiko() {
                 <th>Bil</th>
                 <th>No. Rujukan</th>
                 <th>Nama Risiko</th>
-                <th>Tahun / Separuh Tahun Daftar</th>
-                <th>Subsidiari</th>
+                <th>Tahun  & Separuh Tahun Daftar</th>
+                <th>Syarikat</th>
                 <th>Skor Risiko (Terkini)</th>
                 <th>Status Pemantauan</th>
                 <th>Tindakan</th>

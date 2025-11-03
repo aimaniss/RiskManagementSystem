@@ -77,7 +77,7 @@ export default function ReportOptionsModal({
               }}
             />
             <label htmlFor="report-all">Keseluruhan Laporan</label>
-            <p className="report-modal-desc">Jana laporan untuk semua log pemantauan yang direkodkan.</p>
+            <p className="report-modal-desc">Jana keseluruhan laporan dan pemantauan.</p>
           </div>
           
           <div className="report-modal-option">
@@ -90,10 +90,10 @@ export default function ReportOptionsModal({
               onChange={() => setReportType('range')}
               disabled={!hasLogs}
             />
-            <label htmlFor="report-range">Laporan Khusus (Julat atau Single)</label>
+            <label htmlFor="report-range">Laporan Khusus</label>
             
             {!hasLogs && (
-              <p className="report-modal-status"><i>Tiada log pemantauan ditemui untuk risiko ini.</i></p>
+              <p className="report-modal-status"><i>Tiada pemantauan ditemui untuk risiko ini.</i></p>
             )}
             
             {hasLogs && (
@@ -108,7 +108,7 @@ export default function ReportOptionsModal({
                     onChange={(e) => setIsSingleLogMode(e.target.checked)}
                     disabled={reportType !== 'range'}
                   />
-                  <label htmlFor="single-log-check">Pilih satu log sahaja</label>
+                  <label htmlFor="single-log-check">Pilih satu pemantauan sahaja</label>
                 </div>
                 
                 <div className="report-modal-checkbox-wrapper">
@@ -120,8 +120,8 @@ export default function ReportOptionsModal({
                         disabled={reportType !== 'range'}
                     />
                     <label htmlFor="log-only-check">
-                        Jana Log Sahaja
-                        <span>(Hanya paparkan jadual log)</span>
+                        Jana Pemantauan Sahaja
+                        <span>(Hanya paparkan pemantauan)</span>
                     </label>
                 </div>
 
@@ -180,7 +180,7 @@ export default function ReportOptionsModal({
             onClick={handleGenerateClick}
             disabled={reportType === 'range' && !hasLogs}
           >
-            Jana Pratonton Laporan
+            Jana Laporan
           </button>
         </div>
       </div>
