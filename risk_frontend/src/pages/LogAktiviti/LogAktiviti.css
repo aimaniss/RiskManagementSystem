@@ -7,19 +7,19 @@
 
 /* 1. Stail Komponen Utama */
 .log-aktiviti-container {
-  padding: 12px 24px; /* DIUBAH: Padanan rujukan */
-  max-width: 1440px; /* DIUBAH: Padanan rujukan */
-  margin: 0 auto; /* DIUBAH: Padanan rujukan */
-  font-family: "Inter", sans-serif; /* DIUBAH: Fon */
-  background: #f9fafb; /* DIUBAH: Padanan rujukan */
+  padding: 12px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  background: #f9fafb;
   min-height: 100vh;
 }
 
 .log-page-title {
-  font-size: 1.5rem; /* DIUBAH: Padanan rujukan */
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #005fa3; /* DIUBAH: Padanan rujukan */
-  margin-bottom: 20px; /* DIUBAH: Padanan rujukan */
+  color: #005fa3;
+  margin-bottom: 20px;
 }
 
 .log-filter-bar {
@@ -29,7 +29,6 @@
   align-items: center;
   margin-bottom: 20px;
   gap: 12px;
-  /* DIUBAH: Guna gaya kad rujukan */
   padding: 20px;
   background-color: #ffffff;
   border-radius: 8px;
@@ -40,13 +39,13 @@
 .log-filter-group-left {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px; /* DIUBAH: Selaraskan gap */
+  gap: 12px;
   align-items: center;
 }
 .log-filter-group-right {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px; /* DIUBAH: Selaraskan gap */
+  gap: 12px;
   align-items: center;
 }
 .log-filter-input-wrapper {
@@ -61,42 +60,42 @@
 }
 
 .log-filter-select {
-  padding: 8px 12px 8px 32px; /* DIUBAH: Selaraskan padding */
-  font-size: 14px; /* DIUBAH: Selaraskan saiz fon */
-  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  padding: 8px 12px 8px 32px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   background: #ffffff;
   color: #374151;
   appearance: none;
   min-width: 130px;
-  height: auto; /* DIUBAH: Biar padding tentukan ketinggian */
+  height: auto;
 }
 
 .log-reset-button {
-  padding: 8px 14px; /* DIUBAH: Selaraskan padding */
+  padding: 8px 14px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151; /* DIUBAH: Padanan butang 'cancel' */
-  background: #e5e7eb; /* DIUBAH: Padanan butang 'cancel' */
-  border: 1px solid #d1d5db; /* DIUBAH: Padanan butang 'cancel' */
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  color: #374151;
+  background: #e5e7eb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   cursor: pointer;
   height: auto;
   transition: background-color 0.2s;
 }
 .log-reset-button:hover {
-  background: #d1d5db; /* DIUBAH: Padanan butang 'cancel' */
+  background: #d1d5db;
 }
 
 /* Stail Butang Padam Julat */
 .log-delete-range-button {
-  padding: 8px 14px; /* DIUBAH: Selaraskan padding */
+  padding: 8px 14px;
   font-size: 13px;
   font-weight: 600;
   color: #ef4444;
   background: #fef2f2;
   border: 1px solid #ef4444;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  border-radius: 6px;
   cursor: pointer;
   height: auto;
   transition: background-color 0.2s, color 0.2s;
@@ -112,8 +111,8 @@
 .log-table-container {
   background: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* DIUBAH: Padanan rujukan */
-  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
   overflow: hidden;
 }
 .log-table {
@@ -122,37 +121,37 @@
 }
 
 .log-th {
-  padding: 12px 15px; /* DIUBAH: Padanan rujukan */
+  padding: 12px 15px;
   text-align: left;
   font-weight: 600;
-  font-size: 12px; /* DIUBAH: Padanan rujukan */
-  text-transform: uppercase; /* DIUBAH: Padanan rujukan */
-  letter-spacing: 0.05em; /* DIUBAH: Padanan rujukan */
-  background-color: #f0f9ff; /* DIUBAH: Padanan rujukan */
-  color: #005fa3; /* DIUBAH: Padanan rujukan */
-  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #f0f9ff;
+  color: #005fa3;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .log-tbody {
-  color: #1f2937; /* DIUBAH: Teks lebih gelap */
+  color: #1f2937;
 }
 .log-tr {
   background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
 }
 .log-tr:hover {
-  background-color: #f0f9ff; /* DIUBAH: Padanan rujukan */
+  background-color: #f0f9ff;
 }
 .log-td {
-  padding: 12px 15px; /* DIUBAH: Padanan rujukan */
+  padding: 12px 15px;
   vertical-align: middle;
   line-height: 1.5;
-  font-size: 13px; /* DIUBAH: Selaraskan saiz fon */
+  font-size: 13px;
 }
 .log-td-small-text {
   font-size: 13px;
-  color: #1f2937; /* DIUBAH: Teks lebih gelap */
+  color: #1f2937;
 }
 .log-td-center {
   text-align: center;
@@ -166,7 +165,7 @@
 
 .log-view-button {
   background: transparent;
-  color: #374151; /* DIUBAH: Warna permulaan lebih gelap */
+  color: #374151;
   border: none;
   border-radius: 4px;
   padding: 6px;
@@ -178,11 +177,11 @@
   transition: color 0.2s;
 }
 .log-view-button:hover {
-  color: #0074c8; /* DIUBAH: Padanan rujukan */
+  color: #0074c8;
 }
 .log-delete-button {
   background: transparent;
-  color: #374151; /* DIUBAH: Warna permulaan lebih gelap */
+  color: #374151;
   border: none;
   border-radius: 4px;
   padding: 6px;
@@ -200,14 +199,14 @@
 .log-no-logs-td {
   padding: 40px;
   text-align: center;
-  color: #6b7280; /* DIUBAH: Padanan no-data */
-  font-size: 14px; /* DIUBAH: Padanan no-data */
-  font-style: italic; /* DIUBAH: Padanan no-data */
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
 }
 .log-loading-text {
   padding: 40px;
   text-align: center;
-  color: #0074c8; /* DIUBAH: Padanan rujukan */
+  color: #0074c8;
   font-size: 16px;
   font-weight: 600;
 }
@@ -262,11 +261,11 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); /* DIUBAH: Tambah blur */
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999; /* ⭐️ DIUBAH: Dinaikkan (asal 1000) */
 }
 
 .log-modal {
@@ -276,7 +275,7 @@
   width: 90%;
   max-width: 600px;
   overflow: hidden;
-  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  border: 1px solid #e5e7eb;
 }
 
 .log-modal-header {
@@ -284,19 +283,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #f9fafb; /* DIUBAH: Padanan rujukan */
-  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 .log-modal-header h2 {
   margin: 0;
   font-size: 1.125rem; /* 18px */
-  color: #1f2937; /* DIUBAH: Teks gelap */
+  color: #1f2937;
 }
 
 .log-modal-tutup-button {
   background: transparent;
   border: none;
-  color: #6b7280; /* DIUBAH: Warna kelabu */
+  color: #6b7280;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -325,17 +324,17 @@
   align-items: center;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e8f0;
-  font-size: 14px; /* DIUBAH: Kecilkan sikit */
+  font-size: 14px;
 }
 .log-modal-detail-item strong {
-  font-size: 13px; /* DIUBAH: Kecilkan sikit */
-  color: #374151; /* DIUBAH: Padanan rujukan */
+  font-size: 13px;
+  color: #374151;
   font-weight: 600;
   flex-shrink: 0;
 }
 .log-modal-detail-item span {
   font-weight: 400;
-  color: #1f2937; /* DIUBAH: Teks lebih gelap */
+  color: #1f2937;
   text-align: right;
   padding-left: 16px;
 }
@@ -351,20 +350,20 @@
   margin-top: 8px;
 }
 .log-modal-detail-full strong {
-  font-size: 13px; /* DIUBAH: Kecilkan sikit */
-  color: #374151; /* DIUBAH: Padanan rujukan */
+  font-size: 13px;
+  color: #374151;
   font-weight: 600;
 }
 
 .log-modal-perincian-teks {
   margin: 0;
-  background: #f9fafb; /* DIUBAH: Padanan rujukan */
+  background: #f9fafb;
   border: 1px solid #e5e7eb;
   padding: 12px;
   border-radius: 6px;
   width: 100%;
   line-height: 1.6;
-  color: #1f2937; /* DIUBAH: Teks lebih gelap */
+  color: #1f2937;
   white-space: pre-wrap;
   box-sizing: border-box;
 }
@@ -380,11 +379,11 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); /* DIUBAH: Tambah blur */
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1010;
+  z-index: 10000; /* ⭐️ DIUBAH: Dinaikkan (asal 1010) & lebih tinggi dari modal biasa */
 }
 
 .log-delete-modal {
@@ -394,7 +393,7 @@
   width: 90%;
   max-width: 450px;
   overflow: hidden;
-  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  border: 1px solid #e5e7eb;
 }
 
 .log-delete-modal-header {
@@ -408,7 +407,7 @@
 .log-delete-modal-header h3 {
   margin: 0;
   font-size: 1.125rem; /* 18px */
-  color: #1f2937; /* DIUBAH: Teks gelap */
+  color: #1f2937;
 }
 /* Guna semula stail butang tutup */
 .log-delete-modal-header .log-modal-tutup-button {
@@ -424,7 +423,7 @@
 .log-delete-modal-body p {
   margin: 0;
   font-size: 14px;
-  color: #374151; /* DIUBAH: Padanan rujukan */
+  color: #374151;
   line-height: 1.6;
 }
 
@@ -436,13 +435,13 @@
 .log-delete-modal-form-group label {
   font-size: 13px;
   font-weight: 600;
-  color: #374151; /* DIUBAH: Padanan rujukan */
+  color: #374151;
 }
 /* Guna semula stail input tarikh */
 .log-delete-modal-form-group .log-filter-select {
   width: 100%;
-  padding: 8px 12px; /* DIUBAH: Selaraskan padding */
-  font-size: 14px; /* DIUBAH: Selaraskan saiz fon */
+  padding: 8px 12px;
+  font-size: 14px;
   appearance: auto;
 }
 
@@ -469,7 +468,7 @@
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  border-radius: 6px;
   cursor: pointer;
   border: 1px solid transparent;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
@@ -477,8 +476,8 @@
 
 .log-delete-modal-button-cancel {
   background: #ffffff;
-  color: #374151; /* DIUBAH: Padanan rujukan */
-  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  color: #374151;
+  border: 1px solid #d1d5db;
 }
 .log-delete-modal-button-cancel:hover {
   background: #f9fafb;
