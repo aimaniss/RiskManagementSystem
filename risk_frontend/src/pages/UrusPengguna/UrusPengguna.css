@@ -1,42 +1,49 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #eef0f3;
+  background-color: #f9fafb; /* DIUBAH: Padanan gaya rujukan */
 }
 
 .urus-container {
-  max-width: 95vw;
-  margin: 20px auto;
-  padding: 18px; /* kecilkan 10% */
-  background: #f8f6f6;
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0, 64, 113, 0.1);
+  max-width: 1440px; /* DIUBAH: Padanan skrin 15" */
+  margin: 0 auto; /* DIUBAH: Tengahkannya */
+  padding: 12px 24px; /* DIUBAH: Padanan rujukan (padding atas kecil) */
+  background: #f9fafb; /* DIUBAH: Latar container sama dgn body */
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .urus-container h1 {
-  font-size: 25px; /* asal 28px */
-  font-weight: 600;
-  margin-bottom: 18px;
-  color: #004071;
+  font-size: 1.5rem; /* DIUBAH: Padanan rujukan (24px) */
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #005fa3; /* DIUBAH: Padanan rujukan */
 }
 
 .filter-add {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 8px; /* asal 10px */
-  margin-bottom: 18px;
+  flex-wrap: wrap; /* DIUBAH: Lebih responsif */
+  gap: 12px;
+  margin-bottom: 20px;
   align-items: center;
+  /* DIUBAH: Tambah gaya kad dari rujukan */
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .search-input,
 .role-select {
-  padding: 8px 12px; /* asal 10px 14px */
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 13px; /* asal 14px */
+  padding: 8px 12px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  font-size: 13px;
   outline: none;
   font-family: "Inter", sans-serif;
 }
@@ -48,69 +55,80 @@ body {
 }
 
 .add-btn {
-  background: #004071;
+  background: #0074c8; /* DIUBAH: Padanan rujukan */
   color: #fff;
   border: none;
-  padding: 8px 14px; /* asal 10px 16px */
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
 }
 .add-btn:hover {
-  background: #0074c8;
+  background: #005fa3; /* DIUBAH: Padanan rujukan */
 }
 
 .table-container {
   overflow-x: auto;
+  /* DIUBAH: Tambah gaya kad dari rujukan */
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Simpan ini untuk border-radius */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 14px rgba(0, 64, 113, 0.08);
+  /* Radius & shadow dipindah ke .table-container */
 }
 
 th,
 td {
-  padding: 10px 12px; /* asal 12px 15px */
+  padding: 12px 15px; /* DIUBAH: Padanan saiz rujukan */
   text-align: left;
-  font-size: 13px; /* asal 14px */
+  font-size: 13px;
   vertical-align: middle;
 }
 
 th {
-  background: #004071;
-  color: #fff;
+  background: #f0f9ff; /* DIUBAH: Padanan rujukan */
+  color: #005fa3; /* DIUBAH: Padanan rujukan */
   font-weight: 600;
+  font-size: 12px; /* DIUBAH: Padanan rujukan */
+  text-transform: uppercase; /* DIUBAH: Padanan rujukan */
+  letter-spacing: 0.05em; /* DIUBAH: Padanan rujukan */
+}
+
+td {
+  color: #1f2937; /* DIUBAH: Teks lebih gelap */
 }
 
 tbody tr {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
   transition: 0.2s;
 }
 
 tbody tr:hover {
-  background: #f1f7fc;
+  background: #f0f9ff; /* DIUBAH: Padanan rujukan */
 }
 
 .nama-penuh-cell {
   display: flex;
   align-items: center;
-  gap: 10px; /* asal 12px */
+  gap: 10px;
 }
 
 .profile-icon {
-  width: 36px; /* asal 40px */
+  width: 36px;
   height: 36px;
   color: #4b5563;
 }
 
 .profile-pic {
-  width: 36px; /* asal 40px */
+  width: 36px;
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
@@ -120,7 +138,7 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px; /* asal 12px */
+  gap: 10px;
 }
 
 .edit-icon {
@@ -157,20 +175,22 @@ tbody tr:hover {
 .filter-modal {
   background: #fff;
   border-radius: 12px;
-  padding: 24px; /* asal 30px */
-  width: 380px; /* asal 400px */
+  padding: 24px;
+  width: 380px;
   max-width: 90%;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* asal 15px */
+  gap: 12px;
+  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* DIUBAH: Padanan rujukan */
 }
 
 .filter-modal input,
 .filter-modal select {
-  padding: 8px 10px; /* asal 10px 12px */
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 13px; /* asal 14px */
+  padding: 8px 10px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  font-size: 13px;
   outline: none;
   background: #f9fafb;
 }
@@ -178,13 +198,13 @@ tbody tr:hover {
 .filter-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 8px; /* asal 10px */
+  gap: 8px;
   margin-top: 10px;
 }
 
 .filter-buttons button {
-  padding: 7px 12px; /* asal 8px 14px */
-  border-radius: 8px;
+  padding: 7px 12px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   border: none;
   font-weight: 600;
   cursor: pointer;
@@ -196,20 +216,21 @@ tbody tr:hover {
   color: #374151;
 }
 .filter-buttons button:last-child {
-  background: #004071;
+  background: #0074c8; /* DIUBAH: Padanan rujukan */
   color: #fff;
 }
 .filter-buttons button:first-child:hover {
   background: #d1d5db;
 }
 .filter-buttons button:last-child:hover {
-  background: #0074c8;
+  background: #005fa3; /* DIUBAH: Padanan rujukan */
 }
 
 .no-data {
   text-align: center;
   color: #6b7280;
   font-style: italic;
+  padding: 20px; /* DIUBAH: Tambah padding */
 }
 
 /* Profile upload */
@@ -217,7 +238,7 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px; /* asal 8px */
+  gap: 6px;
 }
 
 .profile-wrapper {
@@ -226,7 +247,7 @@ tbody tr:hover {
 }
 
 .profile-preview {
-  width: 110px; /* asal 120px */
+  width: 110px;
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
@@ -244,7 +265,7 @@ tbody tr:hover {
   top: 50%;
   right: -10px;
   transform: translateY(-50%);
-  width: 22px; /* asal 24px */
+  width: 22px;
   height: 22px;
   color: #ef4444;
   cursor: pointer;
@@ -262,13 +283,13 @@ tbody tr:hover {
 /* Responsive tweak untuk laptop kecil */
 @media (max-width: 1366px) {
   .urus-container h1 {
-    font-size: 22px;
+    font-size: 1.25rem; /* 20px */
   }
 
   th,
   td {
     font-size: 12px;
-    padding: 8px 10px;
+    padding: 10px 12px; /* DIUBAH: Selaraskan padding */
   }
 
   .add-btn,

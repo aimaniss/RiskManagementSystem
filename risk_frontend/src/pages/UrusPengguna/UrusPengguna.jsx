@@ -258,7 +258,7 @@ function UrusPengguna() {
           className="role-select"
           disabled={filterSubsidiaryLocked}
         >
-          <option value="">Pilih Subsidiari</option>
+          <option value="">Pilih Syarikat</option>
           {subsidiaries.map((s) => (
             <option key={s.subsidiari_id} value={s.subsidiari_id}>
               {s.nama_subsidiari}
@@ -279,7 +279,7 @@ function UrusPengguna() {
               <th>Bil</th>
               <th>Nama Penuh</th>
               <th>Peranan</th>
-              <th>Subsidiari</th>
+              <th>Syarikat</th>
               <th>Staff ID</th>
               <th>Kata Laluan</th>
               <th>Tindakan</th>
@@ -436,7 +436,7 @@ function UrusPengguna() {
                   }
                   disabled={subsidiaryLocked}
                 >
-                  <option value="">Pilih Subsidiari</option>
+                  <option value="">Pilih Syarikat</option>
                   {subsidiaries.map((s) => (
                     <option key={s.subsidiari_id} value={s.subsidiari_id}>
                       {s.nama_subsidiari}

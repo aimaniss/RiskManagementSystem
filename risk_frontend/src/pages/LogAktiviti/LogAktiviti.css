@@ -1,38 +1,52 @@
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 /* ===================================================================
    Fail: LogAktiviti.css
    =================================================================== */
 
 /* 1. Stail Komponen Utama */
 .log-aktiviti-container {
-  padding: 20px;
-  font-family: "Roboto", sans-serif;
-  background: #f8fafc;
+  padding: 12px 24px; /* DIUBAH: Padanan rujukan */
+  max-width: 1440px; /* DIUBAH: Padanan rujukan */
+  margin: 0 auto; /* DIUBAH: Padanan rujukan */
+  font-family: "Inter", sans-serif; /* DIUBAH: Fon */
+  background: #f9fafb; /* DIUBAH: Padanan rujukan */
   min-height: 100vh;
 }
+
 .log-page-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 16px;
+  font-size: 1.5rem; /* DIUBAH: Padanan rujukan */
+  font-weight: 700;
+  color: #005fa3; /* DIUBAH: Padanan rujukan */
+  margin-bottom: 20px; /* DIUBAH: Padanan rujukan */
 }
+
 .log-filter-bar {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  gap: 8px;
+  gap: 12px;
+  /* DIUBAH: Guna gaya kad rujukan */
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
+
 .log-filter-group-left {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px; /* DIUBAH: Selaraskan gap */
   align-items: center;
 }
 .log-filter-group-right {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px; /* DIUBAH: Selaraskan gap */
   align-items: center;
 }
 .log-filter-input-wrapper {
@@ -40,52 +54,51 @@
 }
 .log-filter-input-icon {
   position: absolute;
-  top: 8px; /* Dilaraskan untuk ikon lucide */
-  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 10px;
   color: #9ca3af;
 }
+
 .log-filter-select {
-  padding: 6px 8px 6px 28px;
-  font-size: 13px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 8px 12px 8px 32px; /* DIUBAH: Selaraskan padding */
+  font-size: 14px; /* DIUBAH: Selaraskan saiz fon */
+  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   background: #ffffff;
   color: #374151;
   appearance: none;
   min-width: 130px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  height: 30px;
-  box-sizing: border-box;
+  height: auto; /* DIUBAH: Biar padding tentukan ketinggian */
 }
+
 .log-reset-button {
-  padding: 6px 12px;
+  padding: 8px 14px; /* DIUBAH: Selaraskan padding */
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
-  background: #6b7280; /* Warna kelabu */
-  border: 1px solid #4b5563;
-  border-radius: 4px;
+  color: #374151; /* DIUBAH: Padanan butang 'cancel' */
+  background: #e5e7eb; /* DIUBAH: Padanan butang 'cancel' */
+  border: 1px solid #d1d5db; /* DIUBAH: Padanan butang 'cancel' */
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  height: 30px;
+  height: auto;
   transition: background-color 0.2s;
 }
 .log-reset-button:hover {
-  background: #4b5563;
+  background: #d1d5db; /* DIUBAH: Padanan butang 'cancel' */
 }
 
 /* Stail Butang Padam Julat */
 .log-delete-range-button {
-  padding: 6px 12px;
+  padding: 8px 14px; /* DIUBAH: Selaraskan padding */
   font-size: 13px;
   font-weight: 600;
-  color: #ef4444; /* Merah */
-  background: #fef2f2; /* Merah pudar */
+  color: #ef4444;
+  background: #fef2f2;
   border: 1px solid #ef4444;
-  border-radius: 4px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  height: 30px;
+  height: auto;
   transition: background-color 0.2s, color 0.2s;
   display: inline-flex;
   align-items: center;
@@ -95,53 +108,51 @@
   background: #ef4444;
   color: #ffffff;
 }
-.log-delete-range-button span {
-  margin-left: 6px;
-}
 
 .log-table-container {
   background: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* DIUBAH: Padanan rujukan */
+  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
   overflow: hidden;
 }
 .log-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
 }
-.log-thead {
-  background: #0074c8;
-  color: #ffffff;
-}
+
 .log-th {
-  padding: 10px 16px;
+  padding: 12px 15px; /* DIUBAH: Padanan rujukan */
   text-align: left;
   font-weight: 600;
-  font-size: 13px;
-  border-bottom: 1px solid #005a9e;
-  text-transform: uppercase;
+  font-size: 12px; /* DIUBAH: Padanan rujukan */
+  text-transform: uppercase; /* DIUBAH: Padanan rujukan */
+  letter-spacing: 0.05em; /* DIUBAH: Padanan rujukan */
+  background-color: #f0f9ff; /* DIUBAH: Padanan rujukan */
+  color: #005fa3; /* DIUBAH: Padanan rujukan */
+  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
 }
+
 .log-tbody {
-  color: #334155;
+  color: #1f2937; /* DIUBAH: Teks lebih gelap */
 }
 .log-tr {
   background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
   transition: background-color 0.2s;
 }
 .log-tr:hover {
-  background-color: #f8fafc;
+  background-color: #f0f9ff; /* DIUBAH: Padanan rujukan */
 }
 .log-td {
-  padding: 10px 16px;
+  padding: 12px 15px; /* DIUBAH: Padanan rujukan */
   vertical-align: middle;
   line-height: 1.5;
+  font-size: 13px; /* DIUBAH: Selaraskan saiz fon */
 }
 .log-td-small-text {
   font-size: 13px;
-  color: #334155;
+  color: #1f2937; /* DIUBAH: Teks lebih gelap */
 }
 .log-td-center {
   text-align: center;
@@ -152,9 +163,10 @@
   justify-content: center;
   gap: 4px;
 }
+
 .log-view-button {
   background: transparent;
-  color: #334155;
+  color: #374151; /* DIUBAH: Warna permulaan lebih gelap */
   border: none;
   border-radius: 4px;
   padding: 6px;
@@ -166,11 +178,11 @@
   transition: color 0.2s;
 }
 .log-view-button:hover {
-  color: #0074c8;
+  color: #0074c8; /* DIUBAH: Padanan rujukan */
 }
 .log-delete-button {
   background: transparent;
-  color: #334155;
+  color: #374151; /* DIUBAH: Warna permulaan lebih gelap */
   border: none;
   border-radius: 4px;
   padding: 6px;
@@ -184,16 +196,18 @@
 .log-delete-button:hover {
   color: #ef4444;
 }
+
 .log-no-logs-td {
   padding: 40px;
   text-align: center;
-  color: #475569;
-  font-size: 16px;
+  color: #6b7280; /* DIUBAH: Padanan no-data */
+  font-size: 14px; /* DIUBAH: Padanan no-data */
+  font-style: italic; /* DIUBAH: Padanan no-data */
 }
 .log-loading-text {
   padding: 40px;
   text-align: center;
-  color: #1d4ed8;
+  color: #0074c8; /* DIUBAH: Padanan rujukan */
   font-size: 16px;
   font-weight: 600;
 }
@@ -216,7 +230,6 @@
   font-weight: 600;
   gap: 6px;
 }
-
 .log-tag-green {
   background-color: #ecfdf5;
   color: #067647;
@@ -239,7 +252,7 @@
 }
 
 /* ===================================================================
-   2. Stail Modal Perincian (⭐️ DIKEMASKINI ⭐️)
+   2. Stail Modal Perincian
    =================================================================== */
 
 .log-modal-overlay {
@@ -249,6 +262,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px); /* DIUBAH: Tambah blur */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,6 +276,7 @@
   width: 90%;
   max-width: 600px;
   overflow: hidden;
+  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
 }
 
 .log-modal-header {
@@ -269,18 +284,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #1d4ed8;
-  color: white;
+  background: #f9fafb; /* DIUBAH: Padanan rujukan */
+  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
 }
 .log-modal-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.125rem; /* 18px */
+  color: #1f2937; /* DIUBAH: Teks gelap */
 }
 
 .log-modal-tutup-button {
   background: transparent;
   border: none;
-  color: white;
+  color: #6b7280; /* DIUBAH: Warna kelabu */
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -296,12 +312,12 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px; /* Jarak antara setiap item */
+  gap: 16px;
   max-height: 70vh;
   overflow-y: auto;
 }
 
-/* Stail untuk setiap item (label di kiri, nilai di kanan) */
+/* Stail untuk setiap item */
 .log-modal-detail-item {
   display: flex;
   flex-direction: row;
@@ -309,19 +325,19 @@
   align-items: center;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e8f0;
-  font-size: 15px;
+  font-size: 14px; /* DIUBAH: Kecilkan sikit */
 }
 .log-modal-detail-item strong {
-  font-size: 14px;
-  color: #334155;
+  font-size: 13px; /* DIUBAH: Kecilkan sikit */
+  color: #374151; /* DIUBAH: Padanan rujukan */
   font-weight: 600;
-  flex-shrink: 0; /* Pastikan label tidak mengecut */
+  flex-shrink: 0;
 }
 .log-modal-detail-item span {
   font-weight: 400;
-  color: #1e293b;
+  color: #1f2937; /* DIUBAH: Teks lebih gelap */
   text-align: right;
-  padding-left: 16px; /* Jarak dari label */
+  padding-left: 16px;
 }
 .log-modal-detail-item .log-tag-base {
   flex-shrink: 0;
@@ -335,26 +351,26 @@
   margin-top: 8px;
 }
 .log-modal-detail-full strong {
-  font-size: 14px;
-  color: #334155;
+  font-size: 13px; /* DIUBAH: Kecilkan sikit */
+  color: #374151; /* DIUBAH: Padanan rujukan */
   font-weight: 600;
 }
 
 .log-modal-perincian-teks {
   margin: 0;
-  background: #f8fafc;
+  background: #f9fafb; /* DIUBAH: Padanan rujukan */
   border: 1px solid #e5e7eb;
   padding: 12px;
   border-radius: 6px;
   width: 100%;
   line-height: 1.6;
-  color: #374151;
+  color: #1f2937; /* DIUBAH: Teks lebih gelap */
   white-space: pre-wrap;
   box-sizing: border-box;
 }
 
 /* ===================================================================
-   3. ⭐️ STail MODAL BARU: Padam Julat ⭐️
+   3. Stail MODAL BARU: Padam Julat
    =================================================================== */
 
 .log-delete-modal-overlay {
@@ -364,10 +380,11 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px); /* DIUBAH: Tambah blur */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1010; /* Di atas modal lain jika ada */
+  z-index: 1010;
 }
 
 .log-delete-modal {
@@ -377,6 +394,7 @@
   width: 90%;
   max-width: 450px;
   overflow: hidden;
+  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
 }
 
 .log-delete-modal-header {
@@ -384,15 +402,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #f8fafc; /* Latar belakang kelabu pudar */
+  background: #f9fafb;
   border-bottom: 1px solid #e2e8f0;
 }
 .log-delete-modal-header h3 {
   margin: 0;
-  font-size: 18px;
-  color: #1e293b;
+  font-size: 1.125rem; /* 18px */
+  color: #1f2937; /* DIUBAH: Teks gelap */
 }
-/* Guna semula stail butang tutup, tapi warna gelap */
+/* Guna semula stail butang tutup */
 .log-delete-modal-header .log-modal-tutup-button {
   color: #6b7280;
 }
@@ -406,7 +424,7 @@
 .log-delete-modal-body p {
   margin: 0;
   font-size: 14px;
-  color: #475569;
+  color: #374151; /* DIUBAH: Padanan rujukan */
   line-height: 1.6;
 }
 
@@ -418,13 +436,14 @@
 .log-delete-modal-form-group label {
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: #374151; /* DIUBAH: Padanan rujukan */
 }
 /* Guna semula stail input tarikh */
 .log-delete-modal-form-group .log-filter-select {
   width: 100%;
-  padding-left: 12px; /* Tiada ikon, jadi padding biasa */
-  appearance: auto; /* Biar pelayar tunjuk ikon kalendar */
+  padding: 8px 12px; /* DIUBAH: Selaraskan padding */
+  font-size: 14px; /* DIUBAH: Selaraskan saiz fon */
+  appearance: auto;
 }
 
 .log-delete-modal-error {
@@ -450,7 +469,7 @@
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px; /* DIUBAH: Padanan rujukan */
   cursor: pointer;
   border: 1px solid transparent;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
@@ -458,15 +477,15 @@
 
 .log-delete-modal-button-cancel {
   background: #ffffff;
-  color: #475569;
-  border: 1px solid #d1d5db;
+  color: #374151; /* DIUBAH: Padanan rujukan */
+  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
 }
 .log-delete-modal-button-cancel:hover {
   background: #f9fafb;
 }
 
 .log-delete-modal-button-confirm {
-  background: #dc2626; /* Merah */
+  background: #dc2626;
   color: #ffffff;
   border: 1px solid #b91c1c;
 }
