@@ -1,18 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-// ⭐️ Menggunakan 'lucide-react' untuk ikon
+// ⭐️ 1. axios diimport
+import axios from "axios"; 
 import { 
   Calendar, UserCog, Building, X, Eye,
   Plus, FilePenLine, Trash2, Send, CheckCircle, XCircle, AlertCircle,
   Filter 
 } from "lucide-react";
-// ⭐️ Mengimport fail CSS luaran
 import './LogAktiviti.css'; 
 
 // ===================================================================
-// 1. Data 'mock' (Kekal Sama)
+// 1. Data 'mock' (Hanya untuk Aktiviti)
 // ===================================================================
-const mockSenaraiPeranan = ["Pentadbir", "Ketua Subsidiari", "Staff"];
-const mockSenaraiSubsidiari = ["Ibu Pejabat", "UKM Holdings", "UKM Pakarunding", "UKM Specialist Centre"];
+// ⭐️ Data mock untuk Peranan & Subsidiari telah dibuang
 const mockSenaraiAktiviti = ["Tambah", "Lulus", "Kemaskini", "Padam", "Tolak", "Permohonan"];
 
 // ===================================================================
@@ -75,7 +74,7 @@ function AktivitiTag({ aktiviti }) {
 }
 
 // ===================================================================
-// 4. Komponen Modal (Perincian) (⭐️ DIKEMASKINI ⭐️)
+// 4. Komponen Modal (Perincian) (Kekal Sama)
 // ===================================================================
 function LogDetailModal({ log, onTutup }) {
   if (!log) return null;
@@ -90,7 +89,6 @@ function LogDetailModal({ log, onTutup }) {
         <div className="log-modal-body">
           <div className="log-modal-detail-item">
             <strong>Pengguna:</strong>
-            {/* ⭐️ DIUBAH: ID Pengguna dibuang dari sini */}
             <span>{log.nama_pengguna}</span>
           </div>
          
@@ -155,6 +153,8 @@ function DeleteRangeModal({ isOpen, onClose, onDeleteSuccess }) {
         url.searchParams.append("tarikhMula", deleteMula);
         url.searchParams.append("tarikhAkhir", deleteAkhir);
 
+        // ⭐️ DIUBAH: Menggunakan fetch ke axios untuk konsistensi (pilihan)
+        // atau kekalkan fetch
         const response = await fetch(url.toString(), {
           method: 'DELETE',
           headers: {
@@ -240,16 +240,17 @@ function DeleteRangeModal({ isOpen, onClose, onDeleteSuccess }) {
 
 
 // ===================================================================
-// 6. Komponen Utama (LogAktiviti) (Kekal Sama)
+// 6. Komponen Utama (LogAktiviti)
 // ===================================================================
 function LogAktiviti() {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [senaraiPeranan] = useState(mockSenaraiPeranan);
-  const [senaraiSubsidiari] = useState(mockSenaraiSubsidiari);
-  const [senaraiAktiviti] = useState(mockSenaraiAktiviti);
+  // ⭐️ 2. State untuk data API (menggantikan mock)
+  const [senaraiPeranan, setSenaraiPeranan] = useState([]);
+  const [senaraiSubsidiari, setSenaraiSubsidiari] = useState([]);
+  const [senaraiAktiviti] = useState(mockSenaraiAktiviti); // Kekalkan mock untuk aktiviti
   
   const [tarikhMula, setTarikhMula] = useState("");
   const [tarikhAkhir, setTarikhAkhir] = useState("");
@@ -260,6 +261,41 @@ function LogAktiviti() {
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); 
   
+  // ⭐️ 3. Fungsi untuk fetch Roles (dari rujukan)
+  const fetchRoles = async (token) => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/roles", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSenaraiPeranan(res.data);
+    } catch (err) {
+      console.error("Gagal memuatkan senarai peranan:", err);
+    }
+  };
+
+  // ⭐️ 4. Fungsi untuk fetch Subsidiari (dari rujukan)
+  const fetchSubsidiaries = async (token) => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/subsidiari", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSenaraiSubsidiari(res.data);
+    } catch (err) {
+      console.error("Gagal memuatkan senarai subsidiari:", err);
+    }
+  };
+
+  // ⭐️ 5. useEffect untuk memuatkan data dropdown sekali sahaja
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchRoles(token);
+      fetchSubsidiaries(token);
+    }
+  }, []); // <-- Array dependensi kosong, berjalan sekali semasa 'mount'
+
+
+  // Fungsi fetchLogs kekal sama
   const fetchLogs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -297,10 +333,12 @@ function LogAktiviti() {
     }
   }, [tarikhMula, tarikhAkhir, filterPeranan, filterSubsidiari, filterAktiviti]);
 
+  // useEffect untuk fetchLogs kekal sama
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
+  // Fungsi handleDeleteLog kekal sama
   const handleDeleteLog = async (logId) => {
     if (window.confirm("Adakah anda pasti mahu memadam rekod log ini? Tindakan ini tidak boleh diundur.")) {
       try {
@@ -328,6 +366,7 @@ function LogAktiviti() {
     }
   };
 
+  // Fungsi resetFilters kekal sama
   const resetFilters = () => {
     setTarikhMula("");
     setTarikhAkhir("");
@@ -336,6 +375,7 @@ function LogAktiviti() {
     setFilterAktiviti("");
   };
 
+  // logDipilih dan filteredLogs kekal sama
   const logDipilih = useMemo(() => {
     return logs.find(log => log.log_id === selectedLogId);
   }, [logs, selectedLogId]);
@@ -358,21 +398,35 @@ function LogAktiviti() {
               {senaraiAktiviti.map(aktiviti => (<option key={aktiviti} value={aktiviti}>{aktiviti}</option>))}
             </select>
           </div>
+          
+          {/* ⭐️ 6. Dropdown Peranan dikemaskini */}
           <div className="log-filter-input-wrapper">
             <UserCog className="log-filter-input-icon" />
             <select value={filterPeranan} onChange={(e) => setFilterPeranan(e.target.value)} className="log-filter-select">
               <option value="">Semua Peranan</option>
-              {senaraiPeranan.map(peranan => (<option key={peranan} value={peranan}>{peranan}</option>))}
+              {senaraiPeranan.map(r => (
+                <option key={r.peranan_id} value={r.nama_peranan}>
+                  {r.nama_peranan}
+                </option>
+              ))}
             </select>
           </div>
+          
+          {/* ⭐️ 7. Dropdown Subsidiari dikemaskini */}
           <div className="log-filter-input-wrapper">
             <Building className="log-filter-input-icon" />
             <select value={filterSubsidiari} onChange={(e) => setFilterSubsidiari(e.target.value)} className="log-filter-select">
               <option value="">Semua Subsidiari</option>
-              {senaraiSubsidiari.map(subs => (<option key={subs} value={subs}>{subs}</option>))}
+              {senaraiSubsidiari.map(s => (
+                <option key={s.subsidiari_id} value={s.nama_subsidiari}>
+                  {s.nama_subsidiari}
+                </option>
+              ))}
             </select>
           </div>
         </div>
+        
+        {/* Bahagian lain kekal sama */}
         <div className="log-filter-group-right">
           <div className="log-filter-input-wrapper">
             <Calendar className="log-filter-input-icon" />
