@@ -6,30 +6,32 @@
 /* ========================================= */
 
 .laporan-container {
-  padding: 24px; /* Padanan gaya .senaraipemantauan-container */
-  font-family: "Inter", sans-serif; /* Padanan fon */
-  background-color: #f9fafb; /* Padanan bg */
+  padding: 12px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  background-color: #f9fafb;
   min-height: 100vh;
 }
 
 .laporan-title {
-  font-size: 1.5rem; /* DIKEMASKINI: Dikecilkan (dari 1.8rem) */
-  font-weight: 700; /* Padanan gaya h1 */
-  margin-bottom: 24px; /* Padanan gaya h1 */
-  color: #005fa3; /* Padanan gaya h1 */
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #005fa3;
 }
 
 /* 'Card' untuk penapis (filter) */
 .filter-card {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px; /* Padanan .senaraipemantauan-filter-container */
+  gap: 12px;
   padding: 20px;
-  background-color: #ffffff; /* Padanan .senaraipemantauan-table-wrapper */
-  border-radius: 8px; /* Padanan .senaraipemantauan-table-wrapper */
-  border: 1px solid #e5e7eb; /* Padanan .senaraipemantauan-table-wrapper */
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Padanan .senaraipemantauan-table-wrapper */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .filter-group {
@@ -39,17 +41,17 @@
 }
 
 .filter-group label {
-  font-size: 12px; /* Padanan gaya label */
+  font-size: 12px;
   font-weight: 600;
-  color: #4b5563; /* Padanan gaya teks */
+  color: #374151;
 }
 
 .filter-group input,
 .filter-group select {
-  padding: 8px 12px; /* Padanan .senaraipemantauan-filter-select */
-  border-radius: 6px; /* Padanan .senaraipemantauan-filter-select */
-  border: 1px solid #d1d5db; /* Padanan .senaraipemantauan-filter-select */
-  font-size: 14px; /* Padanan .senaraipemantauan-filter-select */
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
   background-color: white;
 }
 
@@ -57,8 +59,8 @@
 .table-card {
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb; /* Padanan .senaraipemantauan-table-wrapper */
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Padanan .senaraipemantauan-table-wrapper */
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   overflow-x: auto;
 }
 
@@ -69,24 +71,24 @@
 
 .risk-table th,
 .risk-table td {
-  padding: 12px 15px; /* DIKEKALKAN: Padding asal anda dikekalkan */
-  border-bottom: 1px solid #e5e7eb; /* Padanan .senaraipemantauan-table */
+  padding: 12px 15px;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
-  vertical-align: middle; /* Padanan .senaraipemantauan-table */
+  vertical-align: middle;
 }
 
 .risk-table th {
-  background-color: #f0f9ff; /* Padanan .senaraipemantauan-table th */
+  background-color: #f0f9ff;
   font-weight: 600;
-  color: #005fa3; /* Padanan .senaraipemantauan-table th */
-  font-size: 12px; /* Padanan .senaraipemantauan-table th */
-  text-transform: uppercase; /* Padanan .senaraipemantauan-table th */
-  letter-spacing: 0.05em; /* Padanan .senaraipemantauan-table th */
+  color: #005fa3;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .risk-table td {
-  font-size: 13px; /* Padanan .senaraipemantauan-table td */
-  color: #4b5563; /* Padanan .senaraipemantauan-table td */
+  font-size: 13px;
+  color: #1f2937;
 }
 
 .risk-table tr:last-child td {
@@ -94,7 +96,7 @@
 }
 
 .risk-table tr:hover {
-  background-color: #f0f9ff; /* Padanan .senaraipemantauan-table tr:hover */
+  background-color: #f0f9ff;
 }
 
 .action-icons {
@@ -102,14 +104,15 @@
 }
 
 .btn-laporan-icon {
-  background: transparent; /* Padanan .senaraipemantauan-icon-edit-btn */
-  color: #0074c8; /* Padanan .senaraipemantauan-icon-edit-btn */
-  border: 1px solid #b3dfff; /* Padanan .senaraipemantauan-icon-edit-btn */
-  border-radius: 6px; /* Padanan .senaraipemantauan-icon-edit-btn */
-  padding: 5px; /* Padanan .senaraipemantauan-icon-edit-btn */
+  /* --- DIKEMASKINI: Latar belakang biru pejal --- */
+  background: #0074c8;
+  color: #ffffff;
+  border: 1px solid #0074c8;
+  border-radius: 6px;
+  padding: 5px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -117,9 +120,10 @@
 }
 
 .btn-laporan-icon:hover {
-  background-color: #0074c8; /* Padanan .senaraipemantauan-icon-edit-btn:hover */
-  color: #ffffff; /* Padanan .senaraipemantauan-icon-edit-btn:hover */
-  border-color: #0074c8; /* Padanan .senaraipemantauan-icon-edit-btn:hover */
+  /* --- DIKEMASKINI: Hover lebih gelap --- */
+  background-color: #005fa3;
+  color: #ffffff;
+  border-color: #005fa3;
 }
 
 /* ... (CSS anda yang lain) ... */

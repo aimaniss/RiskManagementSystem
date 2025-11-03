@@ -208,7 +208,7 @@ export default function LaporanRisiko() {
               <tr>
                 <th>Bil</th>
                 <th>No. Rujukan</th>
-                <th>Nama Risiko</th>
+                <th>Risiko</th>
                 <th>Tahun  & Separuh Tahun Daftar</th>
                 <th>Syarikat</th>
                 <th>Skor Risiko (Terkini)</th>
