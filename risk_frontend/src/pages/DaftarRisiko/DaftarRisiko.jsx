@@ -80,7 +80,7 @@ function DaftarRisiko() {
       case "Sederhana": return "S";
       case "Tinggi": return "T";
       case "Sangat Tinggi": return "ST";
-      default: return ""; 
+      default: return null; 
     }
   };
 
