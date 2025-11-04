@@ -51,8 +51,10 @@ function Sidebar() {
               to="/"
               className={`sidebar-link ${location.pathname === "/" ? "active" : ""}`}
             >
-              <LayoutDashboard className="sidebar-icon" />
-              Paparan Utama
+              <>
+                <LayoutDashboard className="sidebar-icon" />
+                Paparan Utama
+              </>
             </Link>
           </li>
           <li>
@@ -62,13 +64,16 @@ function Sidebar() {
                 location.pathname === "/SenaraiRisiko" ? "active" : ""
               }`}
             >
-              <ListChecks className="sidebar-icon" />
-              Senarai Risiko
+              <>
+                <ListChecks className="sidebar-icon" />
+                Senarai Risiko
+              </>
             </Link>
           </li>
+
+          {/* Daftar Risiko: Tiada Viewer */}
           {(role === "Admin" ||
             role === "Executive" ||
-            role === "Viewer" ||
             role === "Ketua Subsidiari" ||
             role === "Staff") && (
             <li>
@@ -78,15 +83,20 @@ function Sidebar() {
                   location.pathname === "/DaftarRisiko" ? "active" : ""
                 }`}
               >
-                <FilePlus2 className="sidebar-icon" />
-                Daftar Risiko
+                <>
+                  <FilePlus2 className="sidebar-icon" />
+                  Daftar Risiko
+                </>
               </Link>
             </li>
           )}
+
+          {/* === PERUBAHAN DI SINI: 'Viewer' ditambah === */}
           {(role === "Admin" ||
             role === "Executive" ||
             role === "Ketua Subsidiari" ||
-            role === "Staff") && (
+            role === "Staff" ||
+            role === "Viewer") && (
             <li>
               <Link
                 to="/RawatanRisiko"
@@ -94,11 +104,15 @@ function Sidebar() {
                   location.pathname === "/RawatanRisiko" ? "active" : ""
                 }`}
               >
-                <Stethoscope className="sidebar-icon" />
-                Penilaian & Rawatan
+                <>
+                  <Stethoscope className="sidebar-icon" />
+                  Penilaian & Rawatan
+                </>
               </Link>
             </li>
           )}
+
+          {/* Pemantauan Risiko: Ada Viewer */}
           {(role === "Admin" ||
             role === "Executive" ||
             role === "Ketua Subsidiari" ||
@@ -111,29 +125,34 @@ function Sidebar() {
                   location.pathname === "/PemantauanRisiko" ? "active" : ""
                 }`}
               >
-                <Activity className="sidebar-icon" />
-                Pemantauan Risiko
+                <>
+                  <Activity className="sidebar-icon" />
+                  Pemantauan Risiko
+                </>
               </Link>
             </li>
-           )}
-          {(role === "Admin" ||
-            role === "Executive" ||
-            role === "Ketua Subsidiari" ||
-            role === "Staff") && (
-            <>
-              <li>
-                <Link
-                  to="/Pindaan"
-                  className={`sidebar-link ${
-                    location.pathname === "/Pindaan" ? "active" : ""
-                  }`}
-                >
+          )}
+
+          {/* Pindaan: Hanya Admin dan Executive */}
+          {(role === "Admin" || role === "Executive") && (
+            <li>
+              <Link
+                to="/Pindaan"
+                className={`sidebar-link ${
+                  location.pathname === "/Pindaan" ? "active" : ""
+                }`}
+              >
+                <>
                   <FileEdit className="sidebar-icon" />
                   Pindaan
-                </Link>
-              </li>
-              
-              
+                </>
+              </Link>
+            </li>
+          )}
+
+          {/* Laporan, Urus Pengguna, Log Aktiviti: Hanya Admin */}
+          {role === "Admin" && (
+            <>
               <li>
                 <Link
                   to="/Laporan"
@@ -141,8 +160,10 @@ function Sidebar() {
                     location.pathname === "/Laporan" ? "active" : ""
                   }`}
                 >
-                  <BarChart3 className="sidebar-icon" />
-                  Laporan
+                  <>
+                    <BarChart3 className="sidebar-icon" />
+                    Laporan
+                  </>
                 </Link>
               </li>
               <li>
@@ -152,8 +173,10 @@ function Sidebar() {
                     location.pathname === "/UrusPengguna" ? "active" : ""
                   }`}
                 >
-                  <Users className="sidebar-icon" />
-                  Urus Pengguna
+                  <>
+                    <Users className="sidebar-icon" />
+                    Urus Pengguna
+                  </>
                 </Link>
               </li>
               <li>
@@ -163,8 +186,10 @@ function Sidebar() {
                     location.pathname === "/LogAktiviti" ? "active" : ""
                   }`}
                 >
-                  <ClipboardList className="sidebar-icon" />
-                  Log Aktiviti
+                  <>
+                    <ClipboardList className="sidebar-icon" />
+                    Log Aktiviti
+                  </>
                 </Link>
               </li>
             </>
@@ -178,8 +203,10 @@ function Sidebar() {
         className="sidebar-logout"
         onClick={() => localStorage.removeItem("token")}
       >
-        <LogOut className="sidebar-icon" />
-        Log Keluar
+        <>
+          <LogOut className="sidebar-icon" />
+          Log Keluar
+        </>
       </Link>
     </div>
   );
