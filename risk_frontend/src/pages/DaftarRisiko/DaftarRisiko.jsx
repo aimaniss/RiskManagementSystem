@@ -5,6 +5,24 @@ import api from "../../api/api";
 import "./DaftarRisiko.css";
 import PanduanModal from '../Panduan/Panduan'; 
 
+// --- JADUAL RUJUKAN SKOR BARU ---
+const KebarangkalianData = {
+    5: "Hampir Pasti",
+    4: "Kemungkinan Tinggi",
+    3: "Berpeluang Untuk Berlaku",
+    2: "Kemungkinan Rendah",
+    1: "Hampir Tiada Kemungkinan",
+};
+
+const ImpakData = {
+    5: "Sangat Besar",
+    4: "Besar",
+    3: "Ketara",
+    2: "Boleh Diukur",
+    1: "Tidak Ketara",
+};
+// ---------------------------------
+
 function DaftarRisiko() {
   const [formData, setFormData] = useState({
     noRujukan: "",
@@ -16,9 +34,9 @@ function DaftarRisiko() {
     risiko: "",
     skorKebarangkalian: "",
     skorImpak: "",
-    skorRisiko: "", // Ini akan diisi dengan nombor (cth: 25) oleh useEffect
+    skorRisiko: "", 
     statusRisiko: "",
-    tahapRisiko: "" // Ini akan diisi dengan label (cth: "Sangat Tinggi") oleh useEffect
+    tahapRisiko: "" 
   });
 
   const [puncaList, setPuncaList] = useState([""]);
@@ -26,7 +44,7 @@ function DaftarRisiko() {
   const [riskColor, setRiskColor] = useState("#f1f5f9");
   const [subsidiariList, setSubsidiariList] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPanduanOpen, setIsPanduanOpen] = useState(false); // State untuk modal panduan
+  const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
 
   // Ambil userRole dari JWT token
   const token = localStorage.getItem("token");
@@ -56,14 +74,13 @@ function DaftarRisiko() {
 
   const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
 
-  // Helper untuk singkatan R/S/T/ST
   const getRiskAbbreviation = (label) => {
     switch(label) {
       case "Rendah": return "R";
       case "Sederhana": return "S";
       case "Tinggi": return "T";
       case "Sangat Tinggi": return "ST";
-      default: return ""; // Kembalikan string kosong jika tiada padanan
+      default: return ""; 
     }
   };
 
@@ -84,7 +101,7 @@ function DaftarRisiko() {
       }
     };
     fetchSubsidiari();
-  }, []); // Dependency array sengaja dibiarkan kosong
+  }, []); 
 
   useEffect(() => {
     const k = parseInt(formData.skorKebarangkalian);
@@ -94,8 +111,8 @@ function DaftarRisiko() {
       const { label, color } = getRiskMatrix(k, i);
       setFormData(prev => ({ 
         ...prev, 
-        skorRisiko: total, // State 'skorRisiko' simpan nombor (cth: 25)
-        tahapRisiko: label, // State 'tahapRisiko' simpan label (cth: "Sangat Tinggi")
+        skorRisiko: total, 
+        tahapRisiko: label, 
         statusRisiko: label==="Rendah"?"Tidak":"Ya" 
       }));
       setRiskColor(color);
@@ -147,20 +164,15 @@ function DaftarRisiko() {
         skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
         punca: puncaList.filter(p => p.trim() !== ""),
         kesan: kesanList.filter(k => k.trim() !== ""),
-        
-       
         skorRisiko: getRiskAbbreviation(formData.tahapRisiko)
     };
 
-    // --- PERUBAHAN DI SINI ---
-    // 2. Buang 'tahapRisiko' (yang berisi "Sangat Tinggi") dari data yang akan dihantar.
     delete finalData.tahapRisiko;
 
 
     setIsSubmitting(true);
     try {
 
-      //Check NoRujukan unik sebelum digunakan
       // ✅ Semak NoRujukan unik
 try {
   const encodedNoRujukan = encodeURIComponent(noRujukanTrimmed);
@@ -199,10 +211,10 @@ try {
       <h2>Daftar Risiko</h2>
       <form onSubmit={handleSubmit}>
 
-        {/* Maklumat Risiko */}
+        {/* KOTAK GABUNGAN: Pengenalpastian Risiko & Maklumat Risiko */}
         <div className="box">
           <div className="box-header pemantauan-risk-header"> 
-            <span>Maklumat Risiko</span>
+            <span>Pengenalpastian Risiko</span>
             <button 
               type="button" 
               className="pemantauan-panduan-btn" 
@@ -213,8 +225,10 @@ try {
             </button>
           </div>
 
-          <div style={{ padding:"16px", display:"grid", gap:"14px" }}>
-            <div style={{ display:"flex", gap:"12px" }}>
+          <div className="combined-info-section" style={{ padding:"16px", display:"grid", gap:"14px" }}>
+                
+            {/* BAHAGIAN MAKLUMAT RISIKO (Pindah ke atas) */}
+            <div className="info-row" style={{ display:"flex", gap:"12px" }}>
               <label className="label">No Rujukan:</label>
               <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" placeholder="Contoh: UKMH-001/2025" />
               <label className="label">Tahun:</label>
@@ -227,11 +241,11 @@ try {
                 className="input select-dropdown"
               >
                 <option value="">-- Pilih --</option>
-                <option value="1">Pertama</option> {/* Display: Pertama, Value: 1 */}
-                <option value="2">Kedua</option>   {/* Display: Kedua, Value: 2 */}
+                <option value="1">Pertama</option> 
+                <option value="2">Kedua</option>   
               </select>
             </div>
-            <div style={{ display:"flex", gap:"12px" }}>
+            <div className="info-row" style={{ display:"flex", gap:"12px" }}>
               <label className="label">Subsidiari:</label>
               <select 
                 name="subsidiari" 
@@ -246,13 +260,11 @@ try {
                   : <option disabled>Tiada subsidiari</option>}
               </select>
             </div>
-          </div>
-        </div>
 
-        {/* Pengenalpastian Risiko */}
-        <div className="box">
-          <div className="box-header">Pengenalpastian Risiko</div>
-          <div style={{ padding:"16px" }}>
+                {/* GARIS PEMISAH VISUAL */}
+                <hr className="divider-line" />
+
+            {/* BAHAGIAN PENGENALPASTIAN RISIKO */}
             <div style={{ display:"flex", gap:"12px", flexWrap:"wrap" }}>
               <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
                 <label className="label">Kategori Risiko:</label>
@@ -299,6 +311,7 @@ try {
           </div>
         </div>
 
+        {/* Penilaian Risiko (Kekal sebagai kotak berasingan) */}
         {canEditPenilaian && (
   <div className="box">
     <div className="box-header">Penilaian Risiko</div>
@@ -307,7 +320,11 @@ try {
         <label className="label">Skor Kebarangkalian:</label>
         <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
           <option value="">-- Pilih --</option>
-        {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
+          {Object.entries(KebarangkalianData).map(([value, label])=> (
+                <option key={value} value={value}>
+                    {value} - {label} 
+                </option>
+            ))}
         </select>
       </div>
 
@@ -315,7 +332,11 @@ try {
         <label className="label">Skor Impak:</label>
         <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
           <option value="">-- Pilih --</option>
-          {[1,2,3,4,5].map(v=> <option key={v} value={v}>{v}</option>)}
+          {Object.entries(ImpakData).map(([value, label])=> (
+                <option key={value} value={value}>
+                    {value} - {label} 
+                </option>
+            ))}
         </select>
       </div>
 
@@ -323,12 +344,11 @@ try {
         <label className="label">Skor Risiko:</label>
         <input 
           type="text" 
-          // Paparkan singkatan (cth: "ST") pada UI
           value={getRiskAbbreviation(formData.tahapRisiko)} 
           readOnly 
           className="input risk-score" 
           style={{ background: riskColor, textAlign:"center" }} 
-       />
+       />
       </div>
 
       <div className="risk-field">
@@ -359,8 +379,7 @@ try {
         </div>
       </form>
 
-      {/* Kod untuk panggil Modal Panduan */}
-      {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+      {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
 
     </div>
   );
