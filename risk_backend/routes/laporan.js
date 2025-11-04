@@ -99,7 +99,7 @@ router.get("/", verifyToken, async (req, res) => {
         bt.pelan_tindakan_terkini,
         bt.kakitangan_terkini,
         
-        COALESCE(pt.status_pemantauan, 'Buka') AS status_pemantauan_terkini, 
+        pt.status_pemantauan AS status_pemantauan_terkini,
         pt.catatan,
         pt.no_bil_kelulusan,
         pt.justifikasi_pindaan_pemantauan,

@@ -192,7 +192,7 @@ function PemantauanRisiko() {
                         ? d.pelan_tindakan_terkini.filter(p => p) 
                         : [], 
                         
-                    status_pemantauan_terkini: d.status_pemantauan_terkini || "Buka",
+                    status_pemantauan_terkini: d.status_pemantauan_terkini || "",
                     catatan: d.catatan,
                     skor_kebarangkalian_terkini: d.skor_kebarangkalian_terkini,
                     skor_impak_terkini: d.skor_impak_terkini,
@@ -318,7 +318,7 @@ function PemantauanRisiko() {
     // Logik Kad Ringkasan (DIKEMASKINI: untuk Graf Bar Skor Terkini)
     const totalRisiko = filteredData.length;
     const statusCounts = filteredData.reduce((acc, d) => {
-        const status = d.status_pemantauan_terkini || "Buka"; 
+        const status = d.status_pemantauan_terkini || ""; 
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
