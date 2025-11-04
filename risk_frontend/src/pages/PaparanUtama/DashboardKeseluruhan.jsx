@@ -218,7 +218,7 @@ export default function DashboardKeseluruhan({
         
         {/* --- ROW 1 (GABUNGAN) --- */}
         <div className="section-box section-kuantitatif">
-          <h4 className="section-title-normal">SUKATAN RISIKO SEMASA</h4>
+          <h4 className="section-title-normal"></h4>
           <div className="sukatan-risiko-grid">
             <div className="sukatan-header-col">
               <div className="sukatan-header-spacer"></div>
