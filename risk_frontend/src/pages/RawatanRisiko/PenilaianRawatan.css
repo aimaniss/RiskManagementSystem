@@ -9,15 +9,16 @@
   min-height: 100vh;
 }
 
-.penilaian-rawatan-container h1 {
-  font-size: 1.8rem;
+/* 🌟 KEMASKINI: h1 ditukar kepada h2 dan saiz fon dikecilkan */
+.penilaian-rawatan-container h2 {
+  font-size: 1.5rem; /* Dikecilkan dari 1.8rem */
   font-weight: 700;
   margin-bottom: 14px;
   color: #005fa3;
   text-align: left;
 }
 
-/* === TAB CONTAINER & CARDS & FILTERS (Kekal Sama) === */
+/* === TAB CONTAINER & FILTERS === */
 
 .pr-tab-container {
   display: flex;
@@ -48,40 +49,11 @@
   background-color: #f9fafb;
 }
 
-.pr-cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.pr-info-card {
-  flex: 1 1 180px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 14px;
-  text-align: center;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.pr-info-card h3 {
-  font-size: 12px;
-  color: #4b5563;
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-
-.pr-info-card p {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
+/* 🌟 KEMASKINI: Semua gaya .pr-cards-container dan .pr-info-card telah DIBUANG */
 
 .pr-filter-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap; /* Ini membolehkan filter ke-5 muat secara automatik */
   gap: 10px;
   margin-bottom: 15px;
   align-items: center;
@@ -246,13 +218,13 @@
 
 /* === PENGURUSAN LEBAR LAJUR RAWATAN (Kekal Sama) === */
 .pr-risiko-table.rawatan-active {
-  /* Lajur 8: Skor Risiko */
+  /* Lajur 8: Skor Risiko (atau Status Risiko - kedudukan ditukar dalam JSX) */
   & th:nth-child(8),
   & tr td:nth-child(8) {
     width: 70px;
     min-width: 70px;
   }
-  /* Lajur 9: Status Risiko */
+  /* Lajur 9: Status Risiko (atau Skor Risiko - kedudukan ditukar dalam JSX) */
   & th:nth-child(9),
   & tr td:nth-child(9) {
     width: 60px;

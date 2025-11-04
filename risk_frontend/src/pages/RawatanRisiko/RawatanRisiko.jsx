@@ -12,6 +12,7 @@ function PenilaianDanRawatan() {
     const [tahunFilter, setTahunFilter] = useState("");
     const [separuhFilter, setSeparuhFilter] = useState("");
     const [subsidiariFilter, setSubsidiariFilter] = useState("");
+    const [kategoriFilter, setKategoriFilter] = useState(""); // 1️⃣ KEMASKINI: State untuk filter kategori
     const [subsidiariList, setSubsidiariList] = useState([]);
     const [loading, setLoading] = useState(true);
     
@@ -85,6 +86,11 @@ function PenilaianDanRawatan() {
     const risikoMemerlukanRawatan = data.filter(d => isDinilai(d) && !hasRawatan(d)).length;
     const risikoAdaRawatan = data.filter(d => isDinilai(d) && hasRawatan(d)).length;
 
+    // 1️⃣ KEMASKINI: Senarai kategori unik untuk filter
+    const kategoriList = useMemo(() => {
+        return [...new Set(data.map(d => d.kategori).filter(k => k))].sort();
+    }, [data]);
+
     // 🌟 FUNGSI TINDAKAN DIPERBAHARUI (Logik untuk buka modal Penilaian atau Rawatan)
     const handleAction = (item)=>{ 
         setSelectedData(item); 
@@ -103,6 +109,7 @@ function PenilaianDanRawatan() {
         setTahunFilter("");
         setSeparuhFilter("");
         setSubsidiariFilter("");
+        setKategoriFilter(""); // 1️⃣ KEMASKINI: Reset filter kategori
         fetchData(); 
     };
 
@@ -123,9 +130,10 @@ function PenilaianDanRawatan() {
             const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari === subsidiariFilter;
             const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
             const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
-            return matchSearch && matchSubsidiari && matchTahun && matchSeparuh;
+            const matchKategori = !kategoriFilter || d.kategori === kategoriFilter; // 1️⃣ KEMASKINI: Logik filter kategori
+            return matchSearch && matchSubsidiari && matchTahun && matchSeparuh && matchKategori;
         });
-    }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter]);
+    }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter, kategoriFilter]); // 1️⃣ KEMASKINI: Tambah kategoriFilter
 
     // ... (renderTableContent & bahagian return (JSX) dikekalkan) ...
     const penilaianColSpan = 9; 
@@ -176,16 +184,17 @@ function PenilaianDanRawatan() {
                         <td>{d.bahagian_unit||"-"}</td>
                         <td>{d.risiko}</td>
 
-                        {/* ✅ SKOR RISIKO (Kebarangkalian/Impak) */}
-                        <td className="pr-center">
-                            <div className="pr-risk-box" style={{backgroundColor:"#e0f2fe", color:"#005fa3"}}>
-                                {d.skor_kebarangkalian}/{d.skor_impak}
-                            </div>
-                        </td>
-                        {/* ✅ STATUS RISIKO (Tahap Risiko - T, S, R, ST) */}
+                        {/* 4️⃣ KEMASKINI: Lajur STATUS RISIKO (T/S/R) ditukar ke sini */}
                         <td className="pr-center">
                             <div className="pr-risk-box" style={{backgroundColor:d.risk_color}}>
                                 {shortForm(d.tahap_risiko)}
+                            </div>
+                        </td>
+                        
+                        {/* 4️⃣ KEMASKINI: Lajur SKOR RISIKO (K/I) ditukar ke sini */}
+                        <td className="pr-center">
+                            <div className="pr-risk-box" style={{backgroundColor:"#e0f2fe", color:"#005fa3"}}>
+                                {d.skor_kebarangkalian}/{d.skor_impak}
                             </div>
                         </td>
 
@@ -214,15 +223,10 @@ function PenilaianDanRawatan() {
 
     return (
         <div className="penilaian-rawatan-container">
-            <h1>Penilaian & Rawatan Risiko</h1>
+            {/* 3️⃣ KEMASKINI: Tajuk dikecilkan dari <h1> ke <h2> */}
+            <h2>Penilaian & Rawatan Risiko</h2>
 
-            {/* Cards */}
-            <div className="pr-cards-container">
-                <div className="pr-info-card"><h3>Risiko Keseluruhan</h3><p>{data.length}</p></div>
-                <div className="pr-info-card"><h3>Belum Dinilai</h3><p>{risikoBelumDinilai}</p></div>
-                <div className="pr-info-card"><h3>Memerlukan Rawatan</h3><p>{risikoMemerlukanRawatan}</p></div>
-                <div className="pr-info-card"><h3>Rawatan Aktif</h3><p>{risikoAdaRawatan}</p></div>
-            </div>
+            {/* 2️⃣ KEMASKINI: Bahagian Cards telah dibuang */}
             
             {/* Tabs */}
             <div className="pr-tab-container">
@@ -256,6 +260,11 @@ function PenilaianDanRawatan() {
                     <option value="1">Pertama</option>
                     <option value="2">Kedua</option>
                 </select>
+                {/* 1️⃣ KEMASKINI: Filter Kategori ditambah */}
+                <select value={kategoriFilter} onChange={e=>setKategoriFilter(e.target.value)}>
+                    <option value="">-- Semua Kategori --</option>
+                    {kategoriList.map(k=><option key={k} value={k}>{k}</option>)}
+                </select>
             </div>
 
             {/* Table */}
@@ -288,7 +297,9 @@ function PenilaianDanRawatan() {
                                 <th>No Rujukan</th><th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
                                 <th>Subsidiari</th><th>Kategori Risiko</th>
                                 <th>Bahagian/Unit</th><th>Risiko</th>
-                                <th>Skor Risiko</th><th>Status Risiko</th> 
+                                {/* 4️⃣ KEMASKINI: Header ditukar */}
+                                <th>Status Risiko</th> 
+                                <th>Skor Risiko</th>
                                 <th>Status Rawatan</th><th>Tindakan</th>
                             </tr>
                         )}
