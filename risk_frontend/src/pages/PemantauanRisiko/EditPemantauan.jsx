@@ -250,7 +250,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
                             <div className="pemantauan-flex-item"><span className="pemantauan-label-inline">No Rujukan:</span><span className="pemantauan-data-inline">{data.no_rujukan || "-"}</span></div>
                             <div className="pemantauan-flex-item"><span className="pemantauan-label-inline">Tahun Didaftarkan:</span><span className="pemantauan-data-inline">{data.tahun || "-"}</span></div>
                             <div className="pemantauan-flex-item"><span className="pemantauan-label-inline">Separuh Tahun Didaftarkan:</span><span className="pemantauan-data-inline">{formatSeparuhTahun(data.separuh_tahun)}</span></div>
-                            <div className="pemantauan-flex-item"><span className="pemantauan-label-inline">Subsidiari:</span><span className="pemantauan-data-inline">{data.nama_subsidiari || "-"}</span></div>
+                            <div className="pemantauan-flex-item"><span className="pemantauan-label-inline">Syarikat:</span><span className="pemantauan-data-inline">{data.nama_subsidiari || "-"}</span></div>
                         </div>
 
                         {/* Maklumat Pengenalpastian */}
