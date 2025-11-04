@@ -7,19 +7,19 @@ import PanduanModal from '../Panduan/Panduan';
 
 // --- JADUAL RUJUKAN SKOR BARU ---
 const KebarangkalianData = {
-    5: "Hampir Pasti",
-    4: "Kemungkinan Tinggi",
-    3: "Berpeluang Untuk Berlaku",
-    2: "Kemungkinan Rendah",
-    1: "Hampir Tiada Kemungkinan",
+    5: "Hampir Pasti",
+    4: "Kemungkinan Tinggi",
+    3: "Berpeluang Untuk Berlaku",
+    2: "Kemungkinan Rendah",
+    1: "Hampir Tiada Kemungkinan",
 };
 
 const ImpakData = {
-    5: "Sangat Besar",
-    4: "Besar",
-    3: "Ketara",
-    2: "Boleh Diukur",
-    1: "Tidak Ketara",
+    5: "Sangat Besar",
+    4: "Besar",
+    3: "Ketara",
+    2: "Boleh Diukur",
+    1: "Tidak Ketara",
 };
 // ---------------------------------
 
@@ -140,6 +140,19 @@ function DaftarRisiko() {
     return alert("⚠️ Sila lengkapkan semua maklumat dalam Pengenalpastian Risiko.");
   }
 
+    // --- KOD BARU UNTUK LOGIK CUSTOM SKOR DISINI ---
+    if (canEditPenilaian) {
+        const k = formData.skorKebarangkalian;
+        const i = formData.skorImpak;
+
+        // Semak jika salah satu dipilih, tetapi yang satu lagi tidak
+        // Logik: (k ada nilai dan i kosong) ATAU (k kosong dan i ada nilai)
+        if ((k && !i) || (!k && i)) {
+            return alert("⚠️ Anda mesti mengisi KEDUA-DUA Skor Kebarangkalian dan Skor Impak, atau TIDAK MENGISI KEDUA-DUANYA.");
+        }
+    }
+    // ------------------------------------
+
     const finalSubsidiari = formData.subsidiari
       ? parseInt(formData.subsidiari)
       : ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)
@@ -226,7 +239,7 @@ try {
           </div>
 
           <div className="combined-info-section" style={{ padding:"16px", display:"grid", gap:"14px" }}>
-                
+                
             {/* BAHAGIAN MAKLUMAT RISIKO (Pindah ke atas) */}
             <div className="info-row" style={{ display:"flex", gap:"12px" }}>
               <label className="label">No Rujukan:</label>
@@ -261,8 +274,8 @@ try {
               </select>
             </div>
 
-                {/* GARIS PEMISAH VISUAL */}
-                <hr className="divider-line" />
+                {/* GARIS PEMISAH VISUAL */}
+                <hr className="divider-line" />
 
             {/* BAHAGIAN PENGENALPASTIAN RISIKO */}
             <div style={{ display:"flex", gap:"12px", flexWrap:"wrap" }}>
@@ -321,10 +334,10 @@ try {
         <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
           <option value="">-- Pilih --</option>
           {Object.entries(KebarangkalianData).map(([value, label])=> (
-                <option key={value} value={value}>
-                    {value} - {label} 
-                </option>
-            ))}
+                <option key={value} value={value}>
+                    {value} - {label} 
+                </option>
+            ))}
         </select>
       </div>
 
@@ -333,10 +346,10 @@ try {
         <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
           <option value="">-- Pilih --</option>
           {Object.entries(ImpakData).map(([value, label])=> (
-                <option key={value} value={value}>
-                    {value} - {label} 
-                </option>
-            ))}
+                <option key={value} value={value}>
+                    {value} - {label} 
+                </option>
+            ))}
         </select>
       </div>
 
