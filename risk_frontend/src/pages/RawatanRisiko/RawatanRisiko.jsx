@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Edit, Plus } from "lucide-react";
 import api from "../../api/api";
 import EditRawatan from "./EditRawatan"; 
-import PenilaianModal from './PenilaianModal'; // 🌟 KEMASKINI IMPORT: Gunakan PenilaianModal
+import PenilaianModal from './PenilaianModal';
 import "./PenilaianRawatan.css";
 
 function PenilaianDanRawatan() {
@@ -12,11 +12,10 @@ function PenilaianDanRawatan() {
     const [tahunFilter, setTahunFilter] = useState("");
     const [separuhFilter, setSeparuhFilter] = useState("");
     const [subsidiariFilter, setSubsidiariFilter] = useState("");
-    const [kategoriFilter, setKategoriFilter] = useState(""); // 1️⃣ KEMASKINI: State untuk filter kategori
+    const [kategoriFilter, setKategoriFilter] = useState("");
     const [subsidiariList, setSubsidiariList] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // 🌟 KEMASKINI: Rename TambahPenilaian ke PenilaianModal untuk konsistensi
     const [showPenilaianModal, setShowPenilaianModal] = useState(false); 
     const [showRawatanModal, setShowRawatanModal] = useState(false); 
 
@@ -25,7 +24,7 @@ function PenilaianDanRawatan() {
     const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
     const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
-    // Matrix Risiko (5x5) - (Dikekalkan)
+    // Matrix Risiko (5x5)
     const riskMatrix = {
         1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
         2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -41,7 +40,6 @@ function PenilaianDanRawatan() {
     const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null);
     const hasRawatan = (d) => d.plan_tindakan && Array.isArray(d.plan_tindakan) && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0;
     
-    // ... (Fungsi fetchSubsidiariList, fetchData, useEffect, risikoBelumDinilai, dsb. dikekalkan) ...
     const fetchSubsidiariList = async () => {
         try {
             const res = await api.get("/subsidiari");
@@ -69,7 +67,7 @@ function PenilaianDanRawatan() {
                     risk_color: color,
                     plan_tindakan: Array.isArray(planTindakan) ? planTindakan : [planTindakan].filter(p => p),
                     kakitangan_bertanggungjawab: Array.isArray(kakitangan) ? kakitangan : [kakitangan].filter(k => k),
-                    bahagian_unit: d.bahagian_unit || d.unit || null,
+                    bahagian_unit: d.bahagian || d.unit || null,
                 };
             });
             setData(dataWithScore);
@@ -84,24 +82,20 @@ function PenilaianDanRawatan() {
 
     const risikoBelumDinilai = data.filter(d => !isDinilai(d)).length;
     const risikoMemerlukanRawatan = data.filter(d => isDinilai(d) && !hasRawatan(d)).length;
-    const risikoAdaRawatan = data.filter(d => isDinilai(d) && hasRawatan(d)).length;
 
-    // 1️⃣ KEMASKINI: Senarai kategori unik untuk filter
     const kategoriList = useMemo(() => {
         return [...new Set(data.map(d => d.kategori).filter(k => k))].sort();
     }, [data]);
 
-    // 🌟 FUNGSI TINDAKAN DIPERBAHARUI (Logik untuk buka modal Penilaian atau Rawatan)
     const handleAction = (item)=>{ 
         setSelectedData(item); 
         if (activeTab === 'penilaian') {
-            setShowPenilaianModal(true); // Buka modal Penilaian Risiko (Tambah Penilaian)
+            setShowPenilaianModal(true);
         } else {
-            setShowRawatanModal(true); // Buka modal Rawatan Risiko (Tambah Rawatan)
+            setShowRawatanModal(true);
         }
     };
     
-    // Fungsi simpan universal untuk refresh data
     const handleSave = ()=>{ 
         setShowPenilaianModal(false); 
         setShowRawatanModal(false); 
@@ -109,7 +103,7 @@ function PenilaianDanRawatan() {
         setTahunFilter("");
         setSeparuhFilter("");
         setSubsidiariFilter("");
-        setKategoriFilter(""); // 1️⃣ KEMASKINI: Reset filter kategori
+        setKategoriFilter("");
         fetchData(); 
     };
 
@@ -118,9 +112,8 @@ function PenilaianDanRawatan() {
             const dinilai = isDinilai(d);
             
             if (activeTab === 'penilaian') {
-                return !dinilai; // Tab Penilaian: Hanya yang BELUM dinilai
+                return !dinilai;
             } else {
-                // Tab Rawatan: Hanya yang TELAH dinilai TETAPI BELUM diberi rawatan
                 return dinilai && !hasRawatan(d); 
             }
         });
@@ -130,12 +123,11 @@ function PenilaianDanRawatan() {
             const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari === subsidiariFilter;
             const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
             const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
-            const matchKategori = !kategoriFilter || d.kategori === kategoriFilter; // 1️⃣ KEMASKINI: Logik filter kategori
+            const matchKategori = !kategoriFilter || d.kategori === kategoriFilter;
             return matchSearch && matchSubsidiari && matchTahun && matchSeparuh && matchKategori;
         });
-    }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter, kategoriFilter]); // 1️⃣ KEMASKINI: Tambah kategoriFilter
+    }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter, kategoriFilter]);
 
-    // ... (renderTableContent & bahagian return (JSX) dikekalkan) ...
     const penilaianColSpan = 9; 
     const rawatanColSpan = 11; 
 
@@ -153,16 +145,16 @@ function PenilaianDanRawatan() {
         return filteredData.map((d,i)=>(
             <tr key={i}> 
                 <td>{i+1}</td> {/* Lajur BIL. */}
-                <td>{d.no_rujukan}</td>
                 
                 {activeTab === 'penilaian' ? (
                     // Laju data untuk Tab Penilaian
                     <>
-                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td> {/* Tahun/Separuh */}
+                        <td>{d.no_rujukan}</td>
+                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
                         <td>{d.nama_subsidiari||"-"}</td>
                         <td>{d.kategori||"-"}</td> 
                         <td>{d.bahagian_unit||"-"}</td> 
-                        <td>{d.risiko}</td>
+                        <td className="pr-group-divider">{d.risiko}</td>
 
                         <td className="pr-center">
                             <div className="pr-risk-box" style={{backgroundColor:"#fca5a5", color:"#991b1b"}}>
@@ -176,25 +168,27 @@ function PenilaianDanRawatan() {
                         </td>
                     </>
                 ) : (
-                    // Laju data untuk Tab Rawatan (Telah dinilai, tetapi Belum diberi rawatan)
+                    // Laju data untuk Tab Rawatan
                     <>
-                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td> {/* Tahun/Separuh */}
+                        <td>{d.no_rujukan}</td>
+                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
                         <td>{d.nama_subsidiari||"-"}</td>
                         <td>{d.kategori||"-"}</td>
                         <td>{d.bahagian_unit||"-"}</td>
                         <td>{d.risiko}</td>
 
-                        {/* 4️⃣ KEMASKINI: Lajur STATUS RISIKO (T/S/R) ditukar ke sini */}
+                        {/* Data untuk "Skor Risiko" (R/S/T) */}
                         <td className="pr-center">
                             <div className="pr-risk-box" style={{backgroundColor:d.risk_color}}>
                                 {shortForm(d.tahap_risiko)}
                             </div>
                         </td>
                         
-                        {/* 4️⃣ KEMASKINI: Lajur SKOR RISIKO (K/I) ditukar ke sini */}
-                        <td className="pr-center">
+                        {/* 🌟 PEMBETULAN DI SINI 🌟 */}
+                        {/* Data untuk "Status Risiko" (dari d.status_risiko) */}
+                        <td className="pr-center pr-group-divider">
                             <div className="pr-risk-box" style={{backgroundColor:"#e0f2fe", color:"#005fa3"}}>
-                                {d.skor_kebarangkalian}/{d.skor_impak}
+                                {d.status_risiko || "-"}
                             </div>
                         </td>
 
@@ -223,10 +217,7 @@ function PenilaianDanRawatan() {
 
     return (
         <div className="penilaian-rawatan-container">
-            {/* 3️⃣ KEMASKINI: Tajuk dikecilkan dari <h1> ke <h2> */}
             <h2>Penilaian & Rawatan Risiko</h2>
-
-            {/* 2️⃣ KEMASKINI: Bahagian Cards telah dibuang */}
             
             {/* Tabs */}
             <div className="pr-tab-container">
@@ -260,7 +251,6 @@ function PenilaianDanRawatan() {
                     <option value="1">Pertama</option>
                     <option value="2">Kedua</option>
                 </select>
-                {/* 1️⃣ KEMASKINI: Filter Kategori ditambah */}
                 <select value={kategoriFilter} onChange={e=>setKategoriFilter(e.target.value)}>
                     <option value="">-- Semua Kategori --</option>
                     {kategoriList.map(k=><option key={k} value={k}>{k}</option>)}
@@ -270,66 +260,60 @@ function PenilaianDanRawatan() {
             {/* Table */}
             <div className="pr-table-wrapper">
                 <table className={tableClassName}> 
-                    <thead key={activeTab}>
-                        {/* BARIS HEADER ATAS */}
-                        <tr>
-                            <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
-                            <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th>
-                            
-                            {activeTab === 'penilaian' ? (
-                                <th colSpan="2" className="pr-header-rawatan">Penilaian</th> 
-                            ) : (
-                                <th colSpan="4" className="pr-header-rawatan">Rawatan</th>
-                            )}
-                        </tr>
-                        
-                        {/* BARIS HEADER BAWAH */}
+                    
+                    <thead key={activeTab}> 
                         {activeTab === 'penilaian' ? (
-                            <tr>
-                                <th>No Rujukan</th><th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                <th>Subsidiari</th><th>Kategori Risiko</th> 
-                                <th>Bahagian/Unit</th><th>Risiko</th>
-                                <th>Status Penilaian</th> 
-                                <th>Tindakan</th>
-                            </tr>
+                            <>
+                                {/* === TAB PENILAIAN === */}
+                                <tr>
+                                    <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
+                                    <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th> 
+                                    <th colSpan="2" className="pr-header-rawatan">Penilaian</th> 
+                                </tr>
+                                <tr>
+                                    <th>NO RUJUKAN</th>
+                                    <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
+                                    <th>Subsidiari</th><th>Kategori Risiko</th> 
+                                    <th>Bahagian/Unit</th>
+                                    <th className="pr-group-divider">Risiko</th>
+                                    <th className="pr-center">Status Penilaian</th> 
+                                    <th className="pr-center">Tindakan</th>
+                                </tr>
+                            </>
                         ) : (
-                            <tr>
-                                <th>No Rujukan</th><th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                <th>Subsidiari</th><th>Kategori Risiko</th>
-                                <th>Bahagian/Unit</th><th>Risiko</th>
-                                {/* 4️⃣ KEMASKINI: Header ditukar */}
-                                <th>Status Risiko</th> 
-                                <th>Skor Risiko</th>
-                                <th>Status Rawatan</th><th>Tindakan</th>
-                            </tr>
+                            <>
+                                {/* === TAB RAWATAN === */}
+                                <tr>
+                                    <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
+                                    <th colSpan="8" className="pr-header-penilaian">Maklumat Risiko</th>
+                                    <th colSpan="2" className="pr-header-rawatan">Rawatan</th>
+                                </tr>
+                                <tr>
+                                    <th>No Rujukan</th>
+                                    <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
+                                    <th>Subsidiari</th><th>Kategori Risiko</th>
+                                    <th>Bahagian/Unit</th><th>Risiko</th>
+                                    
+                                    <th className="pr-center">Skor Risiko</th> 
+                                    <th className="pr-center pr-group-divider">Status Risiko</th>
+                                    <th className="pr-center">Status Rawatan</th>
+                                    <th className="pr-center">Tindakan</th>
+                                </tr>
+                            </>
                         )}
                     </thead>
+
                     <tbody>
                         {renderTableContent()}
                     </tbody>
                 </table>
             </div>
 
-            {/* 🌟 PENGENDALIAN MODAL PENILAIAN */}
+            {/* PENGENDALIAN MODAL PENILAIAN */}
             {showPenilaianModal && (
-                <PenilaianModal // KEMASKINI NAMA KOMPONEN
+                <PenilaianModal
                     isOpen={showPenilaianModal} 
-                    initialData={{
-                        risiko_id: selectedData?.risiko_id,
-                        noRujukan: selectedData?.no_rujukan,
-                        tahun: selectedData?.tahun,
-                        separuhTahun: selectedData?.separuh_tahun,
-                        subsidiari: selectedData?.subsidiari_id,
-                        kategori: selectedData?.kategori,
-                        bahagian: selectedData?.bahagian_unit,
-                        risiko: selectedData?.risiko,
-                        punca: selectedData?.punca,
-                        kesan: selectedData?.kesan,
-                        skorKebarangkalian: selectedData?.skor_kebarangkalian,
-                        skorImpak: selectedData?.skor_impak,
-                        tahapRisiko: selectedData?.tahap_risiko,
-                        statusRisiko: selectedData?.status_risiko,
-                    }}
+                    initialData={selectedData}
                     onClose={onSave => {
                         setShowPenilaianModal(false);
                         if(onSave) handleSave();
@@ -342,8 +326,8 @@ function PenilaianDanRawatan() {
                 <EditRawatan 
                     isOpen={showRawatanModal} 
                     risk={selectedData} 
-                    isPenilaian={false} // Di Tab Rawatan, ini sentiasa false
-                    isAddMode={true} // Jika ia muncul di sini, ia adalah mod Tambah Rawatan
+                    isPenilaian={false}
+                    isAddMode={true}
                     pelanList={pelanList} 
                     kakitanganList={kakitanganList} 
                     subsidiariList={subsidiariList}

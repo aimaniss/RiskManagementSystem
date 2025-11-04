@@ -9,9 +9,8 @@
   min-height: 100vh;
 }
 
-/* 🌟 KEMASKINI: h1 ditukar kepada h2 dan saiz fon dikecilkan */
 .penilaian-rawatan-container h2 {
-  font-size: 1.5rem; /* Dikecilkan dari 1.8rem */
+  font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 14px;
   color: #005fa3;
@@ -49,11 +48,9 @@
   background-color: #f9fafb;
 }
 
-/* 🌟 KEMASKINI: Semua gaya .pr-cards-container dan .pr-info-card telah DIBUANG */
-
 .pr-filter-container {
   display: flex;
-  flex-wrap: wrap; /* Ini membolehkan filter ke-5 muat secara automatik */
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 15px;
   align-items: center;
@@ -93,24 +90,27 @@
   min-width: 850px;
 }
 
-/* Lebar diperluaskan untuk tab Rawatan (11 lajur) */
 .pr-risiko-table.rawatan-active {
   min-width: 1000px;
 }
 
-/* Header */
+/* Gaya Header Diseragamkan & Isu Garisan Dibetulkan */
 .pr-risiko-table th {
-  background-color: #f0f9ff;
+  background-color: #e0f2fe;
   color: #005fa3;
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left; /* Default alignment */
   padding: 8px 10px;
   border-bottom: 1px solid #e5e7eb;
-  border-top: 1px solid #e5e7eb;
   white-space: nowrap;
+  vertical-align: middle;
+}
+
+.pr-risiko-table thead tr:first-child th {
+  border-top: 1px solid #e5e7eb;
 }
 
 /* Data rows */
@@ -127,28 +127,27 @@
   background-color: #e0f2fe;
 }
 
+/* Peraturan CSS untuk .pr-center */
 .pr-risiko-table td.pr-center {
   text-align: center;
 }
 
-/* 🌟 PEMBAIKAN 1: GAYA HEADER KUMPULAN - Lebih menonjol dan seragam */
+/* Tambah peraturan BARU ini untuk header */
+.pr-risiko-table th.pr-center {
+  text-align: center;
+}
+
+/* GAYA HEADER KUMPULAN */
 .pr-risiko-table th.pr-header-penilaian,
 .pr-risiko-table th.pr-header-rawatan {
-  background-color: #e0f2fe; /* Warna latar belakang seragam */
-  color: #005fa3;
-  font-weight: 700; /* Lebih bold */
-  font-size: 12px;
-  text-transform: none;
-  letter-spacing: 0;
   padding: 8px 10px;
   text-align: center;
 }
-/* Pemisah antara Maklumat Risiko dan Penilaian/Rawatan (Baris Header Atas) */
 .pr-risiko-table th.pr-header-penilaian {
   border-right: 1px solid #e5e7eb;
 }
 
-/* === PENGURUSAN LEBAR LAJUR MAKLUMAT RISIKO (Kekal Sama) === */
+/* === PENGURUSAN LEBAR LAJUR MAKLUMAT RISIKO === */
 
 /* Lajur 1: BIL. */
 .pr-risiko-table th:nth-child(1),
@@ -196,35 +195,21 @@
   width: auto;
 }
 
-/* 🌟 PEMBAIKAN 2: ALIH SEMPADAN PEMISAH KE LAJUR KE-7 (RISIKO) */
-
-/* Reset sempadan yang mungkin diwarisi */
-.pr-risiko-table tr:nth-child(2) th {
-  border-right: none;
-}
-.pr-risiko-table tr td {
-  border-right: none;
-}
-
-/* Sempadan untuk baris header BAWAH selepas lajur Risiko (Lajur ke-7) */
-.pr-risiko-table tr:nth-child(2) th:nth-child(7) {
+/* SEMPADAN PEMISAH MENGGUNAKAN KELAS */
+.pr-risiko-table th.pr-group-divider,
+.pr-risiko-table td.pr-group-divider {
   border-right: 1px solid #e5e7eb;
 }
 
-/* Sempadan untuk SEMUA SEL DATA (td) selepas lajur Risiko (Lajur ke-7) */
-.pr-risiko-table tr td:nth-child(7) {
-  border-right: 1px solid #e5e7eb;
-}
-
-/* === PENGURUSAN LEBAR LAJUR RAWATAN (Kekal Sama) === */
+/* === PENGURUSAN LEBAR LAJUR RAWATAN === */
 .pr-risiko-table.rawatan-active {
-  /* Lajur 8: Skor Risiko (atau Status Risiko - kedudukan ditukar dalam JSX) */
+  /* Lajur 8: Skor Risiko */
   & th:nth-child(8),
   & tr td:nth-child(8) {
     width: 70px;
     min-width: 70px;
   }
-  /* Lajur 9: Status Risiko (atau Skor Risiko - kedudukan ditukar dalam JSX) */
+  /* Lajur 9: Status Risiko */
   & th:nth-child(9),
   & tr td:nth-child(9) {
     width: 60px;
@@ -244,8 +229,6 @@
   }
 }
 
-/* ... (Kekalkan selebihnya: Kotak Skor Risiko/Status, Butang Tindakan, Mesej Loading) ... */
-
 /* Kotak Skor Risiko/Status */
 .pr-risk-box {
   display: inline-block;
@@ -259,11 +242,12 @@
   white-space: nowrap;
 }
 
-/* Tindakan button */
+/* 🌟 KEMASKINI: Tambah align-items: center 🌟 */
 .pr-actions {
   display: flex;
   gap: 6px;
   justify-content: center;
+  align-items: center; /* Tambah ini untuk jajaran vertikal */
 }
 
 .pr-btn-action {

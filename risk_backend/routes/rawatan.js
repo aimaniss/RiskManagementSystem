@@ -5,66 +5,55 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 /* =======================================================
-    🟢 GET: Semua Rawatan Risiko
-    ======================================================= */
+    🟢 GET: Semua Rawatan Risiko
+    ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
-    try {
-        const user = req.user;
+    try {
+        const user = req.user;
 
-        let query = `
-            SELECT 
-                r.risiko_id,
-                r.no_rujukan,
-                r.tahun,
-                r.separuh_tahun,
-                s.nama_subsidiari AS nama_subsidiari,
-                r.kategori,
-                r.bahagian,
-                r.risiko,
-                r.skor_kebarangkalian,
-                r.skor_impak,
-                r.skor_risiko,
-                rr.rawatan_id,
-                rr.jenis_kawalan,
-                rr.tempoh_siap AS tempoh_jangkaan_siap, -- Konsisten dengan nama di frontend
-                ARRAY(
-                    SELECT pelan_tindakan 
-                    FROM pelan_tindakan_rawatan 
-                    WHERE rawatan_id = rr.rawatan_id
-                ) AS plan_tindakan,
-                ARRAY(
-                    SELECT nama_kakitangan 
-                    FROM kakitangan_rawatan 
-                    WHERE rawatan_id = rr.rawatan_id
-                ) AS kakitangan_bertanggungjawab
-            FROM risiko r
-            LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-            LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
-        `;
+        // 🌟 KEMASKINI 1: Query utama kini satu baris tanpa newline di hujung
+        let query = `
+SELECT 
+    r.risiko_id, r.no_rujukan, r.tahun, r.separuh_tahun,
+    r.subsidiari::integer AS subsidiari_id, s.nama_subsidiari AS nama_subsidiari,
+    r.kategori, r.bahagian, r.status_risiko, r.risiko,
+    r.skor_kebarangkalian, r.skor_impak, r.skor_risiko,
+    rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap AS tempoh_jangkaan_siap,
+    ARRAY(
+        SELECT pelan_tindakan 
+        FROM pelan_tindakan_rawatan 
+        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id
+    ) AS plan_tindakan,
+    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
+    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
+    ARRAY(
+        SELECT nama_kakitangan 
+        FROM kakitangan_rawatan 
+        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id
+    ) AS kakitangan_bertanggungjawab
+FROM risiko r
+LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
+LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)`; // <-- Tiada newline di sini
 
-        const params = [];
+        const params = [];
 
-        // 🔒 Hadkan data ikut subsidiari pengguna
-        if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-            query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`;
-            params.push(user.subsidiari_id);
-        }
+        // 🔒 Hadkan data ikut subsidiari pengguna
+        if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
+            // 🌟 KEMASKINI 2: Tambah ' ' (RUANG) di permulaan
+            query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`; 
+            params.push(user.subsidiari_id);
+        }
 
-        query += `
-            ORDER BY 
-                r.tahun DESC,
-                r.separuh_tahun DESC,
-                r.no_rujukan ASC
-        `;
+        // 🌟 KEMASKINI 3: Tambah ' ' (RUANG) di permulaan
+        query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
 
-        const { rows } = await pool.query(query, params);
-        res.json(rows);
-    } catch (err) {
-        console.error("❌ Ralat GET /rawatan:", err);
-        res.status(500).json({ message: err.message });
-    }
+        const { rows } = await pool.query(query, params);
+        res.json(rows);
+    } catch (err) {
+        console.error("❌ Ralat GET /rawatan:", err);
+        res.status(500).json({ message: err.message });
+    }
 });
-
 /* =======================================================
     🟢 POST: Tambah Rawatan Risiko (Diaktifkan bila rawatan_id tiada)
     ======================================================= */
