@@ -17,7 +17,8 @@
   text-align: left;
 }
 
-/* === TAB CONTAINER === */
+/* === TAB CONTAINER & CARDS & FILTERS (Kekal Sama) === */
+
 .pr-tab-container {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
@@ -47,7 +48,6 @@
   background-color: #f9fafb;
 }
 
-/* === CARDS === */
 .pr-cards-container {
   display: flex;
   flex-wrap: wrap;
@@ -79,7 +79,6 @@
   margin: 0;
 }
 
-/* === FILTERS === */
 .pr-filter-container {
   display: flex;
   flex-wrap: wrap;
@@ -119,14 +118,12 @@
 .pr-risiko-table {
   width: 100%;
   border-collapse: collapse;
-  /* Lebar lalai untuk tab Penilaian (8 lajur asal, kini 9) */
-  min-width: 950px; /* Ditingkatkan sedikit untuk menampung lajur baru */
+  min-width: 850px;
 }
 
-/* Lebar diperluaskan jika header Rawatan wujud (13 lajur) */
-/* Carian untuk lajur terakhir (ke-13) di baris header bawah */
-.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13)) {
-  min-width: 1100px;
+/* Lebar diperluaskan untuk tab Rawatan (11 lajur) */
+.pr-risiko-table.rawatan-active {
+  min-width: 1000px;
 }
 
 /* Header */
@@ -151,6 +148,7 @@
   font-size: 12px;
   color: #4b5563;
   background-color: #fff;
+  vertical-align: middle;
 }
 
 .pr-risiko-table tr:hover td {
@@ -161,24 +159,72 @@
   text-align: center;
 }
 
-/* === HEADER GROUPING === */
+/* 🌟 PEMBAIKAN 1: GAYA HEADER KUMPULAN - Lebih menonjol dan seragam */
 .pr-risiko-table th.pr-header-penilaian,
 .pr-risiko-table th.pr-header-rawatan {
-  background-color: #e0f2fe;
+  background-color: #e0f2fe; /* Warna latar belakang seragam */
   color: #005fa3;
-  text-align: center;
+  font-weight: 700; /* Lebih bold */
   font-size: 12px;
   text-transform: none;
   letter-spacing: 0;
   padding: 8px 10px;
+  text-align: center;
 }
-
-/* Pemisah antara Maklumat Risiko dan Rawatan/Penilaian (Baris Header Atas) */
+/* Pemisah antara Maklumat Risiko dan Penilaian/Rawatan (Baris Header Atas) */
 .pr-risiko-table th.pr-header-penilaian {
   border-right: 1px solid #e5e7eb;
 }
 
-/* --- LOGIK SEMPADAN UNTUK BARIS HEADER BAWAH & SEL DATA --- */
+/* === PENGURUSAN LEBAR LAJUR MAKLUMAT RISIKO (Kekal Sama) === */
+
+/* Lajur 1: BIL. */
+.pr-risiko-table th:nth-child(1),
+.pr-risiko-table tr td:nth-child(1) {
+  width: 30px;
+  min-width: 30px;
+}
+
+/* Lajur 2: No Rujukan */
+.pr-risiko-table th:nth-child(2),
+.pr-risiko-table tr td:nth-child(2) {
+  min-width: 100px;
+}
+
+/* Lajur 3: Tahun/Separuh Tahun */
+.pr-risiko-table th:nth-child(3) {
+  line-height: 1.2;
+  text-align: center;
+}
+.pr-risiko-table tr td:nth-child(3) {
+  width: 80px;
+  min-width: 80px;
+  white-space: normal;
+  text-align: center;
+}
+
+/* Lajur 4 & 5: Subsidiari, Kategori Risiko */
+.pr-risiko-table th:nth-child(4),
+.pr-risiko-table tr td:nth-child(4),
+.pr-risiko-table th:nth-child(5),
+.pr-risiko-table tr td:nth-child(5) {
+  min-width: 90px;
+}
+
+/* Lajur 6: Bahagian/Unit */
+.pr-risiko-table th:nth-child(6),
+.pr-risiko-table tr td:nth-child(6) {
+  min-width: 80px;
+}
+
+/* Lajur 7: Risiko (Perlu ruang paling lebar) */
+.pr-risiko-table th:nth-child(7),
+.pr-risiko-table tr td:nth-child(7) {
+  min-width: 180px;
+  width: auto;
+}
+
+/* 🌟 PEMBAIKAN 2: ALIH SEMPADAN PEMISAH KE LAJUR KE-7 (RISIKO) */
 
 /* Reset sempadan yang mungkin diwarisi */
 .pr-risiko-table tr:nth-child(2) th {
@@ -188,26 +234,45 @@
   border-right: none;
 }
 
-/* Sempadan UNTUK TAB PENILAIAN (9 lajur total) */
-/* Border selepas lajur ke-7 (Risiko - lajur terakhir Maklumat Risiko) */
-/* ✅ INDEKS DIUBAH DARI 6 KE 7 */
-.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(9))
-  tr:nth-child(2)
-  th:nth-child(7),
-.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(9)) tr td:nth-child(7) {
+/* Sempadan untuk baris header BAWAH selepas lajur Risiko (Lajur ke-7) */
+.pr-risiko-table tr:nth-child(2) th:nth-child(7) {
   border-right: 1px solid #e5e7eb;
 }
 
-/* Sempadan UNTUK TAB RAWATAN (13 lajur total) - Kekal Sama */
-/* Border selepas lajur ke-7 (Risiko) */
-.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13))
-  tr:nth-child(2)
-  th:nth-child(7),
-.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13))
-  tr
-  td:nth-child(7) {
+/* Sempadan untuk SEMUA SEL DATA (td) selepas lajur Risiko (Lajur ke-7) */
+.pr-risiko-table tr td:nth-child(7) {
   border-right: 1px solid #e5e7eb;
 }
+
+/* === PENGURUSAN LEBAR LAJUR RAWATAN (Kekal Sama) === */
+.pr-risiko-table.rawatan-active {
+  /* Lajur 8: Skor Risiko */
+  & th:nth-child(8),
+  & tr td:nth-child(8) {
+    width: 70px;
+    min-width: 70px;
+  }
+  /* Lajur 9: Status Risiko */
+  & th:nth-child(9),
+  & tr td:nth-child(9) {
+    width: 60px;
+    min-width: 60px;
+  }
+  /* Lajur 10: Status Rawatan */
+  & th:nth-child(10),
+  & tr td:nth-child(10) {
+    width: 150px;
+    min-width: 150px;
+  }
+  /* Lajur 11: Tindakan */
+  & th:nth-child(11),
+  & tr td:nth-child(11) {
+    width: 60px;
+    min-width: 60px;
+  }
+}
+
+/* ... (Kekalkan selebihnya: Kotak Skor Risiko/Status, Butang Tindakan, Mesej Loading) ... */
 
 /* Kotak Skor Risiko/Status */
 .pr-risk-box {
@@ -220,24 +285,6 @@
   min-width: 20px;
   text-align: center;
   white-space: nowrap;
-}
-
-/* Senarai Bernombor */
-.pr-risiko-table td.pr-numbered-list-cell {
-  vertical-align: top;
-  text-align: left;
-  white-space: normal; /* Benarkan text wrap */
-}
-.pr-risiko-table td.pr-numbered-list-cell ol {
-  list-style-type: decimal;
-  margin: 0;
-  padding-left: 20px !important;
-}
-.pr-risiko-table td.pr-numbered-list-cell ol li {
-  font-size: 1em;
-  margin-bottom: 5px;
-  line-height: 1.4;
-  padding-left: 4px;
 }
 
 /* Tindakan button */
