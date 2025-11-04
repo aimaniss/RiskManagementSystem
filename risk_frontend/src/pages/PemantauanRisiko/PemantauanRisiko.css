@@ -357,26 +357,34 @@
   background-color: #f0f9ff;
 }
 
-/* === COLUMN STYLING (Dikekalkan) === */
 
-/* 1. Lajur Risiko kini (3) */
-.senaraipemantauan-table thead th:nth-child(3) {
+
+/* 1. Lajur Risiko kini (4) */ /* Kedudukan diubah dari 3 ke 4 */
+.senaraipemantauan-table thead th:nth-child(4) {
   min-width: 250px;
 }
-/* 2. Lajur No Rujukan (2) */
-.senaraipemantauan-table thead th:nth-child(2) {
+/* 2. Lajur No Rujukan kini (3) */ /* Kedudukan diubah dari 2 ke 3 */
+.senaraipemantauan-table thead th:nth-child(3) {
   min-width: 120px;
 }
-/* 3. Lajur jajaran tengah */
-.senaraipemantauan-table thead th:nth-child(4), /* Skor Asal */
-.senaraipemantauan-table thead th:nth-child(6), /* Skor Terkini */
-.senaraipemantauan-table thead th:nth-child(7), /* Tindakan */
-.senaraipemantauan-table tbody tr td:nth-child(4),
-.senaraipemantauan-table tbody tr td:nth-child(6),
-.senaraipemantauan-table tbody tr td:nth-child(7) {
+/* 3. Lajur jajaran tengah (Skor Asal, Status, Skor Terkini, Tindakan) */
+.senaraipemantauan-table thead th:nth-child(5), /* Skor Asal */
+.senaraipemantauan-table thead th:nth-child(7), /* Skor Terkini */
+.senaraipemantauan-table thead th:nth-child(8), /* Tindakan */
+.senaraipemantauan-table tbody tr td:nth-child(5),
+.senaraipemantauan-table tbody tr td:nth-child(7),
+.senaraipemantauan-table tbody tr td:nth-child(8) {
   text-align: center;
 }
-
+/* Lajur BIL BARU (Kedudukan ke-2) */
+.senaraipemantauan-th-bil {
+  width: 1%;
+  min-width: 40px;
+  text-align: center;
+}
+.senaraipemantauan-table tbody tr td:nth-child(2) {
+  text-align: center;
+}
 /* Lajur butang Kembang (Expand) */
 .senaraipemantauan-th-expand,
 .senaraipemantauan-td-expand {
@@ -387,6 +395,8 @@
 .senaraipemantauan-th-tindakan {
   width: 1%;
 }
+
+---
 
 /* === ACCORDION/EXPAND ROW STYLES (DIPADATKAN SEDIKIT) === */
 .senaraipemantauan-expand-btn {
