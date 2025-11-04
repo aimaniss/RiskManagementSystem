@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Edit, Plus } from "lucide-react";
 import api from "../../api/api";
 import EditRawatan from "./EditRawatan"; 
-import TambahPenilaian from "./TambahPenilaian"; // 🌟 MODAL PENILAIAN BARU
+import PenilaianModal from './PenilaianModal'; // 🌟 KEMASKINI IMPORT: Gunakan PenilaianModal
 import "./PenilaianRawatan.css";
 
 function PenilaianDanRawatan() {
@@ -15,7 +15,7 @@ function PenilaianDanRawatan() {
     const [subsidiariList, setSubsidiariList] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // 🌟 STATE ASINGAN UNTUK MENGENDALIKAN MODAL
+    // 🌟 KEMASKINI: Rename TambahPenilaian ke PenilaianModal untuk konsistensi
     const [showPenilaianModal, setShowPenilaianModal] = useState(false); 
     const [showRawatanModal, setShowRawatanModal] = useState(false); 
 
@@ -24,7 +24,7 @@ function PenilaianDanRawatan() {
     const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
     const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
-    // Matrix Risiko (5x5)
+    // Matrix Risiko (5x5) - (Dikekalkan)
     const riskMatrix = {
         1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
         2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -37,10 +37,10 @@ function PenilaianDanRawatan() {
     const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
     const renderSeparuhTahun = (v) => v===1?"Pertama":v===2?"Kedua":"-";
 
-    const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null); // Semak juga jika null
-    
+    const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null);
     const hasRawatan = (d) => d.plan_tindakan && Array.isArray(d.plan_tindakan) && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0;
     
+    // ... (Fungsi fetchSubsidiariList, fetchData, useEffect, risikoBelumDinilai, dsb. dikekalkan) ...
     const fetchSubsidiariList = async () => {
         try {
             const res = await api.get("/subsidiari");
@@ -54,7 +54,6 @@ function PenilaianDanRawatan() {
             const res = await api.get("/rawatan");
             
             const dataWithScore = res.data.map(d=>{
-                // Mengambil skor (jika wujud) atau 0 jika null/undefined
                 const k = parseInt(d.skor_kebarangkalian)||0;
                 const i = parseInt(d.skor_impak)||0;
                 
@@ -86,13 +85,13 @@ function PenilaianDanRawatan() {
     const risikoMemerlukanRawatan = data.filter(d => isDinilai(d) && !hasRawatan(d)).length;
     const risikoAdaRawatan = data.filter(d => isDinilai(d) && hasRawatan(d)).length;
 
-    // 🌟 FUNGSI TINDAKAN DIPERBAHARUI
+    // 🌟 FUNGSI TINDAKAN DIPERBAHARUI (Logik untuk buka modal Penilaian atau Rawatan)
     const handleAction = (item)=>{ 
         setSelectedData(item); 
         if (activeTab === 'penilaian') {
-            setShowPenilaianModal(true); // Buka modal Tambah Penilaian
+            setShowPenilaianModal(true); // Buka modal Penilaian Risiko (Tambah Penilaian)
         } else {
-            setShowRawatanModal(true); // Buka modal Edit Rawatan
+            setShowRawatanModal(true); // Buka modal Rawatan Risiko (Tambah Rawatan)
         }
     };
     
@@ -128,9 +127,8 @@ function PenilaianDanRawatan() {
         });
     }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter]);
 
-    // Colspan untuk tab Penilaian (1 Bil + 6 Maklumat + 2 Penilaian) = 9
+    // ... (renderTableContent & bahagian return (JSX) dikekalkan) ...
     const penilaianColSpan = 9; 
-    // Colspan untuk tab Rawatan (1 Bil + 6 Maklumat + 4 Rawatan) = 11
     const rawatanColSpan = 11; 
 
     const renderTableContent = () => {
@@ -303,12 +301,28 @@ function PenilaianDanRawatan() {
 
             {/* 🌟 PENGENDALIAN MODAL PENILAIAN */}
             {showPenilaianModal && (
-                <TambahPenilaian 
+                <PenilaianModal // KEMASKINI NAMA KOMPONEN
                     isOpen={showPenilaianModal} 
-                    risk={selectedData} 
-                    riskMatrix={riskMatrix} // Hantar matrix risiko
-                    onClose={() => setShowPenilaianModal(false)} 
-                    onSave={handleSave} 
+                    initialData={{
+                        risiko_id: selectedData?.risiko_id,
+                        noRujukan: selectedData?.no_rujukan,
+                        tahun: selectedData?.tahun,
+                        separuhTahun: selectedData?.separuh_tahun,
+                        subsidiari: selectedData?.subsidiari_id,
+                        kategori: selectedData?.kategori,
+                        bahagian: selectedData?.bahagian_unit,
+                        risiko: selectedData?.risiko,
+                        punca: selectedData?.punca,
+                        kesan: selectedData?.kesan,
+                        skorKebarangkalian: selectedData?.skor_kebarangkalian,
+                        skorImpak: selectedData?.skor_impak,
+                        tahapRisiko: selectedData?.tahap_risiko,
+                        statusRisiko: selectedData?.status_risiko,
+                    }}
+                    onClose={onSave => {
+                        setShowPenilaianModal(false);
+                        if(onSave) handleSave();
+                    }}
                 />
             )}
 

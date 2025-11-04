@@ -188,3 +188,58 @@
 .btn-secondary:hover {
     background-color: #f3f4f6;
 }
+
+/* ... [Kekalkan semua gaya sedia ada] ... */
+
+
+
+/* === KOTAK HASIL PENILAIAN BARU === */
+.risk-result-box {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px; /* Jarak dari nota */
+    padding: 15px;
+    border: 1px dashed #d1d5db; /* Garisan putus-putus untuk menonjolkan bahagian */
+    border-radius: 8px;
+    background-color: #f9fafb;
+}
+
+.risk-result-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.risk-result-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #005fa3;
+    margin-bottom: 5px;
+}
+
+.risk-display-label {
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.risk-display-label.status-display {
+    background-color: #e5e7eb; /* Warna kelabu lembut */
+    color: #374151; /* Teks gelap */
+    font-weight: 500;
+}
+
+/* Responsif */
+@media (max-width: 500px) {
+    .risk-result-box {
+        flex-direction: column;
+    }
+}
