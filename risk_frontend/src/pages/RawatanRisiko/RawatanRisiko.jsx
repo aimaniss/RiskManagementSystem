@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Edit, Plus } from "lucide-react";
 import api from "../../api/api";
 import EditRawatan from "./EditRawatan"; 
+import TambahPenilaian from "./TambahPenilaian"; // 🌟 MODAL PENILAIAN BARU
 import "./PenilaianRawatan.css";
 
 function PenilaianDanRawatan() {
@@ -13,12 +14,17 @@ function PenilaianDanRawatan() {
     const [subsidiariFilter, setSubsidiariFilter] = useState("");
     const [subsidiariList, setSubsidiariList] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+    
+    // 🌟 STATE ASINGAN UNTUK MENGENDALIKAN MODAL
+    const [showPenilaianModal, setShowPenilaianModal] = useState(false); 
+    const [showRawatanModal, setShowRawatanModal] = useState(false); 
+
     const [selectedData, setSelectedData] = useState(null); 
 
     const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
     const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
+    // Matrix Risiko (5x5)
     const riskMatrix = {
         1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
         2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -31,9 +37,8 @@ function PenilaianDanRawatan() {
     const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
     const renderSeparuhTahun = (v) => v===1?"Pertama":v===2?"Kedua":"-";
 
-    const isDinilai = (d) => d.skor_kebarangkalian > 0 && d.skor_impak > 0;
+    const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null); // Semak juga jika null
     
-    // Fungsi untuk semak sama ada rawatan telah diberikan (plan_tindakan wujud dan bukan array kosong)
     const hasRawatan = (d) => d.plan_tindakan && Array.isArray(d.plan_tindakan) && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0;
     
     const fetchSubsidiariList = async () => {
@@ -49,15 +54,19 @@ function PenilaianDanRawatan() {
             const res = await api.get("/rawatan");
             
             const dataWithScore = res.data.map(d=>{
-                const {label,color} = getRiskData(parseInt(d.skor_kebarangkalian)||0, parseInt(d.skor_impak)||0);
+                // Mengambil skor (jika wujud) atau 0 jika null/undefined
+                const k = parseInt(d.skor_kebarangkalian)||0;
+                const i = parseInt(d.skor_impak)||0;
+                
+                const {label,color} = getRiskData(k, i);
                 
                 const planTindakan = d.plan_tindakan;
                 const kakitangan = d.kakitangan_bertanggungjawab;
                 
                 return {
                     ...d, 
-                    tahap_risiko:label, 
-                    risk_color:color,
+                    tahap_risiko: label, 
+                    risk_color: color,
                     plan_tindakan: Array.isArray(planTindakan) ? planTindakan : [planTindakan].filter(p => p),
                     kakitangan_bertanggungjawab: Array.isArray(kakitangan) ? kakitangan : [kakitangan].filter(k => k),
                     bahagian_unit: d.bahagian_unit || d.unit || null,
@@ -77,13 +86,20 @@ function PenilaianDanRawatan() {
     const risikoMemerlukanRawatan = data.filter(d => isDinilai(d) && !hasRawatan(d)).length;
     const risikoAdaRawatan = data.filter(d => isDinilai(d) && hasRawatan(d)).length;
 
+    // 🌟 FUNGSI TINDAKAN DIPERBAHARUI
     const handleAction = (item)=>{ 
         setSelectedData(item); 
-        setShowModal(true); 
+        if (activeTab === 'penilaian') {
+            setShowPenilaianModal(true); // Buka modal Tambah Penilaian
+        } else {
+            setShowRawatanModal(true); // Buka modal Edit Rawatan
+        }
     };
     
-    const handleSaveRawatan = ()=>{ 
-        setShowModal(false); 
+    // Fungsi simpan universal untuk refresh data
+    const handleSave = ()=>{ 
+        setShowPenilaianModal(false); 
+        setShowRawatanModal(false); 
         setSearch("");
         setTahunFilter("");
         setSeparuhFilter("");
@@ -117,26 +133,6 @@ function PenilaianDanRawatan() {
     // Colspan untuk tab Rawatan (1 Bil + 6 Maklumat + 4 Rawatan) = 11
     const rawatanColSpan = 11; 
 
-    // Fungsi ini tidak lagi digunakan dalam reka bentuk baru, tetapi dikekalkan untuk kelengkapan
-    const renderNumberedList = (items) => {
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return "-";
-        }
-        
-        const validItems = items.filter(item => item && item.trim() !== "");
-        if (validItems.length === 0) return "-";
-        
-        return (
-            <ol style={{ margin: 0, paddingLeft: '16px', textAlign: 'left' }}> 
-                {validItems.map((item, index) => (
-                    <li key={index} style={{ fontSize: '0.9em', marginBottom: '2px' }}>
-                        {item}
-                    </li>
-                ))}
-            </ol>
-        );
-    };
-
     const renderTableContent = () => {
         const currentColSpan = activeTab === 'penilaian' ? penilaianColSpan : rawatanColSpan;
         
@@ -156,11 +152,10 @@ function PenilaianDanRawatan() {
                 {activeTab === 'penilaian' ? (
                     // Laju data untuk Tab Penilaian
                     <>
-                        {/* 🌟 Tahun dan Separuh Tahun dalam dua baris */}
                         <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td> {/* Tahun/Separuh */}
                         <td>{d.nama_subsidiari||"-"}</td>
                         <td>{d.kategori||"-"}</td> 
-                        <td>{d.bahagian_unit||"-"}</td> {/* Bahagian/Unit */}
+                        <td>{d.bahagian_unit||"-"}</td> 
                         <td>{d.risiko}</td>
 
                         <td className="pr-center">
@@ -177,7 +172,6 @@ function PenilaianDanRawatan() {
                 ) : (
                     // Laju data untuk Tab Rawatan (Telah dinilai, tetapi Belum diberi rawatan)
                     <>
-                        {/* 🌟 Tahun dan Separuh Tahun dalam dua baris */}
                         <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td> {/* Tahun/Separuh */}
                         <td>{d.nama_subsidiari||"-"}</td>
                         <td>{d.kategori||"-"}</td>
@@ -216,7 +210,6 @@ function PenilaianDanRawatan() {
         ));
     };
 
-    // 🌟 PERUBAHAN UTAMA: Tentukan kelas CSS dinamik untuk jadual
     const tableClassName = activeTab === 'rawatan' 
         ? 'pr-risiko-table rawatan-active' 
         : 'pr-risiko-table';
@@ -269,24 +262,21 @@ function PenilaianDanRawatan() {
 
             {/* Table */}
             <div className="pr-table-wrapper">
-                <table className={tableClassName}> {/* 🌟 Guna kelas dinamik di sini */}
+                <table className={tableClassName}> 
                     <thead key={activeTab}>
-                        {/* BARIS HEADER ATAS (MEMEGANG KUMPULAN & BIL.) */}
+                        {/* BARIS HEADER ATAS */}
                         <tr>
                             <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
-                            {/* Maklumat Risiko (Kekal colSpan 6) */}
                             <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th>
                             
                             {activeTab === 'penilaian' ? (
-                                // Penilaian: 2 lajur Penilaian/Tindakan
                                 <th colSpan="2" className="pr-header-rawatan">Penilaian</th> 
                             ) : (
-                                // Rawatan: 4 lajur Rawatan
                                 <th colSpan="4" className="pr-header-rawatan">Rawatan</th>
                             )}
                         </tr>
                         
-                        {/* BARIS HEADER BAWAH (ISI LAJUR) */}
+                        {/* BARIS HEADER BAWAH */}
                         {activeTab === 'penilaian' ? (
                             <tr>
                                 <th>No Rujukan</th><th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
@@ -296,7 +286,6 @@ function PenilaianDanRawatan() {
                                 <th>Tindakan</th>
                             </tr>
                         ) : (
-                            // Susunan Header Baru untuk Tab Rawatan
                             <tr>
                                 <th>No Rujukan</th><th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
                                 <th>Subsidiari</th><th>Kategori Risiko</th>
@@ -312,17 +301,29 @@ function PenilaianDanRawatan() {
                 </table>
             </div>
 
-            {showModal && (
-                <EditRawatan 
-                    isOpen={showModal} 
+            {/* 🌟 PENGENDALIAN MODAL PENILAIAN */}
+            {showPenilaianModal && (
+                <TambahPenilaian 
+                    isOpen={showPenilaianModal} 
                     risk={selectedData} 
-                    isPenilaian={activeTab === 'penilaian'}
-                    isAddMode={activeTab === 'rawatan' ? !hasRawatan(selectedData) : activeTab === 'penilaian'} 
+                    riskMatrix={riskMatrix} // Hantar matrix risiko
+                    onClose={() => setShowPenilaianModal(false)} 
+                    onSave={handleSave} 
+                />
+            )}
+
+            {/* PENGENDALIAN MODAL RAWATAN */}
+            {showRawatanModal && (
+                <EditRawatan 
+                    isOpen={showRawatanModal} 
+                    risk={selectedData} 
+                    isPenilaian={false} // Di Tab Rawatan, ini sentiasa false
+                    isAddMode={true} // Jika ia muncul di sini, ia adalah mod Tambah Rawatan
                     pelanList={pelanList} 
                     kakitanganList={kakitanganList} 
                     subsidiariList={subsidiariList}
-                    onClose={()=>setShowModal(false)} 
-                    onSave={handleSaveRawatan} 
+                    onClose={() => setShowRawatanModal(false)} 
+                    onSave={handleSave} 
                 />
             )}
         </div>
