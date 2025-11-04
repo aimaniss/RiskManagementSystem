@@ -73,11 +73,11 @@ const DateFilterModal = ({ isOpen, onClose, allData, currentType, currentTahun, 
         <div className="pemantauan-modal-overlay">
             <div className="pemantauan-modal-container pemantauan-date-filter-modal">
                 <div className="pemantauan-modal-header">
-                    <h2>Filter Tahun & Separuh Tahun</h2>
+                    <h2>Tapis Tahun & Separuh Tahun</h2>
                 </div>
                 <div className="pemantauan-modal-body pemantauan-filter-body">
                     
-                    <p className="pemantauan-filter-label-group">Pilih Jenis Penapisan:</p>
+                    <p className="pemantauan-filter-label-group">Pilih Data:</p>
                     <div className="pemantauan-radio-group">
                         <label className="pemantauan-radio-label">
                             <input 
@@ -99,7 +99,7 @@ const DateFilterModal = ({ isOpen, onClose, allData, currentType, currentTahun, 
                         </label>
                     </div>
 
-                    <p className="pemantauan-filter-label-group">Pilih Nilai Tarikh:</p>
+                    <p className="pemantauan-filter-label-group">Pilih Tahun & Separuh Tahun:</p>
                     <div className="pemantauan-select-group">
                         <select className="senaraipemantauan-filter-select" value={tahun} onChange={e=>setTahun(e.target.value)}>
                             <option value="">-- Semua Tahun --</option>
@@ -392,7 +392,7 @@ function PemantauanRisiko() {
                     </div>
                 </div>
                 <div className="senaraipemantauan-info-card">
-                    <h3>Pecahan Skor Risiko Terkini</h3>
+                    <h3>Pecahan Skor Risiko </h3>
                     <div className="senaraipemantauan-barchart-container">
                         {sortedRiskLevelEntries.map(([level, count]) => {
                             const percentage = totalRisiko > 0 ? (count / totalRisiko) * 100 : 0;
@@ -429,7 +429,7 @@ function PemantauanRisiko() {
                 
                 {/* Filter Subsidiari */}
                 <select className="senaraipemantauan-filter-select" value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
-                    <option value="">-- Semua Subsidiari --</option>
+                    <option value="">-- Semua Syarikat --</option>
                     {subsidiariList.map(s=>(
                         <option key={s.subsidiari_id} value={s.nama_subsidiari}>{s.nama_subsidiari}</option>
                     ))}
@@ -485,9 +485,9 @@ function PemantauanRisiko() {
                             <th className="senaraipemantauan-th-bil">BIL</th> {/* COLUMN BARU */}
                             <th>No Rujukan</th>
                             <th>Risiko</th>
-                            <th>Skor Asal</th>
+                            <th>Skor Risiko Sebelum</th>
                             <th>Status Pemantauan</th>
-                            <th>Skor Terkini</th>
+                            <th>Skor Risiko Selepas</th>
                             <th className="senaraipemantauan-th-tindakan">Tindakan</th>
                         </tr>
                     </thead>
@@ -549,7 +549,7 @@ function PemantauanRisiko() {
                                                         <h4>Maklumat Pengenalpastian Risiko</h4>
                                                         
                                                         <p>
-                                                            <strong>Subsidiari:</strong> 
+                                                            <strong>Syarikat:</strong> 
                                                             {d.nama_subsidiari || "-"}
                                                         </p>
                                                         
@@ -612,7 +612,8 @@ function PemantauanRisiko() {
             {/* Modal Edit Pemantauan */}
             {isModalOpen && selectedRiskForEdit && (
                 <EditPemantauan 
-                    riskData={selectedRiskForEdit} 
+                   isOpen={isModalOpen}
+                    risk={selectedRiskForEdit} 
                     onClose={handleCloseModal} 
                     onSave={handleRefreshData}
                 />
