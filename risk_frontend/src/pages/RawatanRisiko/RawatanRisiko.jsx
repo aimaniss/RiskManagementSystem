@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { Edit } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Edit, Plus } from "lucide-react";
 import api from "../../api/api";
-import EditRawatan from "./EditRawatan";
-import "./RawatanRisiko.css";
+import EditRawatan from "./EditRawatan"; 
+import "./PenilaianRawatan.css";
 
-function RawatanRisiko() {
+function PenilaianDanRawatan() {
   const [data, setData] = useState([]);
+  const [activeTab, setActiveTab] = useState('penilaian');
   const [search, setSearch] = useState("");
   const [tahunFilter, setTahunFilter] = useState("");
   const [separuhFilter, setSeparuhFilter] = useState("");
@@ -13,12 +14,12 @@ function RawatanRisiko() {
   const [subsidiariList, setSubsidiariList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [selectedData, setSelectedData] = useState(null);
+  // ✅ PEMBETULAN UNTUK "null is not iterable":
+  const [selectedData, setSelectedData] = useState(null); 
 
   const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
   const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
-  // Standard Risk Matrix (Likelihood x Impact)
   const riskMatrix = {
     1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
     2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -31,36 +32,35 @@ function RawatanRisiko() {
   const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
   const renderSeparuhTahun = (v) => v===1?"Pertama":v===2?"Kedua":"-";
 
-  // Fetch subsidiari dropdown
+  const isDinilai = (d) => d.skor_kebarangkalian > 0 && d.skor_impak > 0;
+  
   const fetchSubsidiariList = async () => {
     try {
-      // Assuming the endpoint returns an array of objects like { subsidiari_id: 1, nama_subsidiari: "Subsidiari A" }
       const res = await api.get("/subsidiari");
       setSubsidiariList(res.data);
     } catch(err){ console.error("❌ Gagal fetch subsidiari:",err); }
   };
 
-  // Fetch semua rawatan risiko
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Assuming the endpoint returns an array of risk objects, potentially with raw data for plan_tindakan and kakitangan_bertanggungjawab
       const res = await api.get("/rawatan");
       
       const dataWithScore = res.data.map(d=>{
-        // Calculate risk score and color
         const {label,color} = getRiskData(parseInt(d.skor_kebarangkalian)||0, parseInt(d.skor_impak)||0);
         
-        // Ensure plan_tindakan and kakitangan_bertanggungjawab are arrays for renderNumberedList
-        const planTindakan = d.plan_tindakan || [];
-        const kakitangan = d.kakitangan_bertanggungjawab || [];
+        const planTindakan = d.plan_tindakan;
+        const kakitangan = d.kakitangan_bertanggungjawab;
         
         return {
           ...d, 
           tahap_risiko:label, 
           risk_color:color,
+          // Pastikan ianya adalah array, jika tidak jadikan array kosong atau array 1 elemen jika wujud
           plan_tindakan: Array.isArray(planTindakan) ? planTindakan : [planTindakan].filter(p => p),
           kakitangan_bertanggungjawab: Array.isArray(kakitangan) ? kakitangan : [kakitangan].filter(k => k),
+          // Tambah field bahagian_unit jika belum ada
+          bahagian_unit: d.bahagian_unit || d.unit || null,
         };
       });
       setData(dataWithScore);
@@ -73,31 +73,44 @@ function RawatanRisiko() {
     fetchData(); 
   }, []);
 
-  // Cards data
   const risikoAktif = data.length;
-  const planRawatan = data.filter(d=>d.plan_tindakan && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0).length;
+  const risikoBelumDinilai = data.filter(d => !isDinilai(d)).length;
+  const planRawatan = data.filter(d=>isDinilai(d) && d.plan_tindakan && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0).length;
 
-  const handleEdit = (item)=>{ 
+  const handleAction = (item)=>{ 
     setSelectedData(item); 
     setShowModal(true); 
   };
   
-  const handleSaveRawatan = (updatedData)=>{ 
+  const handleSaveRawatan = ()=>{ 
     setShowModal(false); 
-    // Re-fetch data to reflect the changes
+    setSearch("");
+    setTahunFilter("");
+    setSeparuhFilter("");
+    setSubsidiariFilter("");
     fetchData(); 
   };
 
-  // --- Client-side Filter ---
-  const filteredData = data.filter(d => {
-    const matchSearch = !search || d.no_rujukan?.toLowerCase().includes(search.toLowerCase());
-    const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari === subsidiariFilter;
-    const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
-    const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
-    return matchSearch && matchSubsidiari && matchTahun && matchSeparuh;
-  });
+  const filteredData = useMemo(()=>{
+    const tabFiltered = data.filter(d => {
+      const dinilai = isDinilai(d);
+      return activeTab === 'penilaian' ? !dinilai : dinilai;
+    });
 
-  // Helper function to render numbered list (Already correct in your original code)
+    return tabFiltered.filter(d => {
+      const matchSearch = !search || d.no_rujukan?.toLowerCase().includes(search.toLowerCase());
+      const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari === subsidiariFilter;
+      const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
+      const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
+      return matchSearch && matchSubsidiari && matchTahun && matchSeparuh;
+    });
+  }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter]);
+
+  // Colspan untuk tab Penilaian kini 9 (1 Bil + 6 Maklumat + 2 Penilaian)
+  const penilaianColSpan = 9; 
+  // Colspan untuk tab Rawatan (13 lajur total)
+  const rawatanColSpan = 13; 
+
   const renderNumberedList = (items) => {
     if (!items || !Array.isArray(items) || items.length === 0) {
       return "-";
@@ -107,7 +120,6 @@ function RawatanRisiko() {
     if (validItems.length === 0) return "-";
     
     return (
-      // The <ul> will be styled as a numbered list (decimal) in RawatanRisiko.css
       <ol style={{ margin: 0, paddingLeft: '16px', textAlign: 'left' }}> 
         {validItems.map((item, index) => (
           <li key={index} style={{ fontSize: '0.9em', marginBottom: '2px' }}>
@@ -115,22 +127,110 @@ function RawatanRisiko() {
           </li>
         ))}
       </ol>
-
     );
   };
 
+  const renderTableContent = () => {
+    const currentColSpan = activeTab === 'penilaian' ? penilaianColSpan : rawatanColSpan;
+    
+    if (loading) return <tr><td colSpan={currentColSpan} className="pr-loading">Memuatkan...</td></tr>;
+    if (filteredData.length === 0) {
+        const message = activeTab === 'penilaian' ? 
+            "Semua risiko telah dinilai." : 
+            "Tiada risiko yang telah dinilai dan mempunyai rawatan.";
+        return <tr><td colSpan={currentColSpan} className="pr-no-data">{message}</td></tr>;
+    }
+
+    // ✅ PEMBETULAN UNTUK KEY TIDAK UNIK DAN WHITESPACE DI SINI
+    return filteredData.map((d,i)=>(
+        <tr key={i}> {/* Guna indeks 'i' untuk kunci yang unik */}
+          <td>{i+1}</td> {/* Lajur BIL. */}
+          <td>{d.no_rujukan}</td>
+          
+          {activeTab === 'penilaian' ? (
+                // Laju data untuk Tab Penilaian (9 lajur total)
+                <>
+                    <td>{d.tahun} ({renderSeparuhTahun(d.separuh_tahun)})</td> {/* Tahun/Separuh */}
+                    <td>{d.nama_subsidiari||"-"}</td>
+                    {/* ✅ TAMBAH KATEGORI RISIKO */}
+                    <td>{d.kategori||"-"}</td> 
+                    <td>{d.bahagian_unit||"-"}</td> {/* Bahagian/Unit */}
+                    <td>{d.risiko}</td>
+
+                    <td className="pr-center">
+                        <div className="pr-risk-box" style={{backgroundColor:"#fca5a5", color:"#991b1b"}}>
+                            BELUM DINILAI
+                        </div>
+                    </td>
+                    <td className="pr-actions">
+                        <button onClick={()=>handleAction(d)} className="pr-btn-action pr-btn-add">
+                            <Plus size={16}/>
+                        </button>
+                    </td>
+                </>
+          ) : (
+                // Laju data untuk Tab Rawatan (13 lajur) - Kekal Sama
+            <>
+                    <td>{d.tahun}</td>
+                    <td>{renderSeparuhTahun(d.separuh_tahun)}</td>
+                    <td>{d.nama_subsidiari||"-"}</td>
+                    <td>{d.kategori}</td>
+                    <td>{d.risiko}</td>
+
+                  <td className="pr-center">
+                    <div className="pr-risk-box" style={{backgroundColor:d.risk_color}}>
+                      {shortForm(d.tahap_risiko)}
+                    </div>
+                  </td>
+                  <td className="pr-numbered-list-cell">
+                    {renderNumberedList(d.plan_tindakan)}
+                  </td>
+                  <td>{d.jenis_kawalan||"-"}</td>
+                  <td>{d.tempoh_jangkaan_siap||"-"}</td>
+                  <td className="pr-numbered-list-cell">
+                    {renderNumberedList(d.kakitangan_bertanggungjawab)}
+                  </td>
+                  <td className="pr-actions">
+                    <button onClick={()=>handleAction(d)} className="pr-btn-action pr-btn-edit">
+                      <Edit size={16}/>
+                    </button>
+                  </td>
+            </>
+          )}
+        </tr>
+      ));
+  };
+
+
   return (
-    <div className="senarai-risiko-container">
-      <h1>Rawatan Risiko</h1>
+    <div className="penilaian-rawatan-container">
+      <h1>Penilaian & Rawatan Risiko</h1>
 
       {/* Cards */}
-      <div className="cards-container">
-        <div className="info-card"><h3>Bilangan Risiko Aktif</h3><p>{risikoAktif}</p></div>
-        <div className="info-card"><h3>Bilangan Plan Rawatan</h3><p>{planRawatan}</p></div>
+      <div className="pr-cards-container">
+        <div className="pr-info-card"><h3>Risiko Keseluruhan</h3><p>{risikoAktif}</p></div>
+        <div className="pr-info-card"><h3>Belum Dinilai</h3><p>{risikoBelumDinilai}</p></div>
+        <div className="pr-info-card"><h3>Plan Rawatan Aktif</h3><p>{planRawatan}</p></div>
+      </div>
+      
+      {/* Tabs */}
+      <div className="pr-tab-container">
+          <button 
+              className={`pr-tab-button ${activeTab === 'penilaian' ? 'pr-active' : ''}`}
+              onClick={() => setActiveTab('penilaian')}
+          >
+              Penilaian Risiko (Belum Dinilai)
+          </button>
+          <button 
+              className={`pr-tab-button ${activeTab === 'rawatan' ? 'pr-active' : ''}`}
+              onClick={() => setActiveTab('rawatan')}
+          >
+              Rawatan Risiko (Telah Dinilai)
+          </button>
       </div>
 
       {/* Filter Sebaris */}
-      <div className="filter-container">
+      <div className="pr-filter-container">
         <input type="text" placeholder="Cari No Rujukan..." value={search} onChange={e=>setSearch(e.target.value)} />
         <select value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
           <option value="">-- Semua Subsidiari --</option>
@@ -138,7 +238,6 @@ function RawatanRisiko() {
         </select>
         <select value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
           <option value="">-- Semua Tahun --</option>
-          {/* Get unique, sorted years */}
           {[...new Set(data.map(d=>d.tahun))].filter(t => t).sort((a,b)=>b-a).map(t=><option key={t} value={t}>{t}</option>)}
         </select>
         <select value={separuhFilter} onChange={e=>setSeparuhFilter(e.target.value)}>
@@ -149,54 +248,52 @@ function RawatanRisiko() {
       </div>
 
       {/* Table */}
-      <div className="table-wrapper">
-        <table className="risiko-table">
-          <thead>
-            {/* BARIS HEADER ATAS: Pengelompokan Lajur */}
+      <div className="pr-table-wrapper">
+        <table className="pr-risiko-table">
+          <thead key={activeTab}>
+            {/* BARIS HEADER ATAS (MEMEGANG KUMPULAN & BIL.) */}
             <tr>
-              <th colSpan="8" className="header-penilaian">Maklumat Risiko</th>
-              <th colSpan="5" className="header-rawatan">Rawatan Atas Risiko</th>
+                {/* ✅ Bil. sebagai sel rowSpan=2 */}
+                <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
+              {activeTab === 'penilaian' ? (
+                // ✅ Tab Penilaian: colSpan 6 (Maklumat Risiko) - DINAICKAN dari 5 ke 6
+                <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th>
+              ) : (
+                // Tab Rawatan: colSpan 6 (Maklumat Risiko) - Kekal Sama
+                <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th>
+              )}
+
+              {activeTab === 'penilaian' ? (
+                // Tab Penilaian: 2 lajur Penilaian/Tindakan
+                <th colSpan="2" className="pr-header-rawatan">Penilaian</th> 
+              ) : (
+                // Tab Rawatan: 6 lajur Rawatan
+                <th colSpan="6" className="pr-header-rawatan">Rawatan Atas Risiko</th>
+              )}
             </tr>
-            {/* BARIS HEADER BAWAH: Sub-Tajuk Lajur */}
-            <tr>
-              <th>Bil.</th><th>No Rujukan</th><th>Tahun</th><th>Separuh Tahun</th>
-              <th>Nama Subsidiari</th><th>Kategori Risiko</th><th>Risiko</th><th>Skor Risiko</th>
-              <th>Plan Tindakan</th><th>Jenis Kawalan</th><th>Tempoh Siap</th><th>Kakitangan</th><th>Tindakan</th>
-            </tr>
+            
+            {/* BARIS HEADER BAWAH (ISI LAJUR) */}
+            {activeTab === 'penilaian' ? (
+                <tr>
+                    <th>No Rujukan</th><th>Tahun/Separuh</th>
+                    <th>Subsidiari</th>
+                    {/* ✅ TAMBAH KATEGORI RISIKO */}
+                    <th>Kategori Risiko</th> 
+                    <th>Bahagian/Unit</th>
+                    <th>Risiko</th>
+                    <th>Status Penilaian</th> 
+                    <th>Tindakan</th>
+                </tr>
+            ) : (
+                <tr>
+                    <th>No Rujukan</th><th>Tahun</th><th>Separuh Tahun</th>
+                    <th>Nama Subsidiari</th><th>Kategori Risiko</th><th>Risiko</th>
+                    <th>Skor Risiko</th><th>Plan Tindakan</th><th>Jenis Kawalan</th><th>Tempoh Siap</th><th>Kakitangan</th><th>Tindakan</th>
+                </tr>
+            )}
           </thead>
           <tbody>
-            {loading ? <tr><td colSpan="13" className="loading">Loading...</td></tr> :
-             filteredData.length>0 ? filteredData.map((d,i)=>(
-              <tr key={d.rawatan_id || d.risiko_id}>
-                <td>{i+1}</td>
-                <td>{d.no_rujukan}</td>
-                <td>{d.tahun}</td>
-                <td>{renderSeparuhTahun(d.separuh_tahun)}</td>
-                <td>{d.nama_subsidiari||"-"}</td>
-                <td>{d.kategori}</td>
-                <td>{d.risiko}</td>
-                <td className="center">
-                  <div className="risk-box" style={{backgroundColor:d.risk_color}}>
-                    {shortForm(d.tahap_risiko)}
-                  </div>
-                </td>
-                {/* Display numbered list for plan tindakan */}
-                <td className="numbered-list-cell">
-                  {renderNumberedList(d.plan_tindakan)}
-                </td>
-                <td>{d.jenis_kawalan||"-"}</td>
-                <td>{d.tempoh_jangkaan_siap||"-"}</td>
-                {/* Display numbered list for kakitangan */}
-                <td className="numbered-list-cell">
-                  {renderNumberedList(d.kakitangan_bertanggungjawab)}
-                </td>
-                <td className="actions">
-                  <button onClick={()=>handleEdit(d)} className="btn-edit">
-                    <Edit size={16}/>
-                  </button>
-                </td>
-              </tr>
-             )) : <tr><td colSpan="13" className="no-data">Tiada data dijumpai</td></tr>}
+            {renderTableContent()}
           </tbody>
         </table>
       </div>
@@ -204,7 +301,8 @@ function RawatanRisiko() {
       {showModal && (
         <EditRawatan 
           isOpen={showModal} 
-          risk={selectedData}  
+          risk={selectedData} 
+          isPenilaian={activeTab === 'penilaian'}
           pelanList={pelanList} 
           kakitanganList={kakitanganList} 
           subsidiariList={subsidiariList}
@@ -216,4 +314,4 @@ function RawatanRisiko() {
   );
 }
 
-export default RawatanRisiko;
+export default PenilaianDanRawatan;

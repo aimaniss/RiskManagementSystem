@@ -1,0 +1,292 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+.penilaian-rawatan-container {
+  /* KELAS ROOT */
+  padding: 20px;
+  font-family: "Inter", sans-serif;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  min-height: 100vh;
+}
+
+.penilaian-rawatan-container h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #005fa3;
+  text-align: left;
+}
+
+/* === TAB CONTAINER === */
+.pr-tab-container {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.pr-tab-button {
+  padding: 8px 15px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.pr-tab-button:hover {
+  color: #005fa3;
+}
+
+.pr-tab-button.pr-active {
+  color: #005fa3;
+  border-bottom: 2px solid #005fa3;
+  background-color: #f9fafb;
+}
+
+/* === CARDS === */
+.pr-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.pr-info-card {
+  flex: 1 1 180px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.pr-info-card h3 {
+  font-size: 12px;
+  color: #4b5563;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.pr-info-card p {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+/* === FILTERS === */
+.pr-filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.pr-filter-container select,
+.pr-filter-container input {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.pr-filter-container input:focus,
+.pr-filter-container select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.15);
+  outline: none;
+}
+
+/* === TABLE WRAPPER === */
+.pr-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+}
+
+.pr-risiko-table {
+  width: 100%;
+  border-collapse: collapse;
+  /* Lebar lalai untuk tab Penilaian (8 lajur asal, kini 9) */
+  min-width: 950px; /* Ditingkatkan sedikit untuk menampung lajur baru */
+}
+
+/* Lebar diperluaskan jika header Rawatan wujud (13 lajur) */
+/* Carian untuk lajur terakhir (ke-13) di baris header bawah */
+.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13)) {
+  min-width: 1100px;
+}
+
+/* Header */
+.pr-risiko-table th {
+  background-color: #f0f9ff;
+  color: #005fa3;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+/* Data rows */
+.pr-risiko-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #4b5563;
+  background-color: #fff;
+}
+
+.pr-risiko-table tr:hover td {
+  background-color: #e0f2fe;
+}
+
+.pr-risiko-table td.pr-center {
+  text-align: center;
+}
+
+/* === HEADER GROUPING === */
+.pr-risiko-table th.pr-header-penilaian,
+.pr-risiko-table th.pr-header-rawatan {
+  background-color: #e0f2fe;
+  color: #005fa3;
+  text-align: center;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 8px 10px;
+}
+
+/* Pemisah antara Maklumat Risiko dan Rawatan/Penilaian (Baris Header Atas) */
+.pr-risiko-table th.pr-header-penilaian {
+  border-right: 1px solid #e5e7eb;
+}
+
+/* --- LOGIK SEMPADAN UNTUK BARIS HEADER BAWAH & SEL DATA --- */
+
+/* Reset sempadan yang mungkin diwarisi */
+.pr-risiko-table tr:nth-child(2) th {
+  border-right: none;
+}
+.pr-risiko-table tr td {
+  border-right: none;
+}
+
+/* Sempadan UNTUK TAB PENILAIAN (9 lajur total) */
+/* Border selepas lajur ke-7 (Risiko - lajur terakhir Maklumat Risiko) */
+/* ✅ INDEKS DIUBAH DARI 6 KE 7 */
+.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(9))
+  tr:nth-child(2)
+  th:nth-child(7),
+.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(9)) tr td:nth-child(7) {
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Sempadan UNTUK TAB RAWATAN (13 lajur total) - Kekal Sama */
+/* Border selepas lajur ke-7 (Risiko) */
+.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13))
+  tr:nth-child(2)
+  th:nth-child(7),
+.pr-risiko-table:has(thead tr:nth-child(2) th:nth-child(13))
+  tr
+  td:nth-child(7) {
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Kotak Skor Risiko/Status */
+.pr-risk-box {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 20px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Senarai Bernombor */
+.pr-risiko-table td.pr-numbered-list-cell {
+  vertical-align: top;
+  text-align: left;
+  white-space: normal; /* Benarkan text wrap */
+}
+.pr-risiko-table td.pr-numbered-list-cell ol {
+  list-style-type: decimal;
+  margin: 0;
+  padding-left: 20px !important;
+}
+.pr-risiko-table td.pr-numbered-list-cell ol li {
+  font-size: 1em;
+  margin-bottom: 5px;
+  line-height: 1.4;
+  padding-left: 4px;
+}
+
+/* Tindakan button */
+.pr-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.pr-btn-action {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.pr-btn-edit {
+  color: #0074c8;
+  background: #e0f2fe;
+}
+
+.pr-btn-edit:hover {
+  background: #0074c8;
+  color: white;
+}
+
+.pr-btn-add {
+  color: #16a34a;
+  background: #dcfce7;
+}
+
+.pr-btn-add:hover {
+  background: #16a34a;
+  color: white;
+}
+
+/* Mesej Loading/No Data */
+.pr-loading,
+.pr-no-data {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: #6b7280;
+  font-size: 13px;
+}
