@@ -1,52 +1,53 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
-.senarai-risiko-container {
+.rm-container {
   padding: 20px;
   font-family: "Inter", sans-serif;
-  background-color: #f9fafb;
+  background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.senarai-risiko-container h1 {
+.rm-container h1 {
   text-align: center;
   margin-bottom: 20px;
   color: #004071;
   font-weight: 600;
 }
 
-.filter-container {
+.rm-filter-container {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
   justify-content: center;
 }
 
-.filter-container select,
-.filter-container input {
+.rm-filter-container select,
+.rm-filter-container input {
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-family: "Inter", sans-serif;
 }
 
-.table-wrapper {
+.rm-table-wrapper {
   overflow-x: auto;
 }
 
-.risiko-table {
+.rm-risiko-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 1100px;
 }
-.risiko-table td.no-bil {
+
+.rm-risiko-table td.rm-no-bil {
   text-align: center;
   font-weight: 600;
   width: 20px;
 }
 
 /* Header */
-.risiko-table th {
+.rm-risiko-table th {
   background-color: #0074c8;
   color: white;
   font-weight: 600;
@@ -56,7 +57,7 @@
 }
 
 /* Data rows */
-.risiko-table td {
+.rm-risiko-table td {
   padding: 12px 10px;
   border-bottom: 1px solid #d3d3d3;
   font-size: 14px;
@@ -65,29 +66,29 @@
 }
 
 /* Buang border-right pada last column */
-.risiko-table td:last-child {
+.rm-risiko-table td:last-child {
   border-right: none;
 }
 
 /* Alternating row shading */
-.risiko-table tr:nth-child(even) td {
+.rm-risiko-table tr:nth-child(even) td {
   background-color: #f9fafb;
 }
 
 /* Hover effect */
-.risiko-table tr:hover td {
+.rm-risiko-table tr:hover td {
   background-color: #e1f0ff;
 }
 
-.risiko-table td.center {
+.rm-risiko-table td.rm-center {
   text-align: center;
 }
 
-.risiko-table td.left {
+.rm-risiko-table td.rm-left {
   text-align: left;
 }
 
-.risiko-table td.justify {
+.rm-risiko-table td.rm-justify {
   text-align: left;
   white-space: normal;
   word-wrap: break-word;
@@ -96,14 +97,14 @@
 }
 
 /* Action buttons horizontal */
-.action-buttons {
+.rm-action-buttons {
   display: flex;
   gap: 5px;
   justify-content: center;
   align-items: center;
 }
 
-.delete-btn {
+.rm-delete-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -115,11 +116,11 @@
   justify-content: center;
 }
 
-.delete-btn:hover {
+.rm-delete-btn:hover {
   color: #dc2626;
 }
 
-.edit-btn {
+.rm-edit-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -131,12 +132,12 @@
   justify-content: center;
 }
 
-.edit-btn:hover {
+.rm-edit-btn:hover {
   color: #0369a1;
 }
 
 /* Skor Risiko Kotak Besar */
-.risiko-table td .risk-box {
+.rm-risiko-table td .rm-risk-box {
   width: 40px;
   height: 40px;
   display: flex;
@@ -151,7 +152,7 @@
 }
 
 /* Loader shimmer row */
-.loader-row td {
+.rm-loader-row td {
   position: relative;
   overflow: hidden;
   background: #f0f0f0;
@@ -161,7 +162,7 @@
   height: 40px;
 }
 
-.loader-row td::after {
+.rm-loader-row td::after {
   content: "";
   position: absolute;
   top: 0;
@@ -174,10 +175,10 @@
     rgba(255, 255, 255, 0.6),
     transparent
   );
-  animation: shimmer 1.5s infinite;
+  animation: rm-shimmer 1.5s infinite;
 }
 
-@keyframes shimmer {
+@keyframes rm-shimmer {
   0% {
     left: -150px;
   }
@@ -187,7 +188,7 @@
 }
 
 /* Modal Styles */
-.modal-overlay {
+.rm-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -200,7 +201,7 @@
   z-index: 999;
 }
 
-.modal {
+.rm-modal {
   background: #fff;
   border-radius: 10px;
   padding: 20px;
@@ -209,50 +210,50 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.modal-header {
+.rm-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.close-btn {
+.rm-close-btn {
   background: none;
   border: none;
   cursor: pointer;
 }
 
-.modal-body {
+.rm-modal-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.modal-body label {
+.rm-modal-body label {
   font-weight: 600;
 }
 
-.modal-body input,
-.modal-body textarea {
+.rm-modal-body input,
+.rm-modal-body textarea {
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-family: "Inter", sans-serif;
 }
 
-.modal-body textarea {
+.rm-modal-body textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.modal-footer {
+.rm-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 15px;
 }
 
-.save-btn {
+.rm-save-btn {
   background-color: #0284c7;
   color: #fff;
   border: none;
@@ -261,11 +262,11 @@
   cursor: pointer;
 }
 
-.save-btn:hover {
+.rm-save-btn:hover {
   background-color: #0369a1;
 }
 
-.cancel-btn {
+.rm-cancel-btn {
   background-color: #e5e7eb;
   color: #111;
   border: none;
@@ -274,7 +275,7 @@
   cursor: pointer;
 }
 
-.cancel-btn:hover {
+.rm-cancel-btn:hover {
   background-color: #d1d5db;
 }
 
@@ -282,48 +283,48 @@
 
 /* Laptop skrin kecil (≤1400px) → kecilkan 10% */
 @media (max-width: 1400px) {
-  .senarai-risiko-container h1 {
-    font-size: 1.25rem; /* asal 1.4rem */
+  .rm-container h1 {
+    font-size: 1.25rem;
   }
-  .risiko-table {
-    min-width: 680px; /* asal 750px */
+  .rm-risiko-table {
+    min-width: 680px;
   }
-  .risiko-table td {
-    font-size: 0.78rem; /* asal 0.85rem */
+  .rm-risiko-table td {
+    font-size: 0.78rem;
     padding: 7px 5px;
   }
-  .risiko-table th {
-    font-size: 0.78rem; /* asal 0.85rem */
+  .rm-risiko-table th {
+    font-size: 0.78rem;
     padding: 7px 5px;
   }
-  .risk-box {
-    width: 2rem; /* asal 2.2rem */
+  .rm-risk-box {
+    width: 2rem;
     height: 2rem;
-    font-size: 0.75rem; /* asal 0.8rem */
+    font-size: 0.75rem;
   }
 }
 
 /* Tablet (≤1024px) */
 @media (max-width: 1024px) {
-  .risiko-table {
-    min-width: 600px; /* asal 650px */
+  .rm-risiko-table {
+    min-width: 600px;
   }
-  .modal {
-    width: 78vw; /* asal 80vw */
-    max-width: 470px; /* asal 500px */
+  .rm-modal {
+    width: 78vw;
+    max-width: 470px;
   }
 }
 
 /* Phone (≤768px) */
 @media (max-width: 768px) {
-  .senarai-risiko-container {
-    padding: 12px; /* asal 15px */
+  .rm-container {
+    padding: 12px;
   }
-  .risiko-table {
-    font-size: 0.75rem; /* asal 0.8rem */
+  .rm-risiko-table {
+    font-size: 0.75rem;
   }
-  .modal {
-    width: 88vw; /* asal 90vw */
-    padding: 12px; /* asal 15px */
+  .rm-modal {
+    width: 88vw;
+    padding: 12px;
   }
 }

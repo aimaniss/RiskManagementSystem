@@ -140,3 +140,30 @@
   color: #333;
   z-index: 10000;
 }
+.risk-score-cell {
+  /* Opsional, untuk memastikan skor berada di tengah secara mendatar dalam sel td */
+  text-align: center; 
+}
+
+/* Gaya kotak skor risiko */
+.risk-box {
+  display: inline-flex; /* Penting: Untuk mengecilkan kotak mengikut kandungan */
+  align-items: center;
+  justify-content: center;
+  
+  /* Tetapkan saiz dan padding yang sesuai */
+  min-width: 40px; /* Lebar minimum untuk kod 1-2 huruf */
+  height: 24px; 
+  padding: 0 8px; /* Padding mendatar (kiri/kanan) */
+  
+  /* Gaya Visual */
+  border-radius: 4px; /* Sudut sedikit bulat */
+  font-weight: 600; /* Tebalkan teks */
+  font-size: 12px; /* Saiz fon yang sesuai */
+  text-align: center;
+  line-height: 1; /* Penting untuk penjajaran vertikal */
+  
+  /* Menghilangkan margin jika ada */
+  margin: 0 auto; /* Tengah-tengah dalam sel td, berfungsi jika display: block */
+  /* Jika td text-align: center; sahaja, ini tidak diperlukan. */
+}
