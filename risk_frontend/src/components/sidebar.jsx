@@ -68,6 +68,7 @@ function Sidebar() {
           </li>
           {(role === "Admin" ||
             role === "Executive" ||
+            role === "Viewer" ||
             role === "Ketua Subsidiari" ||
             role === "Staff") && (
             <li>
@@ -85,7 +86,7 @@ function Sidebar() {
           {(role === "Admin" ||
             role === "Executive" ||
             role === "Ketua Subsidiari" ||
-            role === "Viewer") && (
+            role === "Staff") && (
             <li>
               <Link
                 to="/RawatanRisiko"
@@ -94,12 +95,13 @@ function Sidebar() {
                 }`}
               >
                 <Stethoscope className="sidebar-icon" />
-                Rawatan Risiko
+                Penilaian & Rawatan
               </Link>
             </li>
           )}
           {(role === "Admin" ||
             role === "Executive" ||
+            role === "Ketua Subsidiari" ||
             role === "Staff" ||
             role === "Viewer") && (
             <li>
@@ -113,8 +115,11 @@ function Sidebar() {
                 Pemantauan Risiko
               </Link>
             </li>
-          )}
-          {(role === "Admin" || role === "Executive") && (
+           )}
+          {(role === "Admin" ||
+            role === "Executive" ||
+            role === "Ketua Subsidiari" ||
+            role === "Staff") && (
             <>
               <li>
                 <Link
@@ -127,6 +132,8 @@ function Sidebar() {
                   Pindaan
                 </Link>
               </li>
+              
+              
               <li>
                 <Link
                   to="/Laporan"
