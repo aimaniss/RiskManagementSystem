@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import { getUserRole } from "../../utils/auth";
-import { jwtDecode } from "jwt-decode"; // v4 named import
+import { jwtDecode } from "jwt-decode";
+import { FaUser, FaLock } from "react-icons/fa";
 import "./Login.css";
+import ukmhLogo from "../../assets/images/Dark Background/UKMH_dark.png";
 
 export default function Login() {
   const [staffId, setStaffId] = useState("");
@@ -12,11 +14,9 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Redirect if already logged in
   useEffect(() => {
     const role = getUserRole();
     if (role) {
-      // Match uppercase roles from DB
       if (["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"].includes(role)) {
         navigate("/");
       } else {
@@ -26,21 +26,17 @@ export default function Login() {
   }, [navigate]);
 
   const handleLogin = async () => {
-    setError(""); // reset previous errors
+    setError("");
     try {
       const res = await api.post("/auth/login", {
         staff_id: staffId.trim(),
         katalaluan: password.trim(),
       });
 
-      // Save token
       localStorage.setItem("token", res.data.token);
+      const decoded = jwtDecode(res.data.token);
+      const role = decoded.nama_peranan;
 
-      // Decode role from token
-      const decoded = jwtDecode(res.data.token); // named import usage
-      const role = decoded.nama_peranan; // should match DB uppercase
-
-      // Redirect based on role
       if (["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"].includes(role)) {
         navigate("/");
       } else {
@@ -54,25 +50,39 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <h1>Risk Management System</h1>
+      <div className="login-overlay"></div>
+
+      <div className="login-card glass-effect">
+        <div className="login-header">
+          <img src={ukmhLogo} alt="Logo UKM Holdings" className="login-logo" />
+          <h1 className="login-title">RISK MANAGEMENT SYSTEM</h1>
+        </div>
 
         {error && <div className="login-error">{error}</div>}
 
-        <input
-          type="text"
-          placeholder="ID Staf"
-          value={staffId}
-          onChange={(e) => setStaffId(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Katalaluan"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="input-group">
+          <FaUser className="input-icon" />
+          <input
+            type="text"
+            placeholder="ID Staf"
+            value={staffId}
+            onChange={(e) => setStaffId(e.target.value)}
+          />
+        </div>
 
-        <button onClick={handleLogin}>Log Masuk</button>
+        <div className="input-group">
+          <FaLock className="input-icon" />
+          <input
+            type="password"
+            placeholder="Katalaluan"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <button className="login-btn" onClick={handleLogin}>
+          Log Masuk
+        </button>
       </div>
     </div>
   );
