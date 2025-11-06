@@ -8,7 +8,7 @@
 /* 1. Stail Komponen Utama */
 .log-aktiviti-container {
   padding: 12px 24px;
-  max-width: 1440px;
+  max-width: 1280px; /* ⭐️ DIUBAH: Asal 1440px, dikecilkan untuk laptop */
   margin: 0 auto;
   font-family: "Inter", sans-serif;
   background: #f9fafb;
@@ -16,10 +16,10 @@
 }
 
 .log-page-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem; /* ⭐️ DIUBAH: Asal 1.5rem (24px), dikecilkan ke 20px */
   font-weight: 700;
   color: #005fa3;
-  margin-bottom: 20px;
+  margin-bottom: 16px; /* ⭐️ DIUBAH: Asal 20px */
 }
 
 .log-filter-bar {
@@ -27,9 +27,9 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px; /* ⭐️ DIUBAH: Asal 20px */
   gap: 12px;
-  padding: 20px;
+  padding: 16px; /* ⭐️ DIUBAH: Asal 20px, dikecilkan padding */
   background-color: #ffffff;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
@@ -121,7 +121,7 @@
 }
 
 .log-th {
-  padding: 12px 15px;
+  padding: 10px 15px; /* ⭐️ DIUBAH: Asal 12px 15px, kurangkan padding atas-bawah */
   text-align: left;
   font-weight: 600;
   font-size: 12px;
@@ -144,7 +144,7 @@
   background-color: #f0f9ff;
 }
 .log-td {
-  padding: 12px 15px;
+  padding: 10px 15px; /* ⭐️ DIUBAH: Asal 12px 15px, kurangkan padding atas-bawah */
   vertical-align: middle;
   line-height: 1.5;
   font-size: 13px;
@@ -265,7 +265,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* ⭐️ DIUBAH: Dinaikkan (asal 1000) */
+  z-index: 9999;
 }
 
 .log-modal {
@@ -383,7 +383,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000; /* ⭐️ DIUBAH: Dinaikkan (asal 1010) & lebih tinggi dari modal biasa */
+  z-index: 10000;
 }
 
 .log-delete-modal {

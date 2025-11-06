@@ -1,17 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-/* ======= GAYA PEMANTAUAN MODAL DISERAGAMKAN (V9 - FINAL) ======= */
+/* ======= GAYA VIEW RISIKO MODAL (V1) ======= */
 
 /* Font & Box Sizing Scope */
-.pemantauan-modal-container *,
-.pemantauan-modal-overlay {
+.viewrisiko-modal-container *,
+.viewrisiko-modal-overlay {
   font-family: "Inter", sans-serif;
   font-size: 0.88rem;
   box-sizing: border-box;
 }
 
 /* Overlay (Diseragamkan) */
-.pemantauan-modal-overlay {
+.viewrisiko-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -24,7 +24,7 @@
 }
 
 /* Container (Diseragamkan) */
-.pemantauan-modal-container {
+.viewrisiko-modal-container {
   background: #f4f6f8;
   border-radius: 10px;
   border: none;
@@ -38,11 +38,11 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  animation: tambahlog-slide-up 0.25s ease-out;
+  animation: viewrisiko-slide-up 0.25s ease-out;
 }
 
 /* Animasi Slide Up */
-@keyframes tambahlog-slide-up {
+@keyframes viewrisiko-slide-up {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -54,7 +54,7 @@
 }
 
 /* Header utama (biru diseragamkan) */
-.pemantauan-modal-container > .pemantauan-box-header-main {
+.viewrisiko-modal-container > .viewrisiko-box-header-main {
   background: #0074c8;
   color: #ffffff;
   padding: 14px 18px;
@@ -72,7 +72,7 @@
 }
 
 /* Close button (Diseragamkan) */
-.pemantauan-close-btn {
+.viewrisiko-close-btn {
   background: none;
   border: none;
   color: white;
@@ -84,20 +84,20 @@
   height: auto;
   font-size: 16px;
 }
-.pemantauan-close-btn:hover {
+.viewrisiko-close-btn:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: none;
 }
 
 /* Container Body */
-.pemantauan-modal-body {
+.viewrisiko-modal-body {
   padding: 18px;
   background: #fafafa;
   overflow-y: auto;
 }
 
 /* ======= Struktur Box/Header & Flex Layout ======= */
-.pemantauan-box {
+.viewrisiko-box {
   margin: 0 0 15px 0;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -107,7 +107,7 @@
 }
 
 /* Header Seksyen Biasa (Seperti Penilaian Risiko Awal & Rawatan Risiko) */
-.pemantauan-box-header {
+.viewrisiko-box-header {
   background-color: transparent;
   color: #005fa3;
   padding: 0;
@@ -121,11 +121,7 @@
   align-items: center;
 }
 
-/* HEADER RAWATAN/MONITORING & LOG PEMANTAUAN RISIKO 
-     (Disamakan dengan header biasa, dan menimpa hijau menggunakan !important)
-*/
-.pemantauan-monitoring-header {
-  /* Menjadikannya seperti header Penilaian Risiko Awal */
+.viewrisiko-monitoring-header {
   background: transparent !important;
   color: #005fa3 !important;
   padding: 0;
@@ -139,9 +135,18 @@
   align-items: center;
 }
 
-/* UBAH SUAI: Jadikan table wrapper sebahagian dari gaya minimalis */
-.pemantauan-box.risk-log-box {
-  padding: 0; /* Buang padding lama */
+/* Header Log (khas untuk log) */
+.viewrisiko-log-header {
+  padding: 14px 16px; /* Letak padding di header */
+  background-color: #f9fafb; /* Latar kelabu lembut */
+  border-bottom: 1px solid #e5e7eb; /* Garisan pemisah */
+}
+.viewrisiko-log-header span {
+  color: #005fa3 !important;
+}
+
+.viewrisiko-box.risk-log-box {
+  padding: 0;
   overflow-x: auto;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -150,7 +155,7 @@
 }
 
 /* Layout Flex Row */
-.pemantauan-flex-row {
+.viewrisiko-flex-row {
   display: flex;
   flex-wrap: wrap;
   gap: 14px 20px;
@@ -159,20 +164,20 @@
 }
 
 /* Setiap Item dalam Flex Row */
-.pemantauan-flex-item {
+.viewrisiko-flex-item {
   flex: 1 1 200px;
   display: flex;
   flex-direction: column;
 }
 
 /* Sizing untuk section list */
-.pemantauan-list-section {
+.viewrisiko-list-section {
   padding-top: 5px;
   padding-bottom: 10px;
 }
 
 /* Label & Data Inline */
-.pemantauan-label-inline {
+.viewrisiko-label-inline {
   font-weight: 600;
   color: #374151;
   margin-right: 8px;
@@ -182,7 +187,7 @@
   text-transform: none;
 }
 
-.pemantauan-data-inline {
+.viewrisiko-data-inline {
   font-weight: 400;
   color: #1f2937;
   display: block;
@@ -191,7 +196,7 @@
   word-break: break-word;
 }
 /* Data display read-only */
-.pemantauan-data-inline.pemantauan-textonly {
+.viewrisiko-data-inline.viewrisiko-textonly {
   padding: 7px 10px;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
@@ -201,27 +206,25 @@
   width: 100%;
 }
 
-/* Styling untuk list item dalam ListDisplay */
-/* UBAH SUAI: Kemaskan senarai bernombor di dalam jadual */
-.pemantauan-list-item {
+.viewrisiko-list-item {
   padding-left: 0;
   list-style: none;
-  margin-bottom: 8px; /* Tambah jarak */
-  line-height: 1.5; /* Tambah jarak */
+  margin-bottom: 8px;
+  line-height: 1.5;
 }
-.pemantauan-list-item .pemantauan-data-inline {
+.viewrisiko-list-item .viewrisiko-data-inline {
   font-weight: 400;
   color: #374151;
   font-size: 0.88rem;
 }
 
 /* === BUTANG PANDUAN === */
-.pemantauan-risk-header {
+.viewrisiko-risk-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.pemantauan-panduan-btn {
+.viewrisiko-panduan-btn {
   background: #f0f9ff;
   color: #0074c8;
   border: 1px solid #93c5fd;
@@ -235,18 +238,18 @@
   margin-left: 10px;
   transition: background 0.2s, border-color 0.2s;
 }
-.pemantauan-panduan-btn:hover {
+.viewrisiko-panduan-btn:hover {
   background: #e0f2fe;
   border-color: #60a5fa;
 }
 
 /* === Penilaian Risiko Cards === */
-.pemantauan-score-row {
+.viewrisiko-score-row {
   padding-top: 10px;
   padding-bottom: 10px;
   gap: 14px;
 }
-.pemantauan-score-card {
+.viewrisiko-score-card {
   flex: 1;
   min-width: 140px;
   border: 1px solid #e5e7eb;
@@ -260,20 +263,20 @@
   gap: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-.pemantauan-score-label {
+.viewrisiko-score-label {
   font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   text-transform: none;
   letter-spacing: normal;
 }
-.pemantauan-score-data {
+.viewrisiko-score-data {
   font-size: 24px;
   font-weight: 800;
   color: #1f2937;
   display: block;
 }
-.pemantauan-risk-score-text {
+.viewrisiko-risk-score-text {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -289,13 +292,13 @@
 }
 
 /* === Rawatan Display Section === */
-.pemantauan-data-display-section {
+.viewrisiko-data-display-section {
   padding: 18px 0;
 }
-.pemantauan-data-line-block {
+.viewrisiko-data-line-block {
   margin-bottom: 12px;
 }
-.pemantauan-label-mon {
+.viewrisiko-label-mon {
   display: block;
   font-weight: 700;
   color: #1f2937;
@@ -303,7 +306,7 @@
   font-size: 13px;
   text-transform: none;
 }
-.pemantauan-data-mon {
+.viewrisiko-data-mon {
   display: block;
   font-weight: 500;
   color: #374151;
@@ -311,7 +314,7 @@
 }
 
 /* Gaya untuk Status Risiko Description Block */
-.pemantauan-risk-status-desc {
+.viewrisiko-risk-status-desc {
   padding: 10px 15px;
   border-radius: 6px;
   display: flex;
@@ -341,10 +344,10 @@
   background-color: #fca5a5;
   color: #dc2626;
 }
-.pemantauan-data-line-block {
+.viewrisiko-data-line-block {
   margin-bottom: 20px;
 }
-.pemantauan-data-display-section {
+.viewrisiko-data-display-section {
   padding: 18px 0;
 }
 [data-status="TIDAK"] > span:first-child {
@@ -359,51 +362,53 @@
   color: #059669;
 }
 
-.pemantauan-risk-status-desc > span:last-child {
+.viewrisiko-risk-status-desc > span:last-child {
   color: #475569;
   font-weight: 500;
 }
 
 /* Media Query untuk Mobile */
 @media (max-width: 768px) {
-  .pemantauan-modal-overlay {
+  .viewrisiko-modal-overlay {
     padding: 0;
   }
-  .pemantauan-modal-container {
+  .viewrisiko-modal-container {
     border-radius: 0;
     max-height: 100vh;
     font-size: 14px;
   }
-  .pemantauan-flex-row {
+  .viewrisiko-flex-row {
     flex-direction: column;
     gap: 15px;
     padding: 10px 18px;
   }
-  .pemantauan-flex-item {
+  .viewrisiko-flex-item {
     flex: 1 1 100%;
   }
-  .pemantauan-score-row {
+  .viewrisiko-score-row {
     flex-direction: column;
     gap: 12px;
   }
 
-  
-  .log-pemantauan-table {
+  /* Jadual Responsif */
+  .viewrisiko-log-table {
     min-width: 100%;
   }
-  /* Saiz fon dikekalkan untuk mobile */
-  .log-pemantauan-table th {
+  .viewrisiko-log-table th {
     font-size: 10px;
     padding: 8px 4px;
   }
-  .log-pemantauan-table td {
+  .viewrisiko-log-table td {
     font-size: 10px;
     padding: 6px 4px;
   }
 }
 
+/* ======================================================= */
+/* ====== GAYA LOG PEMANTAUAN (NAMA KELAS DIUBAH) ====== */
+/* ======================================================= */
 
-.log-pemantauan-table {
+.viewrisiko-log-table {
   width: 100%;
   border-collapse: collapse; /* Guna collapse */
   font-size: 13px; /* Saiz fon baru */
@@ -411,7 +416,7 @@
   min-width: 900px;
 }
 
-.log-pemantauan-table th {
+.viewrisiko-log-table th {
   background-color: #f0f9ff; /* Latar biru cerah */
   color: #005fa3; /* Teks biru gelap */
   font-weight: 600;
@@ -427,7 +432,7 @@
   vertical-align: middle;
 }
 
-.log-pemantauan-table td {
+.viewrisiko-log-table td {
   padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb; /* Hanya border bawah */
   text-align: left; /* Jajar kiri */
@@ -440,23 +445,19 @@
 }
 
 /* Buang zebra stripes */
-.log-pemantauan-table tr:nth-child(even) {
+.viewrisiko-log-table tr:nth-child(even) {
   background-color: #fff;
-}
-/* Hover effect baru */
-.log-pemantauan-table tr:hover td {
-  background-color: #e0f2fe;
 }
 
 /* Gaya untuk Skor Tahap Risiko (Kekal) */
-.log-pemantauan-table td[data-label="TAHAP RISIKO"] {
+.viewrisiko-log-table td[data-label="TAHAP RISIKO"] {
   font-weight: 700;
   color: white;
   text-align: center; /* Skor risiko kekal di tengah */
 }
 
 /* Gaya untuk Tag Keberkesanan (Kekal) */
-.pemantauan-keberkesanan-tag {
+.viewrisiko-keberkesanan-tag {
   display: inline-block;
   padding: 3px 8px;
   border-radius: 4px;
@@ -464,119 +465,40 @@
   font-size: 12px;
   text-transform: none;
 }
-.pemantauan-keberkesanan-tag.berkesan {
+.viewrisiko-keberkesanan-tag.berkesan {
   background-color: #065f46;
   color: #d1fae5;
 }
-.pemantauan-keberkesanan-tag.kurangberkesan {
+.viewrisiko-keberkesanan-tag.kurangberkesan {
   background-color: #b45309;
   color: #fffbeb;
 }
-.pemantauan-keberkesanan-tag.tidakberkesan {
+.viewrisiko-keberkesanan-tag.tidakberkesan {
   background-color: #991b1b;
   color: #fee2e2;
 }
-.pemantauan-keberkesanan-tag.tiada {
+.viewrisiko-keberkesanan-tag.tiada {
   background-color: #e5e7eb;
   color: #4b5563;
 }
 
-.log-pemantauan-table th:nth-child(12),
-.log-pemantauan-table td:nth-child(12),
-.log-pemantauan-table th:nth-child(3),
-.log-pemantauan-table td:nth-child(3),
-.log-pemantauan-table td:nth-child(5),
-.log-pemantauan-table th:nth-child(13),
-.log-pemantauan-table td:nth-child(13),
-.log-pemantauan-table td:nth-child(10),
-.log-pemantauan-table td:nth-child(11) {
-  width: auto;
-  max-width: none;
-  white-space: normal;
-}
-
-/* Jajarkan lajur Tindakan ke tengah */
-.log-pemantauan-table th:last-child,
-.log-pemantauan-table td:last-child {
-  text-align: center;
-  width: 1%; /* Elakkan ia jadi terlalu besar */
-  white-space: nowrap;
-}
-
-/* UBAH SUAI: Gaya butang ikon minimalis biru */
-.pemantauan-button-circle {
-  background: #e0f2fe;
-  color: #0074c8;
-  border: none;
-  border-radius: 6px;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pemantauan-button-circle:hover {
-  background: #0074c8;
-  color: white;
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-/* UBAH SUAI: Gaya butang padam merah minimalis */
-.pemantauan-button-circle.rawatan-button-remove {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
-.pemantauan-button-circle.rawatan-button-remove:hover {
-  background: #ef4444;
-  color: white;
-}
-
-/* Gaya Butang Tambah Log di Header (Kekal) */
-.pemantauan-add-log-btn {
-  background-color: #0074c8 !important;
-  border-color: #005fa3 !important;
-  color: white !important;
-  padding: 5px 12px !important;
-  border-radius: 6px !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  transition: background-color 0.2s;
-  display: flex !important;
-  align-items: center !important;
-  border: none !important;
-  cursor: pointer !important;
-}
-.pemantauan-add-log-btn:hover {
-  background-color: #005fa3 !important;
-}
-
-.pemantauan-monitoring-header span {
-  color: #005fa3 !important;
-}
-
-/* Spinner (Kekal) */
-.spin {
-  animation: tambahlog-spin 1s linear infinite;
-  color: #0074c8;
-}
-@keyframes tambahlog-spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-/* ... (kod CSS anda yang sedia ada) ... */
-
-/* ⭐️ BARU: Tambah ini untuk kesan hover & klik pada baris log */
-.log-pemantauan-table tbody tr.log-row-clickable {
+/* ⭐️ BARU: Kesan hover & klik pada baris log */
+.viewrisiko-log-table tbody tr.viewrisiko-log-row-clickable {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.log-pemantauan-table tbody tr.log-row-clickable:hover {
+.viewrisiko-log-table tbody tr.viewrisiko-log-row-clickable:hover {
   background-color: #f7f9fc; /* Warna hover yang lembut */
+}
+
+/* Spinner (Diseragamkan) */
+.spin {
+  animation: viewrisiko-spin 1s linear infinite;
+  color: #0074c8;
+}
+@keyframes viewrisiko-spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }

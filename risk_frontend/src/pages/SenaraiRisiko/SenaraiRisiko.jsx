@@ -115,6 +115,10 @@ function SenaraiRisiko({ refreshTrigger }) {
     return "-";
   };
 
+  // ----- HITUNG JUMLAH KOLUM BARU -----
+  // Bil(1) + Pengenalpastian(6) + Penilaian(5) + Rawatan(4) + Pemantauan(4) + Keberkesanan(7) + Tindakan(1) = 28 Kolum
+  const totalColumns = 28;
+
   return (
     <div className="rm-container">
       <h1>Senarai Risiko</h1>
@@ -155,53 +159,81 @@ function SenaraiRisiko({ refreshTrigger }) {
       <div className="rm-table-wrapper">
         <table className="rm-risiko-table">
           <thead>
+            {/* ----- MULA: HEADER BARU DENGAN GROUPING (TANPA NOMBOR) ----- */}
             <tr>
-              <th>No.</th>
+              <th rowSpan="2">Bil</th>
+              <th colSpan="6">Pengenalpastian Risiko</th>
+              <th colSpan="5">Penilaian Risiko</th>
+              <th colSpan="4">Rawatan atas Risiko</th>
+              <th colSpan="4">Pemantauan Risiko</th>
+              <th colSpan="7">Keberkesanan Tindakan</th>
+              <th rowSpan="2">Tindakan</th>
+            </tr>
+            <tr>
+              {/* 2. Pengenalpastian Risiko (6 sub-kolum) */}
               <th>No Rujukan</th>
-              <th>Tahun</th>
-              <th>Separuh Tahun</th>
-              <th>Subsidiari</th>
-              <th>Bahagian</th>
-              <th>Kategori</th>
+              <th>Tahun & Separuh Tahun Daftar</th>
+              <th>Nama Syarikat</th>
+              <th>Bahagian / Unit</th>
+              <th>Kategori Risiko</th>
               <th>Risiko</th>
+              
+              {/* 3. Penilaian Risiko (5 sub-kolum) */}
               <th>Skor Kebarangkalian</th>
               <th>Skor Impak</th>
               <th>Skor Risiko</th>
               <th>Status Risiko</th>
+              <th>Pindaan Penilaian</th>
               
-              {/* ----- MULA: KOLUM BARU ----- */}
+              {/* 4. Rawatan atas Risiko (4 sub-kolum) */}
               <th>Pelan Tindakan</th>
               <th>Jenis Kawalan</th>
-              <th>Tempoh Jangkaan Siap Tindakan</th>
+              <th>Tempoh Jangkaan Siap</th>
               <th>Kakitangan Bertanggungjawab</th>
-              <th>Skor Risiko Pemantauan</th>
-              {/* ----- TAMAT: KOLUM BARY ----- */}
               
+              {/* 5. Pemantauan Risiko (4 sub-kolum) */}
+              <th>Tahun & Separuh Tahun Pemantauan</th>
+              <th>Pelan Tindakan Pemantauan</th>
+              <th>Kekerapan</th>
+              <th>Kakitangan Bertanggungjawab (Pemantauan)</th>
+              
+              {/* 6. Keberkesanan Tindakan (7 sub-kolum) */}
+              <th>Skor Kebarangkalian (Semasa)</th>
+              <th>Skor Impak (Semasa)</th>
+              <th>Skor Risiko (Semasa)</th>
+              <th>Keberkesanan</th>
               <th>Status Pemantauan</th>
-              <th>Tindakan</th>
+              <th>Pindaan Keberkesanan</th>
+              <th>Catatan</th>
             </tr>
+            {/* ----- TAMAT: HEADER BARU DENGAN GROUPING ----- */}
           </thead>
           <tbody>
             {loading ? (
               <tr className="rm-loader-row">
-                {/* Kemaskini colSpan kepada 19 */}
-                <td colSpan="19" className="rm-center">⏳ Sedang memuat data...</td>
+                {/* Kemaskini colSpan kepada jumlah kolum baru */}
+                <td colSpan={totalColumns} className="rm-center">⏳ Sedang memuat data...</td>
               </tr>
             ) : filteredRisks.length === 0 ? (
               <tr>
-                {/* Kemaskini colSpan kepada 19 */}
-                <td colSpan="19" className="rm-center">🚫 Tiada data risiko</td>
+                {/* Kemaskini colSpan kepada jumlah kolum baru */}
+                <td colSpan={totalColumns} className="rm-center">🚫 Tiada data risiko</td>
               </tr>
             ) : filteredRisks.map((r, index) => (
               <tr key={r.id}>
+                
+                {/* 1. Bil */}
                 <td className="rm-center rm-no-bil">{index + 1}</td>
+                
+                {/* 2. Pengenalpastian Risiko (6 kolum) */}
                 <td className="rm-left">{r.no_rujukan}</td>
-                <td className="rm-center">{r.tahun}</td>
-                <td className="rm-center">{r.separuh_tahun}</td>
+                <td className="rm-center">{r.tahun} - {r.separuh_tahun}</td>
                 <td className="rm-center">{r.subsidiari}</td>
                 <td className="rm-center">{r.bahagian}</td>
                 <td className="rm-center">{r.kategori}</td>
                 <td className="rm-justify">{r.risiko}</td>
+                
+                {/* 3. Penilaian Risiko (5 kolum) */}
                 <td className="rm-center">{r.skor_kebarangkalian || "-"}</td>
                 <td className="rm-center">{r.skor_impak || "-"}</td>
                 <td className="rm-center">
@@ -209,17 +241,31 @@ function SenaraiRisiko({ refreshTrigger }) {
                     {shortForm(r.tahap_risiko)}
                   </div>
                 </td>
-                <td className="rm-center">{r.status_risiko}</td>
-
-                {/* ----- MULA: DATA KOLUM BARU ----- */}
+                <td className="rm-center">{r.status_risiko || "—"}</td>
+                <td className="rm-center">{r.pindaan_penilaian || "—"}</td> {/* DATA BARU */}
+                
+                {/* 4. Rawatan atas Risiko (4 kolum) */}
                 <td className="rm-left">{r.pelan_tindakan || "—"}</td>
                 <td className="rm-center">{r.jenis_kawalan || "—"}</td>
                 <td className="rm-center">{r.tempoh_jangkaan_siap_tindakan || "—"}</td>
                 <td className="rm-center">{r.kakitangan_bertanggungjawab || "—"}</td>
-                <td className="rm-center">{r.skor_risiko_pemantauan || "—"}</td>
-                {/* ----- TAMAT: DATA KOLUM BARU ----- */}
-
+                
+                {/* 5. Pemantauan Risiko (4 kolum) */}
+                <td className="rm-center">{r.pemantauan_tahun_separuh || "—"}</td> {/* DATA BARU */}
+                <td className="rm-left">{r.pemantauan_pelan_tindakan || "—"}</td> {/* DATA BARU */}
+                <td className="rm-center">{r.pemantauan_kekerapan || "—"}</td> {/* DATA BARU */}
+                <td className="rm-center">{r.pemantauan_kakitangan || "—"}</td> {/* DATA BARU */}
+                
+                {/* 6. Keberkesanan Tindakan (7 kolum) */}
+                <td className="rm-center">{r.semasa_skor_kebarangkalian || "—"}</td> {/* DATA BARU */}
+                <td className="rm-center">{r.semasa_skor_impak || "—"}</td> {/* DATA BARU */}
+                <td className="rm-center">{r.skor_risiko_pemantauan || "—"}</td> {/* GUNA SEMULA DARI KOD LAMA */}
+                <td className="rm-center">{r.keberkesanan || "—"}</td> {/* DATA BARU */}
                 <td className="rm-center">{r.status_pemantauan || "—"}</td>
+                <td className="rm-center">{r.pindaan_keberkesanan || "—"}</td> {/* DATA BARU */}
+                <td className="rm-left">{r.catatan || "—"}</td> {/* DATA BARU */}
+
+                {/* 7. Tindakan */}
                 <td className="rm-center">
                   <div className="rm-action-buttons">
                     <button onClick={() => handleEdit(r)} className="rm-edit-btn"><Edit size={16} /></button>

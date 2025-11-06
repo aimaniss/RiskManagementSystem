@@ -8,18 +8,20 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* === PERUBAHAN DI SINI === */
 .rm-container h1 {
-  text-align: center;
+  text-align: left; /* Diubah dari 'center' */
   margin-bottom: 20px;
   color: #004071;
   font-weight: 600;
 }
 
+/* === PERUBAHAN DI SINI === */
 .rm-filter-container {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  justify-content: center;
+  justify-content: flex-start; /* Diubah dari 'center' */
 }
 
 .rm-filter-container select,
@@ -37,7 +39,8 @@
 .rm-risiko-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1100px;
+  /* Tambah lebar minimum yang lebih besar untuk 28 kolum */
+  min-width: 2800px;
 }
 
 .rm-risiko-table td.rm-no-bil {
@@ -46,26 +49,57 @@
   width: 20px;
 }
 
-/* Header */
-.rm-risiko-table th {
-  background-color: #0074c8;
+/* === GAYA HEADER BARU === */
+
+/* Header - Baris Utama (Grouping) */
+.rm-risiko-table thead tr:first-child th {
+  background-color: #004071; /* Warna lebih gelap untuk grouping */
   color: white;
   font-weight: 600;
   text-align: center;
-  padding: 12px 10px;
+  padding: 10px 8px;
   font-size: 14px;
+  border-bottom: 1px solid #005a9e;
+  border-right: 1px solid #005a9e;
 }
+
+/* Header - Baris Sub-kolum */
+.rm-risiko-table thead tr:last-child th {
+  background-color: #0074c8; /* Warna asal */
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 8px;
+  font-size: 13px; /* Kecilkan sikit font sub-header */
+  border-right: 1px solid #006abc;
+  vertical-align: top; /* Jamin alignment jika teks wrap */
+  white-space: normal; /* Benarkan wrapping jika nama kolum panjang */
+  min-width: 120px; /* Tetapkan lebar minimum untuk sub-kolum */
+}
+
+/* Header yang guna rowSpan (Bil & Tindakan) */
+.rm-risiko-table thead th[rowSpan="2"] {
+  background-color: #004071;
+  vertical-align: middle;
+  border-bottom: 1px solid #005a9e;
+  font-size: 14px;
+  min-width: 60px; /* Lebar untuk Bil & Tindakan */
+}
+
+/* === TAMAT GAYA HEADER BARU === */
 
 /* Data rows */
 .rm-risiko-table td {
-  padding: 12px 10px;
+  padding: 10px 8px; /* Selaraskan padding */
   border-bottom: 1px solid #d3d3d3;
-  font-size: 14px;
+  font-size: 13px; /* Kecilkan sikit font data */
   border-right: 1px solid #e5e7eb; /* garisan vertical */
   background-color: #fff;
+  vertical-align: top; /* Selaraskan data ke atas */
 }
 
 /* Buang border-right pada last column */
+.rm-risiko-table th:last-child,
 .rm-risiko-table td:last-child {
   border-right: none;
 }
@@ -82,6 +116,7 @@
 
 .rm-risiko-table td.rm-center {
   text-align: center;
+  vertical-align: middle; /* Pusatkan item seperti skor & status */
 }
 
 .rm-risiko-table td.rm-left {
@@ -92,7 +127,7 @@
   text-align: left;
   white-space: normal;
   word-wrap: break-word;
-  max-width: 400px;
+  max-width: 350px; /* Kurangkan sikit max-width */
   line-height: 1.5;
 }
 
@@ -187,7 +222,7 @@
   }
 }
 
-/* Modal Styles */
+/* Modal Styles (Kekal sama) */
 .rm-modal-overlay {
   position: fixed;
   top: 0;
@@ -200,7 +235,7 @@
   align-items: center;
   z-index: 999;
 }
-
+/* ... (Stail modal yang lain kekal sama seperti kod asal anda) ... */
 .rm-modal {
   background: #fff;
   border-radius: 10px;
@@ -209,30 +244,25 @@
   max-width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
-
 .rm-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
-
 .rm-close-btn {
   background: none;
   border: none;
   cursor: pointer;
 }
-
 .rm-modal-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .rm-modal-body label {
   font-weight: 600;
 }
-
 .rm-modal-body input,
 .rm-modal-body textarea {
   padding: 6px 10px;
@@ -240,19 +270,16 @@
   border: 1px solid #ccc;
   font-family: "Inter", sans-serif;
 }
-
 .rm-modal-body textarea {
   resize: vertical;
   min-height: 80px;
 }
-
 .rm-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 15px;
 }
-
 .rm-save-btn {
   background-color: #0284c7;
   color: #fff;
@@ -261,11 +288,9 @@
   border-radius: 6px;
   cursor: pointer;
 }
-
 .rm-save-btn:hover {
   background-color: #0369a1;
 }
-
 .rm-cancel-btn {
   background-color: #e5e7eb;
   color: #111;
@@ -274,28 +299,25 @@
   border-radius: 6px;
   cursor: pointer;
 }
-
 .rm-cancel-btn:hover {
   background-color: #d1d5db;
 }
 
-/* ===================== Responsive Scaling ===================== */
+/* ===================== Responsive Scaling (DIKEMASKINI) ===================== */
 
-/* Laptop skrin kecil (≤1400px) → kecilkan 10% */
+/* Laptop skrin kecil (≤1400px) */
 @media (max-width: 1400px) {
-  .rm-container h1 {
-    font-size: 1.25rem;
-  }
   .rm-risiko-table {
-    min-width: 680px;
+    min-width: 2000px; /* Kemaskini min-width */
   }
-  .rm-risiko-table td {
-    font-size: 0.78rem;
+  .rm-risiko-table td,
+  .rm-risiko-table thead tr:last-child th {
+    font-size: 0.78rem; /* 12.5px */
     padding: 7px 5px;
   }
-  .rm-risiko-table th {
-    font-size: 0.78rem;
-    padding: 7px 5px;
+  .rm-risiko-table thead tr:first-child th {
+    font-size: 0.8rem;
+    padding: 8px 5px;
   }
   .rm-risk-box {
     width: 2rem;
@@ -307,7 +329,7 @@
 /* Tablet (≤1024px) */
 @media (max-width: 1024px) {
   .rm-risiko-table {
-    min-width: 600px;
+    min-width: 1500px; /* Kemaskini min-width */
   }
   .rm-modal {
     width: 78vw;
@@ -321,6 +343,7 @@
     padding: 12px;
   }
   .rm-risiko-table {
+    min-width: 1200px; /* Kemaskini min-width */
     font-size: 0.75rem;
   }
   .rm-modal {
