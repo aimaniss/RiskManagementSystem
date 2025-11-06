@@ -5,22 +5,8 @@ import api from "../../api/api";
 import "./DaftarRisiko.css";
 import PanduanModal from '../Panduan/Panduan'; 
 
-// --- JADUAL RUJUKAN SKOR BARU ---
-const KebarangkalianData = {
-    5: "Hampir Pasti",
-    4: "Kemungkinan Tinggi",
-    3: "Berpeluang Untuk Berlaku",
-    2: "Kemungkinan Rendah",
-    1: "Hampir Tiada Kemungkinan",
-};
-
-const ImpakData = {
-    5: "Sangat Besar",
-    4: "Besar",
-    3: "Ketara",
-    2: "Boleh Diukur",
-    1: "Tidak Ketara",
-};
+// --- JADUAL RUJUKAN SKOR (DIBUANG) ---
+// (Konstanta KebarangkalianData dan ImpakData dibuang kerana kotak penilaian dibuang)
 // ---------------------------------
 
 function DaftarRisiko() {
@@ -32,16 +18,17 @@ function DaftarRisiko() {
     kategori: "",
     bahagian: "",
     risiko: "",
-    skorKebarangkalian: "",
-    skorImpak: "",
-    skorRisiko: "", 
-    statusRisiko: "",
-    tahapRisiko: "" 
+    // --- Skor dibuang dari state ---
+    // skorKebarangkalian: "",
+    // skorImpak: "",
+    // skorRisiko: "", 
+    // statusRisiko: "",
+    // tahapRisiko: "" 
   });
 
   const [puncaList, setPuncaList] = useState([""]);
   const [kesanList, setKesanList] = useState([""]);
-  const [riskColor, setRiskColor] = useState("#f1f5f9");
+  // const [riskColor, setRiskColor] = useState("#f1f5f9"); // Dibuang
   const [subsidiariList, setSubsidiariList] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
@@ -62,27 +49,11 @@ function DaftarRisiko() {
     }
   }
 
-  const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
-
-  const riskMatrix = {
-    1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
-    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-  };
-
-  const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-
-  const getRiskAbbreviation = (label) => {
-    switch(label) {
-      case "Rendah": return "R";
-      case "Sederhana": return "S";
-      case "Tinggi": return "T";
-      case "Sangat Tinggi": return "ST";
-      default: return null; 
-    }
-  };
+  // --- Logik Penilaian Dibuang ---
+  // const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
+  // const riskMatrix = { ... };
+  // const getRiskMatrix = (k, i) => ...;
+  // const getRiskAbbreviation = (label) => ...;
 
   useEffect(() => {
     const fetchSubsidiari = async () => {
@@ -101,26 +72,13 @@ function DaftarRisiko() {
       }
     };
     fetchSubsidiari();
-  }, []); 
+  }, []); // Dependency userRole dan subsidiariId dibuang kerana ia pembolehubah statik dalam render ini
 
-  useEffect(() => {
-    const k = parseInt(formData.skorKebarangkalian);
-    const i = parseInt(formData.skorImpak);
-    if (k && i) {
-      const total = k * i;
-      const { label, color } = getRiskMatrix(k, i);
-      setFormData(prev => ({ 
-        ...prev, 
-        skorRisiko: total, 
-        tahapRisiko: label, 
-        statusRisiko: label==="Rendah"?"Tidak":"Ya" 
-      }));
-      setRiskColor(color);
-  } else {
-      setFormData(prev => ({ ...prev, skorRisiko: "", tahapRisiko: "", statusRisiko: "" }));
-      setRiskColor("#f1f5f9");
-    }
-  }, [formData.skorKebarangkalian, formData.skorImpak]);
+  // --- useEffect untuk skor dibuang ---
+  // useEffect(() => {
+  //   const k = parseInt(formData.skorKebarangkalian);
+  //   ...
+  // }, [formData.skorKebarangkalian, formData.skorImpak]);
 
   const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -140,18 +98,9 @@ function DaftarRisiko() {
     return alert("⚠️ Sila lengkapkan semua maklumat dalam Pengenalpastian Risiko.");
   }
 
-    // --- KOD BARU UNTUK LOGIK CUSTOM SKOR DISINI ---
-    if (canEditPenilaian) {
-        const k = formData.skorKebarangkalian;
-        const i = formData.skorImpak;
-
-        // Semak jika salah satu dipilih, tetapi yang satu lagi tidak
-        // Logik: (k ada nilai dan i kosong) ATAU (k kosong dan i ada nilai)
-        if ((k && !i) || (!k && i)) {
-            return alert("⚠️ Anda mesti mengisi KEDUA-DUA Skor Kebarangkalian dan Skor Impak, atau TIDAK MENGISI KEDUA-DUANYA.");
-        }
-    }
-    // ------------------------------------
+    // --- KOD LOGIK CUSTOM SKOR DIBUANG ---
+    // if (canEditPenilaian) { ... }
+    // ------------------------------------
 
     const finalSubsidiari = formData.subsidiari
       ? parseInt(formData.subsidiari)
@@ -173,14 +122,15 @@ function DaftarRisiko() {
         tahun: tahunInt,
         separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
         subsidiari: finalSubsidiari,
-        skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
-        skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
+        // --- Skor dibuang dari finalData ---
+        // skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
+        // skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
         punca: puncaList.filter(p => p.trim() !== ""),
         kesan: kesanList.filter(k => k.trim() !== ""),
-        skorRisiko: getRiskAbbreviation(formData.tahapRisiko)
+        // skorRisiko: getRiskAbbreviation(formData.tahapRisiko) // Dibuang
     };
 
-    delete finalData.tahapRisiko;
+    // delete finalData.tahapRisiko; // Dibuang
 
 
     setIsSubmitting(true);
@@ -205,14 +155,17 @@ try {
 
       await api.post("/risiko", finalData);
       alert("✅ Risiko berjaya didaftarkan!");
+      
+      // Reset state, kini tanpa skor
       setFormData({
-        noRujukan:"", tahun:"", separuhTahun:"", subsidiari: canEditPenilaian ? "" : subsidiariId,
-        kategori:"", bahagian:"", risiko:"", skorKebarangkalian:"",
-        skorImpak:"", skorRisiko:"", statusRisiko:"", tahapRisiko:""
+        noRujukan:"", tahun:"", separuhTahun:"", 
+        subsidiari: (["STAFF","KETUA SUBSIDIARI"].includes(userRole)) ? subsidiariId : "",
+        kategori:"", bahagian:"", risiko:""
+        // --- Skor dibuang ---
       });
       setPuncaList([""]);
       setKesanList([""]);
-      setRiskColor("#f1f5f9");
+      // setRiskColor("#f1f5f9"); // Dibuang
     } catch (err) {
       console.error("❌ Error:", err.response?.data || err.message);
       alert("⚠️ Gagal mendaftar risiko.");
@@ -254,12 +207,13 @@ try {
                 className="input select-dropdown"
               >
                 <option value="">-- Pilih --</option>
-                <option value="1">Pertama</option> 
-                <option value="2">Kedua</option>   
+                {/* --- DIKEMASKINI --- */}
+                <option value="1">Pertama (Jan-Jun)</option> 
+                <option value="2">Kedua (Jul-Dis)</option>   
               </select>
             </div>
             <div className="info-row" style={{ display:"flex", gap:"12px" }}>
-              <label className="label">Subsidiari:</label>
+              <label className="label">Syarikat:</label>
               <select 
                 name="subsidiari" 
                 value={formData.subsidiari} 
@@ -270,7 +224,7 @@ try {
                 <option value="">-- Pilih --</option>
                 {subsidiariList.length > 0
                   ? subsidiariList.map((s)=>(<option key={s.subsidiari_id} value={s.subsidiari_id}>{s.nama_subsidiari}</option>))
-                  : <option disabled>Tiada subsidiari</option>}
+                  : <option disabled>Tiada syarikat</option>}
               </select>
             </div>
 
@@ -324,66 +278,8 @@ try {
           </div>
         </div>
 
-        {/* Penilaian Risiko (Kekal sebagai kotak berasingan) */}
-        {canEditPenilaian && (
-  <div className="box">
-    <div className="box-header">Penilaian Risiko</div>
-    <div className="risk-wrapper">
-      <div className="risk-field">
-        <label className="label">Skor Kebarangkalian:</label>
-        <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
-          <option value="">-- Pilih --</option>
-          {Object.entries(KebarangkalianData).map(([value, label])=> (
-                <option key={value} value={value}>
-                    {value} - {label} 
-                </option>
-            ))}
-        </select>
-      </div>
-
-      <div className="risk-field">
-        <label className="label">Skor Impak:</label>
-        <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
-          <option value="">-- Pilih --</option>
-          {Object.entries(ImpakData).map(([value, label])=> (
-                <option key={value} value={value}>
-                    {value} - {label} 
-                </option>
-            ))}
-        </select>
-      </div>
-
-      <div className="risk-field">
-        <label className="label">Skor Risiko:</label>
-        <input 
-          type="text" 
-          value={getRiskAbbreviation(formData.tahapRisiko)} 
-          readOnly 
-          className="input risk-score" 
-          style={{ background: riskColor, textAlign:"center" }} 
-       />
-      </div>
-
-      <div className="risk-field">
-        <label className="label">Status Risiko:</label>
-<input
-  type="text"
-  readOnly
-  value={
-    formData.statusRisiko === "Ya"
-      ? "Ya (Risiko memerlukan tindakan)"
-      : formData.statusRisiko === "Tidak"
-      ? "Tidak (Risiko rendah-tiada tindakan)"
-      : ""
-  }
-  className="input status-risk"
-  style={{ textAlign: "center", backgroundColor: "#f1f5f9", color: "#004071" }}
-/>
-
-      </div>
-    </div>
-  </div>
-)}
+        {/* --- KOTAK PENILAIAN RISIKO DIBUANG --- */}
+        {/* {canEditPenilaian && ( ... )} */}
 
         <div style={{ textAlign:"center" }}>
         <button type="submit" className="submit-button" disabled={isSubmitting}>
