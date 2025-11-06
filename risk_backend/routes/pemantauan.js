@@ -216,79 +216,80 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
 
 
 /* =======================================================
-  🟡 GET: Semak Kewujudan Tahun & Separuh Tahun (Kekal Sama)
-  ENDPOINT: /pemantauan-risiko/check-duplicate
+  🟡 GET: Semak Kewujudan Tahun & Separuh Tahun (DIKEMASKINI)
+  ENDPOINT: /pemantauan-risiko/check-duplicate
 ======================================================= */
 router.get("/check-duplicate", verifyToken, async (req, res) => {
-  try {
-    const { risiko_id, tahun, separuh } = req.query;
+  try {
+    const { risiko_id, tahun, separuh } = req.query;
 
-    if (!risiko_id || !tahun || !separuh) {
-      return res.status(400).json({ message: "Parameter tidak lengkap." });
-    }
+    if (!risiko_id || !tahun || !separuh) {
+      return res.status(400).json({ message: "Parameter tidak lengkap." });
+    }
 
-    const risikoQuery = `
-      SELECT tahun, separuh_tahun 
-      FROM risiko 
-      WHERE risiko_id = $1
-    `;
-    const risikoResult = await pool.query(risikoQuery, [risiko_id]);
+    const tahunPemantauan = parseInt(tahun, 10);
+    const separuhPemantauan = parseInt(separuh, 10);
 
-    if (risikoResult.rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
-    }
+    // 1. Dapatkan Tarikh Risiko ASAL
+    const risikoQuery = `SELECT tahun, separuh_tahun FROM risiko WHERE risiko_id = $1`;
+    const risikoResult = await pool.query(risikoQuery, [risiko_id]);
 
-    const risikoTahun = parseInt(risikoResult.rows[0].tahun, 10);
-    const risikoSeparuh = parseInt(risikoResult.rows[0].separuh_tahun, 10);
-    const tahunPemantauan = parseInt(tahun, 10);
-    const separuhPemantauan = parseInt(separuh, 10);
+    if (risikoResult.rows.length === 0) {
+      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+    }
 
-    if (
-      tahunPemantauan < risikoTahun ||
-      (tahunPemantauan === risikoTahun && separuhPemantauan <= risikoSeparuh)
-    ) {
-      return res.json({
-        duplicate: false,
-        invalid: true,
-        message:
-          "Tahun atau separuh tahun pemantauan tidak boleh sama atau lebih awal daripada risiko asal.",
-      });
-    }
+    const risikoTahun = parseInt(risikoResult.rows[0].tahun, 10);
+    const risikoSeparuh = parseInt(risikoResult.rows[0].separuh_tahun, 10);
 
-    const checkQuery = `
-      SELECT COUNT(*) AS count 
-      FROM LogPemantauan 
-      WHERE risiko_id = $1 
-      AND tahun_pemantauan = $2 
-      AND separuh_tahun_pemantauan = $3
-    `;
-    const { rows } = await pool.query(checkQuery, [
-      risiko_id,
-      tahunPemantauan,
-      separuhPemantauan,
-    ]);
-    const duplicate = parseInt(rows[0].count, 10) > 0;
+    // 2. SEMAKAN #1: (DIKEMASKINI) - Tidak boleh LEBIH AWAL daripada risiko asal
+    // (Logik 'tahunPemantauan === risikoTahun && separuhPemantauan <= risikoSeparuh' diubah kepada '<')
+    if (
+      tahunPemantauan < risikoTahun ||
+      (tahunPemantauan === risikoTahun && separuhPemantauan < risikoSeparuh)
+    ) {
+      return res.json({
+        duplicate: false,
+        invalid: true, // ❌ Ralat
+        message:
+          `Tahun/separuh tahun pemantauan tidak boleh lebih awal daripada risiko asal (Tahun: ${risikoTahun}, Separuh: ${risikoSeparuh}).`, // Mesej diubah
+      });
+    }
 
-    if (duplicate) {
-      return res.json({
-        duplicate: true,
-        invalid: false,
-        message:
-          "Log pemantauan untuk tahun & separuh tahun ini telah wujud.",
-      });
-    }
+    // 3. Dapatkan Tarikh Log TERAKHIR
+    const logTerakhirQuery = `SELECT tahun_pemantauan, separuh_tahun_pemantauan FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC LIMIT 1`;
+    const logTerakhirResult = await pool.query(logTerakhirQuery, [risiko_id]);
 
-    res.json({
-      duplicate: false,
-      invalid: false,
-      message: "Pemantauan sah untuk ditambah.",
-    });
-  } catch (err) {
-    console.error("❌ Ralat GET /check-duplicate:", err);
-    res
-      .status(500)
-      .json({ message: "Gagal menyemak data duplicate: " + err.message });
-  }
+    // 4. SEMAKAN #2: (KEKAL SAMA) - Mesti lebih lewat daripada log terakhir (jika ada)
+    if (logTerakhirResult.rows.length > 0) {
+      const logTahunTerakhir = parseInt(logTerakhirResult.rows[0].tahun_pemantauan, 10);
+      const logSeparuhTerakhir = parseInt(logTerakhirResult.rows[0].separuh_tahun_pemantauan, 10);
+
+      // Semak jika tempoh baharu adalah SAMA ATAU LEBIH AWAL dari log terakhir
+      if (
+        tahunPemantauan < logTahunTerakhir ||
+        (tahunPemantauan === logTahunTerakhir && separuhPemantauan <= logSeparuhTerakhir)
+      ) {
+        return res.json({
+          duplicate: true, // Ia adalah "duplicate" atau "lebih awal"
+          invalid: true, // ❌ Ralat
+          message: `Pemantauan mesti lebih lewat daripada log terakhir (Tahun: ${logTahunTerakhir}, Separuh: ${logSeparuhTerakhir}).`,
+        });
+      }
+    }
+
+    // 5. Jika Lulus semua semakan
+    res.json({
+      duplicate: false,
+      invalid: false,
+      message: "Pemantauan sah untuk ditambah.",
+    });
+
+  } catch (err) {
+    console.error("❌ Ralat GET /check-duplicate:", err);
+    res
+      .status(500)
+      .json({ message: "Gagal menyemak data duplicate: " + err.message });
+  }
 });
 
 /* =======================================================

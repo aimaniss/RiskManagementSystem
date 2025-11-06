@@ -1,726 +1,347 @@
-/* ============================================================
-    🧭 Dashboard Keseluruhan - Versi Minimalis Moden 2025
-    Tema: Kelabu Muda + Kad Putih
-    ============================================================ */
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* TUKAR: Menetapkan saiz fon asas kepada 14px untuk mengecilkan skala keseluruhan */
-html {
-  font-size: 14px;
-}
-
-:root {
-  --primary-color: #0074c8;
-  --text-color: #222;
-  --muted-text: #666;
-  --bg-color: #f4f6f8; /* Latar belakang kelabu seperti gambar */
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.08);
-  --radius: 12px; /* TUKAR: Kurangkan radius sikit */
-  --transition: 0.25s ease;
-}
-
+/* === RANGKA UTAMA === */
 .dashboard-keseluruhan-layout {
-  font-family: "Inter", "Segoe UI", sans-serif;
-  background: var(--bg-color);
-  color: var(--text-color);
-  min-height: 100vh;
-  padding: 1.5rem; /* TUKAR: Kurangkan padding dari 2rem */
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem; /* TUKAR: Kurangkan gap dari 1.5rem */
+  font-family: "Inter", sans-serif;
+  background-color: #f3f4f6;
+  padding: 24px;
 }
 
-/* ============================================================
-    HEADER
-    ============================================================ */
+/* === HEADER === */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
 }
-
 .header-left-image {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
 }
-
 .image-placeholder {
-  width: 60px; /* TUKAR: Kecilkan sikit */
-  height: 60px; /* TUKAR: Kecilkan sikit */
-  border-radius: 50%;
-  background: #f4f6f8;
+  width: 50px;
+  height: 50px;
+  background: #e5e7eb;
+  border-radius: 4px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 24px; /* TUKAR: Kecilkan sikit */
-  color: var(--primary-color);
-  box-shadow: var(--shadow);
+  justify-content: center;
 }
-
 .image-caption {
   font-weight: 600;
-  color: #00234f;
-  letter-spacing: 0.3px;
-  font-size: 1rem; /* TUKAR: Kecilkan sikit */
+  color: #374151;
 }
-
 .header-right-title {
   text-align: right;
 }
-
 .comparison-title {
-  font-size: 0.9rem; /* TUKAR: Kecilkan sikit */
-  color: var(--muted-text);
-  margin-bottom: 0.2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
 }
-
 .comparison-years {
+  font-size: 1.5rem;
   font-weight: 700;
-  font-size: 1.2rem; /* TUKAR: Kurangkan dari 1.3rem */
-  color: var(--primary-color);
+  color: #0074c8;
 }
-
 .comparison-years .vs {
-  color: #999;
   font-weight: 400;
-  margin: 0 0.3rem;
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 8px;
 }
 
-/* ============================================================
-    GRID - SUSUN ATUR BARU
-    ============================================================ */
+/* === SUSUN ATUR GRID === */
 .dashboard-grid-layout {
   display: grid;
-  gap: 1.25rem; /* TUKAR: Kurangkan gap dari 1.5rem */
-  grid-template-columns: 1fr 1fr;
-  /* TUKAR: Susun atur grid diubah */
-  grid-template-areas:
-    "sukatan    sukatan" /* Baris 1: Sukatan Risiko rentang penuh */
-    "jenis      kategori"
-    "pemantauan pemantauan"
-    "statuspai  statusbar";
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(400px, auto);
+  gap: 24px;
 }
 
-/* Tetapkan setiap komponen pada area gridnya */
-.section-kuantitatif {
-  grid-area: sukatan;
+/* Kotak untuk setiap carta */
+.section-box {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
-/* .section-lagenda DIBUANG */
-.section-jenis-kawalan {
-  grid-area: jenis;
+
+/* Span merentasi 2 kolum */
+.section-kuantitatif {
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
 .section-kategori-risiko-jadual {
-  grid-area: kategori;
+  grid-column: 2 / 3;
+  grid-row: 2;
 }
 .section-pemantauan {
-  grid-area: pemantauan;
-}
-.section-status-pemantauan-pai {
-  grid-area: statuspai;
+  grid-column: 1 / 2;
+  grid-row: 3;
 }
 .section-bar-status-pemantauan {
-  grid-area: statusbar;
+  grid-column: 2 / -1;
+  grid-row: 3 / span 2;
 }
 
-/* ============================================================
-    BOX / CARD (KAD PUTIH)
-    ============================================================ */
-.section-box {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.25rem; /* TUKAR: Kurangkan padding dari 1.5rem */
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem; /* TUKAR: Kurangkan gap dari 1rem */
-  transition: var(--transition);
-}
-
-.section-box:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
-}
-
+/* Tajuk Dalam Kad */
 .section-title-normal {
-  color: var(--primary-color);
-  font-weight: 600;
   font-size: 1rem;
-  border-left: 4px solid var(--primary-color);
-  padding-left: 0.6rem;
-  margin-bottom: 0.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
 }
-
-/* ============================================================
-    PEMANTAPAN/PEMANTAUAN RISIKO
-    ============================================================ */
 .g-subtitle {
-  font-size: 0.9rem;
-  color: var(--muted-text);
-  margin-top: -0.5rem; /* Rapatkan sikit */
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: -12px;
+  margin-bottom: 16px;
 }
 
-.pemantapan-chart-container {
-  width: 100%;
+/* === KAD ROW 1 (SUKATAN RISIKO) === */
+.sukatan-risiko-grid {
   display: flex;
-  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
 }
-
-.pemantapan-chart-wrapper {
-  display: flex;
-  justify-content: space-around;
-  height: 140px; /* TUKAR: Kurangkan ketinggian */
-  border-bottom: 2px solid var(--border-color);
-  padding: 0 1rem;
+.sukatan-header-col {
+  flex: 0 0 200px; /* Lebar tetap untuk tajuk baris */
 }
-
-.pemantapan-bar-group {
-  display: flex;
-  gap: 6px; /* TUKAR: Kurangkan gap */
-  flex: 1;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.pemantapan-bar-wrapper {
-  width: 28px; /* TUKAR: Kurangkan lebar */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-.pemantapan-bar {
-  width: 100%;
-  border-radius: 4px 4px 0 0;
-  color: white;
-  font-size: 0.7rem; /* TUKAR: Kecilkan fon */
+.sukatan-row-header {
+  font-size: 0.75rem;
   font-weight: 600;
-  text-align: center;
-  padding-top: 4px;
-  transition: height 0.3s ease-out;
-}
-.pemantapan-bar.prev {
-  background-color: #0074c8; /* Biru */
-}
-.pemantapan-bar.current {
-  background-color: #d9534f; /* Merah */
-}
-
-.pemantapan-xaxis-labels {
-  display: flex;
-  justify-content: space-around;
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--muted-text);
-}
-.pemantapan-xaxis-labels span {
-  flex: 1;
-  text-align: center;
-}
-
-.g-legend-bottom {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.legend-item-box {
-  font-size: 0.85rem;
-  color: var(--muted-text);
+  color: #374151;
+  padding: 12px;
+  height: 50px;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box; /* **PERUBAHAN DI SINI** */
 }
-.legend-item-box::before {
-  content: "";
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+.sukatan-header-spacer {
+  height: 80px; /* Padan dengan ketinggian ikon + tajuk */
+  border-bottom: 1px solid #e5e7eb;
 }
-.legend-item-box.prev::before {
-  background-color: #0074c8;
+.sukatan-row-header:last-child {
+  border-bottom: none;
 }
-.legend-item-box.current::before {
-  background-color: #d9534f;
+.sukatan-data-cols-wrapper {
+  display: flex;
+  flex: 1;
 }
-
-.g-bottom-section {
-  margin-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
+.sukatan-data-col {
+  flex: 1;
+  text-align: center;
+  border-left: 1px solid #e5e7eb;
 }
-
-/* --- TUKAR: STIL UNTUK SKOR RISIKO --- */
-.g-skor-risiko h5 {
-  width: 100%;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-color);
+.sukatan-icon-box {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e5e7eb;
 }
-
-.skor-risiko-legend-container {
+.sukatan-icon {
+  width: 32px;
+  height: 32px;
+}
+.sukatan-data-box {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box; /* **PERUBAHAN DI SINI** */
+}
+.sukatan-data-col:last-child {
+  border-right: none;
+}
+.sukatan-data-box:last-child {
+  border-bottom: none;
+}
+.lagenda-container-sukatan {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1.25rem; /* Jarak baris dan lajur */
+  gap: 16px;
+  margin-top: 16px;
 }
-
-.skor-risiko-item {
+.lagenda-item-sukatan {
   display: flex;
   align-items: center;
-  gap: 0.6rem; /* Jarak antara kotak dan label */
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+.lagenda-icon-sukatan {
+  width: 16px;
+  height: 16px;
 }
 
-.skor-risiko-box {
-  width: 28px; /* Saiz kotak */
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: white; /* Warna teks dalam kotak */
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
-  flex-shrink: 0;
-}
-
-.skor-risiko-label {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-color);
-}
-/* --- TAMAT PERUBAHAN --- */
-
-/* ============================================================
-    STIL CARTA PAI BERKEMBAR
-    ============================================================ */
+/* === KAD ROW 2 (PAI) === */
 .pie-comparison-wrapper {
   display: flex;
-  justify-content: space-around; /* Letak carta bersebelahan */
-  gap: 1rem;
-  width: 100%;
+  justify-content: space-around;
+  align-items: center;
+  flex: 1;
+  gap: 20px;
 }
-
 .pie-chart-container {
   display: flex;
-  flex-direction: column; /* Susun tajuk, carta, lagenda secara menegak */
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  flex: 1; /* Setiap carta ambil separuh ruang */
-  min-width: 0; /* Elak isu 'flex overflow' */
+  flex: 1;
 }
-
 .pie-chart-title {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--muted-text);
-  margin: 0;
-  text-wrap: nowrap; /* Elak tajuk jadi 2 baris */
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 16px;
 }
 
-.chart-pie-ring {
-  width: 110px; /* TUKAR: Kurangkan saiz dari 120px */
-  height: 110px; /* TUKAR: Kurangkan saiz dari 120px */
-  border-radius: 50%;
-  flex-shrink: 0; /* Elak carta dari mengecut */
-}
-
-/* Stail lagenda untuk carta pai */
-.b-legend-row,
-.d-legend-row {
-  display: flex;
-  flex-direction: column; /* Susun lagenda secara menegak */
-  align-items: flex-start; /* Jajar ke kiri */
-  gap: 0.3rem;
-  font-size: 0.85rem;
-  color: var(--muted-text);
-  margin-top: 0.5rem;
+/* Ini adalah 'placeholder' untuk Recharts */
+.chart-placeholder {
   width: 100%;
-  padding-left: 10%; /* Bagi sedikit inden */
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  text-wrap: nowrap; /* Elak lagenda jadi 2 baris */
-}
-
-.legend-item::before {
-  content: "•";
-  font-size: 1.3rem;
-}
-
-.legend-item.kurang::before {
-  color: #7f8c8d;
-}
-.legend-item.terima::before {
-  color: #ff8c00;
-}
-.legend-item.buka::before {
-  color: #dc3545;
-}
-.legend-item.sedang::before {
-  color: #ffc107;
-}
-.legend-item.tutup::before {
-  color: #28a745;
-}
-
-/* ============================================================
-    Kategori Risiko Jadual (STIL PERBANDINGAN)
-    ============================================================ */
-.f-table-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.f-row {
-  display: flex;
-  align-items: flex-start; /* Jajar ke atas */
-  gap: 0.5rem;
-}
-
-.f-label {
   flex: 1;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding-top: 0.25rem; /* Jarak sikit */
-}
-
-.f-bar-comparison-wrapper {
-  flex: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* Jarak antara bar prev dan current */
-}
-
-.f-bar-wrapper-with-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.comparison-bar-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--muted-text);
-  width: 50px; /* Lebar tetap untuk H1 2024 */
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.f-bar-wrapper {
-  flex: 1;
-  display: flex;
-  height: 18px; /* TUKAR: Kurangkan dari 20px */
+  min-height: 250px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
   border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-style: italic;
 }
 
-.f-bar-segment {
-  text-align: center;
-  font-size: 0.7rem; /* TUKAR: Kecilkan fon */
-  color: #fff;
-  font-weight: 600;
+/* === KAD ROW 2 & 4 (LEGEND) === */
+.f-legend-container,
+.d-legend-row-horizontal {
   display: flex;
   justify-content: center;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
 }
-
-/* Lagenda Kategori Risiko */
-.f-legend-container {
-  display: flex;
-  flex-wrap: wrap; /* Benarkan item turun ke baris baru */
-  justify-content: center; /* Jajarkan ke tengah */
-  gap: 0.75rem 1rem; /* Jarak atas/bawah dan kiri/kanan */
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color); /* Garisan pemisah */
-}
-
 .f-legend-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--muted-text);
+  gap: 8px;
+  font-size: 0.875rem;
 }
-
 .f-legend-color-box {
   width: 14px;
   height: 14px;
   border-radius: 3px;
 }
 
-/* ============================================================
-    SUKATAN RISIKO SEMASA (TEMA KAD PUTIH)
-    ============================================================ */
-.sukatan-risiko-grid {
+/* Dikemas kini untuk 5 status */
+.d-legend-row-horizontal .legend-item {
+  font-size: 0.875rem;
+  padding-left: 20px;
+  position: relative;
+}
+.d-legend-row-horizontal .legend-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.d-legend-row-horizontal .legend-item.buka::before {
+  background-color: #dc3545; /* Merah */
+}
+.d-legend-row-horizontal .legend-item.sedang-laksana::before {
+  background-color: #ffc107; /* Kuning */
+}
+.d-legend-row-horizontal .legend-item.pemantauan::before {
+  background-color: #0074c8; /* Biru */
+}
+.d-legend-row-horizontal .legend-item.selesai::before {
+  background-color: #17a2b8; /* Teal */
+}
+.d-legend-row-horizontal .legend-item.tutup::before {
+  background-color: #28a745; /* Hijau */
+}
+
+/* === KAD ROW 3 (PEMANTAUAN RISIKO) === */
+.g-legend-bottom {
   display: flex;
-  gap: 8px; /* Jarak antara lajur header dan lajur data */
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
 }
-
-.sukatan-header-col {
-  flex: 1;
+.legend-item-box {
+  font-size: 0.875rem;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.legend-item-box.prev {
+  background-color: #0074c8;
+  color: white;
+}
+.legend-item-box.current {
+  background-color: #d9534f;
+  color: white;
+}
+.g-bottom-section {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+.g-skor-risiko h5 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+}
+.skor-risiko-legend-container {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-
-.sukatan-header-spacer {
-  height: 44px; /* TUKAR: Kurangkan dari 50px (padan dgn icon box) */
-}
-
-.sukatan-row-header {
-  height: 36px; /* TUKAR: Kurangkan dari 40px (padan dgn data box) */
+.skor-risiko-item {
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* Jajarkan teks ke kanan */
-  padding-right: 10px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--muted-text); /* Warna teks untuk latar putih */
-}
-
-.sukatan-data-cols-wrapper {
-  flex: 3; /* Ambil lebih banyak ruang */
-  display: grid;
-  grid-template-columns: repeat(6, 1fr); /* 6 lajur */
   gap: 6px;
 }
-
-.sukatan-data-col {
+.skor-risiko-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: white;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sukatan-icon-box {
-  height: 44px; /* TUKAR: Kurangkan dari 50px */
-  display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
+  font-weight: 700;
+  font-size: 0.75rem;
 }
-
-/* TUKAR: Stail untuk ikon SVG Lucide */
-.sukatan-icon {
-  width: 32px; /* TUKAR: Saiz ikon dikurangkan */
-  height: 32px;
-  stroke-width: 2; /* Ketebalan ikon */
-}
-
-.sukatan-data-box {
-  height: 36px; /* TUKAR: Kurangkan dari 40px */
-  border: 2px dashed var(--border-color); /* Guna border-color */
-  border-radius: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1rem; /* TUKAR: Kurangkan dari 1.1rem */
-  color: var(--text-color); /* Warna teks untuk latar putih */
-}
-
-/* ============================================================
-    CSS UNTUK IKON (DIBUANG)
-    ============================================================ */
-/* Semua stail .icon-* (cth: .icon-jumlah-risiko) telah dibuang */
-
-/* ============================================================
-    LAGENDA SUKATAN RISIKO (KINI DI DALAM KAD SUKATAN)
-    ============================================================ */
-/* .section-lagenda dan .lagenda-container DIBUANG */
-
-/* TUKAR: Stail baharu untuk lagenda di dalam kad sukatan */
-.lagenda-container-sukatan {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.75rem;
-  margin-top: 1.25rem; /* Jarak dari grid di atas */
-  padding-top: 1.25rem; /* Jarak dari garisan */
-  border-top: 1px solid var(--border-color); /* Garisan pemisah */
-}
-
-.lagenda-item-sukatan {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.4rem 0.8rem; /* Kurangkan padding */
-  border-radius: 8px;
-}
-
-.lagenda-icon-sukatan {
-  width: 20px; /* Saiz ikon kecil */
-  height: 20px;
-  flex-shrink: 0;
-  stroke-width: 2.5;
-}
-
-/* ============================================================
-    CARTA BAR SUBSIDIARI (PERBANDINGAN)
-    ============================================================ */
-.subsidiari-bar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem; /* Jarak antara bar */
-}
-
-.subsidiari-bar-row {
-  display: flex;
-  align-items: flex-start; /* Jajar ke atas */
-  gap: 0.5rem;
-}
-
-.subsidiari-bar-label {
-  flex: 1;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-color);
-  text-wrap: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-top: 0.25rem; /* Jarak sikit */
-}
-
-.subsidiari-bar-comparison-wrapper {
-  flex: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* Jarak antara bar prev dan current */
-}
-
-.subsidiari-bar-wrapper-with-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.subsidiari-bar-wrapper {
-  flex: 1;
-  display: flex;
-  height: 20px; /* TUKAR: Kurangkan dari 22px */
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.subsidiari-bar-segment {
-  text-align: center;
-  font-size: 0.75rem; /* TUKAR: Kurangkan dari 0.8rem */
-  color: #fff;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  white-space: nowrap;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
-}
-
-/* Lagenda mendatar untuk bar subsidiari */
-.d-legend-row-horizontal {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  font-size: 0.85rem;
-  color: var(--muted-text);
-  margin-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-}
-
-/* ============================================================
-    RESPONSIVE
-    ============================================================ */
-@media (max-width: 1024px) {
-  /* TUKAR: Grid baru kini disusun secara menegak */
-  .dashboard-grid-layout {
-    grid-template-columns: 1fr;
-    /* TUKAR: lagenda kini sebahagian dari sukatan */
-    grid-template-areas:
-      "sukatan"
-      /* "lagenda" DIBUANG */
-      "jenis"
-      "kategori"
-      "pemantauan"
-      "statuspai"
-      "statusbar";
-  }
-
-  .dashboard-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .header-right-title {
-    text-align: center;
-  }
-
-  /* Susun atur grid risiko untuk mudah alih (mobile) */
-  .sukatan-risiko-grid {
-    flex-direction: column;
-  }
-  .sukatan-header-col {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 6px;
-    overflow-x: auto;
-  }
-
-  .sukatan-header-spacer {
-    height: 30px;
-    width: 30px;
-    flex-shrink: 0;
-  }
-
-  .sukatan-row-header {
-    height: 30px;
-    padding-right: 0;
-    justify-content: center;
-    text-align: center;
-    font-size: 0.7rem;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-  }
-  .sukatan-data-cols-wrapper {
-    overflow-x: auto;
-    padding-bottom: 10px;
-  }
-  .sukatan-data-col {
-    min-width: 80px;
-  }
-}
-
-/* Responsif untuk carta pai berkembar */
-@media (max-width: 600px) {
-  .pie-comparison-wrapper {
-    flex-direction: column; /* Susun 2 carta pai secara menegak */
-    align-items: center;
-    gap: 1.5rem; /* Jarak lebih besar bila menegak */
-  }
-  .pie-chart-container {
-    width: 80%; /* Jangan penuhkan skrin */
-  }
-  .b-legend-row,
-  .d-legend-row {
-    align-items: center; /* Jajarkan lagenda ke tengah */
-    padding-left: 0;
-  }
-
-  /* TUKAR: Susun atur lagenda sukatan risiko pada skrin kecil */
-  .lagenda-container-sukatan {
-    grid-template-columns: 1fr; /* 1 lajur sahaja */
-  }
+.skor-risiko-label {
+  font-size: 0.875rem;
+  color: #4b5563;
 }

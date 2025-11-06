@@ -573,3 +573,14 @@
     transform: rotate(360deg);
   }
 }
+/* ... (kod CSS anda yang sedia ada) ... */
+
+/* ⭐️ BARU: Tambah ini untuk kesan hover & klik pada baris log */
+.log-pemantauan-table tbody tr.log-row-clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.log-pemantauan-table tbody tr.log-row-clickable:hover {
+  background-color: #f7f9fc; /* Warna hover yang lembut */
+}
