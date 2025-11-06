@@ -240,7 +240,7 @@ try {
                   <option>Operasi</option>
                   <option>Kewangan</option>
                   <option>Strategik</option>
-                  <option>Pematuhan/Perundangan</option>
+                  <option>Pematuhan / Perundangan</option>
                 </select>
               </div>
               <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
