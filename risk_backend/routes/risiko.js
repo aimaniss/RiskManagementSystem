@@ -236,32 +236,89 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
   }
 });
 
-// ------------------- DELETE: Risiko -------------------
-// (Kod ini bersih)
+
+
+// ------------------- DELETE: Risiko (DIBAIKI / HANYA ADMIN) -------------------
 router.delete("/:risiko_id", verifyToken, async (req, res) => {
-  try {
-    const risikoId = req.params.risiko_id;
-    const user = req.user;
+  // 1. risiko_id adalah INTEGER
+  const risikoId = parseInt(req.params.risiko_id, 10); 
+  const user = req.user; // Dapatkan peranan dari token
+  const client = await pool.connect(); 
 
-    const { rows } = await pool.query(`SELECT subsidiari FROM risiko WHERE risiko_id=$1`, [risikoId]);
-    if (!rows[0]) return res.status(44).json({ error: "Risiko tidak ditemui" });
+  if (isNaN(risikoId)) {
+    client.release();
+    return res.status(400).json({ error: "risiko_id tidak sah, mesti integer." });
+  }
 
-    if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      if (parseInt(rows[0].subsidiari) !== user.subsidiari_id) {
-        return res.status(403).json({ error: "No permission to delete other subsidiari" });
-      }
-    }
+  try {
+    // --- 1. PENGESAHAN PERANAN (Hanya Admin) ---
+    // ⭐️ PERUBAHAN DI SINI: Semak jika peranan BUKAN Admin
+    if (user.nama_peranan !== "Admin") {
+      await client.release();
+      return res.status(403).json({ error: "Hanya Admin dibenarkan untuk memadam data ini." });
+    }
+    
+    // --- 2. Semak jika risiko wujud ---
+    // Kita tidak perlukan 'subsidiari' lagi, hanya periksa jika ia wujud
+    const { rows } = await client.query(`SELECT 1 FROM risiko WHERE risiko_id = $1`, [risikoId]);
+    
+    if (!rows[0]) {
+      await client.release(); 
+      return res.status(404).json({ error: "Risiko tidak ditemui" });
+    }
 
-    await pool.query("DELETE FROM punca_risiko WHERE risiko_id=$1", [risikoId]);
-    await pool.query("DELETE FROM kesan_risiko WHERE risiko_id=$1", [risikoId]);
-    await pool.query("DELETE FROM risiko WHERE risiko_id=$1", [risikoId]);
+    // KOD LAMA (if ["Staff", "Ketua Subsidiari"]...) TELAH DIBUANG
+    // Kerana semakan Admin di atas sudah memadai.
 
-    res.json({ message: "Risiko berjaya dipadam" });
+    // --- 3. Mulakan Transaksi ---
+    await client.query('BEGIN');
 
-  } catch (err) {
-    console.error("Ralat DELETE /risiko/:risiko_id:", err);
-    res.status(500).json({ message: err.message });
-  }
+    // --- 4. Dapatkan ID Bersarang ---
+    // 2. rawatan_id adalah INTEGER
+    const rawatanIdsRes = await client.query('SELECT rawatan_id FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
+    const rawatanIds = rawatanIdsRes.rows.map(r => r.rawatan_id); // [Array Integer]
+
+    // 3. log_id adalah UUID
+    const logIdsRes = await client.query('SELECT log_id FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
+    const logIds = logIdsRes.rows.map(l => l.log_id); // [Array UUID]
+
+    // --- 5. Padam Jadual "Grandchild" (Cucu) ---
+    
+    // Padam rawatan (menggunakan ::integer[])
+    if (rawatanIds.length > 0) {
+      await client.query('DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+      await client.query('DELETE FROM kakitangan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+    }
+    
+    // Padam log pemantauan (menggunakan ::uuid[])
+    if (logIds.length > 0) {
+      await client.query('DELETE FROM PelanTindakanPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
+      await client.query('DELETE FROM KakitanganPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
+    }
+
+    // --- 6. Padam Jadual "Child" (Anak) ---
+    await client.query('DELETE FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM punca_risiko WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM kesan_risiko WHERE risiko_id = $1', [risikoId]);
+
+    // --- 7. Padam Jadual Utama "Parent" (Induk) ---
+    await client.query("DELETE FROM risiko WHERE risiko_id = $1", [risikoId]);
+
+    // --- 8. Commit Transaksi ---
+    await client.query('COMMIT');
+
+    res.json({ message: "Risiko dan semua data berkaitan berjaya dipadam" });
+
+  } catch (err) {
+    // --- 9. Rollback jika Gagal ---
+    await client.query('ROLLBACK');
+    console.error("Ralat DELETE /risiko/:risiko_id:", err); 
+    res.status(500).json({ message: "Transaksi gagal: " + err.message });
+  } finally {
+    // --- 10. Lepaskan Client ---
+    client.release();
+  }
 });
 
 // ------------------- GET: Check No Rujukan -------------------
