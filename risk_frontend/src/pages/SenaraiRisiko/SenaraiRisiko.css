@@ -8,20 +8,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* === PERUBAHAN DI SINI === */
 .rm-container h1 {
-  text-align: left; /* Diubah dari 'center' */
+  text-align: left;
   margin-bottom: 20px;
   color: #004071;
   font-weight: 600;
 }
 
-/* === PERUBAHAN DI SINI === */
 .rm-filter-container {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  justify-content: flex-start; /* Diubah dari 'center' */
+  justify-content: flex-start;
 }
 
 .rm-filter-container select,
@@ -39,7 +37,6 @@
 .rm-risiko-table {
   width: 100%;
   border-collapse: collapse;
-  /* Tambah lebar minimum yang lebih besar untuk 28 kolum */
   min-width: 2800px;
 }
 
@@ -49,11 +46,9 @@
   width: 20px;
 }
 
-/* === GAYA HEADER BARU === */
-
-/* Header - Baris Utama (Grouping) */
+/* === HEADER STYLING === */
 .rm-risiko-table thead tr:first-child th {
-  background-color: #004071; /* Warna lebih gelap untuk grouping */
+  background-color: #004071;
   color: white;
   font-weight: 600;
   text-align: center;
@@ -61,82 +56,97 @@
   font-size: 14px;
   border-bottom: 1px solid #005a9e;
   border-right: 1px solid #005a9e;
+  vertical-align: middle;
 }
 
-/* Header - Baris Sub-kolum */
 .rm-risiko-table thead tr:last-child th {
-  background-color: #0074c8; /* Warna asal */
+  background-color: #0074c8;
   color: white;
   font-weight: 600;
   text-align: center;
   padding: 10px 8px;
-  font-size: 13px; /* Kecilkan sikit font sub-header */
+  font-size: 13px;
   border-right: 1px solid #006abc;
-  vertical-align: top; /* Jamin alignment jika teks wrap */
-  white-space: normal; /* Benarkan wrapping jika nama kolum panjang */
-  min-width: 120px; /* Tetapkan lebar minimum untuk sub-kolum */
+  vertical-align: middle;
+  white-space: normal;
+  min-width: 120px;
 }
 
-/* Header yang guna rowSpan (Bil & Tindakan) */
 .rm-risiko-table thead th[rowSpan="2"] {
   background-color: #004071;
   vertical-align: middle;
   border-bottom: 1px solid #005a9e;
   font-size: 14px;
-  min-width: 60px; /* Lebar untuk Bil & Tindakan */
+  min-width: 60px;
 }
 
-/* === TAMAT GAYA HEADER BARU === */
-
-/* Data rows */
+/* === DATA ROWS - SEMUA VERTICAL-ALIGN: TOP === */
 .rm-risiko-table td {
-  padding: 10px 8px; /* Selaraskan padding */
+  padding: 8px 8px;
   border-bottom: 1px solid #d3d3d3;
-  font-size: 13px; /* Kecilkan sikit font data */
-  border-right: 1px solid #e5e7eb; /* garisan vertical */
+  font-size: 13px;
+  border-right: 1px solid #e5e7eb;
   background-color: #fff;
-  vertical-align: top; /* Selaraskan data ke atas */
+  vertical-align: top; /* ✅ SEMUA DATA KE ATAS */
 }
 
-/* Buang border-right pada last column */
 .rm-risiko-table th:last-child,
 .rm-risiko-table td:last-child {
   border-right: none;
 }
 
-/* Alternating row shading */
 .rm-risiko-table tr:nth-child(even) td {
   background-color: #f9fafb;
 }
 
-/* Hover effect */
 .rm-risiko-table tr:hover td {
   background-color: #e1f0ff;
 }
 
 .rm-risiko-table td.rm-center {
   text-align: center;
-  vertical-align: middle; /* Pusatkan item seperti skor & status */
+  vertical-align: top; /* ✅ ALIGN TOP */
 }
 
 .rm-risiko-table td.rm-left {
   text-align: left;
+  vertical-align: top; /* ✅ ALIGN TOP */
 }
 
 .rm-risiko-table td.rm-justify {
   text-align: left;
   white-space: normal;
   word-wrap: break-word;
-  max-width: 350px; /* Kurangkan sikit max-width */
+  max-width: 350px;
   line-height: 1.5;
+  vertical-align: top; /* ✅ ALIGN TOP */
 }
 
-/* Action buttons horizontal */
+/* === STYLING UNTUK TAHUN & SEPARUH TAHUN === */
+.rm-year-separuh {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.rm-year-separuh div:first-child {
+  font-weight: 600;
+  color: #004071;
+}
+
+.rm-year-separuh div:last-child {
+  font-size: 11px;
+  color: #555;
+  font-weight: 400;
+}
+
+/* === ACTION BUTTONS === */
 .rm-action-buttons {
   display: flex;
   gap: 5px;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* ✅ ALIGN TOP */
 }
 
 .rm-delete-btn {
@@ -171,7 +181,7 @@
   color: #0369a1;
 }
 
-/* Skor Risiko Kotak Besar */
+/* === SKOR RISIKO KOTAK === */
 .rm-risiko-table td .rm-risk-box {
   width: 40px;
   height: 40px;
@@ -186,7 +196,7 @@
   margin: 0 auto;
 }
 
-/* Loader shimmer row */
+/* === LOADER ROW === */
 .rm-loader-row td {
   position: relative;
   overflow: hidden;
@@ -195,6 +205,7 @@
   font-weight: 500;
   text-align: center;
   height: 40px;
+  vertical-align: middle;
 }
 
 .rm-loader-row td::after {
@@ -222,7 +233,7 @@
   }
 }
 
-/* Modal Styles (Kekal sama) */
+/* === MODAL STYLES === */
 .rm-modal-overlay {
   position: fixed;
   top: 0;
@@ -235,7 +246,7 @@
   align-items: center;
   z-index: 999;
 }
-/* ... (Stail modal yang lain kekal sama seperti kod asal anda) ... */
+
 .rm-modal {
   background: #fff;
   border-radius: 10px;
@@ -244,25 +255,30 @@
   max-width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
+
 .rm-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
+
 .rm-close-btn {
   background: none;
   border: none;
   cursor: pointer;
 }
+
 .rm-modal-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .rm-modal-body label {
   font-weight: 600;
 }
+
 .rm-modal-body input,
 .rm-modal-body textarea {
   padding: 6px 10px;
@@ -270,16 +286,19 @@
   border: 1px solid #ccc;
   font-family: "Inter", sans-serif;
 }
+
 .rm-modal-body textarea {
   resize: vertical;
   min-height: 80px;
 }
+
 .rm-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 15px;
 }
+
 .rm-save-btn {
   background-color: #0284c7;
   color: #fff;
@@ -288,9 +307,11 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 .rm-save-btn:hover {
   background-color: #0369a1;
 }
+
 .rm-cancel-btn {
   background-color: #e5e7eb;
   color: #111;
@@ -299,20 +320,24 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 .rm-cancel-btn:hover {
   background-color: #d1d5db;
 }
 
-/* ===================== Responsive Scaling (DIKEMASKINI) ===================== */
+/* === CLICKABLE ROW === */
+.rm-row-clickable {
+  cursor: pointer;
+}
 
-/* Laptop skrin kecil (≤1400px) */
+/* === RESPONSIVE SCALING === */
 @media (max-width: 1400px) {
   .rm-risiko-table {
-    min-width: 2000px; /* Kemaskini min-width */
+    min-width: 2000px;
   }
   .rm-risiko-table td,
   .rm-risiko-table thead tr:last-child th {
-    font-size: 0.78rem; /* 12.5px */
+    font-size: 0.78rem;
     padding: 7px 5px;
   }
   .rm-risiko-table thead tr:first-child th {
@@ -326,10 +351,9 @@
   }
 }
 
-/* Tablet (≤1024px) */
 @media (max-width: 1024px) {
   .rm-risiko-table {
-    min-width: 1500px; /* Kemaskini min-width */
+    min-width: 1500px;
   }
   .rm-modal {
     width: 78vw;
@@ -337,13 +361,12 @@
   }
 }
 
-/* Phone (≤768px) */
 @media (max-width: 768px) {
   .rm-container {
     padding: 12px;
   }
   .rm-risiko-table {
-    min-width: 1200px; /* Kemaskini min-width */
+    min-width: 1200px;
     font-size: 0.75rem;
   }
   .rm-modal {
