@@ -4,9 +4,11 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ------------------- POST: Tambah Risiko -------------------
-// (Kod ini bersih)
+// ------------------- POST: Tambah Risiko (DIKEMAS KINI DENGAN TRANSAKSI & LOG) -------------------
 router.post("/", verifyToken, async (req, res) => {
+  // ⭐️ BARU: Dapatkan 'client' dari 'pool' untuk transaksi
+  const client = await pool.connect();
+
   try {
     const user = req.user;
     const {
@@ -18,16 +20,22 @@ router.post("/", verifyToken, async (req, res) => {
 
     const allowedRoles = ["Admin", "Executive", "Staff", "Ketua Subsidiari"];
     if (!allowedRoles.includes(user.nama_peranan)) {
+      client.release(); // ⭐️ BARU: Lepaskan client sebelum return
       return res.status(403).json({ error: "No permission to add risiko" });
     }
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       if (parseInt(subsidiari) !== user.subsidiari_id) {
+        client.release(); // ⭐️ BARU: Lepaskan client sebelum return
         return res.status(403).json({ error: "No permission for other subsidiari" });
       }
     }
 
-    const result = await pool.query(
+    // ⭐️ BARU: Mulakan Transaksi
+    await client.query('BEGIN');
+
+    // 1. Masukkan ke jadual 'risiko'
+    const result = await client.query( // ⭐️ BARU: Guna 'client.query'
       `INSERT INTO risiko
       (no_rujukan, tahun, separuh_tahun, subsidiari, kategori, bahagian, risiko, 
        skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
@@ -39,28 +47,52 @@ router.post("/", verifyToken, async (req, res) => {
 
     const risikoId = result.rows[0].risiko_id;
 
+    // 2. Masukkan ke jadual 'punca_risiko'
     if (Array.isArray(punca)) {
       for (let p of punca) {
-        if (p) await pool.query(
+        if (p) await client.query( // ⭐️ BARU: Guna 'client.query'
           `INSERT INTO punca_risiko (risiko_id, punca) VALUES ($1,$2)`,
           [risikoId, p]
         );
       }
     }
 
+    // 3. Masukkan ke jadual 'kesan_risiko'
     if (Array.isArray(kesan)) {
       for (let k of kesan) {
-        if (k) await pool.query(
+        if (k) await client.query( // ⭐️ BARU: Guna 'client.query'
           `INSERT INTO kesan_risiko (risiko_id, kesan) VALUES ($1,$2)`,
           [risikoId, k]
         );
       }
     }
 
-    res.status(201).json({ message: "Risiko berjaya didaftarkan", risiko_id: risikoId });
+    // 4. ⭐️ BARU: Automasi masukkan ke 'LogPemantauan'
+    // (Anda perlu sahkan nama jadual dan lajur adalah betul)
+    // Berdasarkan query GET anda, nama lajur ialah 'tahun_pemantauan' & 'separuh_tahun_pemantauan'
+    await client.query( // ⭐️ BARU: Guna 'client.query'
+        `INSERT INTO LogPemantauan 
+            (risiko_id, tahun_pemantauan, separuh_tahun_pemantauan, status_pemantauan)
+         VALUES ($1, $2, $3, $4)`,
+        [risikoId, tahun, separuhTahun, 'Buka']
+    );
+
+    // ⭐️ BARU: Commit transaksi jika semua berjaya
+    await client.query('COMMIT');
+
+    res.status(201).json({ 
+        message: "Risiko dan log pemantauan berjaya didaftarkan", 
+        risiko_id: risikoId 
+    });
+
   } catch (err) {
+    // ⭐️ BARU: Rollback transaksi jika ada ralat
+    await client.query('ROLLBACK');
     console.error("Ralat POST /risiko:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    // ⭐️ BARU: Lepaskan 'client' kembali ke 'pool' walau apa pun terjadi
+    client.release();
   }
 });
 
