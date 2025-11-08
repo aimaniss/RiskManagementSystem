@@ -1,21 +1,8 @@
 import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import "./DashboardSubsidiari.css";
 
-export default function DashboardSubsidiari({ filterValues }) {
-  // Dummy data
+export default function DashboardSubsidiari() {
+  // Data dummy dikemaskini untuk sepadan dengan gambar
   const allData = [
     {
       tahun: "2024",
@@ -25,8 +12,12 @@ export default function DashboardSubsidiari({ filterValues }) {
       status: "Sedang Dilaksanakan",
       skorPenilaian: "T",
       jenisKawalan: "Kurang",
-      pelanTindakan: "1. Competitive Salary\n2. Recognize & Reward Employees",
+      pelanTindakan:
+        "Implement Employee Retention Strategies\n1. Competitive Salary\n2. Recognize & Reward Employees\n3. Build Employee Engagement\n4. Reduce Employee Burnout\n5. Employee Wellness (Physical/Mental)\n6. Personal Development (Career Growth)",
       skorPemantauan: "S",
+      kakitanganBw: "Ketua Sumber Manusia UKMSC/JKMH", // Data baru
+      pelanTindakanPemantauan:
+        "1. Kesejahteraan Kakitangan (Fizikal/Mental)\n- UKMSC akan mengadakan bengkel yang dijadualkan pada bulan Julai 2025\n2. Memperbesarkan Talent Pool dengan kerjasama kolej atau universiti tempatan", // Data baru
     },
     {
       tahun: "2025",
@@ -38,6 +29,8 @@ export default function DashboardSubsidiari({ filterValues }) {
       jenisKawalan: "Terima",
       pelanTindakan: "1. Audit Internal\n2. Pemantauan vendor",
       skorPemantauan: "S",
+      kakitanganBw: "Ketua Pegawai Kewangan", // Data tambahan
+      pelanTindakanPemantauan: "1. Semakan audit suku tahunan", // Data tambahan
     },
     {
       tahun: "2025",
@@ -49,115 +42,40 @@ export default function DashboardSubsidiari({ filterValues }) {
       jenisKawalan: "Kurang",
       pelanTindakan: "1. Kursus Latihan",
       skorPemantauan: "S",
+      kakitanganBw: "Ketua Sumber Manusia UKMSC/JKMH", // Data tambahan
+      pelanTindakanPemantauan: "1. Modul latihan baru dibangunkan", // Data tambahan
     },
   ];
 
-  const [tahunFokus, setTahunFokus] = useState(filterValues.tahunAsas);
-  const [selectedNoRujukan, setSelectedNoRujukan] = useState("");
+  const [tahunFokus, setTahunFokus] = useState("2024");
+  const [selectedNoRujukan, setSelectedNoRujukan] = useState("UKMSC/0723/01"); // Set default untuk tunjuk data
 
   const dataTahun = allData.filter((item) => item.tahun === tahunFokus);
   const selectedData = dataTahun.find(
     (item) => item.noRujukan === selectedNoRujukan
   );
 
-  const dataAsas = allData.filter(
-    (item) => item.tahun === filterValues.tahunAsas
-  );
-  const dataBanding = allData.filter(
-    (item) => item.tahun === filterValues.tahunBanding
-  );
-
-  // Dummy chart data
-  const chartBahagian = [
-    { name: "SUMBER MANUSIA", value: 3 },
-    { name: "KEWANGAN", value: 2 },
-    { name: "OPERASI", value: 1 },
-  ];
-
-  const chartKategori = [
-    { name: "STRATEGIK", value: 4 },
-    { name: "OPERASI", value: 2 },
-    { name: "KEWANGAN", value: 1 },
-  ];
-
-  const chartStatus = [
-    { name: "Sedang Dilaksanakan", value: 4 },
-    { name: "Tutup", value: 2 },
-  ];
-
-  const chartKawalan = [
-    { name: "Kurang", value: 3 },
-    { name: "Terima", value: 2 },
-  ];
-
-  const COLORS = ["#0074c8", "#00c49f", "#ffbb28", "#ff8042"];
-
   return (
     <div className="dashboard-subsidiari">
-      {/* Header */}
-      <div className="dash-header">
-        <h2>Dashboard Subsidiari: {filterValues.subsidiari}</h2>
-        <p>
-          Perbandingan Tahun Asas {filterValues.tahunAsas} & Tahun Bandingan{" "}
-          {filterValues.tahunBanding}
-        </p>
-      </div>
-
-      {/* Ringkasan */}
-      <div className="summary-grid">
-        <div className="summary-card">
-          <h4>Jumlah Risiko</h4>
-          <div className="year-compare">
-            <span>
-              {filterValues.tahunAsas}: {dataAsas.length}
-            </span>
-            <span>
-              {filterValues.tahunBanding}: {dataBanding.length}
-            </span>
-          </div>
-        </div>
-        <div className="summary-card">
-          <h4>Kategori Risiko</h4>
-          <div className="year-compare">
-            <span>{filterValues.tahunAsas}: Strategik</span>
-            <span>{filterValues.tahunBanding}: Operasi</span>
-          </div>
-        </div>
-        <div className="summary-card">
-          <h4>Status Pemantauan</h4>
-          <div className="year-compare">
-            <span>{filterValues.tahunAsas}: Aktif</span>
-            <span>{filterValues.tahunBanding}: Tutup</span>
-          </div>
-        </div>
-        <div className="summary-card">
-          <h4>Jenis Kawalan</h4>
-          <div className="year-compare">
-            <span>{filterValues.tahunAsas}: Kurang</span>
-            <span>{filterValues.tahunBanding}: Terima</span>
-          </div>
-        </div>
-      </div>
-
       {/* Pilih Tahun */}
       <div className="tahun-toggle">
         <button
-          className={tahunFokus === filterValues.tahunAsas ? "active" : ""}
+          className={tahunFokus === "2024" ? "active" : ""}
           onClick={() => {
-            setTahunFokus(filterValues.tahunAsas);
+            setTahunFokus("2024");
             setSelectedNoRujukan("");
           }}
         >
-          {filterValues.tahunAsas}
+          2024
         </button>
         <button
-          className={tahunFokus === filterValues.tahunBanding ? "active" : ""}
+          className={tahunFokus === "2025" ? "active" : ""}
           onClick={() => {
-            setTahunFokus(filterValues.tahunBanding);
+            setTahunFokus("2025");
             setSelectedNoRujukan("");
           }}
         >
-          {filterValues.tahunBanding}
+          2025
         </button>
       </div>
 
@@ -180,108 +98,83 @@ export default function DashboardSubsidiari({ filterValues }) {
         </div>
 
         {selectedData ? (
-          <div className="perincian-grid">
-            <div>
-              <strong>Bahagian / Unit:</strong> {selectedData.bahagian}
-            </div>
-            <div>
-              <strong>Kategori Risiko:</strong> {selectedData.kategori}
-            </div>
-            <div>
-              <strong>Status Pemantauan:</strong> {selectedData.status}
-            </div>
-            <div>
-              <strong>Skor Penilaian Risiko:</strong>{" "}
-              {selectedData.skorPenilaian}
-            </div>
-            <div>
-              <strong>Jenis Kawalan:</strong> {selectedData.jenisKawalan}
-            </div>
-            <div>
-              <strong>Pelan Tindakan:</strong>
-              <pre>{selectedData.pelanTindakan}</pre>
-            </div>
-            <div>
-              <strong>Skor Pemantauan:</strong> {selectedData.skorPemantauan}
-            </div>
+          <div className="perincian-table-container">
+            <table className="perincian-table">
+              <thead>
+                <tr>
+                  <th className="header-perincian" colSpan="3">
+                    PERINCIAN:
+                  </th>
+                  <th className="header-norujukan" colSpan="2">
+                    {selectedData.noRujukan}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Bahagian Info Atas */}
+                <tr>
+                  <td className="col-label">
+                    <strong>BAHAGIAN/UNIT</strong>
+                  </td>
+                  <td className="col-data">{selectedData.bahagian}</td>
+                  <td className="col-kakitangan-label" rowSpan="3">
+                    <strong>KAKITANGAN BERTANGGUNGJAWAB</strong>
+                  </td>
+                  <td className="col-kakitangan-data" rowSpan="3" colSpan="2">
+                    {selectedData.kakitanganBw}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="col-label">
+                    <strong>KATEGORI RISIKO</strong>
+                  </td>
+                  <td className="col-data">{selectedData.kategori}</td>
+                </tr>
+                <tr>
+                  <td className="col-label">
+                    <strong>STATUS PEMANTAUAN</strong>
+                  </td>
+                  <td className="col-data">{selectedData.status}</td>
+                </tr>
+
+                {/* Pemisah */}
+                <tr>
+                  <td className="divider" colSpan="5"></td>
+                </tr>
+
+                {/* Bahagian Header Jadual Bawah */}
+                <tr className="header-row">
+                  <th>SKOR PENILAIAN RISIKO</th>
+                  <th>PELAN TINDAKAN [Rawatan Risiko]</th>
+                  <th>JENIS KAWALAN</th>
+                  <th>PELAN TINDAKAN [Pemantauan 2025]</th>
+                  <th>SKOR PEMANTAUAN RISIKO 2025</th>
+                </tr>
+
+                {/* Bahagian Data Jadual Bawah */}
+                <tr className="data-row">
+                  <td className="col-skor col-skor-penilaian">
+                    {selectedData.skorPenilaian}
+                  </td>
+                  <td>
+                    <pre>{selectedData.pelanTindakan}</pre>
+                  </td>
+                  <td>{selectedData.jenisKawalan}</td>
+                  <td>
+                    <pre>{selectedData.pelanTindakanPemantauan}</pre>
+                  </td>
+                  <td className="col-skor col-skor-pemantauan">
+                    {selectedData.skorPemantauan}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         ) : (
-          <p className="empty-note">Sila pilih No Rujukan untuk lihat maklumat.</p>
+          <p className="empty-note">
+            Sila pilih No Rujukan untuk lihat maklumat.
+          </p>
         )}
-      </div>
-
-      {/* Carta Bahagian */}
-      <div className="chart-section">
-        <h3>Bahagian / Unit</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartBahagian} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis dataKey="name" type="category" />
-            <Tooltip />
-            <Bar dataKey="value" fill="#0074c8" barSize={20} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Carta Kategori */}
-      <div className="chart-section">
-        <h3>Kategori Risiko</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartKategori}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#00c49f" barSize={30} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Pai Chart Status */}
-      <div className="chart-grid">
-        <div className="chart-section">
-          <h3>Status Pemantauan</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={chartStatus}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={90}
-                label
-              >
-                {chartStatus.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Pai Chart Jenis Kawalan */}
-        <div className="chart-section">
-          <h3>Jenis Kawalan</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={chartKawalan}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={90}
-                label
-              >
-                {chartKawalan.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
       </div>
     </div>
   );
