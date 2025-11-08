@@ -37,19 +37,16 @@ const getRiskLevel = (k, i) => {
 };
 
 /* =======================================================
-  🟢 GET: Semua Risiko + Pemantauan Terkini (Kekal Sama)
+  🟢 GET: Semua Risiko + Pemantauan Terkini (DIKEMASKINI)
   ENDPOINT: /pemantauan-risiko
 ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
   try {
     const user = req.user;
 
+    // ❌ Bahagian 'RisikoAdaRawatan' telah dibuang
     let query = `
-      WITH RisikoAdaRawatan AS (
-        SELECT DISTINCT risiko_id
-        FROM rawatan_risiko
-      ),
-      PemantauanTerkini AS (
+      WITH PemantauanTerkini AS (
         SELECT
           pm.log_id,
           pm.risiko_id,
@@ -115,7 +112,7 @@ router.get("/", verifyToken, async (req, res) => {
         pt.skor_risiko_pemantauan
 
       FROM Risiko r
-      JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
+      -- ❌ JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id  -- <<< Baris ini telah dibuang
       LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
