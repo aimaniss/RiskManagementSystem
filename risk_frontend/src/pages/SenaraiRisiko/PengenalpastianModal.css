@@ -1,0 +1,227 @@
+/* PengenalpastianModal.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* GAYA ASAS MODAL (Diulang di sini) */
+.penilaian-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.penilaian-modal-container {
+  background: #f4f6f8;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: 900px;
+  width: 95%;
+  font-family: "Inter", sans-serif;
+  overflow-y: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slide-up 0.25s ease-out;
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.penilaian-modal-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+.penilaian-box-header-main {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.penilaian-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+.penilaian-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* GAYA KHUSUS BORANG */
+.penilaian-box {
+  border-radius: 8px;
+  margin-bottom: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0, 64, 113, 0.08);
+  overflow: hidden;
+}
+.penilaian-box-header {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.penilaian-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 120px;
+  margin-bottom: 6px;
+  display: block;
+}
+.penilaian-input,
+.penilaian-textarea {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 8px;
+  color: #1f2937;
+  resize: vertical;
+}
+
+/* Khas untuk Input */
+.penilaian-input[readOnly],
+.penilaian-textarea[readOnly],
+.penilaian-input:disabled,
+.penilaian-textarea:disabled {
+  background-color: #e5e7eb;
+  border-color: #d1d5db;
+  cursor: default;
+  font-weight: 500;
+  color: #6b7280;
+}
+.penilaian-input:not([readOnly]):focus,
+.penilaian-textarea:not([readOnly]):focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.15);
+}
+
+/* Layout */
+.penilaian-info-section {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+.penilaian-info-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.penilaian-input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+.penilaian-input-group.full-width {
+  flex: 1 1 100%;
+  min-width: auto;
+}
+.penilaian-divider-line {
+  border: 0;
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0 10px 0;
+}
+.penilaian-field-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.penilaian-field-group > .penilaian-input-group {
+  flex: 1 1 48%;
+  min-width: 250px;
+}
+.penilaian-button-group {
+  text-align: right;
+  margin-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 15px;
+}
+
+/* Submit button & Spinner */
+.penilaian-submit-button {
+  padding: 10px 24px;
+  background: #0074c8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 64, 113, 0.3);
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.penilaian-submit-button:hover {
+  background: #005fa3;
+  box-shadow: 0 6px 18px rgba(0, 116, 200, 0.4);
+  transform: translateY(-1px);
+}
+.penilaian-submit-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.penilaian-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0074c8;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .penilaian-info-row {
+    flex-direction: column;
+  }
+  .penilaian-field-group > .penilaian-input-group {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+}

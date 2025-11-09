@@ -1,0 +1,255 @@
+/* PenilaianRisikoModal.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* GAYA ASAS MODAL (Diulang di sini) */
+.penilaian-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.penilaian-modal-container {
+  background: #f4f6f8;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: 900px;
+  width: 95%;
+  font-family: "Inter", sans-serif;
+  overflow-y: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slide-up 0.25s ease-out;
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.penilaian-modal-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+.penilaian-box-header-main {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.penilaian-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+.penilaian-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* GAYA KHUSUS PENILAIAN */
+.penilaian-box {
+  border-radius: 8px;
+  margin-bottom: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0, 64, 113, 0.08);
+  overflow: hidden;
+}
+.penilaian-box-header {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.penilaian-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 120px;
+  margin-bottom: 6px;
+  display: block;
+}
+.penilaian-input {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+/* Dropdown */
+.penilaian-select-dropdown {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 7px 10px;
+  flex: 1;
+  margin-bottom: 8px;
+}
+.penilaian-select-dropdown:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.15);
+}
+.penilaian-select-dropdown:disabled {
+  background-color: #e5e7eb;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  color: #6b7280;
+}
+
+/* Risk section - wrapper sebaris */
+.penilaian-risk-wrapper {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px 16px 16px;
+  flex-wrap: wrap;
+}
+.penilaian-risk-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  flex: 1;
+}
+
+/* Skor Risiko / Status */
+.penilaian-risk-score,
+.penilaian-status-risk {
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 12px !important;
+  border-radius: 8px;
+  min-width: 100px;
+  flex: 1;
+  color: #ffffff !important;
+  font-size: 14px;
+  height: 36px;
+  border: none !important; /* Mesti readOnly */
+}
+.penilaian-status-risk {
+  background: #005fa3;
+  color: #ffffff !important;
+}
+.penilaian-risk-score {
+  background: #0074c8;
+  color: #ffffff !important;
+}
+
+/* Gaya Butang Panduan */
+.penilaian-risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.penilaian-panduan-btn {
+  background: #f0f9ff;
+  color: #0074c8;
+  border: 1px solid #93c5fd;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.penilaian-panduan-btn:hover {
+  background: #e0f2fe;
+  border-color: #60a5fa;
+}
+
+/* Submit button & Spinner */
+.penilaian-button-group {
+  text-align: right;
+  margin-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 15px;
+}
+.penilaian-submit-button {
+  padding: 10px 24px;
+  background: #0074c8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 64, 113, 0.3);
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.penilaian-submit-button:hover {
+  background: #005fa3;
+  box-shadow: 0 6px 18px rgba(0, 116, 200, 0.4);
+  transform: translateY(-1px);
+}
+.penilaian-submit-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.penilaian-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0074c8;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .penilaian-risk-wrapper {
+    flex-direction: column;
+  }
+  .penilaian-risk-field {
+    min-width: 100%;
+  }
+}

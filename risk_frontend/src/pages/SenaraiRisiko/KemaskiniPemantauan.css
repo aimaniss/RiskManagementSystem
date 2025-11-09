@@ -1,0 +1,368 @@
+/* KemaskiniPemantauan.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* ==================================== */
+/* 1. ASAS MODAL & OVERLAY */
+/* ==================================== */
+.kemaskinipemantauan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.kemaskinipemantauan-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  max-width: 800px;
+  width: 95%;
+  font-family: "Inter", sans-serif;
+  overflow: hidden;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  animation: modal-fade-in 0.3s ease-out;
+}
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Utama */
+.kemaskinipemantauan-header {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.kemaskinipemantauan-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kemaskinipemantauan-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Body Konten */
+.kemaskinipemantauan-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+/* ==================================== */
+/* 2. KOTAK INFORMASI (BOXES) */
+/* ==================================== */
+.kemaskinipemantauan-box {
+  border-radius: 10px;
+  margin-bottom: 25px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+.kemaskinipemantauan-box-header {
+  background: #e0f2fe;
+  color: #1e40af;
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
+  border-bottom: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+}
+.kemaskinipemantauan-header-with-btn {
+  justify-content: space-between;
+}
+.kemaskinipemantauan-box-subheader {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 15px 18px 8px 18px;
+  padding-top: 5px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Butang Panduan */
+.kemaskinipemantauan-panduan-btn {
+  background: #0074c8;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.kemaskinipemantauan-panduan-btn:hover {
+  background: #005fa3;
+}
+
+/* ==================================== */
+/* 3. INPUT, SELECT, TEXTAREA */
+/* ==================================== */
+.kemaskinipemantauan-row {
+  display: flex;
+  gap: 15px;
+  padding: 18px;
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+.kemaskinipemantauan-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+}
+.kemaskinipemantauan-item label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+.kemaskinipemantauan-item input,
+.kemaskinipemantauan-item select,
+.kemaskinipemantauan-box textarea {
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 14px;
+  outline: none;
+  color: #1f2937;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+/* Fokus state */
+.kemaskinipemantauan-item input:focus:not([readOnly]):not(:disabled),
+.kemaskinipemantauan-item select:focus:not([disabled]),
+.kemaskinipemantauan-box textarea:focus:not([readOnly]) {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.2);
+  background: #ffffff;
+}
+
+/* Read-only / Disabled state */
+.kemaskinipemantauan-item input[readOnly],
+.kemaskinipemantauan-item input:disabled,
+.kemaskinipemantauan-item select:disabled,
+.kemaskinipemantauan-box textarea[readOnly],
+.kemaskinipemantauan-box textarea:disabled {
+  background-color: #e5e7eb;
+  border-color: #d1d5db;
+  cursor: default;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+/* Gaya khusus Catatan */
+.kemaskinipemantauan-box textarea {
+  width: 95%;
+  min-height: 100px;
+  resize: vertical;
+  margin: 0 18px 18px 18px;
+}
+.kemaskinipemantauan-box .kemaskinipemantauan-box-header + label {
+  margin: 10px 18px 5px 18px;
+  display: block;
+}
+
+/* ==================================== */
+/* 4. PENILAIAN SKOR & BADGE */
+/* ==================================== */
+.kemaskinipemantauan-score-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+  display: block;
+  height: 16px; /* Untuk sebaris dengan label input */
+}
+.kemaskinipemantauan-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 100px;
+  height: 36px; /* Supaya sebaris dengan input/select */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================================== */
+/* 5. SENARAI DINAMIK (PELAN/KAKITANGAN) */
+/* ==================================== */
+.kemaskinipemantauan-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 18px 8px 18px;
+}
+.kemaskinipemantauan-input-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 14px;
+  outline: none;
+}
+.kemaskinipemantauan-input-row input:focus:not([readOnly]) {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.2);
+}
+.kemaskinipemantauan-btn-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s, transform 0.1s;
+}
+.kemaskinipemantauan-btn-add {
+  background-color: #10b981;
+  color: white;
+}
+.kemaskinipemantauan-btn-add:hover {
+  background-color: #059669;
+}
+.kemaskinipemantauan-btn-remove {
+  background-color: #ef4444;
+  color: white;
+}
+.kemaskinipemantauan-btn-remove:hover {
+  background-color: #dc2626;
+}
+.kemaskinipemantauan-btn-circle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================================== */
+/* 6. FOOTER DAN BUTANG */
+/* ==================================== */
+.kemaskinipemantauan-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end; /* Asas: Simpan di kanan */
+  gap: 10px;
+  flex-shrink: 0;
+}
+.kemaskinipemantauan-footer-centered {
+  justify-content: space-between; /* Untuk meletakkan Batal di kiri, Simpan di kanan */
+}
+.kemaskinipemantauan-btn-cancel {
+  background: #e5e7eb;
+  color: #4b5563;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.kemaskinipemantauan-btn-cancel:hover {
+  background: #d1d5db;
+}
+
+.kemaskinipemantauan-btn-submit {
+  padding: 10px 24px;
+  background: #0074c8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 116, 200, 0.3);
+  transition: 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.kemaskinipemantauan-btn-submit:hover:not(:disabled) {
+  background: #005fa3;
+  box-shadow: 0 6px 16px rgba(0, 116, 200, 0.4);
+  transform: translateY(-1px);
+}
+.kemaskinipemantauan-btn-submit:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Spinner */
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================================== */
+/* 7. RESPONSIVE */
+/* ==================================== */
+@media (max-width: 600px) {
+  .kemaskinipemantauan-row {
+    flex-direction: column;
+    padding: 15px;
+  }
+  .kemaskinipemantauan-item {
+    min-width: 100%;
+  }
+  .kemaskinipemantauan-input-row {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+  .kemaskinipemantauan-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .kemaskinipemantauan-btn-cancel,
+  .kemaskinipemantauan-btn-submit {
+    width: 100%;
+  }
+}

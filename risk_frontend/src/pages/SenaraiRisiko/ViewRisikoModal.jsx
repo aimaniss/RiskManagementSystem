@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, Loader2 } from "lucide-react";
+// ⭐️ KEMASKINI: Tambah ikon Pencil dan Trash2
+import { X, BookOpen, Loader2, Pencil, Trash2 } from "lucide-react"; 
 import { jwtDecode } from "jwt-decode";
 import "./ViewRisikoModal.css";
 import api from "../../api/api";
 import PanduanModal from "../Panduan/Panduan";
 import TambahLogModal from "../PemantauanRisiko/TambahLogModal";
+// ⭐️ KEMASKINI: Import komponen KemaskiniPemantauanModal untuk fungsi Edit
+import KemaskiniPemantauanModal from "./KemaskiniPemantauan"; 
+
+// ==========================================================
+// HELPER COMPONENTS & CONSTANTS (Dikekalkan)
+// ==========================================================
 
 const ListDisplay = ({ data, isLogContext = false }) => {
   const getItemText = (item) => {
@@ -95,6 +102,10 @@ const formatSeparuhTahun = (value) => {
   return "-";
 };
 
+// ==========================================================
+// UTAMA: ViewRisikoModal
+// ==========================================================
+
 export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   const [isPanduanOpen, setIsPanduanOpen] = useState(false);
   const [logData, setLogData] = useState([]);
@@ -102,6 +113,13 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [logToView, setLogToView] = useState(null);
+  
+  // ⭐️ KEMASKINI: State untuk modal edit log
+  const [isEditLogModalOpen, setIsEditLogModalOpen] = useState(false);
+  const [logToEdit, setLogToEdit] = useState(null);
+  
+  // ⭐️ KEMASKINI: State untuk peranan pengguna
+  const [userRole, setUserRole] = useState(null); 
   
   const [data, setData] = useState({
     risiko_id: null,
@@ -128,7 +146,31 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
 
   const [riskColor, setRiskColor] = useState("#f1f5f9");
 
-  // ⭐️ BARU: Helper functions untuk check data
+  // ⭐️ KEMASKINI: Decode JWT dengan mapping yang betul (sama seperti SenaraiRisiko.jsx)
+  useEffect(() => {
+    const token = localStorage.getItem('token'); 
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const roleMapping = {
+          1: "ADMIN",
+          2: "EXECUTIVE",
+          3: "KETUA SUBSIDIARI",
+          4: "STAFF",
+          5: "VIEWER",
+        };
+        const role = roleMapping[decoded.peranan_id] || "";
+        setUserRole(role); 
+      } catch (error) {
+        console.error("❌ Invalid token", error);
+        localStorage.removeItem("token");
+        setUserRole(null);
+      }
+    }
+  }, []);
+
+
+  // Helper functions untuk check data (Dikekalkan)
   const hasPenilaianData = () => {
     const k = parseInt(data.skor_kebarangkalian);
     const i = parseInt(data.skor_impak);
@@ -267,6 +309,33 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     setLogToView(null);
   };
 
+  // ⭐️ KEMASKINI: Fungsi untuk mengendalikan Edit Log
+  const handleEditLog = (logItem, e) => {
+    e.stopPropagation(); // Elak trigger handleViewLog (row click)
+    setLogToEdit(logItem);
+    setIsEditLogModalOpen(true);
+  };
+
+  const handleCloseEditLogModal = () => {
+    setIsEditLogModalOpen(false);
+    setLogToEdit(null);
+  };
+  
+  // ⭐️ KEMASKINI: Fungsi untuk mengendalikan Delete Log
+  const handleDeleteLog = async (logItem, e) => {
+    e.stopPropagation();
+    if (window.confirm(`Adakah anda pasti mahu memadam log pemantauan untuk tahun ${logItem.tahun_pemantauan} - Separuh ${formatSeparuhTahun(logItem.separuh_tahun_pemantauan)}? Tindakan ini tidak boleh diundur.`)) {
+      try {
+        await api.delete(`/pemantauan-risiko/log/${logItem.log_id}`);
+        alert("✅ Log berjaya dipadam!");
+        fetchLog(data.risiko_id); // Refresh log data
+      } catch (error) {
+        console.error("❌ Gagal memadam log:", error);
+        alert("⚠️ Gagal memadam log. Sila cuba lagi.");
+      }
+    }
+  };
+  
   if (!isOpen) return null;
 
   return (
@@ -353,8 +422,8 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                 <span className="viewrisiko-data-inline">
                   {data.risiko || "-"}
                 </span>
-              </div>
-              <div className="viewrisiko-flex-item">
+                </div>
+                <div className="viewrisiko-flex-item">
                 <span className="viewrisiko-label-inline">
                   Kategori Risiko:
                 </span>
@@ -385,7 +454,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             </div>
           </div>
 
-          {/* 2. Penilaian Risiko Awal - ⭐️ SOROKKAN JIKA TIADA DATA */}
+          {/* 2. Penilaian Risiko Awal */}
           {hasPenilaianData() && (
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header">Penilaian Risiko Awal</div>
@@ -506,7 +575,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             </div>
           )}
 
-          {/* 3. Rawatan Risiko - ⭐️ SOROKKAN JIKA TIADA DATA */}
+          {/* 3. Rawatan Risiko */}
           {hasRawatanData() && (
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header viewrisiko-monitoring-header">
@@ -548,7 +617,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             </div>
           )}
 
-          {/* 4. LOG SEJARAH PEMANTAUAN - ⭐️ SOROKKAN JIKA TIADA DATA */}
+          {/* 4. LOG SEJARAH PEMANTAUAN */}
           {!isLoadingLog && hasLogData() && (
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header viewrisiko-log-header">
@@ -572,6 +641,10 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                         <th>Kelulusan</th>
                         <th>Catatan</th>
                         <th>Pindaan Keberkesanan</th>
+                        {/* ⭐️ KEMASKINI: Lajur Tindakan - Hanya ADMIN */}
+                        {userRole === "ADMIN" && (
+                          <th>Tindakan</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -662,6 +735,34 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                             >
                               {log.justifikasi_pindaan_pemantauan || "-"}
                             </td>
+                            
+                            {/* ⭐️ KEMASKINI: Lajur Tindakan - Hanya ADMIN */}
+                            {userRole === "ADMIN" && (
+                              <td 
+                                data-label="TINDAKAN" 
+                                onClick={(e) => e.stopPropagation()} 
+                              >
+                                <div className="viewrisiko-action-buttons">
+                                  {/* Butang Edit (Pensel) */}
+                                  <button
+                                    className="viewrisiko-btn-edit"
+                                    onClick={(e) => handleEditLog(log, e)}
+                                    title="Kemaskini Log"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  
+                                  {/* Butang Delete (Tong Sampah) */}
+                                  <button
+                                    className="viewrisiko-btn-delete"
+                                    onClick={(e) => handleDeleteLog(log, e)}
+                                    title="Padam Log"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         );
                       })}
@@ -690,6 +791,19 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             onSaveSuccess={null}
             logDataToEdit={logToView}
             mode="papar"
+          />
+        )}
+        
+        {/* ⭐️ KEMASKINI: Modal 'Kemaskini' Log Pemantauan */}
+        {isEditLogModalOpen && (
+          <KemaskiniPemantauanModal
+            isOpen={isEditLogModalOpen}
+            onClose={handleCloseEditLogModal}
+            onSaveSuccess={() => {
+              fetchLog(data.risiko_id);
+              handleCloseEditLogModal();
+            }}
+            logDataToEdit={logToEdit}
           />
         )}
       </div>

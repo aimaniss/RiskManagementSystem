@@ -502,3 +502,69 @@
     transform: rotate(360deg);
   }
 }
+/* --- Tambahan CSS untuk Lajur Tindakan Log (Edit & Delete) --- */
+
+/* Tetapkan lebar dan jajaran untuk lajur Tindakan di Header */
+.viewrisiko-log-table th:last-child {
+  width: 80px; /* Lebar yang cukup untuk 2 butang dan padding */
+  text-align: center;
+  padding: 12px 8px; /* Sesuaikan padding agar sama dengan th lain */
+}
+
+/* Tetapkan jajaran untuk lajur Tindakan di Body */
+.viewrisiko-log-table td:last-child {
+  text-align: center;
+  padding: 8px; /* Padding yang lebih kecil untuk sel butang */
+}
+
+/* Container untuk butang Edit & Delete */
+.viewrisiko-action-buttons {
+  display: flex;
+  justify-content: center; /* Butang berada di tengah lajur Tindakan */
+  gap: 6px; /* Jarak kecil antara butang */
+  align-items: center;
+}
+
+/* Gaya asas untuk butang ikon */
+.viewrisiko-btn-edit,
+.viewrisiko-btn-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px; /* Saiz butang kecil, sedikit besar dari 4px */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  line-height: 1; /* Penting untuk ikon */
+}
+
+/* Gaya khusus untuk butang Edit (Pensel) */
+.viewrisiko-btn-edit {
+  color: #0074c8; /* Warna utama sistem anda (biru) */
+  background-color: #e0f2fe; /* Latar belakang biru cerah */
+}
+
+.viewrisiko-btn-edit:hover {
+  background-color: #93c5fd; /* Biru sederhana */
+  color: #1e40af;
+  transform: translateY(-1px);
+}
+
+/* Gaya khusus untuk butang Delete (Tong Sampah) */
+.viewrisiko-btn-delete {
+  color: #dc2626; /* Merah (Red 600) */
+  background-color: #fee2e2; /* Latar belakang merah cerah */
+}
+
+.viewrisiko-btn-delete:hover {
+  background-color: #fca5a5; /* Merah sederhana */
+  color: #991b1b;
+  transform: translateY(-1px);
+}
+
+/* Pastikan butang tidak mengganggu klik baris (walaupun logik JS sudah ada e.stopPropagation()) */
+.viewrisiko-log-table .viewrisiko-action-buttons button {
+  z-index: 5;
+  position: relative;
+}

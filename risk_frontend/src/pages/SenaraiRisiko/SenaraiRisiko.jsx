@@ -368,6 +368,7 @@ function SenaraiRisiko({ refreshTrigger }) {
         <ViewRisikoModal
           isOpen={isViewModalOpen}
           risk={riskToView}
+          userRole={userRole}
           onClose={handleCloseViewModal}
         />
       )}
