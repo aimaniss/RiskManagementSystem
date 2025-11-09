@@ -226,6 +226,20 @@ function UrusPengguna() {
     }
   };
 
+  // --- TAMBAHAN BARU ---
+  // Objek untuk memetakan nama peranan
+  const roleNameMap = {
+    "Ketua Subsidiari": "Head Subsidiary",
+    // Tambah terjemahan lain di sini jika perlu
+    // "NamaLain": "PaparanLain",
+  };
+
+  // Fungsi untuk mendapatkan nama paparan
+  const getDisplayRoleName = (roleName) => {
+    return roleNameMap[roleName] || roleName;
+  };
+  // --- TAMAT TAMBAHAN ---
+
   return (
     <div className="urus-container">
       <h1>Urus Pengguna</h1>
@@ -247,7 +261,8 @@ function UrusPengguna() {
           <option value="">Pilih Peranan</option>
           {roles.map((r) => (
             <option key={r.peranan_id} value={r.peranan_id}>
-              {r.nama_peranan}
+              {/* DIUBAH DI SINI */}
+              {getDisplayRoleName(r.nama_peranan)}
             </option>
           ))}
         </select>
@@ -311,7 +326,8 @@ function UrusPengguna() {
                       )}
                       <span>{u.nama_penuh}</span>
                     </td>
-                    <td>{u.nama_peranan}</td>
+                    {/* DIUBAH DI SINI */}
+                    <td>{getDisplayRoleName(u.nama_peranan)}</td>
                     <td>{subsidiary ? subsidiary.nama_subsidiari : "-"}</td>
                     <td>{u.staff_id}</td>
                     <td>{u.katalaluan || "-"}</td>
@@ -356,44 +372,43 @@ function UrusPengguna() {
                 <h2>{selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}</h2>
 
                 {/* Profile Upload */}
-<div className="profile-upload">
-  <div className="profile-wrapper">
-    {preview || (formData.profile_pic && !removeProfileFlag) ? (
-      <img
-        src={
-          preview
-            ? preview
-            : formData.profile_pic instanceof File
-            ? URL.createObjectURL(formData.profile_pic)
-            : `data:image/png;base64,${formData.profile_pic}`
-        }
-        alt="preview"
-        className="profile-preview"
-      />
-    ) : (
-      <UserCircle className="profile-placeholder" />
-    )}
+                <div className="profile-upload">
+                  <div className="profile-wrapper">
+                    {preview || (formData.profile_pic && !removeProfileFlag) ? (
+                      <img
+                        src={
+                          preview
+                            ? preview
+                            : formData.profile_pic instanceof File
+                            ? URL.createObjectURL(formData.profile_pic)
+                            : `data:image/png;base64,${formData.profile_pic}`
+                        }
+                        alt="preview"
+                        className="profile-preview"
+                      />
+                    ) : (
+                      <UserCircle className="profile-placeholder" />
+                    )}
 
-    {(preview || (formData.profile_pic && !removeProfileFlag)) && (
-      <Trash2
-        className="remove-profile-icon"
-        onClick={() => {
-          setFormData({ ...formData, profile_pic: null });
-          setPreview("");
-          setRemoveProfileFlag(true);
-        }}
-      />
-    )}
-  </div>
+                    {(preview || (formData.profile_pic && !removeProfileFlag)) && (
+                      <Trash2
+                        className="remove-profile-icon"
+                        onClick={() => {
+                          setFormData({ ...formData, profile_pic: null });
+                          setPreview("");
+                          setRemoveProfileFlag(true);
+                        }}
+                      />
+                    )}
+                  </div>
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleFileChange}
-    className="profile-input"
-  />
-</div>
-
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="profile-input"
+                  />
+                </div>
 
                 <input
                   placeholder="Staff ID"
@@ -424,7 +439,8 @@ function UrusPengguna() {
                   <option value="">Pilih Peranan</option>
                   {roles.map((r) => (
                     <option key={r.peranan_id} value={r.peranan_id}>
-                      {r.nama_peranan}
+                      {/* DIUBAH DI SINI */}
+                      {getDisplayRoleName(r.nama_peranan)}
                     </option>
                   ))}
                 </select>

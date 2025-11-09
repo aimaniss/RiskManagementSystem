@@ -133,13 +133,13 @@ export default function DashboardSubsidiari({ data }) {
       {/* Jadual */}
       <div className="dashboard-subsidiari-table-container">
       <div className="dashboard-subsidiari-section-box">
-        <h4 className="dashboard-subsidiari-section-title">Senarai Risiko Teratas (Kritikal & "Buka")</h4>
+        <h4 className="dashboard-subsidiari-section-title">6 Risiko Teratas</h4>
         <div className="dashboard-subsidiari-table-wrapper">
         <table className="dashboard-subsidiari-table">
           <thead>
           <tr>
             <th>No Rujukan</th> <th>Nama Risiko</th> <th>Kategori</th> <th>Bahagian/Unit</th>
-            <th>Skor Risiko Terkini</th>
+            <th>Tahap Risiko Terkini</th>
           </tr>
           </thead>
           <tbody>

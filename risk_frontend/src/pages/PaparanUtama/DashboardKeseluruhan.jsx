@@ -172,7 +172,7 @@ export default function DashboardKeseluruhan({
       <div className="table-container">
         <div className="section-box">
           <h4 className="section-title-normal">
-            Senarai Risiko Teratas (Kritikal & "Buka")
+            6 Risiko Teratas
           </h4>
           <div className="table-wrapper">
             <table className="top-risks-table">
@@ -182,7 +182,7 @@ export default function DashboardKeseluruhan({
                   <th>Nama Risiko</th>
                   <th>Kategori</th>
                   <th>Bahagian/Unit</th>
-                  <th>Skor Risiko Terkini</th>
+                  <th>Tahap Risiko Terkini</th>
                 </tr>
               </thead>
               <tbody>
