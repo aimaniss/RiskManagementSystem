@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2 } from "lucide-react"; // 'Edit' telah dibuang
 import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
-import EditModalRisiko from "./EditModalRisiko";
+// import EditModalRisiko from "./EditModalRisiko"; // EditModalRisiko telah dibuang
 import ViewRisikoModal from "./ViewRisikoModal";
 import "./SenaraiRisiko.css";
 
@@ -16,8 +16,9 @@ function SenaraiRisiko({ refreshTrigger }) {
   const [kategoriFilter, setKategoriFilter] = useState("");
   const [subsidiariList, setSubsidiariList] = useState([]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRisk, setSelectedRisk] = useState(null);
+  // State untuk modal Edit (LAMA) telah dibuang:
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [selectedRisk, setSelectedRisk] = useState(null);
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [riskToView, setRiskToView] = useState(null);
@@ -128,12 +129,13 @@ function SenaraiRisiko({ refreshTrigger }) {
     catch (err) { console.error(err); alert("⚠️ Gagal padam risiko."); }
   };
 
-  const handleEdit = risk => { setSelectedRisk(risk); setIsModalOpen(true); };
-  const handleCloseModal = () => { setIsModalOpen(false); setSelectedRisk(null); };
-  const handleSaveModal = async updatedRisk => {
-    try { await api.put(`/risiko/${updatedRisk.id}`, updatedRisk); fetchRisks(); handleCloseModal(); }
-    catch (err) { console.error(err); alert("⚠️ Gagal kemaskini risiko."); }
-  };
+  // Fungsi-fungsi Edit (LAMA) telah dibuang:
+  // const handleEdit = risk => { setSelectedRisk(risk); setIsModalOpen(true); };
+  // const handleCloseModal = () => { setIsModalOpen(false); setSelectedRisk(null); };
+  // const handleSaveModal = async updatedRisk => {
+  //   try { await api.put(`/risiko/${updatedRisk.id}`, updatedRisk); fetchRisks(); handleCloseModal(); }
+  //   catch (err) { console.error(err); alert("⚠️ Gagal kemaskini risiko."); }
+  // };
 
   const handleViewRisk = (risk) => {
     setRiskToView(risk);
@@ -156,7 +158,7 @@ function SenaraiRisiko({ refreshTrigger }) {
   const totalColumns = 28;
 
   const kategoriOptions = [...new Set(risks.map(r => r.kategori).filter(k => k))] 
-                          .sort();
+                              .sort();
 
   return (
     <div className="rm-container">
@@ -289,7 +291,7 @@ function SenaraiRisiko({ refreshTrigger }) {
                 <td className="rm-center">{r.jenis_kawalan || "—"}</td>
                 <td className="rm-center">{r.tempoh_jangkaan_siap_tindakan || "—"}</td>
                 <td className="rm-center">{r.kakitangan_bertanggungjawab || "—"}</td>
-               
+                
                 <td className="rm-center">
                   <div className="rm-year-separuh">
                     {(() => {
@@ -331,15 +333,7 @@ function SenaraiRisiko({ refreshTrigger }) {
 
                 <td className="rm-center">
                   <div className="rm-action-buttons">
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        handleEdit(r); 
-                      }} 
-                      className="rm-edit-btn"
-                    >
-                      <Edit size={16} />
-                    </button>
+                    {/* Butang Edit telah dibuang dan hanya butang Padam dikekalkan */}
                     <button 
                       onClick={(e) => { 
                         e.stopPropagation(); 
@@ -357,7 +351,8 @@ function SenaraiRisiko({ refreshTrigger }) {
         </table>
       </div>
 
-      {selectedRisk && (
+      {/* Komponen EditModalRisiko telah dibuang */}
+      {/* {selectedRisk && (
         <EditModalRisiko 
           isOpen={isModalOpen}
           risk={selectedRisk} 
@@ -367,7 +362,7 @@ function SenaraiRisiko({ refreshTrigger }) {
           onClose={handleCloseModal} 
           onSave={handleSaveModal} 
         />
-      )}
+      )} */}
 
       {isViewModalOpen && (
         <ViewRisikoModal
