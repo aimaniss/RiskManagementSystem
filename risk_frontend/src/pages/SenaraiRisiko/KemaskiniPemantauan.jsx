@@ -68,7 +68,7 @@ export default function KemaskiniPemantauanModal({
     const isStaff = userRole === 'Staff';
 
     // Kemaskini Tajuk Modal
-    const modalTitle = isEditMode ? "Kemaskini Log Pemantauan" : "Papar Log Pemantauan";
+    const modalTitle = isEditMode ? "Kemaskini Pemantauan" : "Papar Pemantauan";
 
     const [isLoading, setIsLoading] = useState(false);
     const [isPanduanOpen, setIsPanduanOpen] = useState(false);
