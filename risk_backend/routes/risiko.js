@@ -1,48 +1,49 @@
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
+// 1. Import 'catatAktiviti'
+import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 const router = express.Router();
 
-// ------------------- POST: Tambah Risiko (DIKEMAS KINI DENGAN TRANSAKSI & LOG) -------------------
+// ------------------- POST: Tambah Risiko (DIKEMAS KINI DENGAN LOG) -------------------
 router.post("/", verifyToken, async (req, res) => {
-  // ⭐️ BARU: Dapatkan 'client' dari 'pool' untuk transaksi
   const client = await pool.connect();
+  
+  // Data untuk log
+  const user = req.user; 
+  const {
+    noRujukan, tahun, separuhTahun, subsidiari,
+    kategori, bahagian, risiko,
+    skorKebarangkalian, skorImpak, skorRisiko,
+    statusRisiko, punca, kesan
+  } = req.body;
 
   try {
-    const user = req.user;
-    const {
-      noRujukan, tahun, separuhTahun, subsidiari,
-      kategori, bahagian, risiko,
-      skorKebarangkalian, skorImpak, skorRisiko,
-      statusRisiko, punca, kesan
-    } = req.body;
-
     const allowedRoles = ["Admin", "Executive", "Staff", "Ketua Subsidiari"];
     if (!allowedRoles.includes(user.nama_peranan)) {
-      client.release(); // ⭐️ BARU: Lepaskan client sebelum return
+      client.release(); 
       return res.status(403).json({ error: "No permission to add risiko" });
     }
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       if (parseInt(subsidiari) !== user.subsidiari_id) {
-        client.release(); // ⭐️ BARU: Lepaskan client sebelum return
+        client.release(); 
         return res.status(403).json({ error: "No permission for other subsidiari" });
       }
     }
 
-    // ⭐️ BARU: Mulakan Transaksi
     await client.query('BEGIN');
 
     // 1. Masukkan ke jadual 'risiko'
-    const result = await client.query( // ⭐️ BARU: Guna 'client.query'
+    const result = await client.query(
       `INSERT INTO risiko
       (no_rujukan, tahun, separuh_tahun, subsidiari, kategori, bahagian, risiko, 
-       skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
+        skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING risiko_id`,
       [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian, risiko,
-       skorKebarangkalian, skorImpak, skorRisiko, statusRisiko]
+        skorKebarangkalian, skorImpak, skorRisiko, statusRisiko]
     );
 
     const risikoId = result.rows[0].risiko_id;
@@ -50,7 +51,7 @@ router.post("/", verifyToken, async (req, res) => {
     // 2. Masukkan ke jadual 'punca_risiko'
     if (Array.isArray(punca)) {
       for (let p of punca) {
-        if (p) await client.query( // ⭐️ BARU: Guna 'client.query'
+        if (p) await client.query(
           `INSERT INTO punca_risiko (risiko_id, punca) VALUES ($1,$2)`,
           [risikoId, p]
         );
@@ -60,25 +61,37 @@ router.post("/", verifyToken, async (req, res) => {
     // 3. Masukkan ke jadual 'kesan_risiko'
     if (Array.isArray(kesan)) {
       for (let k of kesan) {
-        if (k) await client.query( // ⭐️ BARU: Guna 'client.query'
+        if (k) await client.query(
           `INSERT INTO kesan_risiko (risiko_id, kesan) VALUES ($1,$2)`,
           [risikoId, k]
         );
       }
     }
 
-    // 4. ⭐️ BARU: Automasi masukkan ke 'LogPemantauan'
-    // (Anda perlu sahkan nama jadual dan lajur adalah betul)
-    // Berdasarkan query GET anda, nama lajur ialah 'tahun_pemantauan' & 'separuh_tahun_pemantauan'
-    await client.query( // ⭐️ BARU: Guna 'client.query'
+    // 4. Automasi masukkan ke 'LogPemantauan'
+    await client.query(
         `INSERT INTO LogPemantauan 
-            (risiko_id, tahun_pemantauan, separuh_tahun_pemantauan, status_pemantauan)
-         VALUES ($1, $2, $3, $4)`,
+             (risiko_id, tahun_pemantauan, separuh_tahun_pemantauan, status_pemantauan)
+          VALUES ($1, $2, $3, $4)`,
         [risikoId, tahun, separuhTahun, 'Buka']
     );
 
-    // ⭐️ BARU: Commit transaksi jika semua berjaya
+    // 5. Commit transaksi
     await client.query('COMMIT');
+
+    // 6. Catat Log Aktiviti (SELEPAS COMMIT)
+    try {
+      const logRingkasan = `Menambah risiko baru: ${noRujukan}.`;
+      const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah menambah risiko baru dengan No. Rujukan: ${noRujukan}.`;
+      await catatAktiviti(
+        user.pengguna_id, 
+        "Tambah Risiko", 
+        logRingkasan, 
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas TAMBAH risiko:", logErr);
+    }
 
     res.status(201).json({ 
         message: "Risiko dan log pemantauan berjaya didaftarkan", 
@@ -86,17 +99,15 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
   } catch (err) {
-    // ⭐️ BARU: Rollback transaksi jika ada ralat
     await client.query('ROLLBACK');
     console.error("Ralat POST /risiko:", err);
     res.status(500).json({ message: err.message });
   } finally {
-    // ⭐️ BARU: Lepaskan 'client' kembali ke 'pool' walau apa pun terjadi
     client.release();
   }
 });
 
-// ------------------- GET: Semua Risiko (DIBETULKAN SEPENUHNYA) -------------------
+// ------------------- GET: Semua Risiko (Kekal Sama - Tiada Log Diperlukan) -------------------
 router.get("/", verifyToken, async (req, res) => {
   try {
     const user = req.user;
@@ -124,7 +135,6 @@ router.get("/", verifyToken, async (req, res) => {
         FROM LogPemantauan pm
       ),
       
-      -- ⭐️ PEMBETULAN 1: 'pt.pelan_tindakan' ditukar kepada 'pt.butiran_aktiviti'
       ButiranTerkini AS (
         SELECT 
           pt.log_id,
@@ -135,7 +145,6 @@ router.get("/", verifyToken, async (req, res) => {
         GROUP BY pt.log_id
       ),
       
-      -- ⭐️ PEMBETULAN 2: 'RawatanAgregat' ditulis semula berdasarkan skema 'rawatan.js'
       RawatanAgregat AS (
         SELECT
           rr.risiko_id,
@@ -159,21 +168,15 @@ router.get("/", verifyToken, async (req, res) => {
         r.bahagian,
         r.kategori,
         r.risiko,
-        
-        -- 3. Penilaian Risiko
         r.skor_kebarangkalian,
         r.skor_impak,
         r.skor_risiko, 
         r.status_risiko,
         r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
-        
-        -- 4. Rawatan atas Risiko (Data dari RawatanAgregat)
         raw.pelan_tindakan,
         raw.jenis_kawalan,
         raw.tempoh_jangkaan_siap_tindakan,
         raw.kakitangan_bertanggungjawab,
-        
-        -- 5. Pemantauan Risiko (Data dari ButiranTerkini)
         CASE 
           WHEN pt.tahun_pemantauan IS NOT NULL THEN pt.tahun_pemantauan || ' - ' || pt.separuh_tahun_pemantauan
           ELSE NULL
@@ -181,8 +184,6 @@ router.get("/", verifyToken, async (req, res) => {
         bt.pemantauan_pelan_tindakan,
         pt.kekerapan_pemantauan AS pemantauan_kekerapan,
         bt.pemantauan_kakitangan,
-
-        -- 6. Keberkesanan Tindakan (Data dari PemantauanTerkini)
         pt.skor_kebarangkalian_selepas AS semasa_skor_kebarangkalian,
         pt.skor_impak_selepas AS semasa_skor_impak,
         pt.skor_risiko_pemantauan,
@@ -190,8 +191,6 @@ router.get("/", verifyToken, async (req, res) => {
         pt.status_pemantauan,
         pt.justifikasi_pindaan_pemantauan AS pindaan_keberkesanan,
         pt.catatan,
-        
-        -- Data tambahan (jika perlu)
         ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id) AS punca,
         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan
 
@@ -220,7 +219,6 @@ router.get("/", verifyToken, async (req, res) => {
 });
 
 // ------------------- GET: Tahun Unik -------------------
-// (Kod ini bersih)
 router.get("/tahun", verifyToken, async (req, res) => {
   try {
     const { rows } = await pool.query(`SELECT DISTINCT tahun FROM risiko ORDER BY tahun DESC`);
@@ -231,130 +229,177 @@ router.get("/tahun", verifyToken, async (req, res) => {
   }
 });
 
-// ------------------- PUT: Update Risiko -------------------
-// (Kod ini bersih)
+// ------------------- PUT: Update Risiko (DIKEMAS KINI DENGAN LOG & TRANSAKSI) -------------------
 router.put("/:risiko_id", verifyToken, async (req, res) => {
-  try {
-    const risikoId = req.params.risiko_id;
-    const user = req.user;
-    const {
-      noRujukan, tahun, separuhTahun, subsidiari,
-      kategori, bahagian, risiko,
-      skorKebarangkalian, skorImpak, skorRisiko,
-      statusRisiko
-    } = req.body;
+  // Guna 'client' untuk transaksi
+  const client = await pool.connect();
+  const risikoId = req.params.risiko_id;
+  const user = req.user;
+  const {
+    noRujukan, tahun, separuhTahun, subsidiari,
+    kategori, bahagian, risiko,
+    skorKebarangkalian, skorImpak, skorRisiko,
+    statusRisiko
+  } = req.body;
 
+  try {
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       if (parseInt(subsidiari) !== user.subsidiari_id) {
+        client.release(); // Mesti 'release' client
         return res.status(403).json({ error: "No permission to update other subsidiari" });
       }
     }
 
-    await pool.query(
+    // Mula transaksi
+    await client.query('BEGIN');
+
+    // 1. Dapatkan 'no_rujukan' asal SEBELUM update (untuk log)
+    const { rows: originalRows } = await client.query(
+      "SELECT no_rujukan FROM risiko WHERE risiko_id = $1",
+      [risikoId]
+    );
+    if (originalRows.length === 0) {
+      await client.query('ROLLBACK');
+      client.release();
+      return res.status(404).json({ error: "Risiko tidak dijumpai." });
+    }
+    const noRujukanAsal = originalRows[0].no_rujukan;
+
+
+    // 2. Lakukan UPDATE
+    await client.query(
       `UPDATE risiko SET
         no_rujukan=$1, tahun=$2, separuh_tahun=$3, subsidiari=$4, kategori=$5, bahagian=$6,
         risiko=$7, skor_kebarangkalian=$8, skor_impak=$9, skor_risiko=$10,
         status_risiko=$11
-       WHERE risiko_id=$12`,
+        WHERE risiko_id=$12`,
       [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian,
-       risiko, skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, risikoId]
+        risiko, skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, risikoId]
     );
+
+    // 3. Commit transaksi
+    await client.query('COMMIT');
+
+    // 4. Catat Log Aktiviti (SELEPAS COMMIT)
+    try {
+      const logRingkasan = `Mengemaskini risiko: ${noRujukanAsal}.`;
+      let logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah mengemaskini risiko (No. Rujukan Asal: ${noRujukanAsal}).`;
+      if (noRujukanAsal !== noRujukan) {
+        logPerincian += ` No. Rujukan telah ditukar kepada ${noRujukan}.`;
+      }
+      await catatAktiviti(
+        user.pengguna_id,
+        "Kemaskini Risiko",
+        logRingkasan,
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas KEMASKINI risiko:", logErr);
+    }
 
     res.json({ message: "Risiko berjaya dikemaskini" });
 
   } catch (err) {
+    await client.query('ROLLBACK'); // Pastikan rollback jika gagal
     console.error("Ralat PUT /risiko/:risiko_id:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release(); // Pastikan 'release' client
   }
 });
 
 
 
-// ------------------- DELETE: Risiko (DIBAIKI / HANYA ADMIN) -------------------
+// ------------------- DELETE: Risiko (DIKEMAS KINI DENGAN LOG) -------------------
 router.delete("/:risiko_id", verifyToken, async (req, res) => {
-  // 1. risiko_id adalah INTEGER
-  const risikoId = parseInt(req.params.risiko_id, 10); 
-  const user = req.user; // Dapatkan peranan dari token
-  const client = await pool.connect(); 
+  const risikoId = parseInt(req.params.risiko_id, 10); 
+  const user = req.user;
+  const client = await pool.connect(); 
 
-  if (isNaN(risikoId)) {
-    client.release();
-    return res.status(400).json({ error: "risiko_id tidak sah, mesti integer." });
-  }
+  if (isNaN(risikoId)) {
+    client.release();
+    return res.status(400).json({ error: "risiko_id tidak sah, mesti integer." });
+  }
 
-  try {
-    // --- 1. PENGESAHAN PERANAN (Hanya Admin) ---
-    // ⭐️ PERUBAHAN DI SINI: Semak jika peranan BUKAN Admin
-    if (user.nama_peranan !== "Admin") {
-      await client.release();
-      return res.status(403).json({ error: "Hanya Admin dibenarkan untuk memadam data ini." });
-    }
-    
-    // --- 2. Semak jika risiko wujud ---
-    // Kita tidak perlukan 'subsidiari' lagi, hanya periksa jika ia wujud
-    const { rows } = await client.query(`SELECT 1 FROM risiko WHERE risiko_id = $1`, [risikoId]);
-    
-    if (!rows[0]) {
-      await client.release(); 
-      return res.status(404).json({ error: "Risiko tidak ditemui" });
-    }
+  try {
+    // --- 1. PENGESAHAN PERANAN ---
+    if (user.nama_peranan !== "Admin") {
+      await client.release();
+      return res.status(403).json({ error: "Hanya Admin dibenarkan untuk memadam data ini." });
+    }
+    
+    // --- 2. Dapatkan 'no_rujukan' untuk log SEBELUM padam ---
+    const { rows } = await client.query(
+      `SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, 
+      [risikoId]
+    );
+    
+    if (!rows[0]) {
+      await client.release(); 
+      return res.status(404).json({ error: "Risiko tidak ditemui" });
+    }
+    // Simpan no rujukan untuk log
+    const noRujukanUntukLog = rows[0].no_rujukan;
 
-    // KOD LAMA (if ["Staff", "Ketua Subsidiari"]...) TELAH DIBUANG
-    // Kerana semakan Admin di atas sudah memadai.
 
-    // --- 3. Mulakan Transaksi ---
-    await client.query('BEGIN');
+    // --- 3. Mulakan Transaksi ---
+    await client.query('BEGIN');
 
-    // --- 4. Dapatkan ID Bersarang ---
-    // 2. rawatan_id adalah INTEGER
-    const rawatanIdsRes = await client.query('SELECT rawatan_id FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
-    const rawatanIds = rawatanIdsRes.rows.map(r => r.rawatan_id); // [Array Integer]
+    // --- 4. Dapatkan ID Bersarang ---
+    const rawatanIdsRes = await client.query('SELECT rawatan_id FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
+    const rawatanIds = rawatanIdsRes.rows.map(r => r.rawatan_id);
 
-    // 3. log_id adalah UUID
-    const logIdsRes = await client.query('SELECT log_id FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
-    const logIds = logIdsRes.rows.map(l => l.log_id); // [Array UUID]
+    const logIdsRes = await client.query('SELECT log_id FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
+    const logIds = logIdsRes.rows.map(l => l.log_id);
 
-    // --- 5. Padam Jadual "Grandchild" (Cucu) ---
-    
-    // Padam rawatan (menggunakan ::integer[])
-    if (rawatanIds.length > 0) {
-      await client.query('DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
-      await client.query('DELETE FROM kakitangan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
-    }
-    
-    // Padam log pemantauan (menggunakan ::uuid[])
-    if (logIds.length > 0) {
-      await client.query('DELETE FROM PelanTindakanPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
-      await client.query('DELETE FROM KakitanganPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
-    }
+    // --- 5. Padam Jadual "Grandchild" (Cucu) ---
+    if (rawatanIds.length > 0) {
+      await client.query('DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+      await client.query('DELETE FROM kakitangan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+    }
+    if (logIds.length > 0) {
+      await client.query('DELETE FROM PelanTindakanPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
+      await client.query('DELETE FROM KakitanganPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
+    }
 
-    // --- 6. Padam Jadual "Child" (Anak) ---
-    await client.query('DELETE FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM punca_risiko WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM kesan_risiko WHERE risiko_id = $1', [risikoId]);
+    // --- 6. Padam Jadual "Child" (Anak) ---
+    await client.query('DELETE FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM punca_risiko WHERE risiko_id = $1', [risikoId]);
+    await client.query('DELETE FROM kesan_risiko WHERE risiko_id = $1', [risikoId]);
 
-    // --- 7. Padam Jadual Utama "Parent" (Induk) ---
-    await client.query("DELETE FROM risiko WHERE risiko_id = $1", [risikoId]);
+    // --- 7. Padam Jadual Utama "Parent" (Induk) ---
+    await client.query("DELETE FROM risiko WHERE risiko_id = $1", [risikoId]);
 
-    // --- 8. Commit Transaksi ---
-    await client.query('COMMIT');
+    // --- 8. Commit Transaksi ---
+    await client.query('COMMIT');
 
-    res.json({ message: "Risiko dan semua data berkaitan berjaya dipadam" });
+    // 9. Catat Log Aktiviti (SELEPAS COMMIT)
+    try {
+      const logRingkasan = `Memadam risiko: ${noRujukanUntukLog}.`;
+      const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah memadam risiko dengan No. Rujukan: ${noRujukanUntukLog}.`;
+      await catatAktiviti(
+        user.pengguna_id,
+        "Padam Risiko",
+        logRingkasan,
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas PADAM risiko:", logErr);
+    }
 
-  } catch (err) {
-    // --- 9. Rollback jika Gagal ---
-    await client.query('ROLLBACK');
-    console.error("Ralat DELETE /risiko/:risiko_id:", err); 
-    res.status(500).json({ message: "Transaksi gagal: " + err.message });
-  } finally {
-    // --- 10. Lepaskan Client ---
-    client.release();
-  }
+    res.json({ message: "Risiko dan semua data berkaitan berjaya dipadam" });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error("Ralat DELETE /risiko/:risiko_id:", err); 
+    res.status(500).json({ message: "Transaksi gagal: " + err.message });
+  } finally {
+    client.release();
+  }
 });
 
 // ------------------- GET: Check No Rujukan -------------------
-// (Kod ini bersih)
 router.get("/check-no-rujukan/:noRujukan", verifyToken, async (req, res) => {
   try {
     const { noRujukan } = req.params;
