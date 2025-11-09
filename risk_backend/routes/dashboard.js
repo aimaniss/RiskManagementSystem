@@ -25,7 +25,7 @@ router.get("/", verifyToken, async (req, res) => {
     console.log("📊 Dashboard Request:", { subsidiari_id, user_role: user.nama_peranan });
 
     // === 1. WHERE clause ===
-    // <-- DIUBAH: Penapis status 'Buka' DIBUANG dari sini -->
+    // 'whereClause' ini HANYA menapis subsidiari, BUKAN status
     let whereConditions = []; 
     let params = [];
     let paramIndex = 1;
@@ -39,11 +39,10 @@ router.get("/", verifyToken, async (req, res) => {
       params.push(parseInt(subsidiari_id));
     }
 
-    // Bina klausa WHERE (kini tiada lagi tapisan status)
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
-    // <-- TAMAT BLOK PERUBAHAN 1 -->
 
     // === 2. QUERY UTAMA (Untuk Carta) ===
+    // Query ini mengambil SEMUA status, yang sepadan dengan logik 'whereClause'
     const mainQuery = `
       WITH LogTerkini AS (
         SELECT
@@ -92,7 +91,7 @@ router.get("/", verifyToken, async (req, res) => {
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
       LEFT JOIN RawatanTerkini rt ON rt.risiko_id = r.risiko_id AND rt.rn = 1
-      ${whereClause} -- <-- DIUBAH: Guna 'whereClause' baru
+      ${whereClause} 
       ORDER BY r.risiko_id
     `;
 
@@ -116,6 +115,7 @@ router.get("/", verifyToken, async (req, res) => {
       jumlahTutup: 0,
     };
 
+    // 'tahapRisikoCount' dan 'kategoriRisikoCount' kini mengira SEMUA STATUS
     const tahapRisikoCount = {
       "ST": 0, "T": 0, "S": 0, "R": 0, "N/A": 0
     };
@@ -145,7 +145,7 @@ router.get("/", verifyToken, async (req, res) => {
           skor.jumlahBuka++;
       }
 
-      // 4b. Tahap Risiko
+      // 4b. Tahap Risiko (Kira semua status)
       const skorRisiko = row.skor_risiko_terkini;
       if (!skorRisiko || skorRisiko === "null") {
         tahapRisikoCount["N/A"]++; 
@@ -155,7 +155,7 @@ router.get("/", verifyToken, async (req, res) => {
         console.warn(`⚠️ Kod skor tidak dikenali: "${skorRisiko}" (risiko ${row.risiko_id})`);
       }
 
-      // 4c. Kategori
+      // 4c. Kategori (Kira semua status)
       const kategori = row.kategori;
       if (kategori && kategoriRisikoCount[kategori] !== undefined) {
         kategoriRisikoCount[kategori]++;
@@ -166,7 +166,7 @@ router.get("/", verifyToken, async (req, res) => {
         }
       }
 
-      // 4d. Jenis Kawalan
+      // 4d. Jenis Kawalan (Kira semua status)
       const jenis = row.jenis_kawalan;
       if (jenis && jenisKawalanCount[jenis] !== undefined) {
         jenisKawalanCount[jenis]++;
@@ -178,7 +178,6 @@ router.get("/", verifyToken, async (req, res) => {
     // === 5. Log debugging ===
     console.log("📊 Skor Status (Semua Status):", skor);
     console.log("📊 Tahap Risiko (Semua Status):", tahapRisikoCount);
-    // ...
 
     // === 6. Format data carta dengan label penuh ===
     const tahapRisikoData = Object.entries(tahapRisikoCount)
@@ -197,8 +196,7 @@ router.get("/", verifyToken, async (req, res) => {
       .map(([name, value]) => ({ name, value }));
 
     // === 7. Top Risks (Untuk Jadual) ===
-    // Amaran: Query ini akan memaparkan risiko 'Buka' SAHAJA
-    // Walaupun carta memaparkan SEMUA risiko. Ini akan jadi tidak selari.
+    // Query ini kini akan memaparkan SEMUA risiko, selari dengan carta
     const topRisksQuery = `
       WITH LogTerkini AS (
         SELECT
@@ -222,7 +220,14 @@ router.get("/", verifyToken, async (req, res) => {
         COALESCE(lt.status_pemantauan, 'Buka') AS status_pemantauan
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
-      ${whereClause} -- <-- Guna 'whereClause' (yang kini tiada tapisan status)
+      ${whereClause} -- <-- Guna 'whereClause' (yang kini tiada tapisan status 'Buka')
+      
+      -- <-- DIUBAH: Baris 'IN ('T', 'ST')' dibuang (dijadikan komen)
+      -- AND COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) IN ('T', 'ST')
+      
+      -- <-- DIUBAH: Baris 'status_pemantauan = Buka' dibuang (dijadikan komen)
+      -- AND COALESCE(lt.status_pemantauan, 'Buka') = 'Buka' 
+      
       ORDER BY 
         CASE COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko)
           WHEN 'ST' THEN 1
