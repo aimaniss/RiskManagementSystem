@@ -176,7 +176,7 @@ function SenaraiRisiko({ refreshTrigger }) {
           onChange={e => setSubsidiariFilter(e.target.value)}
           disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
         >
-          <option value="">-- Semua Subsidiari --</option>
+          <option value="">-- Semua Syarikat --</option>
           {subsidiariList.map(s => (
             <option key={s.subsidiari_id} value={s.subsidiari_id}>
               {s.nama_subsidiari}

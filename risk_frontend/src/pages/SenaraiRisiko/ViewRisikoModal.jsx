@@ -7,7 +7,11 @@ import api from "../../api/api";
 import PanduanModal from "../Panduan/Panduan";
 import TambahLogModal from "../PemantauanRisiko/TambahLogModal";
 // ⭐️ KEMASKINI: Import komponen KemaskiniPemantauanModal untuk fungsi Edit
-import KemaskiniPemantauanModal from "./KemaskiniPemantauan"; 
+import KemaskiniPemantauanModal from "./KemaskiniPemantauan";
+// ⭐️ BARU: Import modal untuk edit Pengenalpastian, Penilaian, dan Rawatan
+import PengenalpastianModal from "./PengenalpastianModal";
+import PenilaianRisikoModal from "./PenilaianRisikoModal";
+import KemaskiniRawatan from "./KemaskiniRawatan"; 
 
 // ==========================================================
 // HELPER COMPONENTS & CONSTANTS (Dikekalkan)
@@ -117,6 +121,15 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   // ⭐️ KEMASKINI: State untuk modal edit log
   const [isEditLogModalOpen, setIsEditLogModalOpen] = useState(false);
   const [logToEdit, setLogToEdit] = useState(null);
+  
+  // ⭐️ BARU: State untuk modal edit Pengenalpastian
+  const [isPengenalpastianModalOpen, setIsPengenalpastianModalOpen] = useState(false);
+  
+  // ⭐️ BARU: State untuk modal edit Penilaian
+  const [isPenilaianModalOpen, setIsPenilaianModalOpen] = useState(false);
+  
+  // ⭐️ BARU: State untuk modal edit Rawatan
+  const [isRawatanModalOpen, setIsRawatanModalOpen] = useState(false);
   
   // ⭐️ KEMASKINI: State untuk peranan pengguna
   const [userRole, setUserRole] = useState(null); 
@@ -335,6 +348,56 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
       }
     }
   };
+
+  // ⭐️ BARU: Handler untuk Edit Pengenalpastian Risiko
+  const handleEditPengenalpastian = () => {
+    console.log("🔧 Edit Pengenalpastian Risiko clicked");
+    setIsPengenalpastianModalOpen(true);
+  };
+
+  // ⭐️ BARU: Handler untuk Edit Penilaian Risiko
+  const handleEditPenilaian = () => {
+    console.log("🔧 Edit Penilaian Risiko clicked");
+    setIsPenilaianModalOpen(true);
+  };
+
+  // ⭐️ BARU: Handler untuk Edit Rawatan Risiko
+  const handleEditRawatan = () => {
+    console.log("🔧 Edit Rawatan Risiko clicked");
+    setIsRawatanModalOpen(true);
+  };
+
+  // ⭐️ BARU: Handler untuk tutup modal Pengenalpastian dan refresh data jika berjaya
+  const handleClosePengenalpastian = (isSuccess) => {
+    setIsPengenalpastianModalOpen(false);
+    if (isSuccess) {
+      // Refresh data risiko - panggil semula parent atau fetch data
+      console.log("✅ Pengenalpastian dikemaskini - perlu refresh parent");
+      // TODO: Tambah callback ke parent untuk refresh SenaraiRisiko
+    }
+  };
+
+  // ⭐️ BARU: Handler untuk tutup modal Penilaian dan refresh data jika berjaya
+  const handleClosePenilaian = (isSuccess) => {
+    setIsPenilaianModalOpen(false);
+    if (isSuccess) {
+      console.log("✅ Penilaian dikemaskini - perlu refresh parent");
+      // TODO: Tambah callback ke parent untuk refresh SenaraiRisiko
+    }
+  };
+
+  // ⭐️ BARU: Handler untuk tutup modal Rawatan dan refresh data
+  const handleCloseRawatan = () => {
+    setIsRawatanModalOpen(false);
+  };
+
+  // ⭐️ BARU: Handler untuk simpan rawatan dan refresh data
+  const handleSaveRawatan = (updatedRisk) => {
+    console.log("✅ Rawatan dikemaskini:", updatedRisk);
+    // TODO: Kemaskini state data dengan rawatan baru
+    // setData(prev => ({ ...prev, ...updatedRisk }));
+    setIsRawatanModalOpen(false);
+  };
   
   if (!isOpen) return null;
 
@@ -360,14 +423,27 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           <div className="viewrisiko-box">
             <div className="viewrisiko-box-header viewrisiko-risk-header">
               <span>Pengenalpastian Risiko</span>
-              <button
-                type="button"
-                className="viewrisiko-panduan-btn"
-                onClick={() => setIsPanduanOpen(true)}
-              >
-                <BookOpen size={16} style={{ marginRight: "6px" }} />
-                Panduan
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {/* ⭐️ BARU: Butang Edit untuk Pengenalpastian */}
+                {userRole === "ADMIN" && (
+                  <button
+                    type="button"
+                    className="viewrisiko-edit-section-btn"
+                    onClick={handleEditPengenalpastian}
+                    title="Edit Pengenalpastian Risiko"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="viewrisiko-panduan-btn"
+                  onClick={() => setIsPanduanOpen(true)}
+                >
+                  <BookOpen size={16} style={{ marginRight: "6px" }} />
+                  Panduan
+                </button>
+              </div>
             </div>
 
             {/* Maklumat Asal Risiko */}
@@ -457,7 +533,20 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           {/* 2. Penilaian Risiko Awal */}
           {hasPenilaianData() && (
             <div className="viewrisiko-box">
-              <div className="viewrisiko-box-header">Penilaian Risiko Awal</div>
+              <div className="viewrisiko-box-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Penilaian Risiko Awal</span>
+                {/* ⭐️ BARU: Butang Edit untuk Penilaian */}
+                {userRole === "ADMIN" && (
+                  <button
+                    type="button"
+                    className="viewrisiko-edit-section-btn"
+                    onClick={handleEditPenilaian}
+                    title="Edit Penilaian Risiko"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+              </div>
               <div className="viewrisiko-flex-row viewrisiko-score-row">
                 <div className="viewrisiko-score-card">
                   <span className="viewrisiko-score-label">
@@ -578,8 +667,19 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           {/* 3. Rawatan Risiko */}
           {hasRawatanData() && (
             <div className="viewrisiko-box">
-              <div className="viewrisiko-box-header viewrisiko-monitoring-header">
-                Rawatan Risiko
+              <div className="viewrisiko-box-header viewrisiko-monitoring-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Rawatan Risiko</span>
+                {/* ⭐️ BARU: Butang Edit untuk Rawatan */}
+                {userRole === "ADMIN" && (
+                  <button
+                    type="button"
+                    className="viewrisiko-edit-section-btn"
+                    onClick={handleEditRawatan}
+                    title="Edit Rawatan Risiko"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
               </div>
               <div
                 className="viewrisiko-flex-row"
@@ -804,6 +904,82 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               handleCloseEditLogModal();
             }}
             logDataToEdit={logToEdit}
+          />
+        )}
+
+        {/* ⭐️ BARU: Modal Edit Pengenalpastian Risiko */}
+        {isPengenalpastianModalOpen && (
+          <PengenalpastianModal
+            isOpen={isPengenalpastianModalOpen}
+            onClose={handleClosePengenalpastian}
+            initialData={{
+              risiko_id: data.risiko_id,
+              no_rujukan: data.no_rujukan,
+              tahun: data.tahun,
+              separuh_tahun: data.separuh_tahun,
+              subsidiari_id: risk?.subsidiari_id,
+              subsidiari: data.nama_subsidiari,
+              kategori: data.kategori,
+              bahagian_unit: data.bahagian,
+              bahagian: data.bahagian,
+              risiko: data.risiko,
+              punca: Array.isArray(data.punca) 
+                ? data.punca.map(p => typeof p === 'string' ? p : (p.punca || p.text || ""))
+                : [],
+              kesan: Array.isArray(data.kesan)
+                ? data.kesan.map(k => typeof k === 'string' ? k : (k.kesan || k.text || ""))
+                : [],
+              // Sertakan data penilaian untuk kekalkan
+              skor_kebarangkalian: data.skor_kebarangkalian,
+              skor_impak: data.skor_impak,
+              skor_risiko: data.tahap_risiko,
+              status_risiko: data.status_risiko,
+              tahap_risiko: data.tahap_risiko,
+            }}
+          />
+        )}
+
+        {/* ⭐️ BARU: Modal Edit Penilaian Risiko */}
+        {isPenilaianModalOpen && (
+          <PenilaianRisikoModal
+            isOpen={isPenilaianModalOpen}
+            onClose={handleClosePenilaian}
+            initialData={{
+              risiko_id: data.risiko_id,
+              no_rujukan: data.no_rujukan,
+              tahun: data.tahun,
+              separuh_tahun: data.separuh_tahun,
+              subsidiari_id: risk?.subsidiari_id,
+              subsidiari: data.nama_subsidiari,
+              kategori: data.kategori,
+              bahagian_unit: data.bahagian,
+              bahagian: data.bahagian,
+              risiko: data.risiko,
+              punca: data.punca,
+              kesan: data.kesan,
+              skor_kebarangkalian: data.skor_kebarangkalian,
+              skor_impak: data.skor_impak,
+              skor_risiko: data.tahap_risiko,
+              status_risiko: data.status_risiko,
+              tahap_risiko: data.tahap_risiko,
+            }}
+          />
+        )}
+
+        {/* ⭐️ BARU: Modal Edit Rawatan Risiko */}
+        {isRawatanModalOpen && (
+          <KemaskiniRawatan
+            isOpen={isRawatanModalOpen}
+            onClose={handleCloseRawatan}
+            onSave={handleSaveRawatan}
+            risk={{
+              risiko_id: data.risiko_id,
+              rawatan_id: risk?.rawatan_id || null,
+              plan_tindakan: data.planTindakan,
+              jenis_kawalan: data.jenisKawalan,
+              tempoh_jangkaan_siap: data.tempohSiap,
+              kakitangan_bertanggungjawab: data.kakitanganBertanggungjawab,
+            }}
           />
         )}
       </div>

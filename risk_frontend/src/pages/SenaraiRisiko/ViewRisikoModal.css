@@ -127,7 +127,7 @@
   padding: 0;
   font-weight: 600;
   font-size: 0.95rem;
-  border-bottom: 2px solid #cce1f5 !important; /* Kekalkan garisan biru */
+  border-bottom: 2px solid #cce1f5 !important;
   margin-bottom: 10px;
   padding-bottom: 4px;
   display: flex;
@@ -137,9 +137,9 @@
 
 /* Header Log (khas untuk log) */
 .viewrisiko-log-header {
-  padding: 14px 16px; /* Letak padding di header */
-  background-color: #f9fafb; /* Latar kelabu lembut */
-  border-bottom: 1px solid #e5e7eb; /* Garisan pemisah */
+  padding: 14px 16px;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 .viewrisiko-log-header span {
   color: #005fa3 !important;
@@ -241,6 +241,33 @@
 .viewrisiko-panduan-btn:hover {
   background: #e0f2fe;
   border-color: #60a5fa;
+}
+
+/* === BUTANG EDIT SECTION === */
+.viewrisiko-edit-section-btn {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fdba74;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  line-height: 1;
+}
+
+.viewrisiko-edit-section-btn:hover {
+  background: #ffedd5;
+  border-color: #fb923c;
+  transform: translateY(-1px);
+}
+
+.viewrisiko-edit-section-btn:active {
+  transform: translateY(0);
 }
 
 /* === Penilaian Risiko Cards === */
@@ -390,7 +417,6 @@
     gap: 12px;
   }
 
-  /* Jadual Responsif */
   .viewrisiko-log-table {
     min-width: 100%;
   }
@@ -410,53 +436,51 @@
 
 .viewrisiko-log-table {
   width: 100%;
-  border-collapse: collapse; /* Guna collapse */
-  font-size: 13px; /* Saiz fon baru */
+  border-collapse: collapse;
+  font-size: 13px;
   margin: 0;
   min-width: 900px;
 }
 
 .viewrisiko-log-table th {
-  background-color: #f0f9ff; /* Latar biru cerah */
-  color: #005fa3; /* Teks biru gelap */
+  background-color: #f0f9ff;
+  color: #005fa3;
   font-weight: 600;
   padding: 12px 16px;
-  text-align: left; /* Jajar kiri */
+  text-align: left;
   border-bottom: 1px solid #e5e7eb;
   border-top: 1px solid #e5e7eb;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-left: none; /* Buang border lama */
-  border-right: none; /* Buang border lama */
+  border-left: none;
+  border-right: none;
   vertical-align: middle;
 }
 
 .viewrisiko-log-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb; /* Hanya border bawah */
-  text-align: left; /* Jajar kiri */
-  vertical-align: middle; /* Jajar tengah */
-  color: #4b5563; /* Teks kelabu gelap */
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: middle;
+  color: #4b5563;
   background-color: #fff;
-  border-left: none; /* Buang border lama */
-  border-right: none; /* Buang border lama */
+  border-left: none;
+  border-right: none;
   line-height: 1.5;
 }
 
-/* Buang zebra stripes */
 .viewrisiko-log-table tr:nth-child(even) {
   background-color: #fff;
 }
 
-/* Gaya untuk Skor Tahap Risiko (Kekal) */
 .viewrisiko-log-table td[data-label="TAHAP RISIKO"] {
   font-weight: 700;
   color: white;
-  text-align: center; /* Skor risiko kekal di tengah */
+  text-align: center;
 }
 
-/* Gaya untuk Tag Keberkesanan (Kekal) */
+/* Gaya untuk Tag Keberkesanan */
 .viewrisiko-keberkesanan-tag {
   display: inline-block;
   padding: 3px 8px;
@@ -482,17 +506,17 @@
   color: #4b5563;
 }
 
-/* ⭐️ BARU: Kesan hover & klik pada baris log */
+/* Kesan hover & klik pada baris log */
 .viewrisiko-log-table tbody tr.viewrisiko-log-row-clickable {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .viewrisiko-log-table tbody tr.viewrisiko-log-row-clickable:hover {
-  background-color: #f7f9fc; /* Warna hover yang lembut */
+  background-color: #f7f9fc;
 }
 
-/* Spinner (Diseragamkan) */
+/* Spinner */
 .spin {
   animation: viewrisiko-spin 1s linear infinite;
   color: #0074c8;
@@ -502,26 +526,24 @@
     transform: rotate(360deg);
   }
 }
-/* --- Tambahan CSS untuk Lajur Tindakan Log (Edit & Delete) --- */
 
-/* Tetapkan lebar dan jajaran untuk lajur Tindakan di Header */
+/* Tambahan CSS untuk Lajur Tindakan Log (Edit & Delete) */
 .viewrisiko-log-table th:last-child {
-  width: 80px; /* Lebar yang cukup untuk 2 butang dan padding */
+  width: 80px;
   text-align: center;
-  padding: 12px 8px; /* Sesuaikan padding agar sama dengan th lain */
+  padding: 12px 8px;
 }
 
-/* Tetapkan jajaran untuk lajur Tindakan di Body */
 .viewrisiko-log-table td:last-child {
   text-align: center;
-  padding: 8px; /* Padding yang lebih kecil untuk sel butang */
+  padding: 8px;
 }
 
 /* Container untuk butang Edit & Delete */
 .viewrisiko-action-buttons {
   display: flex;
-  justify-content: center; /* Butang berada di tengah lajur Tindakan */
-  gap: 6px; /* Jarak kecil antara butang */
+  justify-content: center;
+  gap: 6px;
   align-items: center;
 }
 
@@ -531,39 +553,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px; /* Saiz butang kecil, sedikit besar dari 4px */
+  padding: 6px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
-  line-height: 1; /* Penting untuk ikon */
+  line-height: 1;
 }
 
 /* Gaya khusus untuk butang Edit (Pensel) */
 .viewrisiko-btn-edit {
-  color: #0074c8; /* Warna utama sistem anda (biru) */
-  background-color: #e0f2fe; /* Latar belakang biru cerah */
+  color: #0074c8;
+  background-color: #e0f2fe;
 }
 
 .viewrisiko-btn-edit:hover {
-  background-color: #93c5fd; /* Biru sederhana */
+  background-color: #93c5fd;
   color: #1e40af;
   transform: translateY(-1px);
 }
 
 /* Gaya khusus untuk butang Delete (Tong Sampah) */
 .viewrisiko-btn-delete {
-  color: #dc2626; /* Merah (Red 600) */
-  background-color: #fee2e2; /* Latar belakang merah cerah */
+  color: #dc2626;
+  background-color: #fee2e2;
 }
 
 .viewrisiko-btn-delete:hover {
-  background-color: #fca5a5; /* Merah sederhana */
+  background-color: #fca5a5;
   color: #991b1b;
   transform: translateY(-1px);
 }
 
-/* Pastikan butang tidak mengganggu klik baris (walaupun logik JS sudah ada e.stopPropagation()) */
 .viewrisiko-log-table .viewrisiko-action-buttons button {
   z-index: 5;
   position: relative;

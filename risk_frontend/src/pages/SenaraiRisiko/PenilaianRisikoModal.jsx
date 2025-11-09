@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X, BookOpen, Save } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
-import "./PenilaiaRisikoModal.css"; 
+import "./PenilaianRisikoModal.css"; 
 import PanduanModal from '../Panduan/Panduan'; 
 
 // --- JADUAL RUJUKAN SKOR ---
