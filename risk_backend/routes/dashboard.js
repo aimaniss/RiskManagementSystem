@@ -10,7 +10,8 @@ const getSkorRisikoLabel = (shortCode) => {
     'ST': 'Sangat Tinggi',
     'T': 'Tinggi',
     'S': 'Sederhana',
-    'R': 'Rendah'
+    'R': 'Rendah',
+    'N/A': 'Belum Dinilai' // Untuk risiko null
   };
   return mapping[shortCode] || shortCode;
 };
@@ -70,7 +71,6 @@ router.get("/", verifyToken, async (req, res) => {
         r.kategori,
         r.bahagian,
         
-        -- ⭐ BETUL: Guna skor_risiko (bukan status_risiko)
         r.skor_risiko AS skor_risiko_asal,
         r.skor_kebarangkalian,
         r.skor_impak,
@@ -116,19 +116,20 @@ router.get("/", verifyToken, async (req, res) => {
       jumlahTutup: 0,
     };
 
-    // ⭐ BETUL: Guna short code (ST, T, S, R)
     const tahapRisikoCount = {
       "ST": 0,  // Sangat Tinggi
       "T": 0,   // Tinggi
       "S": 0,   // Sederhana
-      "R": 0    // Rendah
+      "R": 0,   // Rendah
+      "N/A": 0  // Untuk "Belum Dinilai"
     };
 
     const kategoriRisikoCount = {
       "Strategik": 0,
       "Operasi": 0,
       "Pematuhan / Perundangan": 0,
-      "Kewangan": 0
+      "Kewangan": 0,
+      "Lain-lain / Tiada": 0 // <-- DIUBAH: Untuk kategori null
     };
 
     const jenisKawalanCount = {
@@ -165,26 +166,30 @@ router.get("/", verifyToken, async (req, res) => {
           skor.jumlahBuka++;
       }
 
-      // ✅ 4b. Kemaskini logik untuk handle skor null / tidak sah
-      const skorRisiko = row.skor_risiko_terkini; // Contoh: "ST", "T", "S", "R"
+      // 4b. Tahap Risiko
+      const skorRisiko = row.skor_risiko_terkini;
       
       if (!skorRisiko || skorRisiko === "null") {
-        console.info(`ℹ️ Risiko ${row.risiko_id} belum dinilai (skor_risiko null).`);
-        continue; // skip pengiraan tahap risiko
-      }
-
-      if (tahapRisikoCount[skorRisiko] !== undefined) {
+        tahapRisikoCount["N/A"]++; 
+        console.info(`ℹ️ Risiko ${row.risiko_id} dikira sebagai 'Belum Dinilai'.`);
+      } else if (tahapRisikoCount[skorRisiko] !== undefined) {
         tahapRisikoCount[skorRisiko]++;
       } else {
         console.warn(`⚠️ Kod skor tidak dikenali: "${skorRisiko}" (risiko ${row.risiko_id})`);
       }
 
       // 4c. Kategori
+      // --- BLOK INI TELAH DIBETULKAN ---
       const kategori = row.kategori;
-      if (kategoriRisikoCount[kategori] !== undefined) {
+      if (kategori && kategoriRisikoCount[kategori] !== undefined) {
         kategoriRisikoCount[kategori]++;
       } else {
-        console.warn(`⚠️ Kategori tidak dikenali: "${kategori}" (risiko ${row.risiko_id})`);
+        // Jika kategori null, atau tidak dikenali, kira di bawah 'Lain-lain / Tiada'
+        kategoriRisikoCount["Lain-lain / Tiada"]++;
+        
+        if (kategori) { // Hanya log amaran jika ia nilai tidak dikenali (bukan null)
+          console.warn(`⚠️ Kategori tidak dikenali: "${kategori}" (risiko ${row.risiko_id}). Dikira sebagai 'Lain-lain / Tiada'.`);
+        }
       }
 
       // 4d. Jenis Kawalan
@@ -202,11 +207,11 @@ router.get("/", verifyToken, async (req, res) => {
     console.log("📊 Kategori:", kategoriRisikoCount);
     console.log("📊 Jenis Kawalan:", jenisKawalanCount);
 
-    // === 6. ⭐ BETUL: Format data carta dengan label penuh ===
+    // === 6. Format data carta dengan label penuh ===
     const tahapRisikoData = Object.entries(tahapRisikoCount)
       .filter(([_, value]) => value > 0)
       .map(([shortCode, value]) => ({
-        name: getSkorRisikoLabel(shortCode), // Convert ST -> "Sangat Tinggi"
+        name: getSkorRisikoLabel(shortCode),
         value
       }));
 
