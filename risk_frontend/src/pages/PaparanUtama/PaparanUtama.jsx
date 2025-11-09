@@ -4,7 +4,9 @@ import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx";
 import DashboardSubsidiari from "./DashboardSubsidiari.jsx";
 import "./PaparanUtama.css";
 
-// Header
+// ================================
+// 🟦 Komponen Header Ringkas
+// ================================
 const MinimalHeader = ({ setShowModal }) => (
   <div className="PaparanUtama-header">
     <h1>Paparan Utama</h1>
@@ -12,7 +14,9 @@ const MinimalHeader = ({ setShowModal }) => (
   </div>
 );
 
-// Render dashboard berdasarkan filter
+// ================================
+// 🟦 Pemilih Dashboard (All/Subsidiari)
+// ================================
 const DashboardRenderer = ({ filterValues, data }) => {
   if (filterValues.subsidiari === "Semua Subsidiari") {
     return <DashboardKeseluruhan data={data} />;
@@ -21,50 +25,80 @@ const DashboardRenderer = ({ filterValues, data }) => {
   }
 };
 
+// ================================
+// 🟦 Komponen Utama
+// ================================
 export default function PaparanUtama() {
   const [filterValues, setFilterValues] = useState({
     subsidiari: "Semua Subsidiari",
+    subsidiariId: "Semua",
+    subsidiariName: "Semua Subsidiari",
   });
-  const [showModal, setShowModal] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [subsidiariOptions, setSubsidiariOptions] = useState([]);
+  const [subsidiariLoading, setSubsidiariLoading] = useState(true);
+
+  // Ambil senarai subsidiari untuk dropdown
+  useEffect(() => {
+    const fetchSubsidiari = async () => {
+      try {
+        setSubsidiariLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token tidak ditemui. Sila login semula.");
+
+        const res = await fetch("/api/subsidiari", {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401) throw new Error("401 Unauthorized. Sila login semula.");
+        if (!res.ok) throw new Error(`Gagal ambil subsidiari: ${res.status}`);
+
+        const data = await res.json();
+        setSubsidiariOptions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("❌ Ralat ambil subsidiari:", err);
+        setSubsidiariOptions([]);
+      } finally {
+        setSubsidiariLoading(false);
+      }
+    };
+
+    fetchSubsidiari();
+  }, []);
+
+  // Ambil data dashboard bila filter berubah
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-
-        // Ambil token dari localStorage/sessionStorage
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Sila login semula. Token tidak ditemui.");
 
         const subsidiariQuery =
-          filterValues.subsidiari === "Semua Subsidiari"
+          filterValues.subsidiariId === "Semua"
             ? "Semua"
-            : filterValues.subsidiari;
+            : encodeURIComponent(filterValues.subsidiariId);
 
-        const response = await fetch(
-          `/api/dashboard?subsidiari_id=${encodeURIComponent(subsidiariQuery)}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`, // hantar token
-            },
-          }
-        );
+        const res = await fetch(`/api/dashboard?subsidiari_id=${subsidiariQuery}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
 
-        if (response.status === 401) {
-          throw new Error("401 Unauthorized. Sila login semula.");
-        }
+        if (res.status === 401) throw new Error("401 Unauthorized. Sila login semula.");
+        if (!res.ok) throw new Error(`Gagal memuatkan data: ${res.status}`);
 
-        if (!response.ok) {
-          throw new Error(`Gagal memuatkan data: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await res.json();
         setDashboardData(data);
       } catch (err) {
         console.error(err);
@@ -76,7 +110,7 @@ export default function PaparanUtama() {
     };
 
     fetchDashboardData();
-  }, [filterValues.subsidiari]);
+  }, [filterValues.subsidiariId]);
 
   return (
     <div className="PaparanUtama">
@@ -95,6 +129,7 @@ export default function PaparanUtama() {
           filterValues={filterValues}
           setFilterValues={setFilterValues}
           setShowModal={setShowModal}
+          subsidiariOptions={subsidiariOptions}
         />
       )}
     </div>
