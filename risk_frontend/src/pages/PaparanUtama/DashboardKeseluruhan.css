@@ -19,24 +19,42 @@
   margin-bottom: 24px;
   border: 1px solid #e5e7eb;
 }
+
+/* --- PERUBAHAN DI SINI --- */
 .header-left-image {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column; /* 1. Susun secara menegak (gambar di atas, teks di bawah) */
+  align-items: center; /* 2. Pusatkan kedua-duanya */
+  gap: 8px; /* 3. Letak jarak kecil antara gambar dan teks */
 }
 .image-placeholder {
-  width: 50px;
-  height: 50px;
+  width: 50px; /* Kekalkan saiz kotak asal */
+  height: 50px; /* Kekalkan saiz kotak asal */
   background: #e5e7eb;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* Buang 'display: flex' sebab kita nak letak <img> */
+  overflow: hidden; /* Pastikan gambar tak terkeluar dari kotak */
+}
+/* 4. Ini adalah 'magic' untuk scaling gambar */
+.image-placeholder img {
+  width: 100%; /* Lebar gambar ikut saiz kotak (50px) */
+  height: 100%; /* Tinggi gambar ikut saiz kotak (50px) */
+
+  /* 'contain' akan pastikan SELURUH gambar 1811x579 muat 
+     di dalam kotak 50x50 tanpa herot (ia akan jadi kecil) */
+  object-fit: contain;
+
+  /* (Jika anda mahu ia 'crop' dan penuhi kotak, guna 'object-fit: cover;') */
+
+  display: block;
 }
 .image-caption {
   font-weight: 600;
   color: #374151;
+  font-size: 0.75rem; /* Kecilkan sikit teks kapsyen */
 }
+/* --- TAMAT PERUBAHAN --- */
+
 .header-right-title {
   text-align: right;
 }
@@ -45,24 +63,100 @@
   font-weight: 600;
   color: #1f2937;
 }
-.comparison-years {
+.current-status-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0074c8;
 }
-.comparison-years .vs {
-  font-weight: 400;
-  font-size: 1rem;
-  color: #6b7280;
-  margin: 0 8px;
+
+/* === FILTER BAR (FYP) === */
+.dashboard-filter-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+.dashboard-filter-bar label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+.dashboard-filter-bar select {
+  font-family: "Inter", sans-serif;
+  font-size: 0.875rem;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
 }
 
-/* === SUSUN ATUR GRID === */
-.dashboard-grid-layout {
+/* === KAD SKOR (VERSI 5 KAD) === */
+.scorecard-container-5 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: minmax(400px, auto);
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Responsif untuk 5 kad pada skrin kecil */
+@media (max-width: 1200px) {
+  .scorecard-container-5 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+.scorecard-box {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  gap: 16px;
+  flex-direction: column;
+  text-align: center;
+}
+
+/* Kembali ke paparan sisi-ke-sisi pada skrin besar */
+@media (min-width: 1200px) {
+  .scorecard-box {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+.scorecard-icon {
+  flex-shrink: 0;
+}
+.scorecard-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.scorecard-content {
+  flex-grow: 1;
+}
+.scorecard-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+.scorecard-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* === GRID CARTA (FYP) === */
+.charts-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 24px;
+  margin-bottom: 24px;
 }
 
 /* Kotak untuk setiap carta */
@@ -73,24 +167,6 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-}
-
-/* Span merentasi 2 kolum */
-.section-kuantitatif {
-  grid-column: 1 / -1;
-  grid-row: 1;
-}
-.section-kategori-risiko-jadual {
-  grid-column: 2 / 3;
-  grid-row: 2;
-}
-.section-pemantauan {
-  grid-column: 1 / 2;
-  grid-row: 3;
-}
-.section-bar-status-pemantauan {
-  grid-column: 2 / -1;
-  grid-row: 3 / span 2;
 }
 
 /* Tajuk Dalam Kad */
@@ -105,122 +181,18 @@
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 8px;
 }
-.g-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: -12px;
-  margin-bottom: 16px;
-}
 
-/* === KAD ROW 1 (SUKATAN RISIKO) === */
-.sukatan-risiko-grid {
-  display: flex;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-}
-.sukatan-header-col {
-  flex: 0 0 200px; /* Lebar tetap untuk tajuk baris */
-}
-.sukatan-row-header {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #374151;
-  padding: 12px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #e5e7eb;
-  box-sizing: border-box; /* **PERUBAHAN DI SINI** */
-}
-.sukatan-header-spacer {
-  height: 80px; /* Padan dengan ketinggian ikon + tajuk */
-  border-bottom: 1px solid #e5e7eb;
-}
-.sukatan-row-header:last-child {
-  border-bottom: none;
-}
-.sukatan-data-cols-wrapper {
-  display: flex;
-  flex: 1;
-}
-.sukatan-data-col {
-  flex: 1;
-  text-align: center;
-  border-left: 1px solid #e5e7eb;
-}
-.sukatan-icon-box {
-  height: 80px;
+/* Pemegang carta (recharts) */
+.chart-placeholder-wrapper {
+  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #e5e7eb;
 }
-.sukatan-icon {
-  width: 32px;
-  height: 32px;
-}
-.sukatan-data-box {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #e5e7eb;
-  box-sizing: border-box; /* **PERUBAHAN DI SINI** */
-}
-.sukatan-data-col:last-child {
-  border-right: none;
-}
-.sukatan-data-box:last-child {
-  border-bottom: none;
-}
-.lagenda-container-sukatan {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 16px;
-}
-.lagenda-item-sukatan {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-.lagenda-icon-sukatan {
-  width: 16px;
-  height: 16px;
-}
-
-/* === KAD ROW 2 (PAI) === */
-.pie-comparison-wrapper {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  flex: 1;
-  gap: 20px;
-}
-.pie-chart-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-}
-.pie-chart-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
-/* Ini adalah 'placeholder' untuk Recharts */
 .chart-placeholder {
   width: 100%;
   flex: 1;
-  min-height: 250px;
+  min-height: 300px;
   background: #f9fafb;
   border: 1px dashed #d1d5db;
   border-radius: 8px;
@@ -230,118 +202,36 @@
   color: #9ca3af;
   font-size: 0.875rem;
   font-style: italic;
+  padding: 16px;
+  text-align: center;
 }
 
-/* === KAD ROW 2 & 4 (LEGEND) === */
-.f-legend-container,
-.d-legend-row-horizontal {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+/* === KOTAK JADUAL (FYP) === */
+.table-container {
+  margin-bottom: 24px;
 }
-.f-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.table-wrapper {
+  overflow-x: auto;
+}
+.top-risks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.top-risks-table th,
+.top-risks-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
   font-size: 0.875rem;
 }
-.f-legend-color-box {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-}
-
-/* Dikemas kini untuk 5 status */
-.d-legend-row-horizontal .legend-item {
-  font-size: 0.875rem;
-  padding-left: 20px;
-  position: relative;
-}
-.d-legend-row-horizontal .legend-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-}
-.d-legend-row-horizontal .legend-item.buka::before {
-  background-color: #dc3545; /* Merah */
-}
-.d-legend-row-horizontal .legend-item.sedang-laksana::before {
-  background-color: #ffc107; /* Kuning */
-}
-.d-legend-row-horizontal .legend-item.pemantauan::before {
-  background-color: #0074c8; /* Biru */
-}
-.d-legend-row-horizontal .legend-item.selesai::before {
-  background-color: #17a2b8; /* Teal */
-}
-.d-legend-row-horizontal .legend-item.tutup::before {
-  background-color: #28a745; /* Hijau */
-}
-
-/* === KAD ROW 3 (PEMANTAUAN RISIKO) === */
-.g-legend-bottom {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 16px;
-}
-.legend-item-box {
-  font-size: 0.875rem;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-.legend-item-box.prev {
-  background-color: #0074c8;
-  color: white;
-}
-.legend-item-box.current {
-  background-color: #d9534f;
-  color: white;
-}
-.g-bottom-section {
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-.g-skor-risiko h5 {
-  font-size: 0.875rem;
+.top-risks-table th {
+  background-color: #f9fafb;
   font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 12px 0;
-  text-transform: uppercase;
+  color: #374151;
 }
-.skor-risiko-legend-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.skor-risiko-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.skor-risiko-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.75rem;
-}
-.skor-risiko-label {
-  font-size: 0.875rem;
+.top-risks-table td {
   color: #4b5563;
+}
+.top-risks-table tbody tr:last-child td {
+  border-bottom: none;
 }

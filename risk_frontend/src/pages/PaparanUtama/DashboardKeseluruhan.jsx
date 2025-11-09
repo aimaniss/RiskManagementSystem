@@ -1,318 +1,209 @@
 import React from "react";
 import "./DashboardKeseluruhan.css";
-// TUKAR: Import ikon dari lucide-react
+// Import ikon untuk 5 status
 import {
-  BarChart3,
-  AlertOctagon,
-  AlertTriangle,
-  MinusCircle,
-  CheckCircle2,
-  XCircle,
+  File, // Buka
+  RefreshCw, // Sedang Dilaksanakan
+  Eye, // Pemantauan
+  Check, // Selesai
+  CheckCircle2, // Tutup
 } from "lucide-react";
 
 // NOTA: Recharts akan diimport di sini nanti, cth:
 // import { PieChart, BarChart, ... } from 'recharts';
 
-// ===== DATA SUKATAN RISIKO =====
-const DATA_SUKATAN_RISIKO_CONFIG = {
-  columns: [
-    {
-      label: "Jumlah Risiko",
-      icon: BarChart3,
-      color: "#6b7280",
-    },
-    {
-      label: "Sangat tinggi [ST]",
-      icon: AlertOctagon,
-      color: "#ef4444",
-    },
-    {
-      label: "Tinggi [T]",
-      icon: AlertTriangle,
-      color: "#f97316",
-    },
-    {
-      label: "Sederhana [S]",
-      icon: MinusCircle,
-      color: "#eab308",
-    },
-    {
-      label: "Rendah [R]",
-      icon: CheckCircle2,
-      color: "#22c55e",
-    },
-    {
-      label: "Tiada Skor",
-      icon: XCircle,
-      color: "#6b7280",
-    },
-  ],
-};
-
-const KATEGORI_RISIKO_LEGEND_CONFIG = [
-  { label: "Kewangan", color: "#f8b195" },
-  { label: "Operasi", color: "#f67280" },
-  { label: "Pematuhan", color: "#c06c84" },
-  { label: "Strategik", color: "#6c5b7b" },
-];
-
-const SKOR_RISIKO_LEGEND_CONFIG = [
-  { short: "R", long: "Rendah", color: "#22c55e" },
-  { short: "S", long: "Sederhana", color: "#eab308" },
-  { short: "T", long: "Tinggi", color: "#f97316" },
-  { short: "ST", long: "Sangat Tinggi", color: "#ef4444" },
-  { short: "Tiada", long: "Tiada Skor", color: "#6b7280" },
-];
-
-const STATUS_SUBSIDIARI_COLORS = [
-  "#dc3545", // Buka (Merah)
-  "#ffc107", // Sedang Dilaksanakan (Kuning)
-  "#0074c8", // Pemantauan (Biru)
-  "#17a2b8", // Selesai (Teal)
-  "#28a745", // Tutup (Hijau)
-];
-// =================================================================
-
 /**
- * Komponen Papan Pemuka yang menerima data sebagai props.
- * ... (penerangan props)
+ * Komponen Papan Pemuka FYP yang lebih ringkas.
+ * Ia hanya menerima 'data' semasa, bukan untuk perbandingan.
  */
 export default function DashboardKeseluruhan({
-  filterValues = { subsidiari: "Semua", tahunAsas: 2025, separuhAsas: 1 },
-  data, // Semua data akan datang dari 'props' ini
+  data, // Semua data akan datang dari 'props' ini (cth: data.skor, data.tahapRisiko, dll)
+  selectedKategori,
+  onKategoriChange,
+  kategoriOptions = [], // Sebaiknya, hantar 4 kategori ini sebagai props
 }) {
-  const { tahunAsas, separuhAsas } = filterValues;
-  const baseYear = tahunAsas;
-  const prevYear = tahunAsas - 1;
-
-  // Logik untuk menukar 1/2 kepada teks
-  const baseHalfLabel = separuhAsas === 1 ? "Separuh Pertama" : "Separuh Kedua";
-
-  // Cipta header baris yang dinamik berdasarkan filter
-  const sukatanRowHeaders = [
-    `${baseHalfLabel} ${prevYear}`, // Cth: "Separuh Pertama 2024"
-    `${baseHalfLabel} ${baseYear}`,  // Cth: "Separuh Pertama 2025"
+  // === Data Dummy untuk 5 Kad Skor (gantikan dengan data.skor) ===
+  const skorData = [
+    {
+      label: "Jumlah Risiko Buka",
+      value: data?.skor?.jumlahBuka || 12,
+      icon: File,
+      color: "#dc3545", // Merah
+    },
+    {
+      label: "Sedang Dilaksanakan",
+      value: data?.skor?.jumlahLaksana || 18,
+      icon: RefreshCw,
+      color: "#ffc107", // Kuning
+    },
+    {
+      label: "Jumlah Risiko Pemantauan",
+      value: data?.skor?.jumlahPantau || 5,
+      icon: Eye,
+      color: "#0074c8", // Biru
+    },
+    {
+      label: "Jumlah Risiko Selesai",
+      value: data?.skor?.jumlahSelesai || 10,
+      icon: Check,
+      color: "#17a2b8", // Teal
+    },
+    {
+      label: "Jumlah Risiko Tutup",
+      value: data?.skor?.jumlahTutup || 15,
+      icon: CheckCircle2,
+      color: "#28a745", // Hijau
+    },
   ];
 
-  // --- SEMUA LOGIK PENGIRAAN MANUAL DIKELUARKAN ---
+  // === TUKAR: Data Dummy Jadual guna 4 kategori anda ===
+  const topRisksData = data?.topRisks || [
+    { noRujukan: "R001", nama: "Isu server down", kategori: "Operasi", bahagian: "Unit IT" },
+    { noRujukan: "R002", nama: "Kekurangan dana", kategori: "Kewangan", bahagian: "Unit Kewangan" },
+    { noRujukan: "R003", nama: "Gagal patuhi akta", kategori: "Pematuhan / Perundangan", bahagian: "Unit Undang-Undang" },
+    { noRujukan: "R004", nama: "Sasaran jualan tidak capai", kategori: "Strategik", bahagian: "Unit Pemasaran" },
+  ];
 
   return (
     <div className="dashboard-keseluruhan-layout">
-      {/* Header (Dikekalkan) */}
+      {/* Header (Logo dikekalkan, Tajuk dipermudahkan) */}
       <div className="dashboard-header">
         <div className="header-left-image">
+          {/* --- PERUBAHAN DI SINI --- */}
           <div className="image-placeholder">
-            <span className="img-icon">🖼️</span>
+            {/* Gantikan 'src' dengan path logo anda */}
+            <img src="path/ke/logo-anda-1811x579.png" alt="Logo Unit" />
           </div>
+          {/* Teks kini akan dipaparkan di bawah oleh CSS */}
           <div className="image-caption">Unit Pematuhan & Pengurusan Risiko</div>
+          {/* --- TAMAT PERUBAHAN --- */}
         </div>
         <div className="header-right-title">
-          <div className="comparison-title">Perbandingan Separuh Tahun </div>
-          <div className="comparison-years">
-            {baseHalfLabel} {prevYear} <span className="vs">vs</span> {baseHalfLabel} {baseYear}
+          <div className="comparison-title">Dashboard Pengurusan Risiko</div>
+          <div className="current-status-title">Status Semasa</div>
+        </div>
+      </div>
+
+      {/* Filter Bar Versi FYP */}
+      <div className="dashboard-filter-bar">
+        <label htmlFor="kategori-filter">Pilih Kategori Risiko:</label>
+        <select
+          id="kategori-filter"
+          value={selectedKategori}
+          onChange={(e) => onKategoriChange(e.target.value)}
+        >
+          <option value="semua">Tunjuk Semua</option>
+          {/* Jika anda hantar 'kategoriOptions' sebagai props, ia akan guna props itu */}
+          {kategoriOptions.map((kat) => (
+            <option key={kat.value} value={kat.value}>
+              {kat.label}
+            </option>
+          ))}
+          
+          {/* TUKAR: Data Dummy Filter guna 4 kategori anda */}
+          {/* Ini hanya akan muncul jika 'kategoriOptions' kosong */}
+          {kategoriOptions.length === 0 && (
+            <>
+              <option value="strategik">Strategik</option>
+              <option value="operasi">Operasi</option>
+              <option value="pematuhan">Pematuhan / Perundangan</option>
+              <option value="kewangan">Kewangan</option>
+            </>
+          )}
+        </select>
+      </div>
+
+      {/* ===== SUSUN ATUR BARU (FYP) ===== */}
+
+      {/* --- 1. KAD SKOR (VERSI 5 KAD) --- */}
+      <div className="scorecard-container-5">
+        {skorData.map((item, index) => {
+          const IconComponent = item.icon;
+          return (
+            <div key={index} className="scorecard-box">
+              <div className="scorecard-icon">
+                <IconComponent style={{ color: item.color }} />
+              </div>
+              <div className="scorecard-content">
+                <div className="scorecard-value">{item.value}</div>
+                <div className="scorecard-label">{item.label}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* --- 2. GRID CARTA (KINI 3 CARTA) --- */}
+      <div className="charts-grid-container">
+        {/* Carta 1: Tahap Risiko (YANG INI PENTING) */}
+        <div className="section-box">
+          <h4 className="section-title-normal">Tahap Risiko</h4>
+          <div className="chart-placeholder-wrapper">
+            <div className="chart-placeholder">
+              [Carta Bar/Donut Recharts untuk Tahap Risiko (Tinggi, Sederhana,
+              Rendah)]
+              {/* Cth: <Recharts... data={data.tahapRisikoData} /> */}
+            </div>
+          </div>
+        </div>
+
+        {/* Carta 2: Kategori Risiko */}
+        <div className="section-box">
+          <h4 className="section-title-normal">Kategori Risiko</h4>
+          <div className="chart-placeholder-wrapper">
+            <div className="chart-placeholder">
+              [Carta Bar Recharts untuk Kategori (Strategik, Operasi, Pematuhan, Kewangan)]
+              {/* Cth: <Recharts... data={data.kategoriRisikoData} /> */}
+            </div>
+          </div>
+        </div>
+
+        {/* Carta 3: Jenis Kawalan */}
+        <div className="section-box">
+          <h4 className="section-title-normal">Jenis Kawalan</h4>
+          <div className="chart-placeholder-wrapper">
+            <div className="chart-placeholder">
+              [Carta Pai Recharts untuk Jenis Kawalan (Cth: Kurang Berkesan vs
+              Berkesan)]
+              {/* Cth: <Recharts... data={data.jenisKawalanData} /> */}
+            </div>
+          </div>
+        </div>
+        
+      </div>
+
+      {/* --- 3. JADUAL RISIKO TERATAS --- */}
+      <div className="table-container">
+        <div className="section-box">
+          <h4 className="section-title-normal">
+            Senarai Risiko Teratas (Kritikal & "Buka")
+          </h4>
+          <div className="table-wrapper">
+            <table className="top-risks-table">
+              <thead>
+                <tr>
+                  <th>No Rujukan</th>
+                  <th>Nama Risiko</th>
+                  <th>Kategori</th>
+                  <th>Bahagian/Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topRisksData.map((risk, index) => (
+                  <tr key={index}> {/* Selamat jika noRujukan tidak unik */}
+                    <td>{risk.noRujukan}</td>
+                    <td>{risk.nama}</td>
+                    <td>{risk.kategori}</td>
+                    <td>{risk.bahagian}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* ===== GRID SUSUN ATUR BARU ===== */}
-      <div className="dashboard-grid-layout">
-        
-        {/* --- ROW 1 (GABUNGAN) --- */}
-        <div className="section-box section-kuantitatif">
-          <h4 className="section-title-normal"></h4>
-          <div className="sukatan-risiko-grid">
-            <div className="sukatan-header-col">
-              <div className="sukatan-header-spacer"></div>
-              
-              {/* Guna 'sukatanRowHeaders' (dinamik) */}
-              {sukatanRowHeaders.map((label, index) => (
-                <div key={index} className="sukatan-row-header">
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div className="sukatan-data-cols-wrapper">
-              {DATA_SUKATAN_RISIKO_CONFIG.columns.map((col, colIndex) => {
-                const IconComponent = col.icon;
-                
-                // Jangkaan 'values' kini ada 2 item [0, 0]
-                // const values = data?.sukatanRisiko?.[colIndex] || [0, 0];
-                
-                return (
-                  <div key={colIndex} className="sukatan-data-col">
-                    <div className="sukatan-icon-box">
-                      <IconComponent
-                        style={{ color: col.color }}
-                        className="sukatan-icon"
-                      />
-                    </div>
-                    
-                    {/* Gantikan ini dengan data sebenar dari props */}
-                    <div className="sukatan-data-box">
-                      {/* {values[0]} */} ?
-                    </div>
-                    <div className="sukatan-data-box">
-                      {/* {values[1]} */} ?
-                    </div>
-
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* --- Lagenda --- */}
-          <div className="lagenda-container-sukatan">
-            {DATA_SUKATAN_RISIKO_CONFIG.columns.map((item, i) => {
-              const IconComponent = item.icon;
-              return (
-                <div className="lagenda-item-sukatan" key={i}>
-                  <IconComponent
-                    style={{ color: item.color }}
-                    className="lagenda-icon-sukatan"
-                  />
-                  <span>{item.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        
-        {/* --- ROW 2 --- */}
-        <div className="section-box section-jenis-kawalan">
-          <h4 className="section-title-normal">JENIS KAWALAN</h4>
-          <div className="pie-comparison-wrapper">
-            
-            {/* Gantikan ini dengan <PieChart> Recharts */}
-            <div className="pie-chart-container">
-              <h5 className="pie-chart-title">{baseHalfLabel} {prevYear}</h5>
-              <div className="chart-placeholder">
-                [Carta Pai Recharts {baseHalfLabel} {prevYear} Di Sini]
-              </div>
-            </div>
-            
-            {/* Gantikan ini dengan <PieChart> Recharts */}
-            <div className="pie-chart-container">
-              <h5 className="pie-chart-title">{baseHalfLabel} {baseYear}</h5>
-              <div className="chart-placeholder">
-                [Carta Pai Recharts {baseHalfLabel} {baseYear} Di Sini]
-              </div>
-            </div>
-            
-          </div>
-        </div>
-        
-        <div className="section-box section-kategori-risiko-jadual">
-          <h4 className="section-title-normal">KATEGORI RISIKO (JADUAL)</h4>
-          
-          {/* Gantikan ini dengan <BarChart layout="vertical"> Recharts */}
-          <div className="f-table-container">
-            <div className="chart-placeholder" style={{ minHeight: "150px" }}>
-              [Carta Bar Bertindih Recharts Di Sini]
-            </div>
-            {/* Logik asal untuk 'map' data Kategori Risiko akan diubah 
-              untuk menyediakan data kepada satu komponen <BarChart> Recharts
-            */}
-          </div>
-
-          <div className="f-legend-container">
-            {KATEGORI_RISIKO_LEGEND_CONFIG.map((item, i) => (
-              <div key={i} className="f-legend-item">
-                <span
-                  className="f-legend-color-box"
-                  style={{ backgroundColor: item.color }}
-                ></span>
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* --- ROW 3 --- */}
-        <div className="section-box section-pemantauan">
-          <h4 className="section-title-normal">PEMANTAUAN RISIKO</h4>
-          <p className="g-subtitle">Perbandingan Risiko ({prevYear} vs {baseYear})</p>
-          
-          {/* Gantikan ini dengan <BarChart> Recharts */}
-          <div className="pemantapan-chart-container">
-            <div className="chart-placeholder" style={{ minHeight: "200px" }}>
-              [Carta Bar (Grouped) Recharts Di Sini]
-            </div>
-          </div>
-          
-          <div className="g-legend-bottom">
-            <span className="legend-item-box prev">
-              {baseHalfLabel} {prevYear}
-            </span>
-            <span className="legend-item-box current">
-              {baseHalfLabel} {baseYear}
-            </span>
-          </div>
-          
-          <div className="g-bottom-section">
-            <div className="g-skor-risiko">
-              <h5>SKOR RISIKO</h5>
-              <div className="skor-risiko-legend-container">
-                {SKOR_RISIKO_LEGEND_CONFIG.map((item) => (
-                  <div key={item.short} className="skor-risiko-item">
-                    <span
-                      className="skor-risiko-box"
-                      style={{ backgroundColor: item.color }}
-                    >
-                      {item.short}
-                    </span>
-                    <span className="skor-risiko-label">{item.long}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* --- ROW 4 --- */}
-        <div className="section-box section-status-pemantauan-pai">
-          <h4 className="section-title-normal">STATUS PEMANTAUAN</h4>
-          <div className="pie-comparison-wrapper">
-
-            {/* Gantikan ini dengan <PieChart> Recharts */}
-            <div className="pie-chart-container">
-              <h5 className="pie-chart-title">{baseHalfLabel} {prevYear}</h5>
-              <div className="chart-placeholder">
-                [Carta Pai Recharts {baseHalfLabel} {prevYear} Di Sini]
-              </div>
-            </div>
-
-            {/* Gantikan ini dengan <PieChart> Recharts */}
-            <div className="pie-chart-container">
-              <h5 className="pie-chart-title">{baseHalfLabel} {baseYear}</h5>
-              <div className="chart-placeholder">
-                [Carta Pai Recharts {baseHalfLabel} {baseYear} Di Sini]
-              </div>
-            </div>
-
-          </div>
-        </div>
-        
-        <div className="section-box section-bar-status-pemantauan">
-          <h4 className="section-title-normal">STATUS PEMANTAUAN SUBSIDIARI</h4>
-          
-          {/* Gantikan ini dengan <BarChart layout="vertical"> Recharts */}
-          <div className="subsidiari-bar-container">
-            <div className="chart-placeholder" style={{ minHeight: "150px" }}>
-              [Carta Bar Bertindih Recharts Di Sini]
-            </div>
-          </div>
-
-          <div className="d-legend-row-horizontal">
-            <span className="legend-item buka">Buka</span>
-            <span className="legend-item sedang-laksana">Sedang Dilaksanakan</span>
-            <span className="legend-item pemantauan">Pemantauan</span>
-            <span className="legend-item selesai">Selesai</span>
-            <span className="legend-item tutup">Tutup</span>
-          </div>
-        </div>
-      
-      </div> {/* ===== TAMAT GRID SUSUN ATUR BARU ===== */}
+      {/* ===== TAMAT SUSUN ATUR BARU ===== */}
     </div>
   );
 }
