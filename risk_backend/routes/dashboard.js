@@ -25,18 +25,25 @@ router.get("/", verifyToken, async (req, res) => {
     console.log("📊 Dashboard Request:", { subsidiari_id, user_role: user.nama_peranan });
 
     // === 1. WHERE clause ===
-    let whereClause = "";
+    // <-- DIUBAH: Penapis status 'Buka' DIBUANG dari sini -->
+    let whereConditions = []; 
     let params = [];
+    let paramIndex = 1;
 
+    // Syarat 1: Tapisan Subsidiari
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      whereClause = "WHERE r.subsidiari::integer = $1";
+      whereConditions.push(`r.subsidiari::integer = $${paramIndex++}`);
       params.push(user.subsidiari_id);
     } else if (subsidiari_id && subsidiari_id !== "Semua") {
-      whereClause = "WHERE r.subsidiari::integer = $1";
+      whereConditions.push(`r.subsidiari::integer = $${paramIndex++}`);
       params.push(parseInt(subsidiari_id));
     }
 
-    // === 2. QUERY UTAMA ===
+    // Bina klausa WHERE (kini tiada lagi tapisan status)
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+    // <-- TAMAT BLOK PERUBAHAN 1 -->
+
+    // === 2. QUERY UTAMA (Untuk Carta) ===
     const mainQuery = `
       WITH LogTerkini AS (
         SELECT
@@ -77,28 +84,21 @@ router.get("/", verifyToken, async (req, res) => {
         r.tahun,
         r.separuh_tahun,
         
-        -- Status pemantauan (default 'Buka')
         COALESCE(lt.status_pemantauan, 'Buka') AS status_pemantauan,
-        
-        -- ⭐ PENTING: Ambil skor_risiko terkini (dari log jika ada, kalau tidak dari risiko)
         COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) AS skor_risiko_terkini,
-        
-        -- Jenis kawalan
         rt.jenis_kawalan,
-        
-        -- Debug flag
         CASE WHEN lt.risiko_id IS NULL THEN true ELSE false END AS tiada_log
 
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
       LEFT JOIN RawatanTerkini rt ON rt.risiko_id = r.risiko_id AND rt.rn = 1
-      ${whereClause}
+      ${whereClause} -- <-- DIUBAH: Guna 'whereClause' baru
       ORDER BY r.risiko_id
     `;
 
     const { rows: risikoData } = await pool.query(mainQuery, params);
 
-    console.log(`✅ Total risiko: ${risikoData.length}`);
+    console.log(`✅ Total risiko (SEMUA STATUS): ${risikoData.length}`);
     
     // Debug
     const risikoTanpaLog = risikoData.filter(r => r.tiada_log);
@@ -117,50 +117,29 @@ router.get("/", verifyToken, async (req, res) => {
     };
 
     const tahapRisikoCount = {
-      "ST": 0,  // Sangat Tinggi
-      "T": 0,   // Tinggi
-      "S": 0,   // Sederhana
-      "R": 0,   // Rendah
-      "N/A": 0  // Untuk "Belum Dinilai"
+      "ST": 0, "T": 0, "S": 0, "R": 0, "N/A": 0
     };
 
     const kategoriRisikoCount = {
-      "Strategik": 0,
-      "Operasi": 0,
-      "Pematuhan / Perundangan": 0,
-      "Kewangan": 0,
-      "Lain-lain / Tiada": 0 // <-- DIUBAH: Untuk kategori null
+      "Strategik": 0, "Operasi": 0, "Pematuhan / Perundangan": 0, "Kewangan": 0, "Lain-lain / Tiada": 0
     };
 
     const jenisKawalanCount = {
-      "Terima": 0,
-      "Kurang": 0,
-      "Elak": 0,
-      "Pindah": 0,
-      "Tiada Rawatan": 0
+      "Terima": 0, "Kurang": 0, "Elak": 0, "Pindah": 0, "Tiada Rawatan": 0
     };
 
     // === 4. Loop pengiraan ===
+    // 'risikoData' kini mengandungi SEMUA risiko
     for (const row of risikoData) {
-      // 4a. Status Pemantauan
-      const status = row.status_pemantauan;
       
+      // 4a. Kira semua status (termasuk 'Tutup')
+      const status = row.status_pemantauan;
       switch (status) {
-        case "Buka":
-          skor.jumlahBuka++;
-          break;
-        case "Sedang Dilaksanakan":
-          skor.jumlahLaksana++;
-          break;
-        case "Pemantauan":
-          skor.jumlahPantau++;
-          break;
-        case "Selesai":
-          skor.jumlahSelesai++;
-          break;
-        case "Tutup":
-          skor.jumlahTutup++;
-          break;
+        case "Buka": skor.jumlahBuka++; break;
+        case "Sedang Dilaksanakan": skor.jumlahLaksana++; break;
+        case "Pemantauan": skor.jumlahPantau++; break;
+        case "Selesai": skor.jumlahSelesai++; break;
+        case "Tutup": skor.jumlahTutup++; break; // <-- Risiko 'Rendah' anda akan dikira di sini
         default:
           console.warn(`⚠️ Status tidak dikenali: "${status}" (risiko ${row.risiko_id})`);
           skor.jumlahBuka++;
@@ -168,26 +147,21 @@ router.get("/", verifyToken, async (req, res) => {
 
       // 4b. Tahap Risiko
       const skorRisiko = row.skor_risiko_terkini;
-      
       if (!skorRisiko || skorRisiko === "null") {
         tahapRisikoCount["N/A"]++; 
-        console.info(`ℹ️ Risiko ${row.risiko_id} dikira sebagai 'Belum Dinilai'.`);
       } else if (tahapRisikoCount[skorRisiko] !== undefined) {
-        tahapRisikoCount[skorRisiko]++;
+        tahapRisikoCount[skorRisiko]++; // <-- Risiko 'Rendah' anda akan dikira di sini
       } else {
         console.warn(`⚠️ Kod skor tidak dikenali: "${skorRisiko}" (risiko ${row.risiko_id})`);
       }
 
       // 4c. Kategori
-      // --- BLOK INI TELAH DIBETULKAN ---
       const kategori = row.kategori;
       if (kategori && kategoriRisikoCount[kategori] !== undefined) {
         kategoriRisikoCount[kategori]++;
       } else {
-        // Jika kategori null, atau tidak dikenali, kira di bawah 'Lain-lain / Tiada'
         kategoriRisikoCount["Lain-lain / Tiada"]++;
-        
-        if (kategori) { // Hanya log amaran jika ia nilai tidak dikenali (bukan null)
+        if (kategori) {
           console.warn(`⚠️ Kategori tidak dikenali: "${kategori}" (risiko ${row.risiko_id}). Dikira sebagai 'Lain-lain / Tiada'.`);
         }
       }
@@ -202,10 +176,9 @@ router.get("/", verifyToken, async (req, res) => {
     }
 
     // === 5. Log debugging ===
-    console.log("📊 Skor Status:", skor);
-    console.log("📊 Tahap Risiko (short code):", tahapRisikoCount);
-    console.log("📊 Kategori:", kategoriRisikoCount);
-    console.log("📊 Jenis Kawalan:", jenisKawalanCount);
+    console.log("📊 Skor Status (Semua Status):", skor);
+    console.log("📊 Tahap Risiko (Semua Status):", tahapRisikoCount);
+    // ...
 
     // === 6. Format data carta dengan label penuh ===
     const tahapRisikoData = Object.entries(tahapRisikoCount)
@@ -223,7 +196,9 @@ router.get("/", verifyToken, async (req, res) => {
       .filter(([_, value]) => value > 0)
       .map(([name, value]) => ({ name, value }));
 
-    // === 7. Top Risks ===
+    // === 7. Top Risks (Untuk Jadual) ===
+    // Amaran: Query ini akan memaparkan risiko 'Buka' SAHAJA
+    // Walaupun carta memaparkan SEMUA risiko. Ini akan jadi tidak selari.
     const topRisksQuery = `
       WITH LogTerkini AS (
         SELECT
@@ -243,25 +218,31 @@ router.get("/", verifyToken, async (req, res) => {
         r.risiko AS nama,
         r.kategori,
         r.bahagian,
-        COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) AS skor_risiko_terkini
+        COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) AS skor_risiko_terkini,
+        COALESCE(lt.status_pemantauan, 'Buka') AS status_pemantauan
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
-      ${whereClause}
-        AND COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) IN ('T', 'ST')
-        AND COALESCE(lt.status_pemantauan, 'Buka') = 'Buka'
+      ${whereClause} -- <-- Guna 'whereClause' (yang kini tiada tapisan status)
       ORDER BY 
         CASE COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko)
           WHEN 'ST' THEN 1
           WHEN 'T' THEN 2
           WHEN 'S' THEN 3
           WHEN 'R' THEN 4
-          ELSE 5
+          ELSE 5 
         END,
         r.risiko_id DESC
-      LIMIT 5
-    `;
+      LIMIT 6
+    `; 
 
     const { rows: topRisks } = await pool.query(topRisksQuery, params);
+
+    // Format skor sebelum hantar ke frontend
+    const formattedTopRisks = topRisks.map(risk => ({
+      ...risk,
+      skor_risiko_terkini: getSkorRisikoLabel(risk.skor_risiko_terkini)
+    }));
+
 
     // === 8. Nama & logo subsidiari ===
     let namaSubsidiari = "Keseluruhan";
@@ -289,7 +270,7 @@ router.get("/", verifyToken, async (req, res) => {
       tahapRisikoData,
       kategoriRisikoData,
       jenisKawalanData,
-      topRisks,
+      topRisks: formattedTopRisks,
       namaSubsidiari,
       logoUrl,
       debug: {
