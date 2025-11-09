@@ -30,7 +30,7 @@ export const login = async (req, res) => {
         subsidiari_id: user.subsidiari_id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "5d" }
     );
 
     res.json({ token, user: { nama: user.nama_penuh, peranan: user.nama_peranan } });
