@@ -20,40 +20,38 @@
   border: 1px solid #e5e7eb;
 }
 
-/* --- PERUBAHAN DI SINI --- */
 .header-left-image {
   display: flex;
-  flex-direction: column; /* 1. Susun secara menegak (gambar di atas, teks di bawah) */
-  align-items: center; /* 2. Pusatkan kedua-duanya */
-  gap: 8px; /* 3. Letak jarak kecil antara gambar dan teks */
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
+
+/* --- PERUBAHAN DI SINI --- */
 .image-placeholder {
-  width: 50px; /* Kekalkan saiz kotak asal */
-  height: 50px; /* Kekalkan saiz kotak asal */
-  background: #e5e7eb;
+  /* width: 50px; */ /* <- DIBUANG */
+  /* height: 50px; */ /* <- DIBUANG */
+  /* background: #e5e7eb; */ /* <- DIBUANG (untuk buang kelabu) */
   border-radius: 4px;
-  /* Buang 'display: flex' sebab kita nak letak <img> */
-  overflow: hidden; /* Pastikan gambar tak terkeluar dari kotak */
+  overflow: hidden;
 }
+
 /* 4. Ini adalah 'magic' untuk scaling gambar */
 .image-placeholder img {
-  width: 100%; /* Lebar gambar ikut saiz kotak (50px) */
-  height: 100%; /* Tinggi gambar ikut saiz kotak (50px) */
+  /* TUKAR: Tetapkan tinggi, biarkan lebar auto */
+  height: 50px; /* Boleh ubah (cth: 40px, 55px) jika perlu */
+  width: auto; /* Ini akan auto-kira lebar (lebih kurang 156px) */
 
-  /* 'contain' akan pastikan SELURUH gambar 1811x579 muat 
-     di dalam kotak 50x50 tanpa herot (ia akan jadi kecil) */
-  object-fit: contain;
-
-  /* (Jika anda mahu ia 'crop' dan penuhi kotak, guna 'object-fit: cover;') */
-
+  /* 'object-fit' tidak diperlukan lagi */
   display: block;
 }
+/* --- TAMAT PERUBAHAN --- */
+
 .image-caption {
   font-weight: 600;
   color: #374151;
-  font-size: 0.75rem; /* Kecilkan sikit teks kapsyen */
+  font-size: 0.75rem;
 }
-/* --- TAMAT PERUBAHAN --- */
 
 .header-right-title {
   text-align: right;
@@ -70,6 +68,7 @@
 }
 
 /* === FILTER BAR (FYP) === */
+/* (Class ini tidak digunakan dalam JSX, tapi dibiarkan jika perlu) */
 .dashboard-filter-bar {
   display: flex;
   gap: 12px;

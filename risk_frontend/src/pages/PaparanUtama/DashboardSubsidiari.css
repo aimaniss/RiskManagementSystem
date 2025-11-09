@@ -1,187 +1,236 @@
-/* === TEMA KORPORAT CLEAN === */
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Latar Belakang & Fon Asas */
-.dashboard-subsidiari {
-  padding: 20px;
-  background-color: #f7f9fa; /* Latar belakang kelabu yang sangat lembut */
-  min-height: 100vh;
-  font-family: "Segoe UI", sans-serif;
-  color: #333; /* Teks kelabu gelap, bukan hitam pekat */
+/* === RANGKA UTAMA === */
+.dashboard-subsidiari-layout {
+  font-family: "Inter", sans-serif;
+  background-color: #f3f4f6;
+  padding: 24px;
 }
 
-/* Butang Tukar Tahun */
-.tahun-toggle {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.tahun-toggle button {
+/* === HEADER === */
+.dashboard-subsidiari-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: #ffffff;
-  border: 1px solid #dde2e6; /* Sempadan kelabu lembut */
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+.dashboard-subsidiari-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- PERUBAHAN DI SINI --- */
+.dashboard-subsidiari-image-placeholder {
+  /* width: 50px; */ /* <- DIBUANG */
+  /* height: 50px; */ /* <- DIBUANG */
+  /* background: #e5e7eb; */ /* <- DIBUANG (untuk buang kelabu) */
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dashboard-subsidiari-image-placeholder img {
+  /* TUKAR: Tetapkan tinggi, biarkan lebar auto */
+  height: 50px; /* Boleh ubah jika perlu */
+  width: auto; /* Ini akan auto-kira lebar */
+  display: block;
+}
+/* --- TAMAT PERUBAHAN --- */
+
+/* Class ini (.dashboard-subsidiari-image-caption)
+  tidak lagi digunakan oleh JSX, tetapi ia tidak 
+  mengganggu jika dibiarkan di sini.
+*/
+.dashboard-subsidiari-image-caption {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.75rem;
+}
+
+.dashboard-subsidiari-header-right {
+  text-align: right;
+}
+.dashboard-subsidiari-title-main {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.dashboard-subsidiari-title-sub {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0074c8;
+}
+
+/* === FILTER BAR (FYP) === */
+/* (Class ini tidak digunakan dalam JSX, tapi dibiarkan jika perlu) */
+.dashboard-subsidiari-filter-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+.dashboard-subsidiari-filter-bar label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+.dashboard-subsidiari-filter-bar select {
+  font-family: "Inter", sans-serif;
+  font-size: 0.875rem;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  padding: 6px 14px;
-  margin: 0 4px;
-  cursor: pointer;
-  color: #34495e; /* Teks kelabu-biru */
-  font-weight: 600;
-  transition: all 0.2s ease;
+  background-color: #fff;
 }
 
-.tahun-toggle button.active {
-  background: #0a4f8a; /* Biru korporat utama */
-  color: #ffffff;
-  border-color: #0a4f8a;
+/* === KAD SKOR (VERSI 5 KAD) === */
+.dashboard-subsidiari-scorecard-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-.tahun-toggle button:hover:not(.active) {
-  background: #eaf2f8; /* Latar biru lembut semasa hover */
-  border-color: #c4d7e6;
+/* Responsif untuk 5 kad pada skrin kecil */
+@media (max-width: 1200px) {
+  .dashboard-subsidiari-scorecard-container {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
 }
 
-/* Kontena Perincian */
-.perincian-section {
+.dashboard-subsidiari-scorecard-box {
+  display: flex;
+  align-items: center;
   background: #ffffff;
-  border-radius: 8px; /* Bulat sedikit */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05); /* Bayang yang lebih lembut */
-  border: 1px solid #e8eef3; /* Sempadan yang sangat halus */
-}
-
-.no-rujukan-select {
-  margin-bottom: 20px;
-}
-
-.no-rujukan-select label {
-  font-weight: 600;
-  color: #34495e;
-}
-
-.no-rujukan-select select {
-  margin-left: 8px;
-  padding: 6px 10px;
-  border-radius: 5px;
-  border: 1px solid #dde2e6;
-}
-
-.empty-note {
+  gap: 16px;
+  flex-direction: column;
   text-align: center;
-  color: #666;
-  font-style: italic;
-  padding: 20px;
 }
 
-/* --- Gaya Jadual Perincian (Korporat) --- */
+/* Kembali ke paparan sisi-ke-sisi pada skrin besar */
+@media (min-width: 1200px) {
+  .dashboard-subsidiari-scorecard-box {
+    flex-direction: row;
+    text-align: left;
+  }
+}
 
-.perincian-table-container {
+.dashboard-subsidiari-scorecard-icon {
+  flex-shrink: 0;
+}
+.dashboard-subsidiari-scorecard-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.dashboard-subsidiari-scorecard-content {
+  flex-grow: 1;
+}
+.dashboard-subsidiari-scorecard-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+.dashboard-subsidiari-scorecard-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* === GRID CARTA (FYP) === */
+.dashboard-subsidiari-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Kotak untuk setiap carta */
+.dashboard-subsidiari-section-box {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tajuk Dalam Kad */
+.dashboard-subsidiari-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+/* Pemegang carta (recharts) */
+.dashboard-subsidiari-chart-wrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dashboard-subsidiari-chart-placeholder {
   width: 100%;
+  flex: 1;
+  min-height: 300px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-style: italic;
+  padding: 16px;
+  text-align: center;
+}
+
+/* === KOTAK JADUAL (FYP) === */
+.dashboard-subsidiari-table-container {
+  margin-bottom: 24px;
+}
+.dashboard-subsidiari-table-wrapper {
   overflow-x: auto;
 }
-
-.perincian-table {
+.dashboard-subsidiari-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
 }
-
-.perincian-table th,
-.perincian-table td {
-  border: 1px solid #e8eef3; /* Sempadan kelabu sangat lembut */
-  padding: 12px;
-  vertical-align: top;
-  word-wrap: break-word;
-}
-
-/* Header Utama */
-.perincian-table .header-perincian {
-  background-color: #0a4f8a; /* Biru korporat utama */
-  color: white;
+.dashboard-subsidiari-table th,
+.dashboard-subsidiari-table td {
+  padding: 12px 16px;
   text-align: left;
-  font-size: 16px;
-  border-color: #0a4f8a;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
 }
-
-.perincian-table .header-norujukan {
-  background-color: #34495e; /* Kelabu-biru gelap (profesional) */
-  color: white;
-  text-align: right;
-  font-size: 16px;
-  border-color: #34495e;
-}
-
-/* Info Atas */
-.perincian-table .col-label {
-  background-color: #f8f9f9; /* Latar kelabu lembut untuk label */
+.dashboard-subsidiari-table th {
+  background-color: #f9fafb;
   font-weight: 600;
-  width: 15%;
+  color: #374151;
 }
-.perincian-table .col-data {
-  width: 25%;
+.dashboard-subsidiari-table td {
+  color: #4b5563;
 }
-
-.perincian-table .col-kakitangan-label,
-.perincian-table .col-kakitangan-data {
-  text-align: center;
-  vertical-align: middle;
-  color: white;
-}
-
-.perincian-table .col-kakitangan-label {
-  background-color: #34495e; /* Kelabu-biru gelap */
-  font-size: 14px;
-  width: 20%;
-}
-
-.perincian-table .col-kakitangan-data {
-  background-color: #5dadec; /* Biru sederhana yang lebih cerah */
-  font-size: 14px;
-  font-weight: bold;
-}
-
-/* Pemisah */
-.perincian-table .divider {
-  height: 5px; /* Lebih nipis */
-  padding: 0;
-  background-color: #0a4f8a; /* Biru korporat utama */
-  border: none;
-}
-
-/* Header Jadual Bawah */
-.perincian-table .header-row th {
-  background-color: #0a4f8a; /* Biru korporat utama */
-  color: white;
-  text-align: center;
-  font-size: 13px;
-  vertical-align: middle;
-}
-
-/* Data Jadual Bawah */
-.perincian-table .data-row td {
-  font-size: 14px;
-}
-
-.perincian-table .data-row pre {
-  white-space: pre-wrap;
-  margin: 0;
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-/* Warna Skor Risiko (Lebih Kemas) */
-.perincian-table .col-skor {
-  text-align: center;
-  vertical-align: middle;
-  font-size: 24px;
-  font-weight: bold;
-  width: 10%;
-}
-
-.perincian-table .col-skor-penilaian {
-  background-color: #f39c12; /* Amber/Oren - masih jelas untuk amaran */
-  color: #fff;
-}
-
-.perincian-table .col-skor-pemantauan {
-  background-color: #fad7a0; /* Kuning/Krim lembut - tidak terlalu terang */
-  color: #333; /* Teks gelap untuk kontras */
+.dashboard-subsidiari-table tbody tr:last-child td {
+  border-bottom: none;
 }

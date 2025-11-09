@@ -1,181 +1,180 @@
-import { useState } from "react";
-import "./DashboardSubsidiari.css";
+import React from "react";
+// Import fail CSS baru
+import "./DashboardSubsidiari.css"; 
+// Import ikon untuk 5 status
+import {
+  File, // Buka
+  RefreshCw, // Sedang Dilaksanakan
+  Eye, // Pemantauan
+  Check, // Selesai
+  CheckCircle2, // Tutup
+} from "lucide-react";
 
-export default function DashboardSubsidiari() {
-  // Data dummy dikemaskini untuk sepadan dengan gambar
-  const allData = [
+// NOTA: Tiada lagi import logo di sini
+
+/**
+ * Komponen Papan Pemuka untuk Subsidiari.
+ * Tiada lagi filter kategori.
+ */
+export default function DashboardSubsidiari({
+  data, // Data (termasuk logoUrl) akan datang dari 'props' ini
+}) {
+  // === Data Dummy untuk 5 Kad Skor (gantikan dengan data.skor) ===
+  const skorData = [
     {
-      tahun: "2024",
-      noRujukan: "UKMSC/0723/01",
-      bahagian: "SUMBER MANUSIA",
-      kategori: "STRATEGIK",
-      status: "Sedang Dilaksanakan",
-      skorPenilaian: "T",
-      jenisKawalan: "Kurang",
-      pelanTindakan:
-        "Implement Employee Retention Strategies\n1. Competitive Salary\n2. Recognize & Reward Employees\n3. Build Employee Engagement\n4. Reduce Employee Burnout\n5. Employee Wellness (Physical/Mental)\n6. Personal Development (Career Growth)",
-      skorPemantauan: "S",
-      kakitanganBw: "Ketua Sumber Manusia UKMSC/JKMH", // Data baru
-      pelanTindakanPemantauan:
-        "1. Kesejahteraan Kakitangan (Fizikal/Mental)\n- UKMSC akan mengadakan bengkel yang dijadualkan pada bulan Julai 2025\n2. Memperbesarkan Talent Pool dengan kerjasama kolej atau universiti tempatan", // Data baru
+      label: "Jumlah Risiko Buka",
+      value: data?.skor?.jumlahBuka || 12,
+      icon: File,
+      color: "#dc3545", // Merah
     },
     {
-      tahun: "2025",
-      noRujukan: "UKMSC/0724/02",
-      bahagian: "KEWANGAN",
-      kategori: "OPERASI",
-      status: "Tutup",
-      skorPenilaian: "S",
-      jenisKawalan: "Terima",
-      pelanTindakan: "1. Audit Internal\n2. Pemantauan vendor",
-      skorPemantauan: "S",
-      kakitanganBw: "Ketua Pegawai Kewangan", // Data tambahan
-      pelanTindakanPemantauan: "1. Semakan audit suku tahunan", // Data tambahan
+      label: "Sedang Dilaksanakan",
+      value: data?.skor?.jumlahLaksana || 18,
+      icon: RefreshCw,
+      color: "#ffc107", // Kuning
     },
     {
-      tahun: "2025",
-      noRujukan: "UKMSC/0724/03",
-      bahagian: "SUMBER MANUSIA",
-      kategori: "STRATEGIK",
-      status: "Sedang Dilaksanakan",
-      skorPenilaian: "T",
-      jenisKawalan: "Kurang",
-      pelanTindakan: "1. Kursus Latihan",
-      skorPemantauan: "S",
-      kakitanganBw: "Ketua Sumber Manusia UKMSC/JKMH", // Data tambahan
-      pelanTindakanPemantauan: "1. Modul latihan baru dibangunkan", // Data tambahan
+      label: "Jumlah Risiko Pemantauan",
+      value: data?.skor?.jumlahPantau || 5,
+      icon: Eye,
+      color: "#0074c8", // Biru
+    },
+    {
+      label: "Jumlah Risiko Selesai",
+      value: data?.skor?.jumlahSelesai || 10,
+      icon: Check,
+      color: "#17a2b8", // Teal
+    },
+    {
+      label: "Jumlah Risiko Tutup",
+      value: data?.skor?.jumlahTutup || 15,
+      icon: CheckCircle2,
+      color: "#28a745", // Hijau
     },
   ];
 
-  const [tahunFokus, setTahunFokus] = useState("2024");
-  const [selectedNoRujukan, setSelectedNoRujukan] = useState("UKMSC/0723/01"); // Set default untuk tunjuk data
-
-  const dataTahun = allData.filter((item) => item.tahun === tahunFokus);
-  const selectedData = dataTahun.find(
-    (item) => item.noRujukan === selectedNoRujukan
-  );
+  // === Data Dummy untuk Jadual ===
+  const topRisksData = data?.topRisks || [
+    { noRujukan: "R001", nama: "Isu server down", kategori: "Operasi", bahagian: "Unit IT" },
+    { noRujukan: "R002", nama: "Kekurangan dana", kategori: "Kewangan", bahagian: "Unit Kewangan" },
+    { noRujukan: "R003", nama: "Gagal patuhi akta", kategori: "Pematuhan / Perundangan", bahagian: "Unit Undang-Undang" },
+    { noRujukan: "R004", nama: "Sasaran jualan tidak capai", kategori: "Strategik", bahagian: "Unit Pemasaran" },
+  ];
 
   return (
-    <div className="dashboard-subsidiari">
-      {/* Pilih Tahun */}
-      <div className="tahun-toggle">
-        <button
-          className={tahunFokus === "2024" ? "active" : ""}
-          onClick={() => {
-            setTahunFokus("2024");
-            setSelectedNoRujukan("");
-          }}
-        >
-          2024
-        </button>
-        <button
-          className={tahunFokus === "2025" ? "active" : ""}
-          onClick={() => {
-            setTahunFokus("2025");
-            setSelectedNoRujukan("");
-          }}
-        >
-          2025
-        </button>
+    <div className="dashboard-subsidiari-layout">
+      {/* Header */}
+      <div className="dashboard-subsidiari-header">
+        <div className="dashboard-subsidiari-header-left">
+          <div className="dashboard-subsidiari-image-placeholder">
+            {/* TUKAR: 
+              - 'src' kini menggunakan data.logoUrl dari props.
+              - 'alt' kini menggunakan data.namaSubsidiari (andaian) 
+              - 'fallback' (?) ditambah jika logoUrl tiada.
+            */}
+            <img 
+              src={data?.logoUrl || "path/ke/logo/default.png"} 
+              alt={data?.namaSubsidiari || "Logo Subsidiari"} 
+            />
+          </div>
+          {/* Kapsyen telah dibuang seperti permintaan sebelum ini */}
+        </div>
+        <div className="dashboard-subsidiari-header-right">
+          <div className="dashboard-subsidiari-title-main">Dashboard Pengurusan Risiko</div>
+          {/* TUKAR: Tajuk ini kini dinamik dari data */}
+          <div className="dashboard-subsidiari-title-sub">
+            {data?.namaSubsidiari || "Status Subsidiari"}
+          </div> 
+        </div>
       </div>
 
-      {/* Perincian */}
-      <div className="perincian-section">
-        <h3>Perincian Risiko ({tahunFokus})</h3>
-        <div className="no-rujukan-select">
-          <label>Pilih No Rujukan:</label>
-          <select
-            value={selectedNoRujukan}
-            onChange={(e) => setSelectedNoRujukan(e.target.value)}
-          >
-            <option value="">-- Pilih No Rujukan --</option>
-            {dataTahun.map((item) => (
-              <option key={item.noRujukan} value={item.noRujukan}>
-                {item.noRujukan}
-              </option>
-            ))}
-          </select>
+      {/* --- FILTER BAR TELAH DIBUANG --- */}
+
+      {/* ===== SUSUN ATUR BARU (FYP) ===== */}
+
+      {/* --- 1. KAD SKOR (VERSI 5 KAD) --- */}
+      <div className="dashboard-subsidiari-scorecard-container">
+        {skorData.map((item, index) => {
+          const IconComponent = item.icon;
+          return (
+            <div key={index} className="dashboard-subsidiari-scorecard-box">
+              <div className="dashboard-subsidiari-scorecard-icon">
+                <IconComponent style={{ color: item.color }} />
+              </div>
+              <div className="dashboard-subsidiari-scorecard-content">
+                <div className="dashboard-subsidiari-scorecard-value">{item.value}</div>
+                <div className="dashboard-subsidiari-scorecard-label">{item.label}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* --- 2. GRID CARTA (KINI 3 CARTA) --- */}
+      <div className="dashboard-subsidiari-charts-grid">
+        {/* Carta 1: Tahap Risiko */}
+        <div className="dashboard-subsidiari-section-box">
+          <h4 className="dashboard-subsidiari-section-title">Tahap Risiko</h4>
+          <div className="dashboard-subsidiari-chart-wrapper">
+            <div className="dashboard-subsidiari-chart-placeholder">
+              [Carta Bar/Donut Recharts untuk Tahap Risiko]
+            </div>
+          </div>
         </div>
 
-        {selectedData ? (
-          <div className="perincian-table-container">
-            <table className="perincian-table">
+        {/* Carta 2: Kategori Risiko */}
+        <div className="dashboard-subsidiari-section-box">
+          <h4 className="dashboard-subsidiari-section-title">Kategori Risiko</h4>
+          <div className="dashboard-subsidiari-chart-wrapper">
+            <div className="dashboard-subsidiari-chart-placeholder">
+              [Carta Bar Recharts untuk Kategori]
+            </div>
+          </div>
+        </div>
+
+        {/* Carta 3: Jenis Kawalan */}
+        <div className="dashboard-subsidiari-section-box">
+          <h4 className="dashboard-subsidiari-section-title">Jenis Kawalan</h4>
+          <div className="dashboard-subsidiari-chart-wrapper">
+            <div className="dashboard-subsidiari-chart-placeholder">
+              [Carta Pai Recharts untuk Jenis Kawalan]
+            </div>
+          </div>
+        </div>
+        
+      </div>
+
+      {/* --- 3. JADUAL RISIKO TERATAS --- */}
+      <div className="dashboard-subsidiari-table-container">
+        <div className="dashboard-subsidiari-section-box">
+          <h4 className="dashboard-subsidiari-section-title">
+            Senarai Risiko Teratas (Kritikal & "Buka")
+          </h4>
+          <div className="dashboard-subsidiari-table-wrapper">
+            <table className="dashboard-subsidiari-table">
               <thead>
                 <tr>
-                  <th className="header-perincian" colSpan="3">
-                    PERINCIAN:
-                  </th>
-                  <th className="header-norujukan" colSpan="2">
-                    {selectedData.noRujukan}
-                  </th>
+                  <th>No Rujukan</th>
+                  <th>Nama Risiko</th>
+                  <th>Kategori</th>
+                  <th>Bahagian/Unit</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Bahagian Info Atas */}
-                <tr>
-                  <td className="col-label">
-                    <strong>BAHAGIAN/UNIT</strong>
-                  </td>
-                  <td className="col-data">{selectedData.bahagian}</td>
-                  <td className="col-kakitangan-label" rowSpan="3">
-                    <strong>KAKITANGAN BERTANGGUNGJAWAB</strong>
-                  </td>
-                  <td className="col-kakitangan-data" rowSpan="3" colSpan="2">
-                    {selectedData.kakitanganBw}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="col-label">
-                    <strong>KATEGORI RISIKO</strong>
-                  </td>
-                  <td className="col-data">{selectedData.kategori}</td>
-                </tr>
-                <tr>
-                  <td className="col-label">
-                    <strong>STATUS PEMANTAUAN</strong>
-                  </td>
-                  <td className="col-data">{selectedData.status}</td>
-                </tr>
-
-                {/* Pemisah */}
-                <tr>
-                  <td className="divider" colSpan="5"></td>
-                </tr>
-
-                {/* Bahagian Header Jadual Bawah */}
-                <tr className="header-row">
-                  <th>SKOR PENILAIAN RISIKO</th>
-                  <th>PELAN TINDAKAN [Rawatan Risiko]</th>
-                  <th>JENIS KAWALAN</th>
-                  <th>PELAN TINDAKAN [Pemantauan 2025]</th>
-                  <th>SKOR PEMANTAUAN RISIKO 2025</th>
-                </tr>
-
-                {/* Bahagian Data Jadual Bawah */}
-                <tr className="data-row">
-                  <td className="col-skor col-skor-penilaian">
-                    {selectedData.skorPenilaian}
-                  </td>
-                  <td>
-                    <pre>{selectedData.pelanTindakan}</pre>
-                  </td>
-                  <td>{selectedData.jenisKawalan}</td>
-                  <td>
-                    <pre>{selectedData.pelanTindakanPemantauan}</pre>
-                  </td>
-                  <td className="col-skor col-skor-pemantauan">
-                    {selectedData.skorPemantauan}
-                  </td>
-                </tr>
+                {topRisksData.map((risk, index) => (
+                  <tr key={index}>
+                    <td>{risk.noRujukan}</td>
+                    <td>{risk.nama}</td>
+                    <td>{risk.kategori}</td>
+                    <td>{risk.bahagian}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="empty-note">
-            Sila pilih No Rujukan untuk lihat maklumat.
-          </p>
-        )}
+        </div>
       </div>
+
     </div>
   );
 }

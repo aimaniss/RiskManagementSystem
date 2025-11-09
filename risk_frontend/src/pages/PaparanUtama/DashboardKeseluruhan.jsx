@@ -9,18 +9,16 @@ import {
   CheckCircle2, // Tutup
 } from "lucide-react";
 
-// NOTA: Recharts akan diimport di sini nanti, cth:
-// import { PieChart, BarChart, ... } from 'recharts';
+// TUKAR: Import logo anda dari folder assets
+// Nota: Kita guna '/' untuk 'import path', walaupun dalam Windows
+import ukmhLogo from "../../assets/images/Light Background/UKMH_light.png";
 
 /**
  * Komponen Papan Pemuka FYP yang lebih ringkas.
- * Ia hanya menerima 'data' semasa, bukan untuk perbandingan.
+ * Tiada lagi filter kategori.
  */
 export default function DashboardKeseluruhan({
-  data, // Semua data akan datang dari 'props' ini (cth: data.skor, data.tahapRisiko, dll)
-  selectedKategori,
-  onKategoriChange,
-  kategoriOptions = [], // Sebaiknya, hantar 4 kategori ini sebagai props
+  data, // Semua data akan datang dari 'props' ini
 }) {
   // === Data Dummy untuk 5 Kad Skor (gantikan dengan data.skor) ===
   const skorData = [
@@ -56,7 +54,7 @@ export default function DashboardKeseluruhan({
     },
   ];
 
-  // === TUKAR: Data Dummy Jadual guna 4 kategori anda ===
+  // === Data Dummy untuk Jadual ===
   const topRisksData = data?.topRisks || [
     { noRujukan: "R001", nama: "Isu server down", kategori: "Operasi", bahagian: "Unit IT" },
     { noRujukan: "R002", nama: "Kekurangan dana", kategori: "Kewangan", bahagian: "Unit Kewangan" },
@@ -69,14 +67,11 @@ export default function DashboardKeseluruhan({
       {/* Header (Logo dikekalkan, Tajuk dipermudahkan) */}
       <div className="dashboard-header">
         <div className="header-left-image">
-          {/* --- PERUBAHAN DI SINI --- */}
           <div className="image-placeholder">
-            {/* Gantikan 'src' dengan path logo anda */}
-            <img src="path/ke/logo-anda-1811x579.png" alt="Logo Unit" />
+            {/* TUKAR: Guna pemboleh ubah logo yang diimport */}
+            <img src={ukmhLogo} alt="Logo UKMH" />
           </div>
-          {/* Teks kini akan dipaparkan di bawah oleh CSS */}
           <div className="image-caption">Unit Pematuhan & Pengurusan Risiko</div>
-          {/* --- TAMAT PERUBAHAN --- */}
         </div>
         <div className="header-right-title">
           <div className="comparison-title">Dashboard Pengurusan Risiko</div>
@@ -84,34 +79,7 @@ export default function DashboardKeseluruhan({
         </div>
       </div>
 
-      {/* Filter Bar Versi FYP */}
-      <div className="dashboard-filter-bar">
-        <label htmlFor="kategori-filter">Pilih Kategori Risiko:</label>
-        <select
-          id="kategori-filter"
-          value={selectedKategori}
-          onChange={(e) => onKategoriChange(e.target.value)}
-        >
-          <option value="semua">Tunjuk Semua</option>
-          {/* Jika anda hantar 'kategoriOptions' sebagai props, ia akan guna props itu */}
-          {kategoriOptions.map((kat) => (
-            <option key={kat.value} value={kat.value}>
-              {kat.label}
-            </option>
-          ))}
-          
-          {/* TUKAR: Data Dummy Filter guna 4 kategori anda */}
-          {/* Ini hanya akan muncul jika 'kategoriOptions' kosong */}
-          {kategoriOptions.length === 0 && (
-            <>
-              <option value="strategik">Strategik</option>
-              <option value="operasi">Operasi</option>
-              <option value="pematuhan">Pematuhan / Perundangan</option>
-              <option value="kewangan">Kewangan</option>
-            </>
-          )}
-        </select>
-      </div>
+      {/* --- FILTER BAR TELAH DIBUANG --- */}
 
       {/* ===== SUSUN ATUR BARU (FYP) ===== */}
 
@@ -135,14 +103,12 @@ export default function DashboardKeseluruhan({
 
       {/* --- 2. GRID CARTA (KINI 3 CARTA) --- */}
       <div className="charts-grid-container">
-        {/* Carta 1: Tahap Risiko (YANG INI PENTING) */}
+        {/* Carta 1: Tahap Risiko */}
         <div className="section-box">
           <h4 className="section-title-normal">Tahap Risiko</h4>
           <div className="chart-placeholder-wrapper">
             <div className="chart-placeholder">
-              [Carta Bar/Donut Recharts untuk Tahap Risiko (Tinggi, Sederhana,
-              Rendah)]
-              {/* Cth: <Recharts... data={data.tahapRisikoData} /> */}
+              [Carta Bar/Donut Recharts untuk Tahap Risiko]
             </div>
           </div>
         </div>
@@ -152,8 +118,7 @@ export default function DashboardKeseluruhan({
           <h4 className="section-title-normal">Kategori Risiko</h4>
           <div className="chart-placeholder-wrapper">
             <div className="chart-placeholder">
-              [Carta Bar Recharts untuk Kategori (Strategik, Operasi, Pematuhan, Kewangan)]
-              {/* Cth: <Recharts... data={data.kategoriRisikoData} /> */}
+              [Carta Bar Recharts untuk Kategori]
             </div>
           </div>
         </div>
@@ -163,9 +128,7 @@ export default function DashboardKeseluruhan({
           <h4 className="section-title-normal">Jenis Kawalan</h4>
           <div className="chart-placeholder-wrapper">
             <div className="chart-placeholder">
-              [Carta Pai Recharts untuk Jenis Kawalan (Cth: Kurang Berkesan vs
-              Berkesan)]
-              {/* Cth: <Recharts... data={data.jenisKawalanData} /> */}
+              [Carta Pai Recharts untuk Jenis Kawalan]
             </div>
           </div>
         </div>
@@ -190,7 +153,7 @@ export default function DashboardKeseluruhan({
               </thead>
               <tbody>
                 {topRisksData.map((risk, index) => (
-                  <tr key={index}> {/* Selamat jika noRujukan tidak unik */}
+                  <tr key={index}>
                     <td>{risk.noRujukan}</td>
                     <td>{risk.nama}</td>
                     <td>{risk.kategori}</td>
@@ -203,7 +166,6 @@ export default function DashboardKeseluruhan({
         </div>
       </div>
 
-      {/* ===== TAMAT SUSUN ATUR BARU ===== */}
     </div>
   );
 }

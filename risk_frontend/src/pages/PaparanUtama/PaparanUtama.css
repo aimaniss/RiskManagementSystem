@@ -1,3 +1,5 @@
+/* Fail CSS ini kebanyakannya sama, hanya ubah suai kecil pada .filter-buttons */
+
 .PaparanUtama {
   padding: 20px;
   font-family: "Roboto", sans-serif;
@@ -5,7 +7,7 @@
 
 .PaparanUtama-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Ini meletakkan butang ke hujung kanan */
   align-items: center;
   margin-bottom: 12px;
 }
@@ -23,7 +25,12 @@
   border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-weight: 600; /* Tambahan kecil */
 }
+
+/* Bahagian CSS (.PaparanUtama-boxes, .boxes-grid, .box-card, .comparison-chart) 
+  dibiarkan seperti asal, kerana anda mungkin menggunakannya nanti. 
+*/
 
 .PaparanUtama-boxes {
   background: #f1f5f9;
@@ -61,7 +68,7 @@
 .box-card {
   background: #cbd5e1;
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   padding: 20px;
   min-height: 100px;
   display: flex;
@@ -88,17 +95,18 @@
   background: #fff;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 
+/* === CSS MODAL === */
 .filter-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
@@ -107,12 +115,12 @@
 }
 
 .filter-modal {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
   padding: 30px;
   border-radius: 20px;
   min-width: 400px;
   max-width: 90%;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
 }
 
@@ -131,6 +139,7 @@
   gap: 4px;
 }
 
+/* CSS untuk filter-grid dikekalkan (jika anda mahu tambah filter lain nanti) */
 .filter-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -144,17 +153,21 @@
   gap: 12px;
 }
 
+/* TUKAR: Stail butang kini menggunakan class name, bukan :first-child */
 .filter-buttons button {
   padding: 10px 20px;
   border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.filter-buttons button:first-child {
+.filter-buttons .btn-cancel {
   border: 1px solid #ccc;
   background: #fff;
+  color: #333;
 }
 
-.filter-buttons button:last-child {
+.filter-buttons .btn-apply {
   border: none;
   background: #2563eb;
   color: #fff;
