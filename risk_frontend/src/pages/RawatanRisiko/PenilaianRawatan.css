@@ -94,15 +94,15 @@
   min-width: 1000px;
 }
 
-/* Gaya Header Diseragamkan & Isu Garisan Dibetulkan */
+/* ✅ HEADER TABLE UPPERCASE */
 .pr-risiko-table th {
   background-color: #e0f2fe;
   color: #005fa3;
   font-weight: 700;
   font-size: 12px;
-  text-transform: none;
-  letter-spacing: 0;
-  text-align: left; /* Default alignment */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
   padding: 8px 10px;
   border-bottom: 1px solid #e5e7eb;
   white-space: nowrap;
@@ -127,12 +127,11 @@
   background-color: #e0f2fe;
 }
 
-/* Peraturan CSS untuk .pr-center */
+/* Peraturan CSS untuk center alignment */
 .pr-risiko-table td.pr-center {
   text-align: center;
 }
 
-/* Tambah peraturan BARU ini untuk header */
 .pr-risiko-table th.pr-center {
   text-align: center;
 }
@@ -147,22 +146,18 @@
   border-right: 1px solid #e5e7eb;
 }
 
-/* === PENGURUSAN LEBAR LAJUR MAKLUMAT RISIKO === */
-
-/* Lajur 1: BIL. */
+/* === PENGURUSAN LEBAR LAJUR === */
 .pr-risiko-table th:nth-child(1),
 .pr-risiko-table tr td:nth-child(1) {
   width: 30px;
   min-width: 30px;
 }
 
-/* Lajur 2: No Rujukan */
 .pr-risiko-table th:nth-child(2),
 .pr-risiko-table tr td:nth-child(2) {
   min-width: 100px;
 }
 
-/* Lajur 3: Tahun/Separuh Tahun */
 .pr-risiko-table th:nth-child(3) {
   line-height: 1.2;
   text-align: center;
@@ -174,7 +169,6 @@
   text-align: center;
 }
 
-/* Lajur 4 & 5: Subsidiari, Kategori Risiko */
 .pr-risiko-table th:nth-child(4),
 .pr-risiko-table tr td:nth-child(4),
 .pr-risiko-table th:nth-child(5),
@@ -182,51 +176,42 @@
   min-width: 90px;
 }
 
-/* Lajur 6: Bahagian/Unit */
 .pr-risiko-table th:nth-child(6),
 .pr-risiko-table tr td:nth-child(6) {
   min-width: 80px;
 }
 
-/* Lajur 7: Risiko (Perlu ruang paling lebar) */
 .pr-risiko-table th:nth-child(7),
 .pr-risiko-table tr td:nth-child(7) {
   min-width: 180px;
   width: auto;
 }
 
-/* SEMPADAN PEMISAH MENGGUNAKAN KELAS */
 .pr-risiko-table th.pr-group-divider,
 .pr-risiko-table td.pr-group-divider {
   border-right: 1px solid #e5e7eb;
 }
 
-/* === PENGURUSAN LEBAR LAJUR RAWATAN === */
-.pr-risiko-table.rawatan-active {
-  /* Lajur 8: Skor Risiko */
-  & th:nth-child(8),
-  & tr td:nth-child(8) {
-    width: 70px;
-    min-width: 70px;
-  }
-  /* Lajur 9: Status Risiko */
-  & th:nth-child(9),
-  & tr td:nth-child(9) {
-    width: 60px;
-    min-width: 60px;
-  }
-  /* Lajur 10: Status Rawatan */
-  & th:nth-child(10),
-  & tr td:nth-child(10) {
-    width: 150px;
-    min-width: 150px;
-  }
-  /* Lajur 11: Tindakan */
-  & th:nth-child(11),
-  & tr td:nth-child(11) {
-    width: 60px;
-    min-width: 60px;
-  }
+/* === RAWATAN === */
+.pr-risiko-table.rawatan-active th:nth-child(8),
+.pr-risiko-table.rawatan-active tr td:nth-child(8) {
+  width: 70px;
+  min-width: 70px;
+}
+.pr-risiko-table.rawatan-active th:nth-child(9),
+.pr-risiko-table.rawatan-active tr td:nth-child(9) {
+  width: 60px;
+  min-width: 60px;
+}
+.pr-risiko-table.rawatan-active th:nth-child(10),
+.pr-risiko-table.rawatan-active tr td:nth-child(10) {
+  width: 150px;
+  min-width: 150px;
+}
+.pr-risiko-table.rawatan-active th:nth-child(11),
+.pr-risiko-table.rawatan-active tr td:nth-child(11) {
+  width: 60px;
+  min-width: 60px;
 }
 
 /* Kotak Skor Risiko/Status */
@@ -242,12 +227,12 @@
   white-space: nowrap;
 }
 
-/* 🌟 KEMASKINI: Tambah align-items: center 🌟 */
+/* ACTION BUTTONS */
 .pr-actions {
   display: flex;
   gap: 6px;
   justify-content: center;
-  align-items: center; /* Tambah ini untuk jajaran vertikal */
+  align-items: center;
 }
 
 .pr-btn-action {
@@ -268,7 +253,6 @@
   color: #0074c8;
   background: #e0f2fe;
 }
-
 .pr-btn-edit:hover {
   background: #0074c8;
   color: white;
@@ -278,7 +262,6 @@
   color: #16a34a;
   background: #dcfce7;
 }
-
 .pr-btn-add:hover {
   background: #16a34a;
   color: white;

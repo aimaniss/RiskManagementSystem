@@ -248,7 +248,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                 </div>
                                 <div className="penilaian-info-row" style={{ marginTop: '0px' }}>
                                     <div className="penilaian-input-group full-width">
-                                        <label className="penilaian-label">Subsidiari:</label>
+                                        <label className="penilaian-label">Syarikat:</label>
                                         <input readOnly value={subsidiariName} className="penilaian-input" />
                                     </div>
                                 </div>
