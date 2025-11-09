@@ -239,7 +239,7 @@ function PenilaianDanRawatan() {
             <div className="pr-filter-container">
                 <input type="text" placeholder="Cari No Rujukan..." value={search} onChange={e=>setSearch(e.target.value)} />
                 <select value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
-                    <option value="">-- Semua Subsidiari --</option>
+                    <option value="">-- Semua Syarikat --</option>
                     {subsidiariList.map(s=><option key={s.subsidiari_id} value={s.nama_subsidiari}>{s.nama_subsidiari}</option>)}
                 </select>
                 <select value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
@@ -273,7 +273,7 @@ function PenilaianDanRawatan() {
                                 <tr>
                                     <th>NO RUJUKAN</th>
                                     <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                    <th>Subsidiari</th><th>Kategori Risiko</th> 
+                                    <th>Syarikat</th><th>Kategori Risiko</th> 
                                     <th>Bahagian/Unit</th>
                                     <th className="pr-group-divider">Risiko</th>
                                     <th className="pr-center">Status Penilaian</th> 
@@ -291,7 +291,7 @@ function PenilaianDanRawatan() {
                                 <tr>
                                     <th>No Rujukan</th>
                                     <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                    <th>Subsidiari</th><th>Kategori Risiko</th>
+                                    <th>Syarikat</th><th>Kategori Risiko</th>
                                     <th>Bahagian/Unit</th><th>Risiko</th>
                                     
                                     <th className="pr-center">Skor Risiko</th> 

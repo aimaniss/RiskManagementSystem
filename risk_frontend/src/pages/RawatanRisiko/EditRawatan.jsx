@@ -265,7 +265,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                                 </span>
                             </div>
                             <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Subsidiari:</span>
+                                <span className="rawatan-label-inline">Syarikat:</span>
                                 <span className="rawatan-data-inline">{formData.nama_subsidiari || "-"}</span>
                             </div>
                         </div>
