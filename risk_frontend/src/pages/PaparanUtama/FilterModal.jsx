@@ -1,35 +1,26 @@
-import React, { useState } from "react";
-// Anda perlukan CSS untuk modal ini, contoh:
-// import "./FilterModal.css";
+// FilterModal.jsx (updated)
+import React, { useState, useEffect } from "react";
+import "./PaparanUtama.css";
 
-export default function FilterModal({ filterValues, setFilterValues, setShowModal }) {
-  
-  // 1. Guna state sementara untuk uruskan pilihan dalam modal
-  // Ini membenarkan pengguna klik "Cancel" tanpa menyimpan perubahan
-  const [tempSubsidiari, setTempSubsidiari] = useState(filterValues.subsidiari);
+export default function FilterModal({
+  filterValues,
+  setFilterValues,
+  setShowModal,
+  subsidiariOptions // expect array of { subsidiari_id, nama_subsidiari } or undefined
+}) {
+  const [tempSubsId, setTempSubsId] = useState(filterValues.subsidiariId ?? "Semua");
 
-  // Senaraikan semua pilihan subsidiari anda di sini
-  // "Semua Subsidiari" akan memaparkan DashboardKeseluruhan
-  const subsidiariOptions = [
-    "Semua Subsidiari",
-    "Subsidiari A",
-    "Subsidiari B",
-    "Subsidiari C", // Tambah seberapa banyak yang anda perlu
-  ];
+  const optionsList = (subsidiariOptions && subsidiariOptions.length > 0)
+    ? [{ subsidiari_id: "Semua", nama_subsidiari: "Semua Subsidiari" }, ...subsidiariOptions]
+    : [{ subsidiari_id: "Semua", nama_subsidiari: "Semua Subsidiari" }];
 
-  // 2. Fungsi apabila "Apply Filter" ditekan
   const handleApply = () => {
-    // Kemas kini state utama di 'App' atau 'Page'
-    setFilterValues({ 
-      ...filterValues, // Kekalkan apa-apa filter lain (jika ada)
-      subsidiari: tempSubsidiari // Simpan pilihan baru
+    const selected = optionsList.find(o => String(o.subsidiari_id) === String(tempSubsId));
+    setFilterValues({
+      ...filterValues,
+      subsidiariId: tempSubsId,
+      subsidiariName: selected ? selected.nama_subsidiari : tempSubsId
     });
-    setShowModal(false); // Tutup modal
-  };
-
-  // 3. Fungsi apabila "Cancel" ditekan
-  const handleCancel = () => {
-    // Tidak berbuat apa-apa pada state, terus tutup modal
     setShowModal(false);
   };
 
@@ -39,22 +30,17 @@ export default function FilterModal({ filterValues, setFilterValues, setShowModa
         <h2>Pilih Paparan Dashboard</h2>
         <div className="filter-select">
           <label>Paparkan data untuk:</label>
-          <select
-            value={tempSubsidiari} // Guna state sementara
-            onChange={(e) => setTempSubsidiari(e.target.value)} // Kemas kini state sementara
-          >
-            {subsidiariOptions.map((sub) => (
-              <option key={sub} value={sub}>
-                {sub}
+          <select value={tempSubsId} onChange={(e) => setTempSubsId(e.target.value)}>
+            {optionsList.map(opt => (
+              <option key={opt.subsidiari_id} value={opt.subsidiari_id}>
+                {opt.nama_subsidiari}
               </option>
             ))}
           </select>
         </div>
 
-        {/* --- Bahagian filter perbandingan (grid) telah dibuang --- */}
-
         <div className="filter-buttons">
-          <button onClick={handleCancel} className="btn-cancel">Cancel</button>
+          <button onClick={() => setShowModal(false)} className="btn-cancel">Cancel</button>
           <button onClick={handleApply} className="btn-apply">Apply Filter</button>
         </div>
       </div>
