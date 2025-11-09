@@ -1,0 +1,227 @@
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* ======= GAYA RAWATAN MODAL (CLEANED V9 - FINAL) ======= */
+
+/* Font & Box Sizing Scope */
+.kemaskini-rawatan-modal-container *,
+.kemaskini-rawatan-modal-overlay {
+  font-family: "Inter", sans-serif;
+  font-size: 0.88rem;
+  box-sizing: border-box;
+}
+
+/* Overlay (Diseragamkan) */
+.kemaskini-rawatan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+/* Container (Diseragamkan) */
+.kemaskini-rawatan-modal-container {
+  background: #f4f6f8;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: 600px; /* Saiz diubahsuai untuk modal input ringkas */
+  width: 95%;
+  font-family: "Inter", sans-serif;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  padding: 0;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: kemaskini-slide-up 0.25s ease-out;
+}
+
+/* Animasi Slide Up */
+@keyframes kemaskini-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header utama (biru diseragamkan) */
+.kemaskini-rawatan-modal-container > .kemaskini-rawatan-box-header-main {
+  background: #0074c8;
+  color: #ffffff;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  letter-spacing: normal;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Close button (Diseragamkan) */
+.kemaskini-rawatan-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: 0.2s;
+  width: auto;
+  height: auto;
+  font-size: 16px;
+}
+.kemaskini-rawatan-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: none;
+}
+
+/* Box Section (Container Form) */
+.kemaskini-rawatan-box {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  background: #f4f6f8;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* === INPUT & FORM STYLING === */
+.kemaskini-rawatan-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.88rem;
+}
+.kemaskini-rawatan-label-required::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.kemaskini-rawatan-input,
+.kemaskini-rawatan-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  color: #1f2937;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.kemaskini-rawatan-input:focus,
+.kemaskini-rawatan-select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.kemaskini-rawatan-dynamic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.kemaskini-rawatan-dynamic-row input {
+  margin-bottom: 0;
+}
+
+/* === BUTANG BULAT (ADD/REMOVE) === */
+
+.kemaskini-rawatan-button-circle {
+  background: #e0f2fe;
+  color: #0074c8;
+  border: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kemaskini-rawatan-button-circle:hover {
+  background: #0074c8;
+  color: white;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Remove button */
+.kemaskini-rawatan-button-circle.kemaskini-rawatan-button-remove {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.kemaskini-rawatan-button-circle.kemaskini-rawatan-button-remove:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* === BUTANG SIMPAN KEMASKINI === */
+
+.kemaskini-rawatan-save-btn-wrapper {
+  margin-top: 25px;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.kemaskini-rawatan-save-btn-dark-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  background-color: #0074c8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  box-shadow: none;
+}
+
+.kemaskini-rawatan-save-btn-dark-blue:hover {
+  background-color: #005fa3;
+  transform: none;
+  box-shadow: none;
+}
+
+.kemaskini-rawatan-save-btn-dark-blue:disabled {
+  background-color: #e5e7eb;
+  color: #4b5563;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* === MEDIA QUERIES === */
+
+@media (max-width: 768px) {
+  .kemaskini-rawatan-modal-overlay {
+    padding: 0;
+  }
+  .kemaskini-rawatan-modal-container {
+    border-radius: 0;
+    max-height: 100vh;
+  }
+}
