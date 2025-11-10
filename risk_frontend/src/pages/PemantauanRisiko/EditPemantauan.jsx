@@ -426,7 +426,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
 
         {/* 2. Penilaian Risiko Awal (Kekal Sama) */}
         <div className="pemantauan-box">
-        	 <div className="pemantauan-box-header">Penilaian Risiko Awal </div>
+        	 <div className="pemantauan-box-header">Penilaian Risiko </div>
         	 <div className="pemantauan-flex-row pemantauan-score-row">
         	 	 <div className="pemantauan-score-card">
         	 	 	 <span className="pemantauan-score-label">
@@ -586,7 +586,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         {/* 4. PAPARAN LOG SEJARAH PEMANTAUAN (DIKEMASKINI) */}
         <div className="pemantauan-box">
         	 <div className="pemantauan-box-header pemantauan-log-header">
-        	 	 <span>Log Sejarah Pemantauan Risiko</span>
+        	 	 <span> Pemantauan Risiko</span>
         	 	 
         	 	 {/* Butang 'Tambah Log' (Hanya Admin & Executive) */}
         	 	 {(userRole === "Admin" || userRole === "Executive") && (
@@ -600,7 +600,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 	 	 	 }}
         	 	 	 >
         	 	 	 	 <PlusCircle size={16} style={{ marginRight: "6px" }} />
-        	 	 	 	 Tambah Log Pemantauan
+        	 	 	 	 Tambah Pemantauan
         	 	 	 </button>
         	 	 )}
         	 </div>
@@ -608,7 +608,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 	 {isLoadingLog ? (
         	 	 	 <div style={{ textAlign: "center", padding: "50px" }}>
         	 	 	 	 <Loader2 size={32} className="spin" />
-        	 	 	 	 <p>Memuatkan Log Pemantauan...</p>
+        	 	 	 	 <p>Memuatkan  Pemantauan...</p>
         	 	 	 </div>
         	 	 ) : (
         	 	 	 <div style={{ overflowX: "auto" }}>
@@ -793,7 +793,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 	 	 	 	 	 	 	 	 colSpan={canViewTindakanColumn ? 14 : 13} 
         	 	 	 	 	 	 	 	 	 style={{ textAlign: "center", color: "#64748b" }}
         	 	 	 	 	 	 	 	 >
-        	 	 	 	 	 	 	 	 	 Tiada rekod log pemantauan yang direkodkan lagi.
+        	 	 	 	 	 	 	 	 	 Tiada rekod pemantauan yang direkodkan lagi.
         	 	 	 	 	 	 	 	 </td>
         	 	 	 	 	 	 	 </tr>
         	 	 	 	 	 	 )}

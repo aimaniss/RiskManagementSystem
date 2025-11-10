@@ -91,10 +91,10 @@ export default function TambahLogModal({
 
     // Kemaskini Tajuk Modal
     const modalTitle = isEditMode
-        ? "Kemaskini Log Pemantauan"
+        ? "Kemaskini Pemantauan"
         : isViewMode
-            ? "Papar Log Pemantauan"
-            : "Tambah Log Pemantauan Baharu";
+            ? "Papar  Pemantauan"
+            : "Tambah Pemantauan Baharu";
     // ================================================================
 
     const [isLoading, setIsLoading] = useState(false);

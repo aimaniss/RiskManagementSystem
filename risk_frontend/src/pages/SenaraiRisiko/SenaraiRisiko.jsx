@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react"; // 'Edit' telah dibuang
+import { Trash2 } from "lucide-react"; 
 import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
-// import EditModalRisiko from "./EditModalRisiko"; // EditModalRisiko telah dibuang
 import ViewRisikoModal from "./ViewRisikoModal";
 import "./SenaraiRisiko.css";
 
@@ -15,10 +14,6 @@ function SenaraiRisiko({ refreshTrigger }) {
   const [separuhFilter, setSeparuhFilter] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("");
   const [subsidiariList, setSubsidiariList] = useState([]);
-
-  // State untuk modal Edit (LAMA) telah dibuang:
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [selectedRisk, setSelectedRisk] = useState(null);
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [riskToView, setRiskToView] = useState(null);
@@ -60,12 +55,17 @@ function SenaraiRisiko({ refreshTrigger }) {
   };
 
   // Helper function: Convert separuh tahun value
+  // BARIS 65: DIUBAH UNTUK MENGELAKKAN TypeError
   const formatSeparuhTahun = (value) => {
-    if (!value) return "—";
-    if (value === "1" || value === 1 || value.toLowerCase() === "pertama") {
+    if (value === null || value === undefined) return "—";
+
+    // ✅ PEMBETULAN: Pastikan value adalah string sebelum menggunakan toLowerCase()
+    const strValue = String(value).toLowerCase();
+
+    if (strValue === "1" || strValue === "pertama") {
       return "Separuh Pertama";
     }
-    if (value === "2" || value === 2 || value.toLowerCase() === "kedua") {
+    if (strValue === "2" || strValue === "kedua") {
       return "Separuh Kedua";
     }
     return value;
@@ -128,14 +128,6 @@ function SenaraiRisiko({ refreshTrigger }) {
     try { await api.delete(`/risiko/${id}`); fetchRisks(); }
     catch (err) { console.error(err); alert("⚠️ Gagal padam risiko."); }
   };
-
-  // Fungsi-fungsi Edit (LAMA) telah dibuang:
-  // const handleEdit = risk => { setSelectedRisk(risk); setIsModalOpen(true); };
-  // const handleCloseModal = () => { setIsModalOpen(false); setSelectedRisk(null); };
-  // const handleSaveModal = async updatedRisk => {
-  //   try { await api.put(`/risiko/${updatedRisk.id}`, updatedRisk); fetchRisks(); handleCloseModal(); }
-  //   catch (err) { console.error(err); alert("⚠️ Gagal kemaskini risiko."); }
-  // };
 
   const handleViewRisk = (risk) => {
     setRiskToView(risk);
@@ -333,7 +325,7 @@ function SenaraiRisiko({ refreshTrigger }) {
 
                 <td className="rm-center">
                   <div className="rm-action-buttons">
-                    {/* Butang Edit telah dibuang dan hanya butang Padam dikekalkan */}
+                    {/* Butang Padam */}
                     <button 
                       onClick={(e) => { 
                         e.stopPropagation(); 
@@ -350,19 +342,6 @@ function SenaraiRisiko({ refreshTrigger }) {
           </tbody>
         </table>
       </div>
-
-      {/* Komponen EditModalRisiko telah dibuang */}
-      {/* {selectedRisk && (
-        <EditModalRisiko 
-          isOpen={isModalOpen}
-          risk={selectedRisk} 
-          subsidiariList={subsidiariList} 
-          userRole={userRole}
-          userSubsidiariId={userSubsidiariId}
-          onClose={handleCloseModal} 
-          onSave={handleSaveModal} 
-        />
-      )} */}
 
       {isViewModalOpen && (
         <ViewRisikoModal

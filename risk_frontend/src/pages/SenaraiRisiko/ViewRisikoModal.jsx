@@ -721,7 +721,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           {!isLoadingLog && hasLogData() && (
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header viewrisiko-log-header">
-                <span>Log Sejarah Pemantauan Risiko</span>
+                <span>Pemantauan Risiko</span>
               </div>
               <div style={{ padding: "4px" }}>
                 <div style={{ overflowX: "auto" }}>
