@@ -54,14 +54,9 @@ function SenaraiRisiko({ refreshTrigger }) {
     return riskMatrix[k][i];
   };
 
-  // Helper function: Convert separuh tahun value
-  // BARIS 65: DIUBAH UNTUK MENGELAKKAN TypeError
   const formatSeparuhTahun = (value) => {
     if (value === null || value === undefined) return "—";
-
-    // ✅ PEMBETULAN: Pastikan value adalah string sebelum menggunakan toLowerCase()
     const strValue = String(value).toLowerCase();
-
     if (strValue === "1" || strValue === "pertama") {
       return "Separuh Pertama";
     }
@@ -134,9 +129,16 @@ function SenaraiRisiko({ refreshTrigger }) {
     setIsViewModalOpen(true);
   };
 
-  const handleCloseViewModal = () => {
+  // ✅ PEMBETULAN: Tambah parameter untuk trigger refresh
+  const handleCloseViewModal = (shouldRefresh = false) => {
     setIsViewModalOpen(false);
     setRiskToView(null);
+    
+    // ✅ Refresh data jika ada perubahan
+    if (shouldRefresh) {
+      console.log("🔄 Refreshing risk data...");
+      fetchRisks();
+    }
   };
 
   const shortForm = label => {
@@ -325,7 +327,6 @@ function SenaraiRisiko({ refreshTrigger }) {
 
                 <td className="rm-center">
                   <div className="rm-action-buttons">
-                    {/* Butang Padam */}
                     <button 
                       onClick={(e) => { 
                         e.stopPropagation(); 
@@ -343,6 +344,7 @@ function SenaraiRisiko({ refreshTrigger }) {
         </table>
       </div>
 
+      {/* ✅ PEMBETULAN: Pass handleCloseViewModal yang baru */}
       {isViewModalOpen && (
         <ViewRisikoModal
           isOpen={isViewModalOpen}

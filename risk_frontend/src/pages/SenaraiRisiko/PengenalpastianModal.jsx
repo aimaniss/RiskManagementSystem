@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
-import "./PengenalpastianModal.css"; // Kekalkan gaya yang sama
+import "./PengenalpastianModal.css";
+
+// ✅ NOTA: Fail ini telah diperbetulkan - Kategori kini menggunakan dropdown select
 
 function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
     if (!isOpen) return null;
 
-    // Ambil data yang berkaitan dengan Pengenalpastian Risiko
     const [formData, setFormData] = useState({
         noRujukan: initialData.no_rujukan || "",
         tahun: initialData.tahun || "",
@@ -16,9 +17,8 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         kategori: initialData.kategori || "",
         bahagian: initialData.bahagian_unit || initialData.bahagian || "",
         risiko: initialData.risiko || "",
-        punca: initialData.punca || ["", ""], // Boleh diedit
-        kesan: initialData.kesan || ["", ""], // Boleh diedit
-        // PENTING: Skor Risiko TIDAK dimasukkan
+        punca: initialData.punca || ["", ""],
+        kesan: initialData.kesan || ["", ""],
     });
 
     const [subsidiariList, setSubsidiariList] = useState([]);
@@ -34,11 +34,9 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         } catch (err) { console.error("❌ Invalid token", err); }
     }
 
-    // Hanya ADMIN/EXECUTIVE dibenarkan mengemas kini
     const canEditPengenalpastian = ["ADMIN", "EXECUTIVE"].includes(userRole);
 
     useEffect(() => {
-        // Fetch subsidiari list untuk paparan, jika perlu
         const fetchSubsidiari = async () => {
             try {
                 const res = await api.get("/subsidiari");
@@ -74,7 +72,6 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         if (!canEditPengenalpastian) return alert("⚠️ Anda tidak mempunyai kebenaran untuk mengemaskini maklumat risiko.");
         if (!initialData.risiko_id) return alert("⚠️ ID Risiko tidak sah untuk dikemaskini.");
 
-        // Data yang dihantar (pastikan ia lengkap, termasuk skor lama)
         const finalData = { 
             noRujukan: formData.noRujukan,
             tahun: formData.tahun,
@@ -83,10 +80,9 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
             kategori: formData.kategori,
             bahagian: formData.bahagian,
             risiko: formData.risiko,
-            punca: formData.punca.filter(p => p && p.trim() !== ""), // Bersihkan senarai
-            kesan: formData.kesan.filter(k => k && k.trim() !== ""), // Bersihkan senarai
+            punca: formData.punca.filter(p => p && p.trim() !== ""),
+            kesan: formData.kesan.filter(k => k && k.trim() !== ""),
             
-            // PENTING: Kekalkan data Penilaian Risiko yang sedia ada agar tidak hilang
             skorKebarangkalian: initialData.skor_kebarangkalian !== undefined ? initialData.skor_kebarangkalian : null,
             skorImpak: initialData.skor_impak !== undefined ? initialData.skor_impak : null,
             skorRisiko: initialData.skor_risiko || "",
@@ -98,7 +94,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         try {
             await api.put(`/risiko/${initialData.risiko_id}`, finalData); 
             alert("✅ Pengenalpastian Risiko berjaya dikemaskini!");
-            onClose(true); // Tutup modal dan isyaratkan kemaskini berjaya
+            onClose(true);
         } catch (err) {
             console.error("❌ Error kemaskini pengenalpastian:", err.response?.data || err.message);
             alert("⚠️ Gagal mengemaskini pengenalpastian risiko.");
@@ -121,7 +117,6 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
                             <div className="penilaian-box-header">Maklumat Asas Risiko</div>
 
                             <div className="penilaian-info-section">
-                                {/* Maklumat Risiko Asas - DISPLAY ONLY (Biasanya ini tidak berubah) */}
                                 <div className="penilaian-info-row">
                                     <div className="penilaian-input-group">
                                         <label className="penilaian-label">No Rujukan:</label>
@@ -145,12 +140,23 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
 
                                 <hr className="penilaian-divider-line" />
 
-                                {/* BAHAGIAN BOLEH EDIT */}
+                                {/* ✅ PEMBETULAN: Tukar input kepada select dropdown untuk Kategori */}
                                 <div className="penilaian-field-group">
                                     <div className="penilaian-input-group">
                                         <label className="penilaian-label">Kategori Risiko:</label>
-                                        {/* Kategori perlu diganti dengan SELECT jika ada senarai dari API */}
-                                        <input name="kategori" value={formData.kategori} onChange={handleChange} className="penilaian-input" disabled={!canEditPengenalpastian} />
+                                        <select 
+                                            name="kategori" 
+                                            value={formData.kategori} 
+                                            onChange={handleChange} 
+                                            className="penilaian-input penilaian-select-dropdown" 
+                                            disabled={!canEditPengenalpastian}
+                                        >
+                                            <option value="">-- Pilih --</option>
+                                            <option>Operasi</option>
+                                            <option>Kewangan</option>
+                                            <option>Strategik</option>
+                                            <option>Pematuhan / Perundangan</option>
+                                        </select>
                                     </div>
                                     <div className="penilaian-input-group">
                                         <label className="penilaian-label">Bahagian/Unit:</label>
@@ -161,7 +167,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
                                 <label className="penilaian-label" style={{ marginTop:"12px" }}>Risiko:</label>
                                 <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="penilaian-textarea" placeholder="Huraian Risiko" disabled={!canEditPengenalpastian} />
 
-                                {/* Punca (List Boleh Diedit) */}
+                                {/* Punca */}
                                 <div style={{ marginTop:"12px" }}>
                                     <label className="penilaian-label">Punca:</label>
                                     {formData.punca.map((p, idx) => (
@@ -182,7 +188,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
                                     )}
                                 </div>
 
-                                {/* Kesan (List Boleh Diedit) */}
+                                {/* Kesan */}
                                 <div style={{ marginTop:"12px" }}>
                                     <label className="penilaian-label">Kesan:</label>
                                     {formData.kesan.map((k, idx) => (

@@ -1,20 +1,17 @@
 import { useState, useEffect } from "react";
-// ⭐️ KEMASKINI: Tambah ikon Pencil dan Trash2
 import { X, BookOpen, Loader2, Pencil, Trash2 } from "lucide-react"; 
 import { jwtDecode } from "jwt-decode";
 import "./ViewRisikoModal.css";
 import api from "../../api/api";
 import PanduanModal from "../Panduan/Panduan";
 import TambahLogModal from "../PemantauanRisiko/TambahLogModal";
-// ⭐️ KEMASKINI: Import komponen KemaskiniPemantauanModal untuk fungsi Edit
 import KemaskiniPemantauanModal from "./KemaskiniPemantauan";
-// ⭐️ BARU: Import modal untuk edit Pengenalpastian, Penilaian, dan Rawatan
 import PengenalpastianModal from "./PengenalpastianModal";
 import PenilaianRisikoModal from "./PenilaianRisikoModal";
 import KemaskiniRawatan from "./KemaskiniRawatan"; 
 
 // ==========================================================
-// HELPER COMPONENTS & CONSTANTS (Dikekalkan)
+// HELPER COMPONENTS & CONSTANTS
 // ==========================================================
 
 const ListDisplay = ({ data, isLogContext = false }) => {
@@ -118,21 +115,17 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [logToView, setLogToView] = useState(null);
   
-  // ⭐️ KEMASKINI: State untuk modal edit log
   const [isEditLogModalOpen, setIsEditLogModalOpen] = useState(false);
   const [logToEdit, setLogToEdit] = useState(null);
   
-  // ⭐️ BARU: State untuk modal edit Pengenalpastian
   const [isPengenalpastianModalOpen, setIsPengenalpastianModalOpen] = useState(false);
-  
-  // ⭐️ BARU: State untuk modal edit Penilaian
   const [isPenilaianModalOpen, setIsPenilaianModalOpen] = useState(false);
-  
-  // ⭐️ BARU: State untuk modal edit Rawatan
   const [isRawatanModalOpen, setIsRawatanModalOpen] = useState(false);
   
-  // ⭐️ KEMASKINI: State untuk peranan pengguna
   const [userRole, setUserRole] = useState(null); 
+  
+  // ✅ PEMBETULAN: State untuk track data refresh
+  const [needsRefresh, setNeedsRefresh] = useState(false);
   
   const [data, setData] = useState({
     risiko_id: null,
@@ -159,7 +152,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
 
   const [riskColor, setRiskColor] = useState("#f1f5f9");
 
-  // ⭐️ KEMASKINI: Decode JWT dengan mapping yang betul (sama seperti SenaraiRisiko.jsx)
   useEffect(() => {
     const token = localStorage.getItem('token'); 
     if (token) {
@@ -182,8 +174,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     }
   }, []);
 
-
-  // Helper functions untuk check data (Dikekalkan)
   const hasPenilaianData = () => {
     const k = parseInt(data.skor_kebarangkalian);
     const i = parseInt(data.skor_impak);
@@ -227,6 +217,53 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     }
   };
 
+  // ✅ PEMBETULAN: Function untuk refresh data risiko dari backend
+  const fetchRiskDetails = async (risikoId) => {
+    if (!risikoId) return;
+    
+    try {
+      const res = await api.get(`/risiko`);
+      const updatedRisk = res.data.find(r => r.id === risikoId);
+      
+      if (updatedRisk) {
+        const getRiskArray = (key1, key2) => {
+          const val = updatedRisk[key1] || updatedRisk[key2];
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string' && val.trim() !== '' && val.trim() !== '-') {
+            return [{ text: val }]; 
+          }
+          return [];
+        };
+
+        const initialData = {
+          risiko_id: risikoId,
+          no_rujukan: updatedRisk.no_rujukan || "-",
+          tahun: updatedRisk.tahun_asal || updatedRisk.tahun || "-",
+          separuh_tahun: updatedRisk.separuh_tahun_asal || updatedRisk.separuh_tahun,
+          nama_subsidiari: updatedRisk.subsidiari || updatedRisk.nama_subsidiari || "-", 
+          kategori: updatedRisk.kategori || "-",
+          bahagian: updatedRisk.bahagian || updatedRisk.bahagian_unit || "-",
+          risiko: updatedRisk.risiko || "-",
+          punca: getRiskArray("punca_risiko_data", "punca"),
+          kesan: getRiskArray("kesan_risiko_data", "kesan"),
+          skor_kebarangkalian: updatedRisk.skor_kebarangkalian_sebelum || updatedRisk.skor_kebarangkalian,
+          skor_impak: updatedRisk.skor_impak_sebelum || updatedRisk.skor_impak,
+          jenisKawalan: updatedRisk.jenis_kawalan || "-",
+          tempohSiap: updatedRisk.tempoh_jangkaan_siap_tindakan || updatedRisk.tempoh_jangkaan_siap || "-",
+          planTindakan: getRiskArray("pelan_tindakan", "rawatan_plan_tindakan"),
+          kakitanganBertanggungjawab: getRiskArray("kakitangan_bertanggungjawab", "rawatan_kakitangan_bertanggungjawab"),
+          status_risiko: "",
+          status_risiko_desc: "",
+          justifikasi_pindaan_penilaian: updatedRisk.pindaan_penilaian || updatedRisk.justifikasi_pindaan_penilaian || "-",
+        };
+
+        setData(initialData);
+      }
+    } catch (err) {
+      console.error("❌ Gagal fetch updated risk details:", err);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !risk?.id) return;
 
@@ -258,23 +295,15 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
       risiko: risk.risiko || "-",
       punca: getRiskArray("punca_risiko_data", "punca"),
       kesan: getRiskArray("kesan_risiko_data", "kesan"),
-      skor_kebarangkalian:
-        risk.skor_kebarangkalian_sebelum || risk.skor_kebarangkalian,
+      skor_kebarangkalian: risk.skor_kebarangkalian_sebelum || risk.skor_kebarangkalian,
       skor_impak: risk.skor_impak_sebelum || risk.skor_impak,
       jenisKawalan: risk.jenis_kawalan || "-",
       tempohSiap: risk.tempoh_jangkaan_siap_tindakan || risk.tempoh_jangkaan_siap || "-",
-      planTindakan: getRiskArray(
-        "pelan_tindakan",
-        "rawatan_plan_tindakan"
-      ),
-      kakitanganBertanggungjawab: getRiskArray(
-        "kakitangan_bertanggungjawab",
-        "rawatan_kakitangan_bertanggungjawab"
-      ),
+      planTindakan: getRiskArray("pelan_tindakan", "rawatan_plan_tindakan"),
+      kakitanganBertanggungjawab: getRiskArray("kakitangan_bertanggungjawab", "rawatan_kakitangan_bertanggungjawab"),
       status_risiko: "",
       status_risiko_desc: "",
-      justifikasi_pindaan_penilaian:
-        risk.pindaan_penilaian || risk.justifikasi_pindaan_penilaian || "-",
+      justifikasi_pindaan_penilaian: risk.pindaan_penilaian || risk.justifikasi_pindaan_penilaian || "-",
     };
 
     setData(initialData);
@@ -295,8 +324,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
 
       if (label === "R") {
         status = "TIDAK";
-        statusDesc =
-          "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
+        statusDesc = "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
       } else {
         status = "YA";
         statusDesc = "Risiko memerlukan tindakan segera dan rekod rawatan.";
@@ -322,9 +350,8 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     setLogToView(null);
   };
 
-  // ⭐️ KEMASKINI: Fungsi untuk mengendalikan Edit Log
   const handleEditLog = (logItem, e) => {
-    e.stopPropagation(); // Elak trigger handleViewLog (row click)
+    e.stopPropagation();
     setLogToEdit(logItem);
     setIsEditLogModalOpen(true);
   };
@@ -334,14 +361,14 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     setLogToEdit(null);
   };
   
-  // ⭐️ KEMASKINI: Fungsi untuk mengendalikan Delete Log
   const handleDeleteLog = async (logItem, e) => {
     e.stopPropagation();
     if (window.confirm(`Adakah anda pasti mahu memadam log pemantauan untuk tahun ${logItem.tahun_pemantauan} - Separuh ${formatSeparuhTahun(logItem.separuh_tahun_pemantauan)}? Tindakan ini tidak boleh diundur.`)) {
       try {
         await api.delete(`/pemantauan-risiko/log/${logItem.log_id}`);
         alert("✅ Log berjaya dipadam!");
-        fetchLog(data.risiko_id); // Refresh log data
+        fetchLog(data.risiko_id);
+        setNeedsRefresh(true); // ✅ Trigger refresh parent
       } catch (error) {
         console.error("❌ Gagal memadam log:", error);
         alert("⚠️ Gagal memadam log. Sila cuba lagi.");
@@ -349,54 +376,52 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     }
   };
 
-  // ⭐️ BARU: Handler untuk Edit Pengenalpastian Risiko
   const handleEditPengenalpastian = () => {
     console.log("🔧 Edit Pengenalpastian Risiko clicked");
     setIsPengenalpastianModalOpen(true);
   };
 
-  // ⭐️ BARU: Handler untuk Edit Penilaian Risiko
   const handleEditPenilaian = () => {
     console.log("🔧 Edit Penilaian Risiko clicked");
     setIsPenilaianModalOpen(true);
   };
 
-  // ⭐️ BARU: Handler untuk Edit Rawatan Risiko
   const handleEditRawatan = () => {
     console.log("🔧 Edit Rawatan Risiko clicked");
     setIsRawatanModalOpen(true);
   };
 
-  // ⭐️ BARU: Handler untuk tutup modal Pengenalpastian dan refresh data jika berjaya
+  // ✅ PEMBETULAN: Handler dengan refresh
   const handleClosePengenalpastian = (isSuccess) => {
     setIsPengenalpastianModalOpen(false);
     if (isSuccess) {
-      // Refresh data risiko - panggil semula parent atau fetch data
-      console.log("✅ Pengenalpastian dikemaskini - perlu refresh parent");
-      // TODO: Tambah callback ke parent untuk refresh SenaraiRisiko
+      console.log("✅ Pengenalpastian dikemaskini - refresh data");
+      fetchRiskDetails(data.risiko_id);
+      setNeedsRefresh(true);
     }
   };
 
-  // ⭐️ BARU: Handler untuk tutup modal Penilaian dan refresh data jika berjaya
   const handleClosePenilaian = (isSuccess) => {
     setIsPenilaianModalOpen(false);
     if (isSuccess) {
-      console.log("✅ Penilaian dikemaskini - perlu refresh parent");
-      // TODO: Tambah callback ke parent untuk refresh SenaraiRisiko
+      console.log("✅ Penilaian dikemaskini - refresh data");
+      fetchRiskDetails(data.risiko_id);
+      setNeedsRefresh(true);
     }
   };
 
-  // ⭐️ BARU: Handler untuk tutup modal Rawatan dan refresh data
-  const handleCloseRawatan = () => {
+  const handleCloseRawatan = (isSuccess) => {
     setIsRawatanModalOpen(false);
+    if (isSuccess) {
+      console.log("✅ Rawatan dikemaskini - refresh data");
+      fetchRiskDetails(data.risiko_id);
+      setNeedsRefresh(true);
+    }
   };
 
-  // ⭐️ BARU: Handler untuk simpan rawatan dan refresh data
-  const handleSaveRawatan = (updatedRisk) => {
-    console.log("✅ Rawatan dikemaskini:", updatedRisk);
-    // TODO: Kemaskini state data dengan rawatan baru
-    // setData(prev => ({ ...prev, ...updatedRisk }));
-    setIsRawatanModalOpen(false);
+  // ✅ PEMBETULAN: Handle modal close dengan trigger refresh parent jika perlu
+  const handleMainModalClose = () => {
+    onClose(needsRefresh); // Pass boolean untuk trigger refresh di parent
   };
   
   if (!isOpen) return null;
@@ -411,7 +436,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           <span>Maklumat Perincian Risiko</span>
           <button
             className="viewrisiko-close-btn"
-            onClick={onClose}
+            onClick={handleMainModalClose}
             aria-label="Tutup Borang"
           >
             <X size={16} />
@@ -419,12 +444,11 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
         </div>
 
         <div className="viewrisiko-modal-body">
-          {/* 1. Pengenalpastian Risiko (Gabungan) */}
+          {/* 1. Pengenalpastian Risiko */}
           <div className="viewrisiko-box">
             <div className="viewrisiko-box-header viewrisiko-risk-header">
               <span>Pengenalpastian Risiko</span>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                {/* ⭐️ BARU: Butang Edit untuk Pengenalpastian */}
                 {userRole === "ADMIN" && (
                   <button
                     type="button"
@@ -446,79 +470,41 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               </div>
             </div>
 
-            {/* Maklumat Asal Risiko */}
-            <div
-              className="viewrisiko-flex-row"
-              style={{ marginBottom: "20px" }}
-            >
+            <div className="viewrisiko-flex-row" style={{ marginBottom: "20px" }}>
               <div className="viewrisiko-flex-item">
                 <span className="viewrisiko-label-inline">No Rujukan:</span>
-                <span className="viewrisiko-data-inline">
-                  {data.no_rujukan || "-"}
-                </span>
+                <span className="viewrisiko-data-inline">{data.no_rujukan || "-"}</span>
               </div>
               <div className="viewrisiko-flex-item">
-                <span className="viewrisiko-label-inline">
-                  Tahun Didaftarkan:
-                </span>
-                <span className="viewrisiko-data-inline">
-                  {data.tahun || "-"}
-                </span>
+                <span className="viewrisiko-label-inline">Tahun Didaftarkan:</span>
+                <span className="viewrisiko-data-inline">{data.tahun || "-"}</span>
               </div>
               <div className="viewrisiko-flex-item">
-                <span className="viewrisiko-label-inline">
-                  Separuh Tahun Didaftarkan:
-                </span>
-                <span className="viewrisiko-data-inline">
-                  {formatSeparuhTahun(data.separuh_tahun)}
-                </span>
+                <span className="viewrisiko-label-inline">Separuh Tahun Didaftarkan:</span>
+                <span className="viewrisiko-data-inline">{formatSeparuhTahun(data.separuh_tahun)}</span>
               </div>
               <div className="viewrisiko-flex-item">
                 <span className="viewrisiko-label-inline">Syarikat:</span>
-                <span className="viewrisiko-data-inline">
-                  {data.nama_subsidiari || "-"}
-                </span>
+                <span className="viewrisiko-data-inline">{data.nama_subsidiari || "-"}</span>
               </div>
             </div>
 
-            {/* Maklumat Pengenalpastian */}
-            <div
-              className="viewrisiko-flex-row"
-              style={{
-                marginBottom: "20px",
-                borderTop: "1px solid #e5e7eb",
-                paddingTop: "20px",
-              }}
-            >
-              <div
-                className="viewrisiko-flex-item"
-                style={{ flex: "2 1 300px" }}
-              >
+            <div className="viewrisiko-flex-row" style={{ marginBottom: "20px", borderTop: "1px solid #e5e7eb", paddingTop: "20px" }}>
+              <div className="viewrisiko-flex-item" style={{ flex: "2 1 300px" }}>
                 <span className="viewrisiko-label-inline">Risiko:</span>
-                <span className="viewrisiko-data-inline">
-                  {data.risiko || "-"}
-                </span>
-                </div>
-                <div className="viewrisiko-flex-item">
-                <span className="viewrisiko-label-inline">
-                  Kategori Risiko:
-                </span>
-                <span className="viewrisiko-data-inline">
-                  {data.kategori || "-"}
-                </span>
+                <span className="viewrisiko-data-inline">{data.risiko || "-"}</span>
+              </div>
+              <div className="viewrisiko-flex-item">
+                <span className="viewrisiko-label-inline">Kategori Risiko:</span>
+                <span className="viewrisiko-data-inline">{data.kategori || "-"}</span>
               </div>
               <div className="viewrisiko-flex-item">
                 <span className="viewrisiko-label-inline">Bahagian/Unit:</span>
-                <span className="viewrisiko-data-inline">
-                  {data.bahagian || "-"}
-                </span>
+                <span className="viewrisiko-data-inline">{data.bahagian || "-"}</span>
               </div>
             </div>
             <div className="viewrisiko-flex-row viewrisiko-list-section">
-              <div
-                className="viewrisiko-flex-item"
-                style={{ flex: "2 1 300px" }}
-              >
+              <div className="viewrisiko-flex-item" style={{ flex: "2 1 300px" }}>
                 <span className="viewrisiko-label-inline">Punca Risiko:</span>
                 <ListDisplay data={data.punca} />
               </div>
@@ -535,7 +521,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>Penilaian Risiko Awal</span>
-                {/* ⭐️ BARU: Butang Edit untuk Penilaian */}
                 {userRole === "ADMIN" && (
                   <button
                     type="button"
@@ -549,18 +534,12 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               </div>
               <div className="viewrisiko-flex-row viewrisiko-score-row">
                 <div className="viewrisiko-score-card">
-                  <span className="viewrisiko-score-label">
-                    Skor Kebarangkalian
-                  </span>
-                  <span className="viewrisiko-score-data">
-                    {data.skor_kebarangkalian || "-"}
-                  </span>
+                  <span className="viewrisiko-score-label">Skor Kebarangkalian</span>
+                  <span className="viewrisiko-score-data">{data.skor_kebarangkalian || "-"}</span>
                 </div>
                 <div className="viewrisiko-score-card">
                   <span className="viewrisiko-score-label">Skor Impak</span>
-                  <span className="viewrisiko-score-data">
-                    {data.skor_impak || "-"}
-                  </span>
+                  <span className="viewrisiko-score-data">{data.skor_impak || "-"}</span>
                 </div>
                 <div className="viewrisiko-score-card">
                   <span className="viewrisiko-score-label">Skor Risiko</span>
@@ -577,45 +556,22 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                 </div>
               </div>
 
-              <div
-                className="viewrisiko-flex-row"
-                style={{ marginTop: "15px" }}
-              >
-                <div
-                  className="viewrisiko-flex-item"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flex: "1 1 100%",
-                  }}
-                >
-                  <span
-                    className="viewrisiko-label-inline"
-                    style={{ fontWeight: "bold", marginBottom: "5px" }}
-                  >
+              <div className="viewrisiko-flex-row" style={{ marginTop: "15px" }}>
+                <div className="viewrisiko-flex-item" style={{ display: "flex", flexDirection: "column", flex: "1 1 100%" }}>
+                  <span className="viewrisiko-label-inline" style={{ fontWeight: "bold", marginBottom: "5px" }}>
                     Status Risiko:
                   </span>
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <span
                       style={{
                         fontWeight: "bold",
-                        color:
-                          data.status_risiko === "YA"
-                            ? "#ef4444"
-                            : data.status_risiko === "TIDAK"
-                            ? "#10b981"
-                            : "#475569",
+                        color: data.status_risiko === "YA" ? "#ef4444" : data.status_risiko === "TIDAK" ? "#10b981" : "#475569",
                         minWidth: "70px",
                         textAlign: "center",
                         marginRight: "15px",
                         padding: "4px 8px",
                         borderRadius: "4px",
-                        backgroundColor:
-                          data.status_risiko === "YA"
-                            ? "#f8717130"
-                            : data.status_risiko === "TIDAK"
-                            ? "#10b98130"
-                            : "#e2e8f0",
+                        backgroundColor: data.status_risiko === "YA" ? "#f8717130" : data.status_risiko === "TIDAK" ? "#10b98130" : "#e2e8f0",
                       }}
                     >
                       {data.status_risiko || "-"}
@@ -627,36 +583,12 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                 </div>
               </div>
 
-              {/* Bahagian Pindaan Penilaian */}
-              <div
-                className="viewrisiko-flex-row"
-                style={{
-                  marginTop: "15px",
-                  borderTop: "1px solid #e2e8f0",
-                  paddingTop: "15px",
-                }}
-              >
-                <div
-                  className="viewrisiko-flex-item"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flex: "1 1 100%",
-                  }}
-                >
-                  <span
-                    className="viewrisiko-label-inline"
-                    style={{ fontWeight: "bold", marginBottom: "5px" }}
-                  >
+              <div className="viewrisiko-flex-row" style={{ marginTop: "15px", borderTop: "1px solid #e2e8f0", paddingTop: "15px" }}>
+                <div className="viewrisiko-flex-item" style={{ display: "flex", flexDirection: "column", flex: "1 1 100%" }}>
+                  <span className="viewrisiko-label-inline" style={{ fontWeight: "bold", marginBottom: "5px" }}>
                     Pindaan Penilaian:
                   </span>
-                  <span
-                    style={{
-                      color: "#475569",
-                      fontSize: "0.9rem",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
+                  <span style={{ color: "#475569", fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>
                     {data.justifikasi_pindaan_penilaian || "-"}
                   </span>
                 </div>
@@ -669,7 +601,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header viewrisiko-monitoring-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>Rawatan Risiko</span>
-                {/* ⭐️ BARU: Butang Edit untuk Rawatan */}
                 {userRole === "ADMIN" && (
                   <button
                     type="button"
@@ -681,16 +612,11 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                   </button>
                 )}
               </div>
-              <div
-                className="viewrisiko-flex-row"
-                style={{ padding: "18px 16px" }}
-              >
+              <div className="viewrisiko-flex-row" style={{ padding: "18px 16px" }}>
                 <div className="viewrisiko-flex-item">
                   <div className="viewrisiko-data-line-block">
                     <span className="viewrisiko-label-mon">Jenis Kawalan:</span>
-                    <span className="viewrisiko-data-mon">
-                      {data.jenisKawalan || "Tiada Data Rawatan"}
-                    </span>
+                    <span className="viewrisiko-data-mon">{data.jenisKawalan || "Tiada Data Rawatan"}</span>
                   </div>
                   <div className="viewrisiko-data-line-block">
                     <span className="viewrisiko-label-mon">Pelan Tindakan:</span>
@@ -699,17 +625,11 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                 </div>
                 <div className="viewrisiko-flex-item">
                   <div className="viewrisiko-data-line-block">
-                    <span className="viewrisiko-label-mon">
-                      Tempoh Jangkaan Siap Tindakan:
-                    </span>
-                    <span className="viewrisiko-data-mon">
-                      {data.tempohSiap || "-"}
-                    </span>
+                    <span className="viewrisiko-label-mon">Tempoh Jangkaan Siap Tindakan:</span>
+                    <span className="viewrisiko-data-mon">{data.tempohSiap || "-"}</span>
                   </div>
                   <div className="viewrisiko-data-line-block">
-                    <span className="viewrisiko-label-mon">
-                      Kakitangan Bertanggungjawab:
-                    </span>
+                    <span className="viewrisiko-label-mon">Kakitangan Bertanggungjawab:</span>
                     <ListDisplay data={data.kakitanganBertanggungjawab} />
                   </div>
                 </div>
@@ -741,109 +661,58 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                         <th>Kelulusan</th>
                         <th>Catatan</th>
                         <th>Pindaan Keberkesanan</th>
-                        {/* ⭐️ KEMASKINI: Lajur Tindakan - Hanya ADMIN */}
-                        {userRole === "ADMIN" && (
-                          <th>Tindakan</th>
-                        )}
+                        {userRole === "ADMIN" && <th>Tindakan</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {logData.map((log, index) => {
                         const k_selepas = log.skor_kebarangkalian_selepas;
                         const i_selepas = log.skor_impak_selepas;
-                        const tahap_risiko =
-                          log.skor_risiko_pemantauan ||
-                          getRiskLevel(k_selepas, i_selepas);
+                        const tahap_risiko = log.skor_risiko_pemantauan || getRiskLevel(k_selepas, i_selepas);
                         const { color } = getRiskMatrix(k_selepas, i_selepas);
-                        const sem_tahun_text = formatSeparuhTahun(
-                          log.separuh_tahun_pemantauan
-                        );
-                        const pelanTindakanLog = Array.isArray(
-                          log.pelan_tindakan_log
-                        )
-                          ? log.pelan_tindakan_log
-                          : [];
-                        const kakitanganLog = Array.isArray(
-                          log.kakitangan_log
-                        )
-                          ? log.kakitangan_log
-                          : [];
+                        const sem_tahun_text = formatSeparuhTahun(log.separuh_tahun_pemantauan);
+                        const pelanTindakanLog = Array.isArray(log.pelan_tindakan_log) ? log.pelan_tindakan_log : [];
+                        const kakitanganLog = Array.isArray(log.kakitangan_log) ? log.kakitangan_log : [];
                         return (
                           <tr 
-                              key={log.log_id || index}
-                              className="viewrisiko-log-row-clickable"
-                              onClick={() => handleViewLog(log)}
+                            key={log.log_id || index}
+                            className="viewrisiko-log-row-clickable"
+                            onClick={() => handleViewLog(log)}
                           >
-                            <td data-label="TAHUN">
-                              {log.tahun_pemantauan || "-"}
-                            </td>
-                            <td data-label="SEPARUH TAHUN">
-                              {sem_tahun_text}
-                            </td>
-                            <td data-label="PELAN TINDAKAN">
-                              <ListDisplay data={pelanTindakanLog} />
-                            </td>
-                            <td data-label="KEKERAPAN AUDIT">
-                              {log.kekerapan_pemantauan || "-"}
-                            </td>
-                            <td data-label="BERTANGGUNGJAWAB">
-                              <ListDisplay data={kakitanganLog} />
-                            </td>
+                            <td data-label="TAHUN">{log.tahun_pemantauan || "-"}</td>
+                            <td data-label="SEPARUH TAHUN">{sem_tahun_text}</td>
+                            <td data-label="PELAN TINDAKAN"><ListDisplay data={pelanTindakanLog} /></td>
+                            <td data-label="KEKERAPAN AUDIT">{log.kekerapan_pemantauan || "-"}</td>
+                            <td data-label="BERTANGGUNGJAWAB"><ListDisplay data={kakitanganLog} /></td>
                             <td data-label="K'KALIAN">{k_selepas || "-"}</td>
                             <td data-label="IMPAK SKOR">{i_selepas || "-"}</td>
                             <td
                               data-label="TAHAP RISIKO"
                               style={{
                                 backgroundColor: color,
-                                color:
-                                  color === "#f1f5f9" ? "#475569" : "white",
+                                color: color === "#f1f5f9" ? "#475569" : "white",
                                 fontWeight: "bold",
                               }}
                             >
                               {tahap_risiko || "-"}
                             </td>
                             <td data-label="KEBERKESANAN">
-                              <span
-                                className={`viewrisiko-keberkesanan-tag ${
-                                  log.keberkesanan?.toLowerCase() || "tiada"
-                                }`}
-                              >
+                              <span className={`viewrisiko-keberkesanan-tag ${log.keberkesanan?.toLowerCase() || "tiada"}`}>
                                 {log.keberkesanan || "-"}
                               </span>
                             </td>
-                            <td data-label="STATUS">
-                              {log.status_pemantauan || "-"}
-                            </td>
-                            <td data-label="KELULUSAN">
-                              {log.no_bil_kelulusan || "-"}
-                            </td>
-                            <td
-                              data-label="CATATAN"
-                              style={{
-                                maxWidth: "200px",
-                                whiteSpace: "normal",
-                              }}
-                            >
+                            <td data-label="STATUS">{log.status_pemantauan || "-"}</td>
+                            <td data-label="KELULUSAN">{log.no_bil_kelulusan || "-"}</td>
+                            <td data-label="CATATAN" style={{ maxWidth: "200px", whiteSpace: "normal" }}>
                               {log.catatan || "-"}
                             </td>
-                            <td
-                              data-label="PINDAAN KEBERKESANAN"
-                              style={{
-                                maxWidth: "200px",
-                                whiteSpace: "normal",
-                              }}
-                            >
+                            <td data-label="PINDAAN KEBERKESANAN" style={{ maxWidth: "200px", whiteSpace: "normal" }}>
                               {log.justifikasi_pindaan_pemantauan || "-"}
                             </td>
                             
-                            {/* ⭐️ KEMASKINI: Lajur Tindakan - Hanya ADMIN */}
                             {userRole === "ADMIN" && (
-                              <td 
-                                data-label="TINDAKAN" 
-                                onClick={(e) => e.stopPropagation()} 
-                              >
+                              <td data-label="TINDAKAN" onClick={(e) => e.stopPropagation()}>
                                 <div className="viewrisiko-action-buttons">
-                                  {/* Butang Edit (Pensel) */}
                                   <button
                                     className="viewrisiko-btn-edit"
                                     onClick={(e) => handleEditLog(log, e)}
@@ -851,8 +720,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                                   >
                                     <Pencil size={16} />
                                   </button>
-                                  
-                                  {/* Butang Delete (Tong Sampah) */}
                                   <button
                                     className="viewrisiko-btn-delete"
                                     onClick={(e) => handleDeleteLog(log, e)}
@@ -894,20 +761,22 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
         
-        {/* ⭐️ KEMASKINI: Modal 'Kemaskini' Log Pemantauan */}
+        {/* Modal 'Kemaskini' Log Pemantauan */}
         {isEditLogModalOpen && (
           <KemaskiniPemantauanModal
             isOpen={isEditLogModalOpen}
             onClose={handleCloseEditLogModal}
             onSaveSuccess={() => {
               fetchLog(data.risiko_id);
+              setNeedsRefresh(true);
               handleCloseEditLogModal();
             }}
             logDataToEdit={logToEdit}
+            userRole={userRole}
           />
         )}
 
-        {/* ⭐️ BARU: Modal Edit Pengenalpastian Risiko */}
+        {/* Modal Edit Pengenalpastian Risiko */}
         {isPengenalpastianModalOpen && (
           <PengenalpastianModal
             isOpen={isPengenalpastianModalOpen}
@@ -929,7 +798,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               kesan: Array.isArray(data.kesan)
                 ? data.kesan.map(k => typeof k === 'string' ? k : (k.kesan || k.text || ""))
                 : [],
-              // Sertakan data penilaian untuk kekalkan
               skor_kebarangkalian: data.skor_kebarangkalian,
               skor_impak: data.skor_impak,
               skor_risiko: data.tahap_risiko,
@@ -939,7 +807,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* ⭐️ BARU: Modal Edit Penilaian Risiko */}
+        {/* Modal Edit Penilaian Risiko */}
         {isPenilaianModalOpen && (
           <PenilaianRisikoModal
             isOpen={isPenilaianModalOpen}
@@ -966,12 +834,11 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* ⭐️ BARU: Modal Edit Rawatan Risiko */}
+        {/* ✅ PEMBETULAN: Modal Edit Rawatan Risiko dengan data yang betul */}
         {isRawatanModalOpen && (
           <KemaskiniRawatan
             isOpen={isRawatanModalOpen}
             onClose={handleCloseRawatan}
-            onSave={handleSaveRawatan}
             risk={{
               risiko_id: data.risiko_id,
               rawatan_id: risk?.rawatan_id || null,
