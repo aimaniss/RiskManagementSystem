@@ -1,4 +1,4 @@
-// KemaskiniPemantauan.jsx - FIXED VERSION
+// KemaskiniPemantauan.jsx - COMPLETE FULL CODE
 
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Save, Loader2, BookOpen, Plus } from "lucide-react"; 
@@ -6,9 +6,6 @@ import api from "../../api/api";
 import "./KemaskiniPemantauan.css"; 
 import PanduanModal from '../Panduan/Panduan';
 
-// ================================================================
-// LOGIK RISIKO & SKOR
-// ================================================================
 const riskMatrix = {
     1: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
     2: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
@@ -67,7 +64,6 @@ export default function KemaskiniPemantauanModal({
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
     const [risikoInfo, setRisikoInfo] = useState(null); 
-    const [validationMessage, setValidationMessage] = useState(""); 
     const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data");
 
     const getInitialFormData = useCallback(() => ({
@@ -91,7 +87,6 @@ export default function KemaskiniPemantauanModal({
 
     const getKeberkesananLabel = (value) => KEBERKESANAN_MAPPING[value] || value;
 
-    // Update tahap risiko & keberkesanan
     useEffect(() => {
         const k = formData.skor_kebarangkalian_selepas; 
         const i = formData.skor_impak_selepas; 
@@ -114,7 +109,6 @@ export default function KemaskiniPemantauanModal({
         }
     }, [formData.skor_kebarangkalian_selepas, formData.skor_impak_selepas, tahapRisikoRujukan]);
 
-    // ✅ PEMBETULAN: Pre-fill data dengan betul
     useEffect(() => {
         if (!isOpen || !logDataToEdit) {
             console.log("❌ Modal tidak buka atau tiada log data");
@@ -125,7 +119,6 @@ export default function KemaskiniPemantauanModal({
         setIsLoadingData(true);
 
         try {
-            // ✅ Format list dengan betul
             const formatList = (list, key) => {
                 if (!Array.isArray(list) || list.length === 0) {
                     return [{ [key]: "" }];
@@ -176,7 +169,6 @@ export default function KemaskiniPemantauanModal({
 
     }, [isOpen, logDataToEdit, risikoId]);
 
-    // Fetch info risiko
     useEffect(() => {
         if (!isOpen || !risikoId || !formData.tahun_pemantauan) return;
 
@@ -256,8 +248,7 @@ export default function KemaskiniPemantauanModal({
         setIsLoading(true);
 
         const logId = formData.log_id;
-        const method = "put";
-        const url = `/pemantauan-risiko/log/${logId}`;
+        const url = `/risiko/${risikoId}/pemantauan/log/${logId}`;
 
         const pelanLog = formData.pelan_tindakan_list.map(item => item.butiran_aktiviti).filter(Boolean);
         const kakitanganLog = formData.kakitangan_list.map(item => item.butiran_kakitangan).filter(Boolean);
@@ -290,15 +281,24 @@ export default function KemaskiniPemantauanModal({
 
         try {
             const payload = {
-                ...formData,
-                pelan_tindakan_log: pelanLog,
-                kakitangan_log: kakitanganLog,
+                risiko_id: risikoId,
+                tahun_pemantauan: formData.tahun_pemantauan,
+                separuh_tahun_pemantauan: formData.separuh_tahun_pemantauan,
                 skor_kebarangkalian_selepas: formData.skor_kebarangkalian_selepas === "" ? null : formData.skor_kebarangkalian_selepas,
                 skor_impak_selepas: formData.skor_impak_selepas === "" ? null : formData.skor_impak_selepas,
-                keberkesanan: formData.keberkesanan === "" ? null : formData.keberkesanan, 
+                keberkesanan: formData.keberkesanan === "" ? null : formData.keberkesanan,
+                status_pemantauan: formData.status_pemantauan,
+                catatan: formData.catatan,
+                justifikasi_pindaan_pemantauan: formData.justifikasi_pindaan_pemantauan,
+                no_bil_kelulusan: formData.no_bil_kelulusan,
+                kekerapan_pemantauan: formData.kekerapan_pemantauan,
+                pelan_tindakan_log: pelanLog,
+                kakitangan_log: kakitanganLog,
             };
             
-            const res = await api[method](url, payload);
+            console.log("📤 Sending payload:", payload);
+            
+            const res = await api.put(url, payload);
             const savedLog = res.data?.data ?? res.data;
 
             alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya dikemaskini!`);
@@ -318,7 +318,6 @@ export default function KemaskiniPemantauanModal({
 
     if (!isOpen) return null;
 
-    // ✅ PEMBETULAN: Loading state
     if (isLoadingData) {
         return (
             <div className="kemaskinipemantauan-modal-overlay">
@@ -335,6 +334,9 @@ export default function KemaskiniPemantauanModal({
         );
     }
 
+   // PART 2 - Return Statement untuk KemaskiniPemantauan.jsx
+// Copy code ni SELEPAS code Part 1
+
     return (
         <div className="kemaskinipemantauan-modal-overlay">
             <div className="kemaskinipemantauan-modal">
@@ -346,7 +348,6 @@ export default function KemaskiniPemantauanModal({
                         </button>
                     </div>
 
-                    {/* ✅ PEMBETULAN: Body dengan scroll */}
                     <div className="kemaskinipemantauan-body">
                         
                         <div className="kemaskinipemantauan-box">

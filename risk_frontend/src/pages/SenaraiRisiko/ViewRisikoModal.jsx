@@ -11,9 +11,21 @@ import PenilaianRisikoModal from "./PenilaianRisikoModal";
 import KemaskiniRawatan from "./KemaskiniRawatan"; 
 
 // ==========================================================
-// HELPER COMPONENTS & CONSTANTS
+// ✅ HELPER FUNCTION - Parse Semicolon Separated String
 // ==========================================================
+const parseListData = (dataString) => {
+  if (!dataString || dataString === "-" || dataString.trim() === "") {
+    return [];
+  }
+  
+  return dataString.split(';')
+    .map(item => item.trim())
+    .filter(item => item !== "" && item !== "-");
+};
 
+// ==========================================================
+// ✅ LIST DISPLAY COMPONENT - FIXED VERSION
+// ==========================================================
 const ListDisplay = ({ data, isLogContext = false }) => {
   const getItemText = (item) => {
     if (typeof item === "string") return item;
@@ -31,29 +43,49 @@ const ListDisplay = ({ data, isLogContext = false }) => {
     if (item?.text) return item.text;
     return "-";
   };
-  const cleanedData = Array.isArray(data)
-    ? data.filter((item) => {
-        const text = getItemText(item);
-        return text && text.trim() !== "-";
-      })
-    : [];
+  
+  // ✅ Handle both array and string (semicolon-separated)
+  let cleanedData = [];
+  
+  if (typeof data === "string") {
+    // Parse semicolon-separated string
+    cleanedData = parseListData(data);
+  } else if (Array.isArray(data)) {
+    // Filter array items
+    cleanedData = data.filter((item) => {
+      const text = getItemText(item);
+      return text && text.trim() !== "-";
+    });
+  }
 
   if (cleanedData.length === 0)
     return <span style={{ color: "#64748b" }}>-</span>;
 
+  // ✅ Show numbered list only if more than 1 item
+  if (cleanedData.length === 1) {
+    const itemText = typeof cleanedData[0] === "string" ? cleanedData[0] : getItemText(cleanedData[0]);
+    return <span className="viewrisiko-data-inline">{itemText}</span>;
+  }
+
   return (
     <ul style={{ listStyleType: "none", paddingLeft: "0", margin: "0" }}>
-      {cleanedData.map((item, index) => (
-        <li key={index} className="viewrisiko-list-item">
-          <span className="viewrisiko-data-inline">
-            {`${index + 1}. ${getItemText(item)}`}
-          </span>
-        </li>
-      ))}
+      {cleanedData.map((item, index) => {
+        const itemText = typeof item === "string" ? item : getItemText(item);
+        return (
+          <li key={index} className="viewrisiko-list-item">
+            <span className="viewrisiko-data-inline">
+              {`${index + 1}. ${itemText}`}
+            </span>
+          </li>
+        );
+      })}
     </ul>
   );
 };
 
+// ==========================================================
+// RISK MATRIX CONSTANTS
+// ==========================================================
 const riskMatrix = {
   1: {
     1: { label: "R", color: "#22c55e" },
@@ -104,9 +136,8 @@ const formatSeparuhTahun = (value) => {
 };
 
 // ==========================================================
-// UTAMA: ViewRisikoModal
+// MAIN COMPONENT: ViewRisikoModal
 // ==========================================================
-
 export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   const [isPanduanOpen, setIsPanduanOpen] = useState(false);
   const [logData, setLogData] = useState([]);
@@ -123,8 +154,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   const [isRawatanModalOpen, setIsRawatanModalOpen] = useState(false);
   
   const [userRole, setUserRole] = useState(null); 
-  
-  // ✅ PEMBETULAN: State untuk track data refresh
   const [needsRefresh, setNeedsRefresh] = useState(false);
   
   const [data, setData] = useState({
@@ -217,7 +246,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     }
   };
 
-  // ✅ PEMBETULAN: Function untuk refresh data risiko dari backend
   const fetchRiskDetails = async (risikoId) => {
     if (!risikoId) return;
     
@@ -226,12 +254,20 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
       const updatedRisk = res.data.find(r => r.id === risikoId);
       
       if (updatedRisk) {
+        // ✅ PEMBETULAN: Better array conversion with parseListData
         const getRiskArray = (key1, key2) => {
           const val = updatedRisk[key1] || updatedRisk[key2];
-          if (Array.isArray(val)) return val;
-          if (typeof val === 'string' && val.trim() !== '' && val.trim() !== '-') {
-            return [{ text: val }]; 
+          
+          if (Array.isArray(val)) {
+            return val;
           }
+          
+          // ✅ Parse semicolon-separated string
+          if (typeof val === 'string' && val.trim() !== '' && val.trim() !== '-') {
+            const parsed = parseListData(val);
+            return parsed.length > 0 ? parsed.map(item => ({ text: item })) : [];
+          }
+          
           return [];
         };
 
@@ -270,6 +306,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     const risikoId = risk.id;
     fetchLog(risikoId);
 
+    // ✅ PEMBETULAN: Better array conversion with parseListData
     const getRiskArray = (key1, key2) => {
       const val = risk[key1] || risk[key2];
 
@@ -277,8 +314,10 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
         return val;
       }
       
+      // ✅ Parse semicolon-separated string
       if (typeof val === 'string' && val.trim() !== '' && val.trim() !== '-') {
-        return [{ text: val }]; 
+        const parsed = parseListData(val);
+        return parsed.length > 0 ? parsed.map(item => ({ text: item })) : [];
       }
       
       return [];
@@ -368,7 +407,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
         await api.delete(`/pemantauan-risiko/log/${logItem.log_id}`);
         alert("✅ Log berjaya dipadam!");
         fetchLog(data.risiko_id);
-        setNeedsRefresh(true); // ✅ Trigger refresh parent
+        setNeedsRefresh(true);
       } catch (error) {
         console.error("❌ Gagal memadam log:", error);
         alert("⚠️ Gagal memadam log. Sila cuba lagi.");
@@ -391,7 +430,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     setIsRawatanModalOpen(true);
   };
 
-  // ✅ PEMBETULAN: Handler dengan refresh
   const handleClosePengenalpastian = (isSuccess) => {
     setIsPengenalpastianModalOpen(false);
     if (isSuccess) {
@@ -419,9 +457,8 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     }
   };
 
-  // ✅ PEMBETULAN: Handle modal close dengan trigger refresh parent jika perlu
   const handleMainModalClose = () => {
-    onClose(needsRefresh); // Pass boolean untuk trigger refresh di parent
+    onClose(needsRefresh);
   };
   
   if (!isOpen) return null;
@@ -741,7 +778,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           )}
         </div>
 
-        {/* Modal Panduan */}
         {isPanduanOpen && (
           <PanduanModal
             isOpen={isPanduanOpen}
@@ -749,7 +785,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* Modal 'Papar' Log Pemantauan */}
         {isLogModalOpen && (
           <TambahLogModal
             isOpen={isLogModalOpen}
@@ -761,11 +796,11 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
         
-        {/* Modal 'Kemaskini' Log Pemantauan */}
         {isEditLogModalOpen && (
           <KemaskiniPemantauanModal
             isOpen={isEditLogModalOpen}
             onClose={handleCloseEditLogModal}
+            risikoId={data.risiko_id}
             onSaveSuccess={() => {
               fetchLog(data.risiko_id);
               setNeedsRefresh(true);
@@ -776,7 +811,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* Modal Edit Pengenalpastian Risiko */}
         {isPengenalpastianModalOpen && (
           <PengenalpastianModal
             isOpen={isPengenalpastianModalOpen}
@@ -807,7 +841,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* Modal Edit Penilaian Risiko */}
         {isPenilaianModalOpen && (
           <PenilaianRisikoModal
             isOpen={isPenilaianModalOpen}
@@ -834,7 +867,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           />
         )}
 
-        {/* ✅ PEMBETULAN: Modal Edit Rawatan Risiko dengan data yang betul */}
         {isRawatanModalOpen && (
           <KemaskiniRawatan
             isOpen={isRawatanModalOpen}

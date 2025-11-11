@@ -40,6 +40,24 @@ function SenaraiRisiko({ refreshTrigger }) {
     }
   }
 
+  // ✅ PEMBETULAN: Function untuk format list dengan nombor
+  const formatListDisplay = (dataString) => {
+    if (!dataString || dataString === "—" || dataString.trim() === "") {
+      return "—";
+    }
+    
+    // Split by semicolon separator
+    const items = dataString.split(';').map(item => item.trim()).filter(item => item !== "");
+    
+    // Jika hanya satu item, return tanpa nombor
+    if (items.length === 1) {
+      return items[0];
+    }
+    
+    // Jika lebih dari satu item, return dengan nombor
+    return items.map((item, index) => `${index + 1}. ${item}`).join('\n');
+  };
+
   // Risiko matrix
   const riskMatrix = {
     1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -129,12 +147,10 @@ function SenaraiRisiko({ refreshTrigger }) {
     setIsViewModalOpen(true);
   };
 
-  // ✅ PEMBETULAN: Tambah parameter untuk trigger refresh
   const handleCloseViewModal = (shouldRefresh = false) => {
     setIsViewModalOpen(false);
     setRiskToView(null);
     
-    // ✅ Refresh data jika ada perubahan
     if (shouldRefresh) {
       console.log("🔄 Refreshing risk data...");
       fetchRisks();
@@ -281,10 +297,15 @@ function SenaraiRisiko({ refreshTrigger }) {
                 <td className="rm-center">{r.status_risiko || "—"}</td>
                 <td className="rm-center">{r.pindaan_penilaian || "—"}</td>
                 
-                <td className="rm-left">{r.pelan_tindakan || "—"}</td>
+                {/* ✅ PEMBETULAN: Format list dengan nombor */}
+                <td className="rm-left" style={{ whiteSpace: 'pre-line' }}>
+                  {formatListDisplay(r.pelan_tindakan)}
+                </td>
                 <td className="rm-center">{r.jenis_kawalan || "—"}</td>
                 <td className="rm-center">{r.tempoh_jangkaan_siap_tindakan || "—"}</td>
-                <td className="rm-center">{r.kakitangan_bertanggungjawab || "—"}</td>
+                <td className="rm-center" style={{ whiteSpace: 'pre-line' }}>
+                  {formatListDisplay(r.kakitangan_bertanggungjawab)}
+                </td>
                 
                 <td className="rm-center">
                   <div className="rm-year-separuh">
@@ -306,9 +327,14 @@ function SenaraiRisiko({ refreshTrigger }) {
                     })()}
                   </div>
                 </td>
-                <td className="rm-left">{r.pemantauan_pelan_tindakan || "—"}</td>
+                {/* ✅ PEMBETULAN: Format list dengan nombor */}
+                <td className="rm-left" style={{ whiteSpace: 'pre-line' }}>
+                  {formatListDisplay(r.pemantauan_pelan_tindakan)}
+                </td>
                 <td className="rm-center">{r.pemantauan_kekerapan || "—"}</td>
-                <td className="rm-center">{r.pemantauan_kakitangan || "—"}</td>
+                <td className="rm-center" style={{ whiteSpace: 'pre-line' }}>
+                  {formatListDisplay(r.pemantauan_kakitangan)}
+                </td>
                 
                 <td className="rm-center">{r.semasa_skor_kebarangkalian || "—"}</td>
                 <td className="rm-center">{r.semasa_skor_impak || "—"}</td>
@@ -344,7 +370,6 @@ function SenaraiRisiko({ refreshTrigger }) {
         </table>
       </div>
 
-      {/* ✅ PEMBETULAN: Pass handleCloseViewModal yang baru */}
       {isViewModalOpen && (
         <ViewRisikoModal
           isOpen={isViewModalOpen}
