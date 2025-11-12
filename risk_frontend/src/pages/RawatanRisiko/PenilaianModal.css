@@ -255,17 +255,16 @@
   border-radius: 8px;
   min-width: 100px;
   flex: 1;
-  color: #0e0d0d;
+  /* KOD UTAMA: Menetapkan warna teks kepada hitam pekat */
+  color: #000000;
   font-size: 14px;
   height: 36px;
 }
 
-.penilaian-risk-score {
-  background: #0074c8;
-}
 
 .penilaian-status-risk {
-  background: #005fa3;
+  /* Tetapkan latar belakang Status Risiko. Warna teks akan sentiasa hitam. */
+  background: #e5e7eb;
 }
 
 /* Spinner loader */

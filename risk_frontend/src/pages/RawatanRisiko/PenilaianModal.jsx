@@ -310,8 +310,8 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                                         ? "Tidak (Risiko rendah-tiada tindakan)"
                                                         : ""
                                             }
+                                            // INI PERUBAHAN UTAMA: Hanya guna class CSS, buang inline style yg bertindih.
                                             className="penilaian-input penilaian-status-risk"
-                                            style={{ textAlign: "center", backgroundColor: "#f1f5f9", color: "#004071" }}
                                         />
                                     </div>
                                 </div>
