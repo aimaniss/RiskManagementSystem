@@ -81,8 +81,21 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             .sort((a, b) => b - a);
             setUniqueYearsPengenalpastian(yearsP);
             
-            // Populate tahun untuk tab "Pemantauan"
-            const yearsM = [...new Set(risks.map(r => r.tahun_pemantauan).filter(Boolean))]
+            // Populate tahun untuk tab "Pemantauan" - HANYA risiko dengan tahap risiko yang sah
+            const risksWithValidScores = risks.filter(risk =>
+                risk.tahun_pemantauan !== null && 
+                risk.tahun_pemantauan !== undefined &&
+                risk.skor_kebarangkalian_terkini !== null &&
+                risk.skor_kebarangkalian_terkini !== undefined &&
+                risk.skor_impak_terkini !== null &&
+                risk.skor_impak_terkini !== undefined &&
+                risk.skor_kebarangkalian_terkini >= 1 &&
+                risk.skor_kebarangkalian_terkini <= 5 &&
+                risk.skor_impak_terkini >= 1 &&
+                risk.skor_impak_terkini <= 5
+            );
+            
+            const yearsM = [...new Set(risksWithValidScores.map(r => r.tahun_pemantauan).filter(Boolean))]
                             .sort((a, b) => b - a);
             setUniqueYearsPemantauan(yearsM);
 
@@ -116,7 +129,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
         return tempRisks;
     }, [risks, search, subsidiariFilter]);
 
-    // 4. Penapisan Kontekstual (mengikut Tab)
+    // 4. Penapisan Kontekstual (mengikut Tab) - DIKEMASKINI dengan penapis tahap risiko
     const risksToDisplay = useMemo(() => {
         let tempRisks = [];
 
@@ -134,9 +147,20 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
             }
         } 
         else if (activeTab === 'pemantauan') {
+            // PENAPIS TAMBAHAN: Hanya papar risiko dengan tahap risiko yang sah
             tempRisks = baseFilteredRisks.filter(risk => 
                 risk.tahun_pemantauan !== null && 
-                risk.tahun_pemantauan !== undefined
+                risk.tahun_pemantauan !== undefined &&
+                // Pastikan ada skor kebarangkalian dan impak terkini
+                risk.skor_kebarangkalian_terkini !== null &&
+                risk.skor_kebarangkalian_terkini !== undefined &&
+                risk.skor_impak_terkini !== null &&
+                risk.skor_impak_terkini !== undefined &&
+                // Pastikan skor dalam julat yang sah (1-5)
+                risk.skor_kebarangkalian_terkini >= 1 &&
+                risk.skor_kebarangkalian_terkini <= 5 &&
+                risk.skor_impak_terkini >= 1 &&
+                risk.skor_impak_terkini <= 5
             );
 
             if (tahunFilter) {
@@ -193,22 +217,46 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                     {/* 2. Filter (Dipindahkan ke bawah Tab) */}
                     <div className="pilih-risiko-filter-container">
                         <input
-                            type="text" placeholder="Cari No Rujukan / Risiko..." value={search} onChange={e => setSearch(e.target.value)} className="form-input" aria-label="Cari risiko"
+                            type="text" 
+                            placeholder="Cari No Rujukan / Risiko..." 
+                            value={search} 
+                            onChange={e => setSearch(e.target.value)} 
+                            className="form-input" 
+                            aria-label="Cari risiko"
                         />
                         <select
-                            value={subsidiariFilter} onChange={e => setSubsidiariFilter(e.target.value)} disabled={["Staff","Ketua Subsidiari"].includes(userRole)} className="form-select" aria-label="Tapis mengikut subsidiari">
+                            value={subsidiariFilter} 
+                            onChange={e => setSubsidiariFilter(e.target.value)} 
+                            disabled={["Staff","Ketua Subsidiari"].includes(userRole)} 
+                            className="form-select" 
+                            aria-label="Tapis mengikut subsidiari"
+                        >
                             <option value="">-- Semua Syarikat --</option>
-                            {subsidiariList.map(s => ( <option key={s.subsidiari_id} value={s.subsidiari_id}> {s.nama_subsidiari} </option> ))}
+                            {subsidiariList.map(s => ( 
+                                <option key={s.subsidiari_id} value={s.subsidiari_id}>
+                                    {s.nama_subsidiari}
+                                </option> 
+                            ))}
                         </select>
                         
                         <select
-                            value={tahunFilter} onChange={e => setTahunFilter(e.target.value)} className="form-select" aria-label="Tapis mengikut tahun">
+                            value={tahunFilter} 
+                            onChange={e => setTahunFilter(e.target.value)} 
+                            className="form-select" 
+                            aria-label="Tapis mengikut tahun"
+                        >
                             <option value="">-- Semua Tahun --</option>
-                            {uniqueYearsForCurrentTab.map(t=>(<option key={t} value={t}>{t}</option>))}
+                            {uniqueYearsForCurrentTab.map(t => (
+                                <option key={t} value={t}>{t}</option>
+                            ))}
                         </select>
                         
                         <select
-                            value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)} className="form-select" aria-label="Tapis mengikut separuh tahun">
+                            value={separuhFilter} 
+                            onChange={e => setSeparuhFilter(e.target.value)} 
+                            className="form-select" 
+                            aria-label="Tapis mengikut separuh tahun"
+                        >
                             <option value="">-- Semua Separuh Tahun --</option>
                             <option value="Pertama">Pertama</option>
                             <option value="Kedua">Kedua</option>
@@ -279,13 +327,26 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
 
                             <tbody>
                                 {risks.length === 0 ? (
-                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada data risiko tersedia.</td></tr>
+                                    <tr>
+                                        <td colSpan={columnCount} className="pilih-risiko-td td-message">
+                                            Tiada data risiko tersedia.
+                                        </td>
+                                    </tr>
                                 ) : baseFilteredRisks.length === 0 ? ( 
-                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">Tiada risiko dijumpai dengan kriteria carianini.</td></tr>
+                                    <tr>
+                                        <td colSpan={columnCount} className="pilih-risiko-td td-message">
+                                            Tiada risiko dijumpai dengan kriteria carian ini.
+                                        </td>
+                                    </tr>
                                 ) : risksToDisplay.length === 0 ? (
-                                    <tr><td colSpan={columnCount} className="pilih-risiko-td td-message">
-                                        Tiada padanan dijumpai untuk penapis Tahun &Separuh Tahun ini.
-                                    </td></tr>
+                                    <tr>
+                                        <td colSpan={columnCount} className="pilih-risiko-td td-message">
+                                            {activeTab === 'pemantauan' 
+                                                ? "Tiada risiko dengan tahap risiko yang sah dijumpai untuk penapis ini."
+                                                : "Tiada padanan dijumpai untuk penapis Tahun & Separuh Tahun ini."
+                                            }
+                                        </td>
+                                    </tr>
                                 ) : (
                                     risksToDisplay.map((risk, index) => {
 
@@ -316,13 +377,18 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                         <td className="pilih-risiko-td td-center">
                                                             <span
                                                                 className="td-skor"
-                                                                style={{ backgroundColor: skorAsal.color, color: skorAsal.textColor }}
+                                                                style={{ 
+                                                                    backgroundColor: skorAsal.color, 
+                                                                    color: skorAsal.textColor 
+                                                                }}
                                                                 title={`Skor Asal: ${skorAsal.label}`}
                                                             >
                                                                 {skorAsal.shortLabel}
                                                             </span>
                                                         </td>
-                                                        <td className="pilih-risiko-td td-justifikasi" title={risk.justifikasi_pindaan_penilaian}>
+                                                        <td className="pilih-risiko-td td-justifikasi" 
+                                                            title={risk.justifikasi_pindaan_penilaian}
+                                                        >
                                                             {risk.justifikasi_pindaan_penilaian || '-'}
                                                         </td>
                                                     </>
@@ -352,7 +418,9 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                                 {skorSemasa.shortLabel}
                                                             </span>
                                                         </td>
-                                                        <td className="pilih-risiko-td td-justifikasi" title={risk.keberkesanan}>
+                                                        <td className="pilih-risiko-td td-justifikasi" 
+                                                            title={risk.keberkesanan}
+                                                        >
                                                             {risk.keberkesanan || '-'}
                                                         </td>
                                                         <td className="pilih-risiko-td">
@@ -362,12 +430,16 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                                 )}
 
                                                 <td className="pilih-risiko-td td-center">
-                                                    <button onClick={() => onRiskSelect(risk)} className="pilih-risiko-btn pilih-risiko-btn-sm pilih-risiko-btn-success" aria-label={`Pilih risiko ${risk.no_rujukan}`}>
+                                                    <button 
+                                                        onClick={() => onRiskSelect(risk)} 
+                                                        className="pilih-risiko-btn pilih-risiko-btn-sm pilih-risiko-btn-success" 
+                                                        aria-label={`Pilih risiko ${risk.no_rujukan}`}
+                                                    >
                                                         <CheckSquare size={14} /> Pilih
                                                     </button>
                                                 </td>
                                             </tr>
-                                        )
+                                        );
                                     })
                                 )}
                             </tbody>
