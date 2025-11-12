@@ -179,7 +179,7 @@ export default function LaporanRisiko() {
         </div>
         
         <div className="filter-group">
-         <label>Separuh Tahun</label>
+         <label>Separuh Tahun Daftar</label>
           <select name="separuhTahun" value={filters.separuhTahun} onChange={handleFilterChange}>
             <option value="all">Semua</option>
             <option value="1">Pertama (Jan-Jun)</option>
@@ -211,7 +211,7 @@ export default function LaporanRisiko() {
                 <th>Risiko</th>
                 <th>Tahun  & Separuh Tahun Daftar</th>
                 <th>Syarikat</th>
-                <th>Skor Risiko (Terkini)</th>
+                <th>Tahap Risiko</th>
                 <th>Status Pemantauan</th>
                 <th>Tindakan</th>
               </tr>

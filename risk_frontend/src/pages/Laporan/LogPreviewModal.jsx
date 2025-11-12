@@ -283,7 +283,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: 'KEBARANGKALIAN', styles: subHeaderStyles }, 
                     { content: 'SKOR IMPAK', styles: subHeaderStyles },
                     { content: 'IMPAK', styles: subHeaderStyles },
-                    { content: 'SKOR RISIKO', styles: subHeaderStyles },
+                    { content: 'TAHAP RISIKO', styles: subHeaderStyles },
                     { content: 'STATUS RISIKO', styles: subHeaderStyles }
                   ],
                   [ 
@@ -478,7 +478,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: 'KEBARANGKALIAN', styles: subHeaderStyles },
                     { content: 'SKOR IMPAK', styles: subHeaderStyles },
                     { content: 'IMPAK', styles: subHeaderStyles },
-                    { content: 'SKOR RISIKO', styles: subHeaderStyles },
+                    { content: 'TAHAP RISIKO', styles: subHeaderStyles },
                     { content: 'KEBERKESANAN', styles: subHeaderStyles },
                     { content: 'STATUS PEMANTAUAN', styles: subHeaderStyles }
                 ]],
