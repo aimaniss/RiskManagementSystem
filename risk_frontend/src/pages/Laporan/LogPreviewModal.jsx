@@ -3,9 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import './LogPreviewModal.css';
 
-// =================================================================
-// Import logo anda
-// =================================================================
+
 import Ukhmlogo from '../../assets/images/Light Background/UKMH_light.png';
 
 // =================================================================
@@ -202,7 +200,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           
           pdf.setFont(globalStyles.font, 'bold');
           pdf.setFontSize(12); 
-          pdf.text("BORANG DAFTAR RISIKO", 105, titleY, { align: 'center' });
+          pdf.text("LAPORAN RISIKO", 105, titleY, { align: 'center' });
 
           currentY = headerBlockEndsY + 2; // 2mm gap (lebih rapat)
           
