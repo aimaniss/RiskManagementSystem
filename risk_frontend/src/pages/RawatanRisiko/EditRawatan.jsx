@@ -101,7 +101,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
             const isRequired = (fullLabel === "Tinggi" || fullLabel === "Sangat Tinggi");
             
             const status = isRequired ? "YA" : "TIDAK";
-            const statusDesc = isRequired ? "Risiko memerlukan tindakan segera dan rekod rawatan." : "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
+            const statusDesc = isRequired ? "Risiko memerlukan tindakan segera ." : "Risiko tidak memerlukan tindakan segera .";
 
             setFormData((prev) => ({
                 ...prev,
@@ -283,7 +283,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             </div>
                             
                             <div className="rawatan-score-card">
-                                <span className="rawatan-score-label">Skor Risiko</span>
+                                <span className="rawatan-score-label">Tahap Risiko</span>
                                 <span className="rawatan-score-data rawatan-risk-score-text" 
                                     style={{ backgroundColor: riskColor, color: riskColor === "#f1f5f9" ? '#475569' : '#ffffff' }}
                                     data-level={formData.tahap_risiko}

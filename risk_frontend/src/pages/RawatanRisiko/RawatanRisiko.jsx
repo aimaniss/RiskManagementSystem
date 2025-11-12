@@ -49,7 +49,7 @@ function PenilaianDanRawatan() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            // 🌟 GUNA ENDPOINT BARU
+            
             const res = await api.get("/rawatan/with-status");
             
             const dataWithScore = res.data.map(d=>{
@@ -299,7 +299,7 @@ function PenilaianDanRawatan() {
                                     <th>Kategori Risiko</th>
                                     <th>Bahagian/Unit</th>
                                     <th>Risiko</th>
-                                    <th className="pr-center">Skor Risiko</th> 
+                                    <th className="pr-center">Tahap Risiko</th> 
                                     <th className="pr-center pr-group-divider">Status Risiko</th>
                                     <th className="pr-center">Status Pemantauan</th>
                                     <th className="pr-center">Tindakan</th>

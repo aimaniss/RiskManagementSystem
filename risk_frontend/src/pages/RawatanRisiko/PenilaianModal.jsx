@@ -288,7 +288,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                     </div>
 
                                     <div className="penilaian-risk-field">
-                                        <label className="penilaian-label">Skor Risiko:</label>
+                                        <label className="penilaian-label">Tahap Risiko:</label>
                                         <input 
                                             type="text" 
                                             value={formData.skorRisiko}
