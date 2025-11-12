@@ -557,7 +557,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           {hasPenilaianData() && (
             <div className="viewrisiko-box">
               <div className="viewrisiko-box-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>Penilaian Risiko Awal</span>
+                <span>Penilaian Risiko</span>
                 {userRole === "ADMIN" && (
                   <button
                     type="button"
@@ -579,7 +579,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                   <span className="viewrisiko-score-data">{data.skor_impak || "-"}</span>
                 </div>
                 <div className="viewrisiko-score-card">
-                  <span className="viewrisiko-score-label">Skor Risiko</span>
+                  <span className="viewrisiko-score-label">Tahap Risiko</span>
                   <span
                     className="viewrisiko-score-data viewrisiko-risk-score-text"
                     style={{
@@ -692,7 +692,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                         <th>Kakitangan Bertanggungjawab</th>
                         <th>Skor Kebarangkalian</th>
                         <th>Skor Impak</th>
-                        <th>Skor Risiko</th>
+                        <th>Tahap Risiko</th>
                         <th>Keberkesanan</th>
                         <th>Status Pemantauan</th>
                         <th>Kelulusan</th>

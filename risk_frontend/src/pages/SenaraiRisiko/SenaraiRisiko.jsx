@@ -233,7 +233,7 @@ function SenaraiRisiko({ refreshTrigger }) {
               
               <th>Skor Kebarangkalian</th>
               <th>Skor Impak</th>
-              <th>Skor Risiko</th>
+              <th>Tahap Risiko</th>
               <th>Status Risiko</th>
               <th>Pindaan Penilaian</th>
               
@@ -247,9 +247,9 @@ function SenaraiRisiko({ refreshTrigger }) {
               <th>Kekerapan</th>
               <th>Kakitangan Bertanggungjawab (Pemantauan)</th>
               
-              <th>Skor Kebarangkalian (Semasa)</th>
-              <th>Skor Impak (Semasa)</th>
-              <th>Skor Risiko (Semasa)</th>
+              <th>Skor Kebarangkalian </th>
+              <th>Skor Impak </th>
+              <th>Tahap Risiko </th>
               <th>Keberkesanan</th>
               <th>Status Pemantauan</th>
               <th>Pindaan Keberkesanan</th>
@@ -297,7 +297,7 @@ function SenaraiRisiko({ refreshTrigger }) {
                 <td className="rm-center">{r.status_risiko || "—"}</td>
                 <td className="rm-center">{r.pindaan_penilaian || "—"}</td>
                 
-                {/* ✅ PEMBETULAN: Format list dengan nombor */}
+               
                 <td className="rm-left" style={{ whiteSpace: 'pre-line' }}>
                   {formatListDisplay(r.pelan_tindakan)}
                 </td>
@@ -327,7 +327,7 @@ function SenaraiRisiko({ refreshTrigger }) {
                     })()}
                   </div>
                 </td>
-                {/* ✅ PEMBETULAN: Format list dengan nombor */}
+              
                 <td className="rm-left" style={{ whiteSpace: 'pre-line' }}>
                   {formatListDisplay(r.pemantauan_pelan_tindakan)}
                 </td>

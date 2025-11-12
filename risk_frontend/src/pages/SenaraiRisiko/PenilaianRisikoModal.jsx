@@ -195,7 +195,7 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
 
                                 {/* Hasil Skor Risiko (Read-Only) */}
                                 <div className="penilaian-risk-field">
-                                    <label className="penilaian-label">Skor Risiko:</label>
+                                    <label className="penilaian-label">Tahap Risiko:</label>
                                     <input 
                                         type="text" 
                                         value={formData.skorRisiko} 
@@ -213,9 +213,9 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
                                         readOnly
                                         value={
                                             formData.statusRisiko === "Ya"
-                                                ? "Ya (Memerlukan tindakan)" 
+                                                ? "Ya (Memerlukan tindakan segera)" 
                                                 : formData.statusRisiko === "Tidak"
-                                                    ? "Tidak (Risiko rendah)"
+                                                    ? "Tidak (Tidak memerlukan tindakan segera)"
                                                         : ""
                                         }
                                         className="penilaian-input penilaian-status-risk"
