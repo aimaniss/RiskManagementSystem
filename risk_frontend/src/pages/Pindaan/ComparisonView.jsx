@@ -23,10 +23,10 @@ const getRiskStylingFromMatrix = (likelihood, impact, matrix) => { /* ... kod fu
 const fieldNameMapping = {
     'skor_kebarangkalian': 'Skor Kebarangkalian (Penilaian)',
     'skor_impak': 'Skor Impak (Penilaian)',
-    'skor_risiko_penilaian': 'Skor Risiko (Penilaian)',
+    'skor_risiko_penilaian': 'Tahap Risiko (Penilaian)',
     'skor_kebarangkalian_selepas': 'Skor Kebarangkalian (Keberkesanan)',
     'skor_impak_selepas': 'Skor Impak (Keberkesanan)',
-    'skor_risiko_keberkesanan': 'Skor Risiko (Keberkesanan)',
+    'skor_risiko_keberkesanan': 'Tahap Risiko (Keberkesanan)',
 };
 
 // Fungsi format skor risiko

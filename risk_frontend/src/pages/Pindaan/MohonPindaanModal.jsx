@@ -186,7 +186,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             className={`pilih-risiko-tab-button ${activeTab === 'pemantauan' ? 'active' : ''}`}
                             onClick={() => setActiveTab('pemantauan')}
                         >
-                            Pemantauan Terkini
+                            Pemantauan Risiko
                         </button>
                     </div>
                     
@@ -250,7 +250,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                     {activeTab === 'pengenalpastian' ? (
                                         <th className="pilih-risiko-th" colSpan="5">Pengenalpastian Risiko</th>
                                     ) : (
-                                        <th className="pilih-risiko-th" colSpan="7">Pemantauan Terkini</th>
+                                        <th className="pilih-risiko-th" colSpan="7">Pemantauan Risiko</th>
                                     )}
                                     <th className="pilih-risiko-th" rowSpan="2">Tindakan</th>
                                 </tr>
@@ -260,7 +260,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                             <th className="pilih-risiko-th">No Rujukan</th>
                                             <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
                                             <th className="pilih-risiko-th">Risiko</th>
-                                            <th className="pilih-risiko-th th-wrap">Skor Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Tahap Risiko</th>
                                             <th className="pilih-risiko-th th-wrap">Pindaan Penilaian</th>
                                         </>
                                     ) : (
@@ -269,7 +269,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                             <th className="pilih-risiko-th th-wrap">Tahun & Separuh</th>
                                             <th className="pilih-risiko-th">Risiko</th>
                                             <th className="pilih-risiko-th th-wrap">Pelan Tindakan</th>
-                                            <th className="pilih-risiko-th th-wrap">Skor Risiko</th>
+                                            <th className="pilih-risiko-th th-wrap">Tahap Risiko</th>
                                             <th className="pilih-risiko-th th-wrap">Pindaan Keberkesanan</th>
                                             <th className="pilih-risiko-th th-wrap">Status</th>
                                         </>

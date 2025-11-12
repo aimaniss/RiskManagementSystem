@@ -77,7 +77,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                         {/* Row 1: No Rujukan | Subsidiari */}
                         <div className="detail-row">
                             <div className="detail-pair">
-                                <span className="detail-label-inline">No Rujukan Risiko:</span>
+                                <span className="detail-label-inline">No Rujukan:</span>
                                 <span className="detail-value-inline">{amendment.no_rujukan || 'N/A'}</span>
                             </div>
                             <div className="detail-pair">

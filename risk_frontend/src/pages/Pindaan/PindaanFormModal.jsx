@@ -122,7 +122,7 @@ const RiskScoringBlock = ({
 
             {/* Skor Asal Rujukan */}
             <div className="pemantauan-flex-row pemantauan-original-score-row">
-                 <span className="pemantauan-original-title">Data Skor Rujukan:</span>
+                 <span className="pemantauan-original-title">Data Rujukan:</span>
                  <div className="pemantauan-flex-item pemantauan-original-item">
                       <label className="pemantauan-label-inline">Skor Kebarangkalian:</label>
                       <span className="pemantauan-data-inline pemantauan-textonly" title={getOriginalDescription(originalLikelihood, 'likelihood')}>
@@ -136,7 +136,7 @@ const RiskScoringBlock = ({
                       </span>
                  </div>
                  <div className="pemantauan-flex-item pemantauan-original-item">
-                      <label className="pemantauan-label-inline">Skor Risiko:</label>
+                      <label className="pemantauan-label-inline">Tahap Risiko:</label>
                       <span
                             className="pemantauan-data-inline risk-score-badge"
                             style={{
@@ -172,7 +172,7 @@ const RiskScoringBlock = ({
                     />
                 </div>
                 <div className="pemantauan-flex-item">
-                    <label className="pemantauan-label-inline">Skor Risiko (Baru):</label>
+                    <label className="pemantauan-label-inline">Tahap Risiko (Baru):</label>
                     <span
                          className="pemantauan-data-inline risk-score-badge"
                          style={{
@@ -363,7 +363,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                         {/* --- Rendering Bersyarat untuk Blok Penilaian --- */}
                         {hasInitialAssessmentScore && (
                             <RiskScoringBlock
-                                title="Penilaian Risiko (Pengenalpastian)"
+                                title="Pindaan Penilaian Risiko"
                                 originalLikelihood={originalData.skor_kebarangkalian}
                                 originalImpact={originalData.skor_impak}
                                 likelihoodValue={formData.skor_kebarangkalian}
@@ -381,7 +381,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                         {/* --- DIUBAH: Blok Keberkesanan kini guna `_selepas` --- */}
                         {hasMonitoringData && (
                             <RiskScoringBlock
-                                title="Keberkesanan Tindakan (Pemantauan)"
+                                title="Pindaan Keberkesanan Tindakan"
                                 originalLikelihood={originalData.skor_kebarangkalian_selepas}
                                 originalImpact={originalData.skor_impak_selepas}
                                 likelihoodValue={formData.skor_kebarangkalian_selepas}
