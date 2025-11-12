@@ -24,7 +24,6 @@ function PenilaianDanRawatan() {
     const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
     const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
-    // Matrix Risiko (5x5)
     const riskMatrix = {
         1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
         2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
@@ -50,7 +49,8 @@ function PenilaianDanRawatan() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await api.get("/rawatan");
+            // 🌟 GUNA ENDPOINT BARU
+            const res = await api.get("/rawatan/with-status");
             
             const dataWithScore = res.data.map(d=>{
                 const k = parseInt(d.skor_kebarangkalian)||0;
@@ -68,10 +68,13 @@ function PenilaianDanRawatan() {
                     plan_tindakan: Array.isArray(planTindakan) ? planTindakan : [planTindakan].filter(p => p),
                     kakitangan_bertanggungjawab: Array.isArray(kakitangan) ? kakitangan : [kakitangan].filter(k => k),
                     bahagian_unit: d.bahagian || d.unit || null,
+                    status_pemantauan: d.status_pemantauan || "Buka",
                 };
             });
             setData(dataWithScore);
-        } catch(err){ console.error("❌ Gagal fetch rawatan risiko:",err); }
+        } catch(err){ 
+            console.error("❌ Gagal fetch rawatan risiko:",err); 
+        }
         finally{ setLoading(false); }
     };
 
@@ -131,6 +134,19 @@ function PenilaianDanRawatan() {
     const penilaianColSpan = 9; 
     const rawatanColSpan = 11; 
 
+    const getStatusPemantauanStyle = (status) => {
+        switch(status) {
+            case "Buka":
+                return { backgroundColor: "#fef3c7", color: "#92400e" };
+            case "Sedang Dilaksanakan":
+                return { backgroundColor: "#bfdbfe", color: "#1e40af" };
+            case "Pemantauan":
+                return { backgroundColor: "#dcfce7", color: "#166534" };
+            default:
+                return { backgroundColor: "#f1f5f9", color: "#475569" };
+        }
+    };
+
     const renderTableContent = () => {
         const currentColSpan = activeTab === 'penilaian' ? penilaianColSpan : rawatanColSpan;
         
@@ -144,10 +160,9 @@ function PenilaianDanRawatan() {
 
         return filteredData.map((d,i)=>(
             <tr key={i}> 
-                <td>{i+1}</td> {/* Lajur BIL. */}
+                <td>{i+1}</td>
                 
                 {activeTab === 'penilaian' ? (
-                    // Laju data untuk Tab Penilaian
                     <>
                         <td>{d.no_rujukan}</td>
                         <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
@@ -157,8 +172,8 @@ function PenilaianDanRawatan() {
                         <td className="pr-group-divider">{d.risiko}</td>
 
                         <td className="pr-center">
-                            <div className="pr-risk-box" style={{backgroundColor:"#fca5a5", color:"#991b1b"}}>
-                                BELUM DINILAI
+                            <div className="pr-risk-box" style={getStatusPemantauanStyle(d.status_pemantauan)}>
+                                {d.status_pemantauan || "Buka"}
                             </div>
                         </td>
                         <td className="pr-actions">
@@ -168,7 +183,6 @@ function PenilaianDanRawatan() {
                         </td>
                     </>
                 ) : (
-                    // Laju data untuk Tab Rawatan
                     <>
                         <td>{d.no_rujukan}</td>
                         <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
@@ -177,29 +191,24 @@ function PenilaianDanRawatan() {
                         <td>{d.bahagian_unit||"-"}</td>
                         <td>{d.risiko}</td>
 
-                        {/* Data untuk "Skor Risiko" (R/S/T) */}
                         <td className="pr-center">
                             <div className="pr-risk-box" style={{backgroundColor:d.risk_color}}>
                                 {shortForm(d.tahap_risiko)}
                             </div>
                         </td>
                         
-                        {/* 🌟 PEMBETULAN DI SINI 🌟 */}
-                        {/* Data untuk "Status Risiko" (dari d.status_risiko) */}
                         <td className="pr-center pr-group-divider">
                             <div className="pr-risk-box" style={{backgroundColor:"#e0f2fe", color:"#005fa3"}}>
                                 {d.status_risiko || "-"}
                             </div>
                         </td>
 
-                        {/* STATUS RAWATAN */}
                         <td className="pr-center">
-                            <div className="pr-risk-box" style={{backgroundColor:"#fca5a5", color:"#991b1b", minWidth:"150px"}}>
-                                RAWATAN BELUM DIBERI
+                            <div className="pr-risk-box" style={getStatusPemantauanStyle(d.status_pemantauan)}>
+                                {d.status_pemantauan || "Sedang Dilaksanakan"}
                             </div>
                         </td>
 
-                        {/* TINDAKAN (ADD RAWATAN) */}
                         <td className="pr-actions">
                             <button onClick={()=>handleAction(d)} className="pr-btn-action pr-btn-add">
                                 <Plus size={16}/>
@@ -219,7 +228,6 @@ function PenilaianDanRawatan() {
         <div className="penilaian-rawatan-container">
             <h2>Penilaian & Rawatan Risiko</h2>
             
-            {/* Tabs */}
             <div className="pr-tab-container">
                 <button 
                     className={`pr-tab-button ${activeTab === 'penilaian' ? 'pr-active' : ''}`}
@@ -235,7 +243,6 @@ function PenilaianDanRawatan() {
                 </button>
             </div>
 
-            {/* Filter Sebaris */}
             <div className="pr-filter-container">
                 <input type="text" placeholder="Cari No Rujukan..." value={search} onChange={e=>setSearch(e.target.value)} />
                 <select value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
@@ -257,14 +264,11 @@ function PenilaianDanRawatan() {
                 </select>
             </div>
 
-            {/* Table */}
             <div className="pr-table-wrapper">
                 <table className={tableClassName}> 
-                    
                     <thead key={activeTab}> 
                         {activeTab === 'penilaian' ? (
                             <>
-                                {/* === TAB PENILAIAN === */}
                                 <tr>
                                     <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
                                     <th colSpan="6" className="pr-header-penilaian">Maklumat Risiko</th> 
@@ -273,16 +277,16 @@ function PenilaianDanRawatan() {
                                 <tr>
                                     <th>NO RUJUKAN</th>
                                     <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                    <th>Syarikat</th><th>Kategori Risiko</th> 
+                                    <th>Syarikat</th>
+                                    <th>Kategori Risiko</th> 
                                     <th>Bahagian/Unit</th>
                                     <th className="pr-group-divider">Risiko</th>
-                                    <th className="pr-center">Status Penilaian</th> 
+                                    <th className="pr-center">Status Pemantauan</th>
                                     <th className="pr-center">Tindakan</th>
                                 </tr>
                             </>
                         ) : (
                             <>
-                                {/* === TAB RAWATAN === */}
                                 <tr>
                                     <th rowSpan="2" style={{minWidth:'40px'}}>BIL.</th>
                                     <th colSpan="8" className="pr-header-penilaian">Maklumat Risiko</th>
@@ -291,12 +295,13 @@ function PenilaianDanRawatan() {
                                 <tr>
                                     <th>No Rujukan</th>
                                     <th style={{lineHeight:'1.2'}}>Tahun<br/>Separuh Tahun</th>
-                                    <th>Syarikat</th><th>Kategori Risiko</th>
-                                    <th>Bahagian/Unit</th><th>Risiko</th>
-                                    
+                                    <th>Syarikat</th>
+                                    <th>Kategori Risiko</th>
+                                    <th>Bahagian/Unit</th>
+                                    <th>Risiko</th>
                                     <th className="pr-center">Skor Risiko</th> 
                                     <th className="pr-center pr-group-divider">Status Risiko</th>
-                                    <th className="pr-center">Status Rawatan</th>
+                                    <th className="pr-center">Status Pemantauan</th>
                                     <th className="pr-center">Tindakan</th>
                                 </tr>
                             </>
@@ -309,7 +314,6 @@ function PenilaianDanRawatan() {
                 </table>
             </div>
 
-            {/* PENGENDALIAN MODAL PENILAIAN */}
             {showPenilaianModal && (
                 <PenilaianModal
                     isOpen={showPenilaianModal} 
@@ -321,7 +325,6 @@ function PenilaianDanRawatan() {
                 />
             )}
 
-            {/* PENGENDALIAN MODAL RAWATAN */}
             {showRawatanModal && (
                 <EditRawatan 
                     isOpen={showRawatanModal} 

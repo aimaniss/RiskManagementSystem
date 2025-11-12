@@ -1,13 +1,13 @@
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-// ⭐️ 1. Import 'catatAktiviti'
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 const router = express.Router();
 
 /* =======================================================
-   🟢 GET: Semua Rawatan Risiko (Kekal Sama)
+   🟢 GET: Semua Rawatan Risiko (KEKAL SAMA - JANGAN USIK!)
+   Endpoint ni digunakan oleh RawatanRisiko.jsx, PemantauanRisiko.jsx
    ======================================================= */
 router.get("/", verifyToken, async (req, res) => {
     try {
@@ -53,26 +53,167 @@ LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)`;
 });
 
 /* =======================================================
-   🟢 POST: Tambah Rawatan Risiko (DIKEMASKINI DENGAN LOG)
+   🆕 GET: Rawatan WITH Status Pemantauan (ENDPOINT BARU!)
+   Khusus untuk PenilaianDanRawatan.jsx sahaja
    ======================================================= */
-router.post("/", verifyToken, async (req, res) => {
+router.get("/with-status", verifyToken, async (req, res) => {
+    try {
+        const user = req.user;
+        let query = `
+SELECT 
+    r.risiko_id, r.no_rujukan, r.tahun, r.separuh_tahun,
+    r.subsidiari::integer AS subsidiari_id, s.nama_subsidiari AS nama_subsidiari,
+    r.kategori, r.bahagian, r.status_risiko, r.risiko,
+    r.skor_kebarangkalian, r.skor_impak, r.skor_risiko,
+    rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap AS tempoh_jangkaan_siap,
+    COALESCE(lp.status_pemantauan, 'Buka') AS status_pemantauan,
+    ARRAY(
+        SELECT pelan_tindakan 
+        FROM pelan_tindakan_rawatan 
+        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id
+    ) AS plan_tindakan,
+    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
+    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
+    ARRAY(
+        SELECT nama_kakitangan 
+        FROM kakitangan_rawatan 
+        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id
+    ) AS kakitangan_bertanggungjawab
+FROM risiko r
+LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
+LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+LEFT JOIN LogPemantauan lp 
+    ON lp.risiko_id = r.risiko_id 
+    AND lp.tahun_pemantauan = r.tahun 
+    AND lp.separuh_tahun_pemantauan = r.separuh_tahun`;
+
+        const params = [];
+
+        if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
+            query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`; 
+            params.push(user.subsidiari_id);
+        }
+
+        query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
+
+        const { rows } = await pool.query(query, params);
+        res.json(rows);
+    } catch (err) {
+        console.error("❌ Ralat GET /rawatan/with-status:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+/* =======================================================
+   🆕 PUT: UPDATE PENILAIAN + STATUS PEMANTAUAN (FIXED!)
+   ======================================================= */
+router.put("/penilaian/:risiko_id", verifyToken, async (req, res) => {
     const client = await pool.connect();
-    // ⭐️ Ambil 'user' untuk log
     const user = req.user;
 
     try {
-        const { risiko_id, jenis_kawalan, tempoh_jangkaan_siap, plan_tindakan, kakitangan_bertanggungjawab } = req.body;
+        const { risiko_id } = req.params;
+        const {
+            skorKebarangkalian,
+            skorImpak,
+            skorRisiko,
+            statusRisiko,
+            // tahapRisiko - JANGAN GUNA, column tak wujud!
+        } = req.body;
+
+        await client.query("BEGIN");
+
+        // 1. Get risiko data
+        const { rows: riskRows } = await client.query(
+            "SELECT no_rujukan, tahun, separuh_tahun FROM risiko WHERE risiko_id = $1",
+            [risiko_id]
+        );
+
+        if (riskRows.length === 0) {
+            await client.query("ROLLBACK");
+            client.release();
+            return res.status(404).json({ message: "Risiko tidak ditemui." });
+        }
+
+        const { no_rujukan, tahun, separuh_tahun } = riskRows[0];
+
+        // 🌟 2. UPDATE RISIKO - BUANG tahap_risiko!
+        await client.query(
+            `UPDATE risiko
+             SET skor_kebarangkalian = $1,
+                 skor_impak = $2,
+                 skor_risiko = $3,
+                 status_risiko = $4,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE risiko_id = $5`,
+            [skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, risiko_id]
+        );
+
+        // 3. UPDATE STATUS PEMANTAUAN
+        try {
+            await client.query(
+                `UPDATE LogPemantauan
+                 SET status_pemantauan = $1,
+                     tarikh_kemaskini = CURRENT_TIMESTAMP
+                 WHERE risiko_id = $2 
+                 AND tahun_pemantauan = $3 
+                 AND separuh_tahun_pemantauan = $4`,
+                ["Sedang Dilaksanakan", risiko_id, tahun, separuh_tahun]
+            );
+        } catch (logErr) {
+            console.warn("⚠️ Gagal update LogPemantauan:", logErr.message);
+        }
+
+        await client.query("COMMIT");
+
+        // 4. Log aktiviti
+        try {
+            const logRingkasan = `Menilai risiko: ${no_rujukan}`;
+            const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah membuat penilaian untuk risiko ${no_rujukan}. Status pemantauan dikemaskini kepada: Sedang Dilaksanakan.`;
+            await catatAktiviti(user.pengguna_id, "Penilaian Risiko", logRingkasan, logPerincian);
+        } catch (logErr) {
+            console.error("Gagal mencatat log aktiviti:", logErr);
+        }
+
+        res.json({ 
+            message: "Penilaian risiko berjaya dikemaskini", 
+            status_pemantauan: "Sedang Dilaksanakan" 
+        });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("❌ Ralat PUT /rawatan/penilaian/:risiko_id:", err);
+        res.status(500).json({ message: "Gagal mengemaskini penilaian: " + err.message });
+    } finally {
+        client.release();
+    }
+});
+
+/* =======================================================
+   🟢 POST: Tambah Rawatan + Update Status (SEDIKIT MODIFY)
+   ======================================================= */
+router.post("/", verifyToken, async (req, res) => {
+    const client = await pool.connect();
+    const user = req.user;
+
+    try {
+        const { 
+            risiko_id, 
+            jenis_kawalan, 
+            tempoh_jangkaan_siap, 
+            plan_tindakan, 
+            kakitangan_bertanggungjawab 
+        } = req.body;
 
         if (!risiko_id || !jenis_kawalan) {
-            client.release(); // Lepaskan client sebelum return
+            client.release();
             return res.status(400).json({ message: "Maklumat risiko (risiko_id) dan Jenis Kawalan diperlukan." });
         }
 
         await client.query("BEGIN");
 
-        // ⭐️ Dapatkan 'no_rujukan' untuk log
+        // Get risiko data
         const { rows: riskRows } = await client.query(
-            "SELECT no_rujukan FROM risiko WHERE risiko_id = $1",
+            "SELECT no_rujukan, tahun, separuh_tahun FROM risiko WHERE risiko_id = $1",
             [risiko_id]
         );
         if (riskRows.length === 0) {
@@ -80,7 +221,7 @@ router.post("/", verifyToken, async (req, res) => {
             client.release();
             return res.status(404).json({ message: "Risiko induk tidak ditemui." });
         }
-        const noRujukanUntukLog = riskRows[0].no_rujukan;
+        const { no_rujukan, tahun, separuh_tahun } = riskRows[0];
 
         // 1️⃣ Tambah rawatan utama
         const result = await client.query(
@@ -117,24 +258,37 @@ router.post("/", verifyToken, async (req, res) => {
             }
         }
 
-        // 4️⃣ Commit
-        await client.query("COMMIT");
-
-        // ⭐️ 5. Catat Log Aktiviti (SELEPAS COMMIT)
+        // 🌟 4️⃣ UPDATE STATUS PEMANTAUAN (macam DaftarRisiko.jsx pattern)
         try {
-            const logRingkasan = `Menambah rawatan untuk risiko: ${noRujukanUntukLog}.`;
-            const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah menambah rawatan (Jenis: ${jenis_kawalan}) untuk risiko No. Rujukan: ${noRujukanUntukLog}.`;
-            await catatAktiviti(
-                user.pengguna_id, 
-                "Tambah Rawatan", 
-                logRingkasan, 
-                logPerincian
+            await client.query(
+                `UPDATE LogPemantauan
+                 SET status_pemantauan = $1,
+                     tarikh_kemaskini = CURRENT_TIMESTAMP
+                 WHERE risiko_id = $2 
+                 AND tahun_pemantauan = $3 
+                 AND separuh_tahun_pemantauan = $4`,
+                ["Pemantauan", risiko_id, tahun, separuh_tahun]
             );
         } catch (logErr) {
-            console.error("Gagal mencatat log selepas TAMBAH rawatan:", logErr);
+            console.warn("⚠️ Gagal update LogPemantauan:", logErr.message);
         }
 
-        res.status(201).json({ message: "Rawatan risiko berjaya ditambah", rawatan_id });
+        await client.query("COMMIT");
+
+        // Log aktiviti
+        try {
+            const logRingkasan = `Menambah rawatan untuk risiko: ${no_rujukan}.`;
+            const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah menambah rawatan (Jenis: ${jenis_kawalan}) untuk risiko No. Rujukan: ${no_rujukan}. Status pemantauan dikemaskini kepada: Pemantauan.`;
+            await catatAktiviti(user.pengguna_id, "Tambah Rawatan", logRingkasan, logPerincian);
+        } catch (logErr) {
+            console.error("Gagal mencatat log:", logErr);
+        }
+
+        res.status(201).json({ 
+            message: "Rawatan risiko berjaya ditambah", 
+            rawatan_id,
+            status_pemantauan: "Pemantauan"
+        });
     } catch (err) {
         await client.query("ROLLBACK");
         console.error("❌ Ralat POST /rawatan:", err);
@@ -145,11 +299,10 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   🟡 PUT: Kemas Kini Rawatan Risiko (DIKEMASKINI DENGAN LOG)
+   🟡 PUT, DELETE, GET/:risiko_id - KEKAL SAMA (EXISTING CODE)
    ======================================================= */
 router.put("/:rawatan_id", verifyToken, async (req, res) => {
     const client = await pool.connect();
-    // ⭐️ Ambil 'user' untuk log
     const user = req.user;
 
     try {
@@ -158,7 +311,6 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
 
         await client.query("BEGIN");
 
-        // ⭐️ Dapatkan 'no_rujukan' untuk log
         const { rows: riskRows } = await client.query(
             "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1",
             [rawatan_id]
@@ -170,12 +322,9 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
         }
         const noRujukanUntukLog = riskRows[0].no_rujukan;
 
-
-        // 1️⃣ Padam data lama
         await client.query(`DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
         await client.query(`DELETE FROM kakitangan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
 
-        // 2️⃣ Masukkan semula pelan tindakan
         if (Array.isArray(plan_tindakan)) {
             for (const pelan of plan_tindakan) {
                 if (pelan && pelan.trim() !== "") {
@@ -188,7 +337,6 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
             }
         }
 
-        // 3️⃣ Masukkan semula kakitangan
         if (Array.isArray(kakitangan_bertanggungjawab)) {
             for (const kakitangan of kakitangan_bertanggungjawab) {
                 if (kakitangan && kakitangan.trim() !== "") {
@@ -201,7 +349,6 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
             }
         }
 
-        // 4️⃣ Kemas kini rawatan_risiko utama
         const updateResult = await client.query(
             `UPDATE rawatan_risiko
              SET jenis_kawalan = $1,
@@ -214,14 +361,12 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
         
         if (updateResult.rowCount === 0) {
              await client.query("ROLLBACK");
-             client.release(); // Lepaskan client
+             client.release();
              return res.status(404).json({ message: "Rekod rawatan tidak ditemui untuk dikemaskini." });
         }
 
-        // 5️⃣ Commit
         await client.query("COMMIT");
 
-        // ⭐️ 6. Catat Log Aktiviti (SELEPAS COMMIT)
         try {
             const logRingkasan = `Mengemaskini rawatan untuk risiko: ${noRujukanUntukLog}.`;
             const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah mengemaskini rawatan (Jenis: ${jenis_kawalan}) untuk risiko No. Rujukan: ${noRujukanUntukLog}.`;
@@ -245,17 +390,12 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
     }
 });
 
-/* =======================================================
-   🔴 DELETE: Padam Rawatan Risiko (DIKEMASKINI DENGAN LOG)
-   ======================================================= */
 router.delete("/:rawatan_id", verifyToken, async (req, res) => {
-    // ⭐️ Ambil 'user' untuk log
     const user = req.user;
     
     try {
         const { rawatan_id } = req.params;
 
-        // ⭐️ 1. Dapatkan 'no_rujukan' untuk log SEBELUM padam
         const { rows: riskRows } = await pool.query(
             "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1",
             [rawatan_id]
@@ -266,17 +406,12 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
         }
         const noRujukanUntukLog = riskRows[0].no_rujukan;
 
-        // 2. Lakukan pemadaman
-        // Anda tidak perlukan transaksi di sini jika DDL anda mempunyai CASCADE DELETE
         const result = await pool.query(`DELETE FROM rawatan_risiko WHERE rawatan_id = $1`, [rawatan_id]);
         
         if (result.rowCount === 0) {
-            // Ini secara teknikal tidak akan berlaku kerana semakan di atas,
-            // tetapi baik untuk ada
             return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
         }
 
-        // ⭐️ 3. Catat Log Aktiviti (SELEPAS DELETE)
         try {
             const logRingkasan = `Memadam rawatan untuk risiko: ${noRujukanUntukLog}.`;
             const logPerincian = `${user.nama_penuh} (ID Staf: ${user.staff_id}) telah memadam rawatan untuk risiko No. Rujukan: ${noRujukanUntukLog}.`;
@@ -297,9 +432,6 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
     }
 });
 
-/* =======================================================
-   🟢 GET: Dapatkan Rawatan Risiko Mengikut risiko_id (Kekal Sama)
-   ======================================================= */
 router.get("/:risiko_id", verifyToken, async (req, res) => {
     try {
         const { risiko_id } = req.params;
