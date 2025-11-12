@@ -331,7 +331,7 @@ function PemantauanRisiko() {
             {/* Kad Ringkasan */}
             <div className="senaraipemantauan-cards-container">
                 <div className="senaraipemantauan-info-card">
-                    <h3>Jumlah Risiko Dipantau</h3>
+                    <h3>Jumlah Risiko </h3>
                     <p>{totalRisiko}</p>
                 </div>
                 <div className="senaraipemantauan-info-card">
@@ -388,7 +388,7 @@ function PemantauanRisiko() {
             <div className="senaraipemantauan-filter-container">
                 <input
                     type="text"
-                    placeholder="Cari No Rujukan / Risiko / Subsidiari..."
+                    placeholder="Cari No Rujukan / Risiko / Syarikat..."
                     className="senaraipemantauan-filter-search"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
@@ -450,13 +450,13 @@ function PemantauanRisiko() {
                         <tr>
                             <th className="senaraipemantauan-th-expand"></th>
                             <th className="senaraipemantauan-th-bil">BIL</th>
-                            <th>Tahun & Separuh Asal</th>
+                            <th>Tahun & Separuh Daftar</th>
                             <th>No Rujukan</th>
                             <th>Risiko</th>
                             <th>Tahun & Separuh Pemantauan</th>
-                            <th>Skor Risiko Sebelum</th>
+                            <th>Tahap Risiko Sebelum</th>
                             <th>Status Pemantauan</th>
-                            <th>Skor Risiko Selepas</th>
+                            <th>Tahap Risiko Selepas</th>
                             <th className="senaraipemantauan-th-tindakan">Tindakan</th>
                         </tr>
                     </thead>

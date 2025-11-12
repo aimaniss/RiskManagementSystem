@@ -44,8 +44,8 @@ const TAHAP_RISIKO_ORDER = {
 };
 
 const KEBERKESANAN_MAPPING = {
-    "Ya": "Berkesan (Menurun atau Kekal)",
-    "Tidak": "Tidak Berkesan (Meningkat)",
+    "Ya": "Berkesan ",
+    "Tidak": "Tidak Berkesan ",
 };
 
 // ================================================================
@@ -599,7 +599,7 @@ export default function TambahLogModal({
 
                         {/*Penilaian dan Keberkesanan Tindakan */}
                         <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Penilaian dan Keberkesanan Tindakan</div>
+                            <div className="tambahlog-box-header">Keberkesanan Tindakan</div>
                             <div className="tambahlog-row">
                                 <div className="tambahlog-item">
                                     <label>Skor Kebarangkalian:</label>
@@ -634,7 +634,7 @@ export default function TambahLogModal({
                                     </select>
                                 </div>
                                 <div className="tambahlog-item">
-                                    <span className="tambahlog-score-label">Skor Risiko :</span>
+                                    <span className="tambahlog-score-label">Tahap Risiko :</span>
                                     <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
                                 </div>
                             </div>
@@ -683,8 +683,8 @@ export default function TambahLogModal({
 
                         {/*Catatan */}
                         <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Catatan</div>
-                            <label>Sila masukkan catatan :</label>
+                            <div className="tambahlog-box-header">Catatan Pemantauan</div>
+                            <label>Catatan:</label>
                             <textarea 
                                 name="catatan" 
                                 value={formData.catatan} 

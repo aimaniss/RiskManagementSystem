@@ -236,10 +236,10 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
       if (label === "R") {
         status = "TIDAK";
         statusDesc =
-          "Risiko sedia terkawal, tiada tindakan rawatan mandatori.";
+          " Risiko tidak memerlukan tindakan segera.";
       } else {
         status = "YA";
-        statusDesc = "Risiko memerlukan tindakan segera dan rekod rawatan.";
+        statusDesc = "Risiko memerlukan tindakan segera ";
       }
     }
 
@@ -443,7 +443,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 	 	 </span>
         	 	 </div>
         	 	 <div className="pemantauan-score-card">
-        	 	 	 <span className="pemantauan-score-label">Skor Risiko</span>
+        	 	 	 <span className="pemantauan-score-label">Tahap Risiko</span>
         	 	 	 <span
         	 	 	 	 className="pemantauan-score-data pemantauan-risk-score-text"
         	 	 	 	 style={{
@@ -622,7 +622,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 	 	 	 	 	 	 <th>Kakitangan Bertanggungjawab</th>
         	 	 	 	 	 	 	 <th>Skor Kebarangkalian</th>
         	 	 	 	 	 	 	 <th>Skor Impak</th>
-        	 	 	 	 	 	 	 <th>Skor Risiko</th>
+        	 	 	 	 	 	 	 <th>Tahap Risiko</th>
         	 	 	 	 	 	 	 <th>Keberkesanan</th>
         	 	 	 	 	 	 	 <th>Status Pemantauan</th>
         	 	 	 	 	 	 	 <th>Kelulusan </th>
