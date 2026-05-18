@@ -18,9 +18,11 @@ dotenv.config();
 const app = express();
 
 // Allow requests from any localhost port (dev-friendly)
+
+
 app.use(cors({
-  origin: "http://localhost:5175",
-  credentials: true,
+    origin: 'http://localhost:5175',
+    credentials: true
 }));
 
 
@@ -39,7 +41,7 @@ app.use("/api/pindaan", pindaanRoutes);
 app.use("/api/log_aktiviti", logAktivitiRoutes);
 app.use("/api/laporan", laporanRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 

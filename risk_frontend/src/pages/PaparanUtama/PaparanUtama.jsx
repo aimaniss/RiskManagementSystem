@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+
+import api from "../../api/api.js";
+
 import FilterModal from "./FilterModal.jsx";
 import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx";
 import DashboardSubsidiari from "./DashboardSubsidiari.jsx";
@@ -17,17 +20,13 @@ const MinimalHeader = ({ setShowModal }) => (
 // ================================
 // 🟦 Pemilih Dashboard (All/Subsidiari)
 // ================================
-// ----- DIUBAH SUAI: Terima `currentUser` untuk semakan peranan -----
 const DashboardRenderer = ({ filterValues, data, currentUser }) => {
-  // Hanya 'ADMIN' (ID 1) dan 'EXECUTIVE' (ID 2) boleh lihat "Semua"
   const adminRoles = [1, 2]; 
   const isAdmin = adminRoles.includes(currentUser?.peranan_id);
 
   if (filterValues.subsidiari === "Semua Subsidiari" && isAdmin) {
     return <DashboardKeseluruhan data={data} />;
   } else {
-    // Pengguna biasa akan sentiasa melihat dashboard subsidiari
-    // (walaupun filter mereka "Semua", ia akan kembali ke subsidiari mereka)
     return <DashboardSubsidiari data={data} />;
   }
 };
@@ -36,10 +35,7 @@ const DashboardRenderer = ({ filterValues, data, currentUser }) => {
 // 🟦 Komponen Utama
 // ================================
 export default function PaparanUtama() {
-  // ----- DIUBAH SUAI: `filterValues` bermula sebagai `null` sehingga data pengguna dimuatkan -----
   const [filterValues, setFilterValues] = useState(null);
-  
-  // ----- BARU: State untuk data pengguna -----
   const [currentUser, setCurrentUser] = useState(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
 
@@ -53,7 +49,7 @@ export default function PaparanUtama() {
   
   const token = localStorage.getItem("token");
 
-  // ----- BARU: Ambil data pengguna semasa (seperti dalam Navbar) -----
+  // ----- DIBETULKAN: Ambil data pengguna menggunakan 'api' -----
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!token) {
@@ -62,15 +58,12 @@ export default function PaparanUtama() {
         return;
       }
       try {
-        const res = await fetch("/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Gagal mendapatkan data pengguna.");
-        const userData = await res.json();
-        setCurrentUser(userData);
+        // Menggunakan api.get() yang automatik ketuk port 5001 dan bawa Token
+        const res = await api.get("/users/me");
+        setCurrentUser(res.data);
       } catch (err) {
         console.error("❌ Ralat ambil pengguna:", err);
-        setError(err.message);
+        setError(err.response?.data?.error || "Gagal mendapatkan data pengguna.");
       } finally {
         setIsUserLoading(false);
       }
@@ -78,27 +71,17 @@ export default function PaparanUtama() {
     fetchCurrentUser();
   }, [token]);
 
-  // Ambil senarai subsidiari untuk dropdown
+  // ----- DIBETULKAN: Ambil senarai subsidiari menggunakan 'api' -----
   useEffect(() => {
     const fetchSubsidiari = async () => {
-      if (!token) return; // Tunggu token
+      if (!token) return; 
       try {
         setSubsidiariLoading(true);
-        const res = await fetch("/api/subsidiari", {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-
-        if (res.status === 401) throw new Error("401 Unauthorized. Sila login semula.");
-        if (!res.ok) throw new Error(`Gagal ambil subsidiari: ${res.status}`);
-
-        const data = await res.json();
-        setSubsidiariOptions(Array.isArray(data) ? data : []);
+        const res = await api.get("/subsidiari");
+        setSubsidiariOptions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("❌ Ralat ambil subsidiari:", err);
-        setError(err.message); // Tetapkan ralat jika gagal
+        setError(err.response?.data?.error || "Gagal memuatkan senarai subsidiari.");
         setSubsidiariOptions([]);
       } finally {
         setSubsidiariLoading(false);
@@ -108,25 +91,22 @@ export default function PaparanUtama() {
     fetchSubsidiari();
   }, [token]);
 
-  // ----- BARU: Tetapkan filter default berdasarkan peranan pengguna -----
+  // Tetapkan filter default berdasarkan peranan pengguna
   useEffect(() => {
-    // Jangan jalankan sehingga kedua-dua data pengguna dan subsidiari dimuatkan
     if (isUserLoading || subsidiariLoading || !currentUser || subsidiariOptions.length === 0) {
       return;
     }
 
-    const adminRoles = [1, 2]; // 1: ADMIN, 2: EXECUTIVE
+    const adminRoles = [1, 2]; 
     const isAdmin = adminRoles.includes(currentUser.peranan_id);
 
     if (isAdmin) {
-      // Admin/Executive bermula dengan "Semua Subsidiari"
       setFilterValues({
         subsidiari: "Semua Subsidiari",
         subsidiariId: "Semua",
         subsidiariName: "Semua Subsidiari",
       });
     } else {
-      // Pengguna lain bermula dengan subsidiari mereka sendiri
       const userSubsidiary = subsidiariOptions.find(
         (s) => s.subsidiari_id === currentUser.subsidiari_id
       );
@@ -138,16 +118,13 @@ export default function PaparanUtama() {
           subsidiariName: userSubsidiary.nama_subsidiari,
         });
       } else {
-        // Fallback jika subsidiari pengguna tidak ditemui (jarang berlaku)
         setError(`Subsidiari ID ${currentUser.subsidiari_id} tidak ditemui.`);
       }
     }
   }, [currentUser, subsidiariOptions, isUserLoading, subsidiariLoading]);
 
-
-  // Ambil data dashboard bila filter berubah
+  // ----- DIBETULKAN: Ambil data dashboard menggunakan 'api' -----
   useEffect(() => {
-    // ----- DIUBAH SUAI: Jangan fetch sehingga filterValues ditetapkan -----
     if (!filterValues || !token) {
       return; 
     }
@@ -157,14 +134,12 @@ export default function PaparanUtama() {
         setIsLoading(true);
         setError(null);
         
-        // Pastikan pengguna biasa tidak boleh 'memaksa' query "Semua"
         const adminRoles = [1, 2];
         const isAdmin = adminRoles.includes(currentUser?.peranan_id);
         
         let finalSubsidiariId = filterValues.subsidiariId;
 
         if (!isAdmin && filterValues.subsidiariId === "Semua") {
-           // Jika bukan admin tapi filter "Semua", paksa guna ID subsidiari pengguna
            finalSubsidiariId = currentUser.subsidiari_id;
         }
 
@@ -173,25 +148,11 @@ export default function PaparanUtama() {
             ? "Semua"
             : encodeURIComponent(finalSubsidiariId);
 
-        // PENTING: API anda di backend (/api/dashboard) 
-        // JUGA MESTI mengesahkan peranan pengguna jika 'subsidiariQuery=Semua' diminta.
-        // Jangan bergantung pada frontend sahaja untuk keselamatan.
-
-        const res = await fetch(`/api/dashboard?subsidiari_id=${subsidiariQuery}`, {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-
-        if (res.status === 401) throw new Error("401 Unauthorized. Sila login semula.");
-        if (!res.ok) throw new Error(`Gagal memuatkan data: ${res.status}`);
-
-        const data = await res.json();
-        setDashboardData(data);
+        const res = await api.get(`/dashboard?subsidiari_id=${subsidiariQuery}`);
+        setDashboardData(res.data);
       } catch (err) {
         console.error(err);
-        setError(err.message);
+        setError(err.response?.data?.error || "Gagal memuatkan data dashboard.");
         setDashboardData(null);
       } finally {
         setIsLoading(false);
@@ -199,9 +160,8 @@ export default function PaparanUtama() {
     };
 
     fetchDashboardData();
-  }, [filterValues, token, currentUser]); // Tambah currentUser sebagai kebergantungan
+  }, [filterValues, token, currentUser]); 
 
-  // ----- DIUBAH SUAI: Tunjukkan status muat data pengguna/filter -----
   if (isUserLoading || subsidiariLoading || !filterValues) {
     return (
       <div className="PaparanUtama">
@@ -224,7 +184,7 @@ export default function PaparanUtama() {
           <DashboardRenderer
             filterValues={filterValues}
             data={dashboardData}
-            currentUser={currentUser} // Hantar data pengguna ke renderer
+            currentUser={currentUser} 
           />
         )}
       </div>
@@ -235,7 +195,6 @@ export default function PaparanUtama() {
           setFilterValues={setFilterValues}
           setShowModal={setShowModal}
           subsidiariOptions={subsidiariOptions}
-          // ----- BARU: Hantar maklumat peranan ke modal -----
           currentUser={currentUser} 
         />
       )}

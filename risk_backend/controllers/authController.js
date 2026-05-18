@@ -3,7 +3,10 @@ import jwt from "jsonwebtoken";
 
 export const login = async (req, res) => {
   const { staff_id, katalaluan } = req.body;
-
+  
+console.log("===============================");
+  console.log("ADA CUBAAN LOGIN DARI FRONTEND!");
+  console.log("Staff ID yang dihantar:", staff_id);
   try {
     const { rows } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan, 

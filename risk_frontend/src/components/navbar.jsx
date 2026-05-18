@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { UserCircle, X, Eye, EyeOff } from "lucide-react";
-import axios from "axios";
-// import NotificationIcon from "../assets/icons/icon_notification.svg"; // <--- DIBUANG
+// Import 'api' yang betul tanpa ralat sintaksis
+import api from "../api/api.js";
 import "./Navbar.css";
 
 function Navbar() {
@@ -23,51 +23,25 @@ function Navbar() {
   const [preview, setPreview] = useState(null);
   const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
   
-  // <--- BAHAGIAN STATE NOTIFIKASI DIBUANG
-  // const [notifications, setNotifications] = useState([]);
-  // const [unreadCount, setUnreadCount] = useState(0);
-  // const [notificationOpen, setNotificationOpen] = useState(false);
-  
   const dropdownRef = useRef(null); 
-  // const notificationRef = useRef(null); // <--- DIBUANG
 
-  // --- TAMBAHAN BARU ---
-  // Objek untuk memetakan nama peranan
   const roleNameMap = {
     "KETUA SUBSIDIARI": "Head Subsidiary",
-    // Tambah terjemahan lain di sini jika perlu
-    // "NAMA_LAIN": "PaparanLain",
   };
 
-  // Fungsi untuk mendapatkan nama paparan
   const getDisplayRoleName = (roleName) => {
     return roleNameMap[roleName] || roleName;
   };
-  // --- TAMAT TAMBAHAN ---
   
   const token = localStorage.getItem("token");
 
-  // --- FUNGSI HELPER TARIKH DIBUANG ---
-  // const formatTimeAgo = (dateString) => { ... };
-
-  // ------------------ Fetch Notifikasi DIBUANG ------------------
-  // const fetchNotifications = async () => { ... };
-
-  // ------------------ Handle Klik Notifikasi DIBUANG ------------------
-  // const handleNotificationClick = () => { ... };
-  
-  // ------------------ Tandakan Notifikasi Telah Dibaca DIBUANG ------------------
-  // const markAsRead = async (id, url) => { ... };
-  
-  // ------------------ Fetch current user & Notifikasi Interval ------------------
   useEffect(() => {
     if (!token) return;
 
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // DIBETULKAN: Guna 'api.get' supaya automatik ke port 5001 mengikut interceptor token asal
+        const res = await api.get("/users/me");
 
         const roleMapping = {
           1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER",
@@ -90,25 +64,12 @@ function Navbar() {
     };
 
     fetchUser();
-    // fetchNotifications(); // <--- DIBUANG
-    
-    // Refresh notifikasi setiap 30 saat DIBUANG
-    // const intervalId = setInterval(fetchNotifications, 30000); 
-
-    // return () => clearInterval(intervalId); 
-    
   }, [token]);
 
-  // ------------------ Close dropdown on outside click ------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Tutup dropdown user
       if (dropdownRef.current && !dropdownRef.current.contains(event.target))
         setOpen(false);
-      
-      // Tutup dropdown notifikasi DIBUANG
-      // if (notificationRef.current && !notificationRef.current.contains(event.target))
-      //   setNotificationOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -143,16 +104,12 @@ function Navbar() {
       if (newProfile) formData.append("gambar_profil", newProfile);
       if (removeProfileFlag) formData.append("hapus_gambar", "true");
 
-      const res = await axios.put(
-        "http://localhost:5000/api/users/me",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // DIBETULKAN: Guna 'api.put' untuk update profil ke port 5001 dengan betul
+      const res = await api.put("/users/me", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setUser((prev) => ({
         ...prev,
@@ -161,7 +118,6 @@ function Navbar() {
           : "",
       }));
 
-      // Reset form
       setPasswordOld("");
       setPasswordNew("");
       setNewProfile(null);
@@ -183,7 +139,6 @@ function Navbar() {
   const openModal = () => {
     setModalOpen(true);
     setOpen(false); 
-    // setNotificationOpen(false); // <--- DIBUANG
   }
   
   const closeModal = () => {
@@ -197,37 +152,16 @@ function Navbar() {
     setShowPasswordNew(false);
   };
   
-  // --- LOGIK PAPARAN BERSYARAT NOTIFIKASI DIBUANG ---
-  // const allowedRoles = ["ADMIN", "EXECUTIVE"];
-  // const isNotificationVisible = allowedRoles.includes(user.role);
-
-  // ------------------ Render ------------------
   return (
     <>
       <div className={`navbar ${modalOpen ? "blurred" : ""}`}>
-        
-        {/* DROPDOWN NOTIFIKASI DIBUANG SEPENUHNYA DARI SINI */}
-        {/* {isNotificationVisible && (
-          <div className="navbar-notification-wrapper" ref={notificationRef}>
-            ... kod notifikasi ...
-          </div>
-        )} */}
-
-        {/* DROPDOWN PROFIL (Kekal untuk semua) */}
         <div className="navbar-user" ref={dropdownRef}>
           <div className="navbar-user-info">
             <div className="user-subsidiari-bold">{user.subsidiari}</div>
-            {/* DIUBAH DI SINI */}
             <div className="user-role-small">{getDisplayRoleName(user.role)}</div>
           </div>
 
-          <div
-            className="profile-wrapper"
-            onClick={() => {
-              setOpen((prev) => !prev);
-              // setNotificationOpen(false); // Tutup notifikasi jika buka profil DIBUANG
-            }}
-          >
+          <div className="profile-wrapper" onClick={() => setOpen((prev) => !prev)}>
             {user.profileImage ? (
               <img src={user.profileImage} alt="User" className="profile-pic" />
             ) : (
@@ -240,19 +174,13 @@ function Navbar() {
               <div className="profile-dropdown-header">
                 <div className="profile-big">
                   {user.profileImage ? (
-                    <img
-                      src={user.profileImage}
-                      alt="User"
-                      className="dropdown-pic"
-                    />
+                    <img src={user.profileImage} alt="User" className="dropdown-pic" />
                   ) : (
                     <UserCircle className="dropdown-icon" size={80} />
                   )}
                 </div>
                 <p className="dropdown-fullname">{user.fullName || "Nama Penuh"}</p>
-                <p className="dropdown-subsidiari">
-                  {user.subsidiariPenuh || "Subsidiari"}
-                </p>
+                <p className="dropdown-subsidiari">{user.subsidiariPenuh || "Subsidiari"}</p>
                 <p className="dropdown-staffid">{user.staffId || "ID Staf"}</p>
               </div>
               <button className="edit-btn" onClick={openModal}>
@@ -276,38 +204,21 @@ function Navbar() {
                 {preview ? (
                   <>
                     <img src={preview} alt="Preview" className="profile-preview" />
-                    <button
-                      type="button"
-                      className="remove-profile-btn"
-                      onClick={handleRemoveProfile}
-                    >
+                    <button type="button" className="remove-profile-btn" onClick={handleRemoveProfile}>
                       Buang
                     </button>
                   </>
                 ) : user.profileImage && !removeProfileFlag ? (
                   <>
-                    <img
-                      src={user.profileImage}
-                      alt="Current"
-                      className="profile-preview"
-                    />
-                    <button
-                      type="button"
-                      className="remove-profile-btn"
-                      onClick={handleRemoveProfile}
-                    >
+                    <img src={user.profileImage} alt="Current" className="profile-preview" />
+                    <button type="button" className="remove-profile-btn" onClick={handleRemoveProfile}>
                       Buang
                     </button>
                   </>
                 ) : (
                   <UserCircle className="profile-placeholder" size={100} />
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="profile-input"
-                />
+                <input type="file" accept="image/*" onChange={handleFileChange} className="profile-input" />
               </div>
 
               <label>Nama Penuh</label>
@@ -331,13 +242,7 @@ function Navbar() {
                   autoComplete="current-password"
                 />
                 <div
-                  style={{
-                    position: "absolute",
-                    right: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    cursor: "pointer",
-                  }}
+                  style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
                   onClick={() => setShowPasswordOld((prev) => !prev)}
                 >
                   {showPasswordOld ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -356,13 +261,7 @@ function Navbar() {
                   autoComplete="new-password"
                 />
                 <div
-                  style={{
-                    position: "absolute",
-                    right: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    cursor: "pointer",
-                  }}
+                  style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
                   onClick={() => setShowPasswordNew((prev) => !prev)}
                 >
                   {showPasswordNew ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -370,9 +269,7 @@ function Navbar() {
               </div>
 
               <div className="filter-buttons">
-                <button type="button" onClick={closeModal}>
-                  Batal
-                </button>
+                <button type="button" onClick={closeModal}>Batal</button>
                 <button type="submit">Simpan</button>
               </div>
             </form>

@@ -25,9 +25,9 @@ const verifyToken = async (req, res, next) => {
       `SELECT 
          u.pengguna_id, 
          u.staff_id, 
-         u.nama_penuh,   -- <-- NAMA KINI DISERTAKAN
+         u.nama_penuh,   
          u.peranan_id, 
-         p.nama_peranan, -- <-- PERANAN KINI DISERTAKAN
+         p.nama_peranan, 
          u.subsidiari_id
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
