@@ -149,7 +149,7 @@ function DeleteRangeModal({ isOpen, onClose, onDeleteSuccess }) {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token tidak dijumpai.");
 
-        const url = new URL("http://localhost:5000/api/log_aktiviti");
+        const url = new URL("http://localhost:5001/api/log_aktiviti");
         url.searchParams.append("tarikhMula", deleteMula);
         url.searchParams.append("tarikhAkhir", deleteAkhir);
 
@@ -264,7 +264,7 @@ function LogAktiviti() {
   // ⭐️ 3. Fungsi untuk fetch Roles (dari rujukan)
   const fetchRoles = async (token) => {
     try {
-      const res = await axios.get("http://localhost:5000/api/roles", {
+      const res = await axios.get("http://localhost:5001/api/roles", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSenaraiPeranan(res.data);
@@ -276,7 +276,7 @@ function LogAktiviti() {
   // ⭐️ 4. Fungsi untuk fetch Subsidiari (dari rujukan)
   const fetchSubsidiaries = async (token) => {
     try {
-      const res = await axios.get("http://localhost:5000/api/subsidiari", {
+      const res = await axios.get("http://localhost:5001/api/subsidiari", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSenaraiSubsidiari(res.data);
@@ -300,7 +300,7 @@ function LogAktiviti() {
     setIsLoading(true);
     setError(null);
     
-    const url = new URL("http://localhost:5000/api/log_aktiviti");
+    const url = new URL("http://localhost:5001/api/log_aktiviti");
     if (tarikhMula) url.searchParams.append("tarikhMula", tarikhMula);
     if (tarikhAkhir) url.searchParams.append("tarikhAkhir", tarikhAkhir);
     if (filterPeranan) url.searchParams.append("peranan", filterPeranan);
@@ -345,7 +345,7 @@ function LogAktiviti() {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token tidak dijumpai.");
 
-        const response = await fetch(`http://localhost:5000/api/log_aktiviti/${logId}`, {
+        const response = await fetch(`http://localhost:5001/api/log_aktiviti/${logId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`

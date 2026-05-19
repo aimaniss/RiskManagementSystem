@@ -41,7 +41,7 @@ function UrusPengguna() {
 
   const fetchRoles = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/roles", {
+      const res = await axios.get("http://localhost:5001/api/roles", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRoles(res.data);
@@ -52,7 +52,7 @@ function UrusPengguna() {
 
   const fetchSubsidiaries = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/subsidiari", {
+      const res = await axios.get("http://localhost:5001/api/subsidiari", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSubsidiaries(res.data);
@@ -63,7 +63,7 @@ function UrusPengguna() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get("http://localhost:5001/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -182,7 +182,7 @@ function UrusPengguna() {
       let res;
       if (selectedUser) {
         res = await axios.put(
-          `http://localhost:5000/api/users/${selectedUser.pengguna_id}`,
+          `http://localhost:5001/api/users/${selectedUser.pengguna_id}`,
           data,
           {
             headers: {
@@ -195,7 +195,7 @@ function UrusPengguna() {
           users.map((u) => (u.pengguna_id === selectedUser.pengguna_id ? res.data : u))
         );
       } else {
-        res = await axios.post("http://localhost:5000/api/users", data, {
+        res = await axios.post("http://localhost:5001/api/users", data, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -214,7 +214,7 @@ function UrusPengguna() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/users/${selectedUser.pengguna_id}`, {
+      await axios.delete(`http://localhost:5001/api/users/${selectedUser.pengguna_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(users.filter((u) => u.pengguna_id !== selectedUser.pengguna_id));
