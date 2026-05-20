@@ -176,11 +176,11 @@ function PenilaianDanRawatan() {
                                 {d.status_pemantauan || "Buka"}
                             </div>
                         </td>
-                        <td className="pr-actions">
-                            <button onClick={()=>handleAction(d)} className="pr-btn-action pr-btn-add">
-                                <Plus size={16}/>
-                            </button>
-                        </td>
+                        <td className="pr-actions" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '8px 0' }}>
+                        <button onClick={()=>handleAction(d)} className="pr-btn-action pr-btn-add">
+                            <Plus size={16}/>
+                        </button>
+                    </td>
                     </>
                 ) : (
                     <>

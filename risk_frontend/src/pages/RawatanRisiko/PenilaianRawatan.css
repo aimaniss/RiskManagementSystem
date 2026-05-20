@@ -78,15 +78,14 @@
 /* === TABLE WRAPPER === */
 .pr-table-wrapper {
   overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
 }
 
 .pr-risiko-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse; /* FIXED: Kembalikan kepada collapse supaya garisan tak double */
   min-width: 850px;
 }
 
@@ -94,37 +93,62 @@
   min-width: 1000px;
 }
 
-/* ✅ HEADER TABLE UPPERCASE */
+/* === HEADER STYLING === */
 .pr-risiko-table th {
-  background-color: #e0f2fe;
-  color: #005fa3;
-  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px 10px;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  white-space: nowrap;
   vertical-align: middle;
+  border: 1px solid #cbd5e1; /* Standard border */
 }
 
+/* Tingkat Atas */
 .pr-risiko-table thead tr:first-child th {
-  border-top: 1px solid #e5e7eb;
+  background-color: #004071;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-color: #004071; /* Blendkan garisan luar */
+  border-bottom: 1px solid #ffffff; /* Pemisah melintang putih */
+  border-right: 1px solid #ffffff; /* Pemisah menegak putih */
+}
+
+/* Tingkat Bawah (Sub-kategori) */
+.pr-risiko-table thead tr:last-child th {
+  background-color: #005698;
+  font-weight: 500;
+  border-color: #005698;
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 2px solid #cbd5e1;
+}
+
+/* Jika ada lajur yang bercantum (rowSpan) dari atas ke bawah */
+.pr-risiko-table thead tr:first-child th[rowspan] {
+  background-color: #004071;
+  border-color: #004071;
+  border-bottom: 2px solid #cbd5e1;
+  border-right: 1px solid #ffffff;
 }
 
 /* Data rows */
 .pr-risiko-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 12px;
-  color: #101111;
+  padding: 12px 10px;
+  border: 1px solid #e2e8f0; /* Garisan yang lebih kemas, takkan bertindih sebab 'collapse' */
+  font-size: 13px;
+  color: #334155;
   background-color: #fff;
   vertical-align: middle;
+  transition: background-color 0.1s;
+}
+
+/* Hover & Shading (Zebra-striping diletak !important untuk tindih sebarang warna HTML asal) */
+.pr-risiko-table tr:nth-child(even) td {
+  background-color: #f8fafc !important;
 }
 
 .pr-risiko-table tr:hover td {
-  background-color: #e0f2fe;
+  background-color: #f1f5f9 !important;
 }
 
 /* Peraturan CSS untuk center alignment */
@@ -139,11 +163,8 @@
 /* GAYA HEADER KUMPULAN */
 .pr-risiko-table th.pr-header-penilaian,
 .pr-risiko-table th.pr-header-rawatan {
-  padding: 8px 10px;
+  padding: 12px 10px;
   text-align: center;
-}
-.pr-risiko-table th.pr-header-penilaian {
-  border-right: 1px solid #e5e7eb;
 }
 
 /* === PENGURUSAN LEBAR LAJUR === */
@@ -187,11 +208,6 @@
   width: auto;
 }
 
-.pr-risiko-table th.pr-group-divider,
-.pr-risiko-table td.pr-group-divider {
-  border-right: 1px solid #e5e7eb;
-}
-
 /* === RAWATAN === */
 .pr-risiko-table.rawatan-active th:nth-child(8),
 .pr-risiko-table.rawatan-active tr td:nth-child(8) {
@@ -217,7 +233,7 @@
 /* Kotak Skor Risiko/Status */
 .pr-risk-box {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   color: white;
   font-weight: 600;
@@ -227,12 +243,14 @@
   white-space: nowrap;
 }
 
-/* ACTION BUTTONS */
+/* === ACTION BUTTONS & FIX KOTAK DOUBLE === */
 .pr-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  align-items: center;
+  /* Padam display flex dan alignment flex */
+  text-align: center; /* Pusatkan butang ke tengah secara mendatar */
+  vertical-align: middle; /* Pusatkan butang ke tengah secara menegak */
+  padding: 8px; /* Boleh ubah ikut kesesuaian ruang */
+  background-color: transparent !important;
+  border: none !important;
 }
 
 .pr-btn-action {
@@ -271,8 +289,9 @@
 .pr-loading,
 .pr-no-data {
   text-align: center;
-  padding: 20px;
+  padding: 24px;
   font-style: italic;
-  color: #6b7280;
+  color: #64748b;
+  font-weight: 500;
   font-size: 13px;
 }
