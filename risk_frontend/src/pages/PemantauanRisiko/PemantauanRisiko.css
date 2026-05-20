@@ -131,14 +131,14 @@
   margin: 0 auto;
   font-family: "Inter", sans-serif;
   overflow-x: hidden;
-  background-color: #f9fafb;
+  background-color: #ffffff;
   min-height: 100vh;
 }
 .senaraipemantauan-container h1 {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #005fa3;
+  color: #004071; /* Ditukar ke biru RM */
 }
 
 /* === SUMMARY CARDS === */
@@ -155,13 +155,13 @@
   background-color: #ffffff;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 .senaraipemantauan-info-card h3 {
   font-size: 10px;
   font-weight: 600;
-  color: #4b5563;
+  color: #64748b;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -169,16 +169,16 @@
 .senaraipemantauan-info-card p {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2937;
+  color: #0f172a;
   margin-bottom: 4px;
 }
 .senaraipemantauan-success-card h3,
 .senaraipemantauan-danger-card h3 {
-  color: #4b5563;
+  color: #64748b;
 }
 .senaraipemantauan-success-card p,
 .senaraipemantauan-danger-card p {
-  color: #1f2937;
+  color: #0f172a;
 }
 
 /* === BAR CHART STYLES === */
@@ -196,7 +196,7 @@
 }
 .senaraipemantauan-barchart-label {
   font-size: 10px;
-  color: #4b5563;
+  color: #64748b;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -204,7 +204,7 @@
   text-align: left;
 }
 .senaraipemantauan-barchart-bar-bg {
-  background: #f3f4f6;
+  background: #f1f5f9;
   border-radius: 4px;
   height: 10px;
   overflow: hidden;
@@ -217,7 +217,7 @@
 .senaraipemantauan-barchart-count {
   font-size: 10px;
   font-weight: 600;
-  color: #1f2937;
+  color: #0f172a;
   text-align: right;
 }
 
@@ -238,49 +238,53 @@
 }
 
 .senaraipemantauan-filter-search {
-  padding: 6px 10px;
-  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: white;
   font-size: 13px;
-  color: #374151;
+  color: #334155;
   flex: 1;
   min-width: 150px;
   max-width: 250px;
+  transition: all 0.2s;
 }
 .senaraipemantauan-filter-search::placeholder {
-  color: #9ca3af;
+  color: #94a3b8;
   font-weight: 400;
 }
 .senaraipemantauan-filter-search:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  outline: none;
   border-color: #0074c8;
-  box-shadow: 0 0 0 1px #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
 }
 .senaraipemantauan-filter-select {
-  padding: 6px 10px;
-  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
-  background-color: white;
+  background-color: #f8fafc;
   font-size: 13px;
-  font-weight: 500;
-  color: #374151;
+  color: #334155;
   cursor: pointer;
   flex-grow: 0;
   flex-shrink: 0;
   min-width: 120px;
 }
+.senaraipemantauan-filter-select:focus {
+  outline: none;
+  border-color: #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
+}
 
 /* GAYA BUTTON FILTER */
 .senaraipemantauan-filter-btn {
-  padding: 6px 10px;
-  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   background-color: white;
   font-size: 13px;
   font-weight: 500;
-  color: #4b5563;
+  color: #334155;
   cursor: pointer;
   flex-grow: 0;
   flex-shrink: 0;
@@ -290,8 +294,7 @@
   transition: all 0.2s;
 }
 .senaraipemantauan-filter-btn:hover {
-  background-color: #f3f4f6;
-  border-color: #b3dfff;
+  background-color: #f1f5f9;
 }
 .senaraipemantauan-filter-btn.active {
   background-color: #e0f2fe;
@@ -304,9 +307,8 @@
 .senaraipemantauan-table-wrapper {
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   background-color: #ffffff;
 }
 
@@ -320,34 +322,35 @@
   background-color: white;
 }
 
-/* === TABLE HEADER === */
+/* === TABLE HEADER (DIKEMASKINI KE BIRU RM) === */
 .senaraipemantauan-table thead th {
-  background-color: #f0f9ff;
-  color: #005fa3;
+  background-color: #004071;
+  color: #ffffff;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e5e7eb;
-  border-top: 1px solid #e5e7eb;
+  border-bottom: 2px solid #cbd5e1;
+  border-top: none;
   text-align: left;
-  padding: 10px 14px;
+  padding: 12px;
   vertical-align: middle;
 }
 
-/* === TABLE DATA === */
+/* === TABLE DATA (DIKEMASKINI) === */
 .senaraipemantauan-table tbody td {
-  padding: 10px 14px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #1b1b1b;
-  font-size: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 13px;
   vertical-align: middle;
   white-space: normal;
+  transition: background-color 0.1s;
 }
 
-/* Row Hover Effect */
-.senaraipemantauan-table tbody tr:hover {
-  background-color: #f0f9ff;
+/* Row Hover Effect (DIKEMASKINI) */
+.senaraipemantauan-table tbody tr:hover td {
+  background-color: #f1f5f9;
 }
 
 /* Lajur Risiko kini (5) */
@@ -382,7 +385,7 @@
 /* Lajur BIL */
 .senaraipemantauan-th-bil {
   width: 1%;
-  min-width: 40px;
+  min-width: 45px;
   text-align: center;
 }
 .senaraipemantauan-table tbody tr td:nth-child(2) {
@@ -397,6 +400,7 @@
 }
 .senaraipemantauan-th-tindakan {
   width: 1%;
+  min-width: 60px;
 }
 
 /* === TAHUN & SEPARUH TAHUN DISPLAY STYLES === */
@@ -410,15 +414,15 @@
   gap: 2px;
 }
 .senaraipemantauan-tahun-year {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #1f2937;
+  color: #0f172a;
   line-height: 1.2;
 }
 .senaraipemantauan-tahun-separuh {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #64748b;
   text-transform: capitalize;
   line-height: 1.2;
 }
@@ -430,24 +434,26 @@
   padding: 4px;
   border-radius: 50%;
   cursor: pointer;
-  color: #6b7280;
+  color: #64748b;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 .senaraipemantauan-expand-btn:hover {
-  background-color: #e5e7eb;
-  color: #1f2937;
+  background-color: #e2e8f0;
+  color: #0f172a;
 }
 .senaraipemantauan-row-expanded td {
-  background-color: #f9fafb;
-  border-bottom-color: #e5e7eb;
+  background-color: #f8fafc;
+  border-bottom-color: #cbd5e1;
 }
 .senaraipemantauan-detail-row td {
   padding: 0;
-  background: #fdfdff;
-  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 .senaraipemantauan-detail-content {
@@ -455,8 +461,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px 20px;
-  background: #f9fafb;
-  border-top: 1px dashed #d1d5db;
+  background: #f8fafc;
+  border-top: 1px dashed #cbd5e1;
 }
 .senaraipemantauan-detail-group {
   font-size: 13px;
@@ -467,27 +473,27 @@
 .senaraipemantauan-detail-group h4 {
   font-size: 12px;
   font-weight: 600;
-  color: #005fa3;
+  color: #004071;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
-  border-bottom: 1px solid #e0f2fe;
+  border-bottom: 1px solid #e2e8f0;
   padding-bottom: 4px;
 }
 .senaraipemantauan-detail-group p {
   margin-bottom: 6px;
-  color: #374151;
+  color: #334155;
 }
 .senaraipemantauan-detail-group p strong {
   font-weight: 600;
-  color: #1f2937;
+  color: #0f172a;
   min-width: 120px;
   display: inline-block;
 }
 .senaraipemantauan-detail-group ol {
   padding-left: 20px;
   margin-top: 4px;
-  color: #374151;
+  color: #334155;
 }
 .senaraipemantauan-detail-group li {
   margin-bottom: 4px;
@@ -497,12 +503,13 @@
 .senaraipemantauan-risk-box {
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 9999px;
   color: white;
   font-weight: 600;
-  font-size: 12px;
-  min-width: 20px;
+  font-size: 11px;
+  min-width: 32px;
   text-align: center;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }
 .senaraipemantauan-center {
   text-align: center;
@@ -514,8 +521,8 @@
   text-align: center;
   padding: 40px;
   font-style: italic;
-  color: #6b7280;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 13px;
 }
 .senaraipemantauan-spin {
   animation: senaraipemantauan-spin 1s linear infinite;
@@ -526,28 +533,40 @@
   }
 }
 
-/* === ACTION BUTTON === */
+/* === ACTION BUTTON & ACTION CELL === */
+.senaraipemantauan-actions {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 8px !important;
+  background-color: transparent !important;
+}
+
 .senaraipemantauan-icon-edit-btn {
   background: transparent;
   color: #0074c8;
   border: 1px solid #b3dfff;
-  padding: 5px;
+  padding: 6px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
+
 .senaraipemantauan-icon-edit-btn:hover {
   background: #0074c8;
   color: #ffffff;
   border-color: #0074c8;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
+
 .senaraipemantauan-icon-edit-btn:disabled {
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-  color: #9ca3af;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #94a3b8;
   cursor: not-allowed;
 }
