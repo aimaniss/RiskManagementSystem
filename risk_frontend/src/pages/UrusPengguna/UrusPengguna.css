@@ -5,117 +5,129 @@ body {
   font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f9fafb; /* DIUBAH: Padanan gaya rujukan */
+  background-color: #ffffff;
 }
 
 .urus-container {
-  max-width: 1440px; /* DIUBAH: Padanan skrin 15" */
-  margin: 0 auto; /* DIUBAH: Tengahkannya */
-  padding: 12px 24px; /* DIUBAH: Padanan rujukan (padding atas kecil) */
-  background: #f9fafb; /* DIUBAH: Latar container sama dgn body */
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px 24px 24px 24px;
+  background: #ffffff;
   border-radius: 0;
   box-shadow: none;
+  min-height: 100vh;
 }
 
 .urus-container h1 {
-  font-size: 1.5rem; /* DIUBAH: Padanan rujukan (24px) */
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #005fa3; /* DIUBAH: Padanan rujukan */
+  color: #004071;
 }
 
+/* 'Card' untuk penapis (filter) & butang tambah */
 .filter-add {
   display: flex;
-  flex-wrap: wrap; /* DIUBAH: Lebih responsif */
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 20px;
   align-items: center;
-  /* DIUBAH: Tambah gaya kad dari rujukan */
-  padding: 20px;
+  padding: 16px;
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .search-input,
 .role-select {
   padding: 8px 12px;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
-  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
   font-size: 13px;
   outline: none;
   font-family: "Inter", sans-serif;
+  background-color: #f8fafc;
+  color: #334155;
+  transition: all 0.2s;
 }
 
 .search-input:focus,
 .role-select:focus {
+  outline: none;
   border-color: #0074c8;
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
 }
 
 .add-btn {
-  background: #0074c8; /* DIUBAH: Padanan rujukan */
+  background: #0074c8;
   color: #fff;
-  border: none;
+  border: 1px solid #0074c8;
   padding: 8px 14px;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
-}
-.add-btn:hover {
-  background: #005fa3; /* DIUBAH: Padanan rujukan */
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
+.add-btn:hover {
+  background: #004071;
+  border-color: #004071;
+}
+
+/* 'Card' untuk jadual */
 .table-container {
   overflow-x: auto;
-  /* DIUBAH: Tambah gaya kad dari rujukan */
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #cbd5e1;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  overflow: hidden; /* Simpan ini untuk border-radius */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  /* Radius & shadow dipindah ke .table-container */
+  table-layout: auto; /* Memastikan pelan jadual dikira mengikut standard HTML */
 }
 
 th,
 td {
-  padding: 12px 15px; /* DIUBAH: Padanan saiz rujukan */
+  padding: 12px 14px;
   text-align: left;
   font-size: 13px;
   vertical-align: middle;
 }
 
 th {
-  background: #f0f9ff; /* DIUBAH: Padanan rujukan */
-  color: #005fa3; /* DIUBAH: Padanan rujukan */
+  background: #004071;
+  color: #ffffff;
   font-weight: 600;
-  font-size: 12px; /* DIUBAH: Padanan rujukan */
-  text-transform: uppercase; /* DIUBAH: Padanan rujukan */
-  letter-spacing: 0.05em; /* DIUBAH: Padanan rujukan */
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 td {
-  color: #1f2937; /* DIUBAH: Teks lebih gelap */
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.1s;
 }
 
-tbody tr {
-  border-bottom: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
-  transition: 0.2s;
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
-tbody tr:hover {
-  background: #f0f9ff; /* DIUBAH: Padanan rujukan */
+tbody tr:hover td {
+  background-color: #f1f5f9;
 }
 
-.nama-penuh-cell {
+/* DIPERBAIKI: Membawa flexbox ke elemen pembungkus, bukan terus pada td */
+.nama-penuh-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -124,7 +136,8 @@ tbody tr:hover {
 .profile-icon {
   width: 36px;
   height: 36px;
-  color: #4b5563;
+  color: #64748b;
+  flex-shrink: 0;
 }
 
 .profile-pic {
@@ -132,40 +145,79 @@ tbody tr:hover {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* ======================================================== */
+/* PENYELESAIAN UTAMA: STRUKTUR KOTAK TINDAKAN DAN LAJUR    */
+/* ======================================================== */
+.action-header {
+  text-align: center !important;
+  width: 100px; /* Saiz tetap untuk tajuk tindakan */
+}
+
+.action-cell {
+  text-align: center !important;
+  width: 100px; /* Saiz tetap untuk sel tindakan */
 }
 
 .action-icons {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.edit-icon {
+.btn-action-icon {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.edit-btn-style {
   color: #0074c8;
-  cursor: pointer;
-}
-.edit-icon:hover {
-  transform: scale(1.2);
 }
 
-.delete-icon {
+.edit-btn-style:hover {
+  background-color: #f0f9ff;
+  border: 1px solid #b3dfff;
+  transform: scale(1.05);
+}
+
+.delete-btn-style {
   color: #ef4444;
-  cursor: pointer;
-}
-.delete-icon:hover {
-  transform: scale(1.2);
 }
 
-/* Modal */
+.delete-btn-style:hover {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  transform: scale(1.05);
+}
+/* ======================================================== */
+
+/* --- MODAL (POP-UP) --- */
 .filter-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -180,19 +232,28 @@ tbody tr:hover {
   max-width: 90%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  border: 1px solid #e5e7eb; /* DIUBAH: Padanan rujukan */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* DIUBAH: Padanan rujukan */
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 .filter-modal input,
 .filter-modal select {
-  padding: 8px 10px;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
-  border: 1px solid #d1d5db; /* DIUBAH: Padanan rujukan */
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
   font-size: 13px;
   outline: none;
-  background: #f9fafb;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.filter-modal input:focus,
+.filter-modal select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
 }
 
 .filter-buttons {
@@ -203,37 +264,42 @@ tbody tr:hover {
 }
 
 .filter-buttons button {
-  padding: 7px 12px;
-  border-radius: 6px; /* DIUBAH: Padanan rujukan */
-  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
+  transition: all 0.2s;
 }
 
 .filter-buttons button:first-child {
-  background: #e5e7eb;
-  color: #374151;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
+
+.filter-buttons button:first-child:hover {
+  background: #e2e8f0;
+}
+
 .filter-buttons button:last-child {
-  background: #0074c8; /* DIUBAH: Padanan rujukan */
+  background: #0074c8;
   color: #fff;
 }
-.filter-buttons button:first-child:hover {
-  background: #d1d5db;
-}
+
 .filter-buttons button:last-child:hover {
-  background: #005fa3; /* DIUBAH: Padanan rujukan */
+  background: #004071;
 }
 
 .no-data {
   text-align: center;
-  color: #6b7280;
+  color: #64748b;
   font-style: italic;
-  padding: 20px; /* DIUBAH: Tambah padding */
+  padding: 30px;
 }
 
-/* Profile upload */
+/* --- GAMBAR PROFIL UPLOAD --- */
 .profile-upload {
   display: flex;
   flex-direction: column;
@@ -251,13 +317,13 @@ tbody tr:hover {
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #0074c8;
+  border: 3px solid #004071;
 }
 
 .profile-placeholder {
   width: 110px;
   height: 110px;
-  color: #4b5563;
+  color: #64748b;
 }
 
 .remove-profile-icon {
@@ -276,26 +342,27 @@ tbody tr:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
 }
+
 .remove-profile-icon:hover {
   transform: translateY(-50%) scale(1.2);
 }
 
-/* Responsive tweak untuk laptop kecil */
+/* --- ADAPTASI DI LAPTOP 13-15 INCI --- */
 @media (max-width: 1366px) {
   .urus-container h1 {
-    font-size: 1.25rem; /* 20px */
+    font-size: 1.5rem;
   }
 
   th,
   td {
-    font-size: 12px;
-    padding: 10px 12px; /* DIUBAH: Selaraskan padding */
+    font-size: 12.5px;
+    padding: 10px 12px;
   }
 
   .add-btn,
   .search-input,
   .role-select {
-    font-size: 12px;
+    font-size: 12.5px;
     padding: 7px 10px;
   }
 }

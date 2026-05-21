@@ -5,7 +5,6 @@ import LogPreviewModal from './LogPreviewModal';
 import api from '../../api/api'; 
 import './LaporanRisiko.css';
 
-
 const riskMatrixColors = {
   "R": "#22c55e",  // Rendah (Hijau)
   "S": "#eab308",  // Sederhana (Kuning)
@@ -14,16 +13,10 @@ const riskMatrixColors = {
   "Default": "#94a3b8" // Kelabu (Fallback)
 };
 
-// ⭐️ BARU: Fungsi untuk dapatkan kod warna dari label (cth: "ST")
 const getRiskColor = (label) => {
   return riskMatrixColors[label] || riskMatrixColors["Default"];
 };
-// =================================================================
 
-
-// =================================================================
-// Komponen Utama (LaporanRisiko)
-// =================================================================
 export default function LaporanRisiko() {
   const [loading, setLoading] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false); 
@@ -44,7 +37,6 @@ export default function LaporanRisiko() {
   const [selectedRisk, setSelectedRisk] = useState(null);
   const [selectedRange, setSelectedRange] = useState(null);
 
-  // Helper function untuk format Separuh Tahun
   const renderSeparuhTahun = (val) => {
     if (val === 1 || val === '1') return 'Pertama';
     if (val === 2 || val === '2') return 'Kedua';
@@ -53,7 +45,6 @@ export default function LaporanRisiko() {
 
   useEffect(() => {
     fetchSubsidiaries();
-    // fetchRisks() akan dipanggil oleh useEffect di bawah
   }, []);
 
   useEffect(() => {
@@ -90,9 +81,7 @@ export default function LaporanRisiko() {
       if (params.tahun === 'all') delete params.tahun;
       if (params.separuhTahun === 'all') delete params.separuhTahun;
 
-      // Panggil API dari /laporan (yang betul)
       const res = await api.get("/laporan", { params });
-
       const data = Array.isArray(res.data) ? res.data : [];
       setRisks(data); 
 
@@ -150,7 +139,6 @@ export default function LaporanRisiko() {
     { value: currentYear - 3, label: currentYear - 3 },
   ];
 
-
   return (
     <div className="laporan-container">
       {loadingModal && <div className="loading-overlay">Memuatkan Data Laporan...</div>}
@@ -201,7 +189,7 @@ export default function LaporanRisiko() {
 
       <div className="table-card">
         {loading ? (
-          <p>Memuatkan data...</p>
+          <p style={{ padding: '20px', textAlign: 'center' }}>Memuatkan data...</p>
         ) : (
           <table className="risk-table">
             <thead>
@@ -209,17 +197,17 @@ export default function LaporanRisiko() {
                 <th>Bil</th>
                 <th>No. Rujukan</th>
                 <th>Risiko</th>
-                <th>Tahun  & Separuh Tahun Daftar</th>
+                <th>Tahun & Separuh Tahun Daftar</th>
                 <th>Syarikat</th>
-                <th>Tahap Risiko</th>
+                <th style={{ textAlign: 'center' }}>Tahap Risiko</th>
                 <th>Status Pemantauan</th>
-                <th>Tindakan</th>
+                <th style={{ textAlign: 'center' }}>Tindakan</th>
               </tr>
             </thead>
             <tbody>
               {risks.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center' }}>Tiada data risiko ditemui.</td>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tiada data risiko ditemui.</td>
                 </tr>
               ) : (
                 risks
@@ -238,24 +226,21 @@ export default function LaporanRisiko() {
                         </td>
                         <td>{r.nama_subsidiari}</td>
                         
-                        {/* ================================================================= */}
-                        {/* ⭐️ DIKEMASKINI: Paparan skor kini berwarna (seperti rawatan.jsx) */}
-                        {/* ================================================================= */}
-                        <td className="risk-score-cell"> {/* Guna className baru */}
+                        <td className="risk-score-cell">
                           <div 
                             className="risk-box" 
                             style={{ 
                               backgroundColor: getRiskColor(r.skor_risiko_terkini),
-                              // ⭐️ BARU: Tukar warna teks jika kuning
                               color: r.skor_risiko_terkini === 'S' ? '#333' : 'white'
                             }}
                           >
                             {r.skor_risiko_terkini || '-'}
                           </div>
                         </td>
-                        {/* ================================================================= */}
 
                         <td>{r.status_pemantauan_terkini}</td>
+                        
+                        {/* KELAS action-icons MEMASTIKAN TIADA KOTAK BERLAPIS */}
                         <td className="action-icons">
                           <button 
                             title="Jana Laporan" 
@@ -263,7 +248,7 @@ export default function LaporanRisiko() {
                             className="btn-laporan-icon"
                             disabled={loadingModal} 
                           >
-                            📄
+                            <span>📄</span>
                           </button>
                         </td>
                       </tr>

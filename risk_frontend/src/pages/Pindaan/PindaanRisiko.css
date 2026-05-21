@@ -1,39 +1,41 @@
 /* Import fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* --- Pembolehubah Global (Global Variables) --- */
+/* --- Pembolehubah Global (Global Variables) - DIKEMASKINI --- */
 :root {
-  --theme-color: #0074c8;
-  --theme-color-dark: #005fa3;
+  --theme-color: #005698; /* Biru sederhana RM */
+  --theme-color-dark: #004071; /* Biru gelap RM */
   --color-success: #16a34a;
   --color-danger: #dc2626;
   --color-warning: #f97316;
   --color-info: #3b82f6;
-  --color-grey: #6b7280;
-  --border-color: #e5e7eb;
+  --color-grey: #64748b; /* Kelabu slate */
+  --border-color: #e2e8f0; /* Garisan kelabu lembut */
   --bg-light: #ffffff;
-  --bg-page: #f9fafb;
-  --text-dark: #1f2937;
-  --text-medium: #374151;
+  --bg-page: #ffffff;
+  --text-dark: #0f172a; /* Hitam slate */
+  --text-medium: #334155; /* Kelabu gelap teks */
 }
 
 /* --- Gaya Borang Umum (Skop) --- */
 .pindaan-risiko-wrapper .form-input,
 .pindaan-risiko-wrapper .form-select,
 .pindaan-risiko-wrapper .form-textarea {
-  padding: 7px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 5px;
-  font-size: 13.5px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
   box-sizing: border-box;
   width: 100%;
   font-family: "Inter", sans-serif;
+  color: var(--text-medium);
+  transition: all 0.2s;
 }
 .pindaan-risiko-wrapper .form-input:focus,
 .pindaan-risiko-wrapper .form-select:focus,
 .pindaan-risiko-wrapper .form-textarea:focus {
-  border-color: var(--theme-color);
-  box-shadow: 0 0 0 2px rgba(0, 116, 200, 0.25);
+  border-color: #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
   outline: none;
 }
 .pindaan-risiko-wrapper .form-textarea {
@@ -45,7 +47,7 @@
 .pindaan-risiko-wrapper .form-group label {
   display: block;
   font-weight: 600;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-size: 12.5px;
   color: var(--text-medium);
 }
@@ -63,14 +65,14 @@
 .pindaan-risiko-wrapper .btn {
   border: 1px solid transparent;
   border-radius: 6px;
-  padding: 7px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 13.5px;
+  font-size: 13px;
   transition: all 0.2s;
 }
 .pindaan-risiko-wrapper .btn:disabled {
@@ -78,13 +80,13 @@
   cursor: not-allowed;
 }
 .pindaan-risiko-wrapper .btn-primary {
-  background: var(--theme-color);
+  background: var(--theme-color-dark);
   color: white;
-  border-color: var(--theme-color);
+  border-color: var(--theme-color-dark);
 }
 .pindaan-risiko-wrapper .btn-primary:hover {
-  background: var(--theme-color-dark);
-  border-color: var(--theme-color-dark);
+  background: var(--theme-color);
+  border-color: var(--theme-color);
 }
 .pindaan-risiko-wrapper .btn-success {
   background: var(--color-success);
@@ -104,10 +106,10 @@
 .pindaan-risiko-wrapper .btn-default {
   background: var(--bg-light);
   color: var(--text-medium);
-  border-color: #d1d5db;
+  border-color: #cbd5e1;
 }
 .pindaan-risiko-wrapper .btn-default:hover {
-  background: #f9fafb;
+  background: #f1f5f9;
 }
 .pindaan-risiko-wrapper .btn-sm {
   padding: 5px 10px;
@@ -119,6 +121,13 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+.pindaan-risiko-wrapper .btn-icon:hover {
+  background-color: #f1f5f9;
 }
 .pindaan-risiko-wrapper .btn-icon-danger {
   color: var(--color-danger);
@@ -129,23 +138,24 @@
 
 /* --- Gaya Halaman Utama (Skop) --- */
 .pindaan-risiko-wrapper .pindaan-container {
-  padding: 10px 16px;
-  max-width: 1440px;
+  padding: 16px 24px 24px 24px;
+  max-width: 100%;
   margin: 0 auto;
   font-family: "Inter", sans-serif;
   min-height: 100vh;
+  background-color: var(--bg-page);
 }
 .pindaan-risiko-wrapper .pindaan-header {
-  font-size: 1.35rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--theme-color-dark);
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 .pindaan-risiko-wrapper .pindaan-box {
   background: var(--bg-light);
   border-radius: 8px;
-  padding: 18px;
-  margin-bottom: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
   border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
@@ -163,7 +173,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .pindaan-risiko-wrapper .stats-card {
@@ -184,13 +194,15 @@
 }
 
 .pindaan-risiko-wrapper .stats-card-title {
-  font-size: 12.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-grey);
   margin-bottom: 6px;
   margin-right: 12px;
   margin-left: 2px;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .pindaan-risiko-wrapper .stats-card-value {
@@ -224,7 +236,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .pindaan-risiko-wrapper .pindaan-box-header .pindaan-subheader {
   margin-bottom: 0;
@@ -234,56 +246,71 @@
 .pindaan-risiko-wrapper .filters-wrapper {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-  padding: 14px;
-  background-color: #ffffff;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--bg-light);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 18px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 .pindaan-risiko-wrapper .filters-wrapper .form-select {
   flex: 1;
   width: 100%;
-  padding: 7px 10px;
-  font-size: 13.5px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background-color: #f8fafc;
 }
 
 /* --- Gaya Jadual Halaman Utama (Skop) --- */
+.pindaan-risiko-wrapper .pindaan-table-container {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: var(--bg-light);
+}
+
 .pindaan-risiko-wrapper .pindaan-table {
   width: 100%;
   border-collapse: collapse;
 }
-/* === HEADER JADUAL DIKEMASKINI === */
+
+/* === HEADER JADUAL DIKEMASKINI (Biru Korporat RM) === */
 .pindaan-risiko-wrapper .pindaan-table-header th,
 .pindaan-risiko-wrapper .pindaan-table th {
-  background: #f0f9ff;
-  color: var(--theme-color-dark);
-  border-bottom: 1px solid var(--border-color);
-  padding: 10px 14px;
+  background-color: var(--theme-color-dark); /* #004071 */
+  color: #ffffff;
+  border-bottom: 2px solid #cbd5e1;
+  padding: 12px 14px;
   text-align: left;
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+/* === DATA JADUAL DIKEMASKINI === */
 .pindaan-risiko-wrapper .pindaan-td,
 .pindaan-risiko-wrapper .pindaan-table td {
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-color);
   font-size: 13px;
-  color: var(--text-dark);
+  color: var(--text-medium);
+  vertical-align: middle;
+  transition: background-color 0.1s;
 }
-.pindaan-risiko-wrapper .pindaan-table tbody tr:hover {
-  background-color: #f0f9ff;
+
+/* === HOVER EFFECT (Neutral) === */
+.pindaan-risiko-wrapper .pindaan-table tbody tr:hover td {
+  background-color: #f1f5f9;
 }
+
 .pindaan-risiko-wrapper .table-message {
   text-align: center;
-  padding: 30px;
+  padding: 40px;
   font-style: italic;
   color: var(--color-grey);
-  font-size: 13.5px;
+  font-size: 13px;
 }
 .pindaan-risiko-wrapper .table-message-error {
   color: var(--color-danger);

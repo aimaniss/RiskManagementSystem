@@ -226,19 +226,14 @@ function UrusPengguna() {
     }
   };
 
-  // --- TAMBAHAN BARU ---
-  // Objek untuk memetakan nama peranan
+  // --- MAP PERANAN ---
   const roleNameMap = {
     "Ketua Subsidiari": "Head Subsidiary",
-    // Tambah terjemahan lain di sini jika perlu
-    // "NamaLain": "PaparanLain",
   };
 
-  // Fungsi untuk mendapatkan nama paparan
   const getDisplayRoleName = (roleName) => {
     return roleNameMap[roleName] || roleName;
   };
-  // --- TAMAT TAMBAHAN ---
 
   return (
     <div className="urus-container">
@@ -261,7 +256,6 @@ function UrusPengguna() {
           <option value="">Pilih Peranan</option>
           {roles.map((r) => (
             <option key={r.peranan_id} value={r.peranan_id}>
-              {/* DIUBAH DI SINI */}
               {getDisplayRoleName(r.nama_peranan)}
             </option>
           ))}
@@ -297,7 +291,7 @@ function UrusPengguna() {
               <th>Syarikat</th>
               <th>Staff ID</th>
               <th>Kata Laluan</th>
-              <th>Tindakan</th>
+              <th className="action-header">Tindakan</th>
             </tr>
           </thead>
           <tbody>
@@ -318,29 +312,40 @@ function UrusPengguna() {
                 return (
                   <tr key={i}>
                     <td>{i + 1}</td>
-                    <td className="nama-penuh-cell">
-                      {profileSrc ? (
-                        <img src={profileSrc} alt="profile" className="profile-pic" />
-                      ) : (
-                        <UserCircle className="profile-icon" />
-                      )}
-                      <span>{u.nama_penuh}</span>
+                    {/* DIPERBAIKI: Menggunakan wrapper div di dalam td, bukannya meletakkan flexbox pada td secara terus */}
+                    <td>
+                      <div className="nama-penuh-wrapper">
+                        {profileSrc ? (
+                          <img src={profileSrc} alt="profile" className="profile-pic" />
+                        ) : (
+                          <UserCircle className="profile-icon" />
+                        )}
+                        <span>{u.nama_penuh}</span>
+                      </div>
                     </td>
-                    {/* DIUBAH DI SINI */}
                     <td>{getDisplayRoleName(u.nama_peranan)}</td>
                     <td>{subsidiary ? subsidiary.nama_subsidiari : "-"}</td>
                     <td>{u.staff_id}</td>
                     <td>{u.katalaluan || "-"}</td>
-                    <td>
+                    {/* DIPERBAIKI: Struktur butang tindakan yang mantap */}
+                    <td className="action-cell">
                       <div className="action-icons">
-                        <Edit
-                          className="edit-icon"
+                        <button 
+                          type="button" 
+                          className="btn-action-icon edit-btn-style" 
                           onClick={() => openModal("edit", u)}
-                        />
-                        <Trash2
-                          className="delete-icon"
+                          title="Edit Pengguna"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn-action-icon delete-btn-style" 
                           onClick={() => openModal("delete", u)}
-                        />
+                          title="Padam Pengguna"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -439,7 +444,6 @@ function UrusPengguna() {
                   <option value="">Pilih Peranan</option>
                   {roles.map((r) => (
                     <option key={r.peranan_id} value={r.peranan_id}>
-                      {/* DIUBAH DI SINI */}
                       {getDisplayRoleName(r.nama_peranan)}
                     </option>
                   ))}

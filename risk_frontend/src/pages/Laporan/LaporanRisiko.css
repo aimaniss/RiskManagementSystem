@@ -6,19 +6,19 @@
 /* ========================================= */
 
 .laporan-container {
-  padding: 12px 24px;
-  max-width: 1440px;
+  padding: 16px 24px 24px 24px;
+  max-width: 100%;
   margin: 0 auto;
   font-family: "Inter", sans-serif;
-  background-color: #f9fafb;
+  background-color: #ffffff; /* Putih bersih */
   min-height: 100vh;
 }
 
 .laporan-title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #005fa3;
+  color: #004071; /* Warna biru gelap korporat RM */
 }
 
 /* 'Card' untuk penapis (filter) */
@@ -26,10 +26,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
-  padding: 20px;
+  padding: 16px;
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0; /* Garisan kelabu lembut */
   margin-bottom: 20px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
@@ -37,29 +37,38 @@
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .filter-group label {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #374151;
+  color: #334155;
 }
 
 .filter-group input,
 .filter-group select {
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  background-color: white;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  background-color: #f8fafc;
+  color: #334155;
+  transition: all 0.2s;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.1);
 }
 
 /* 'Card' untuk jadual */
 .table-card {
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #cbd5e1;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   overflow-x: auto;
 }
@@ -69,64 +78,109 @@
   border-collapse: collapse;
 }
 
-.risk-table th,
-.risk-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-  vertical-align: middle;
-}
-
 .risk-table th {
-  background-color: #f0f9ff;
+  background-color: #004071; /* Kepala jadual biru gelap */
+  color: #ffffff;
   font-weight: 600;
-  color: #005fa3;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 2px solid #cbd5e1;
+  vertical-align: middle;
 }
 
 .risk-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 13px;
-  color: #1f2937;
+  color: #334155;
+  text-align: left;
+  vertical-align: middle;
+  transition: background-color 0.1s;
 }
 
 .risk-table tr:last-child td {
   border-bottom: none;
 }
 
-.risk-table tr:hover {
-  background-color: #f0f9ff;
+/* Hover Effect yang lebih neutral */
+.risk-table tr:hover td {
+  background-color: #f1f5f9;
 }
 
+/* ======================================================== */
+/* PENYELESAIAN ISU GHOST BOX / KOTAK BERTINDIH DI TINDAKAN */
+/* ======================================================== */
+
 .action-icons {
-  text-align: center;
+  text-align: center !important;
+  vertical-align: middle !important;
+  /* Reset padding supaya jadual tak cipta ruang kotak palsu */
+  padding: 8px !important;
+  background-color: transparent !important;
 }
 
 .btn-laporan-icon {
-  /* --- DIKEMASKINI: Latar belakang biru pejal --- */
-  background: #0074c8;
-  color: #ffffff;
-  border: 1px solid #0074c8;
+  appearance: none; /* Buang default style dari browser */
+  -webkit-appearance: none;
+  background: transparent;
+  color: #005698;
+  border: 1px solid transparent; /* Jadikan border lutsinar (tiada kotak) */
   border-radius: 6px;
-  padding: 5px;
-  font-size: 16px;
+  padding: 8px;
+  font-size: 18px; /* Besarkan sikit ikon dokumen */
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  outline: none !important; /* Hilangkan garisan biru bila ditekan */
+  box-shadow: none !important; /* Hilangkan shadow/glow dari browser */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  transition: all 0.2s ease;
 }
 
+/* Hanya tunjukkan kotak bila cursor lalu di atasnya (Hover) */
 .btn-laporan-icon:hover {
-  /* --- DIKEMASKINI: Hover lebih gelap --- */
-  background-color: #005fa3;
-  color: #ffffff;
-  border-color: #005fa3;
+  background-color: #f0f9ff;
+  border: 1px solid #b3dfff;
+  transform: scale(1.05); /* Efek membesar sedikit */
 }
 
-/* ... (CSS anda yang lain) ... */
+.btn-laporan-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ======================================================== */
+/* GAYA SKOR RISIKO (BENTUK PIL/KOTAK KEMAS)                */
+/* ======================================================== */
+
+.risk-score-cell {
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.risk-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 9999px; /* Bentuk pil seragam dengan modul Risiko */
+  font-weight: 600;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1;
+  color: white;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  margin: 0 auto;
+}
+
+/* ======================================================== */
+/* LOADING OVERLAY                                          */
+/* ======================================================== */
 
 .loading-overlay {
   position: fixed;
@@ -137,33 +191,6 @@
   justify-content: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
+  color: #334155;
   z-index: 10000;
-}
-.risk-score-cell {
-  /* Opsional, untuk memastikan skor berada di tengah secara mendatar dalam sel td */
-  text-align: center; 
-}
-
-/* Gaya kotak skor risiko */
-.risk-box {
-  display: inline-flex; /* Penting: Untuk mengecilkan kotak mengikut kandungan */
-  align-items: center;
-  justify-content: center;
-  
-  /* Tetapkan saiz dan padding yang sesuai */
-  min-width: 40px; /* Lebar minimum untuk kod 1-2 huruf */
-  height: 24px; 
-  padding: 0 8px; /* Padding mendatar (kiri/kanan) */
-  
-  /* Gaya Visual */
-  border-radius: 4px; /* Sudut sedikit bulat */
-  font-weight: 600; /* Tebalkan teks */
-  font-size: 12px; /* Saiz fon yang sesuai */
-  text-align: center;
-  line-height: 1; /* Penting untuk penjajaran vertikal */
-  
-  /* Menghilangkan margin jika ada */
-  margin: 0 auto; /* Tengah-tengah dalam sel td, berfungsi jika display: block */
-  /* Jika td text-align: center; sahaja, ini tidak diperlukan. */
 }
