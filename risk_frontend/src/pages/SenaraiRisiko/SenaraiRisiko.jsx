@@ -46,13 +46,13 @@ function SenaraiRisiko({ refreshTrigger }) {
     return items.map((item, index) => `${index + 1}. ${item}`).join('\n');
   };
 
-  const riskMatrix = {
-    1: {1:{label:"Rendah",color:"#e2fcdb",textColor:"#15803d"},2:{label:"Rendah",color:"#e2fcdb",textColor:"#15803d"},3:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},4:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},5:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"}},
-    2: {1:{label:"Rendah",color:"#e2fcdb",textColor:"#15803d"},2:{label:"Rendah",color:"#e2fcdb",textColor:"#15803d"},3:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},4:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},5:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"}},
-    3: {1:{label:"Rendah",color:"#e2fcdb",textColor:"#15803d"},2:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},3:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},4:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"},5:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"}},
-    4: {1:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},2:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},3:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"},4:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"},5:{label:"Sangat Tinggi",color:"#fee2e2",textColor:"#b91c1c"}},
-    5: {1:{label:"Sederhana",color:"#fef9c3",textColor:"#a16207"},2:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"},3:{label:"Tinggi",color:"#ffedd5",textColor:"#c2410c"},4:{label:"Sangat Tinggi",color:"#fee2e2",textColor:"#b91c1c"},5:{label:"Sangat Tinggi",color:"#fee2e2",textColor:"#b91c1c"}},
-  };
+ const riskMatrix = {
+        1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+        2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
+        3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
+        4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+        5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
+    };
 
   const getRiskData = (k, i) => {
     if (!riskMatrix[k] || !riskMatrix[k][i]) return { label: "-", color: "#f1f5f9", textColor: "#64748b" };

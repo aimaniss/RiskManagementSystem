@@ -6,13 +6,14 @@
 /* --- Define Color Variables --- */
 :root {
   /* Main Theme Color */
-  --theme-color: #0074c8; /* Default Blue */
+  --theme-color: #004071;
+  --theme-color-dark: #002d52;
 
   /* Action Colors */
   --color-success: #16a34a; /* Green */
   --color-danger: #dc2626; /* Red */
   --color-warning: #ea580c; /* Darker Orange */
-  --color-info: #0ea5e9; /* Blue (for Tutup button) */
+  --color-info: #004071;
 
   /* Badge Text Colors */
   --color-success-text: #065f46;
@@ -36,9 +37,9 @@
   /* Grey Shades */
   --color-grey-light-bg: #f8fafc;
   --color-grey-medium-bg: #e5e7eb;
-  --color-grey-dark-bg: #b6b8bd;
+  --color-grey-dark-bg: #f1f5f9;
   --color-grey-text-label: #64748b;
-  --color-grey-text-header: #1f2937;
+  --color-grey-text-header: #0f172a;
   --color-text-dark: #1e293b;
 
   /* Border Colors */
@@ -49,343 +50,366 @@
 
 /* 🛑 MODAL WRAPPER: Ketinggian, Kotak Putih & Shadow */
 .modal-dialog.modal-details {
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   max-width: 1000px;
   font-size: 14.5px;
-  /* Gaya Modal Box */
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
+  background-color: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
   overflow: hidden;
-  /* 🛠️ PERBAIKAN KRITIKAL KETINGGIAN & SCROLLING */
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh; /* Hadkan ketinggian modal kepada 90% tetingkap pandangan */
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 90vh !important; /* Hadkan ketinggian modal kepada 90% tetingkap pandangan */
 }
 
-/* Modal Header Styling */
+/* 🛠️ PERBAIKAN TOTAL HEADER: Tukar ke Kelabu Lembut & Paksa Teks Jadi Biru Pekat */
 .modal-header {
-  /* 🛠️ PERBAIKAN WARNA KRITIKAL DENGAN !important */
-  background-color: #0074c8 !important; /* Mesti Biru */
+  background-color: #f8fafc !important; /* Latar belakang cerah lembut */
+  padding: 20px 24px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-radius: 12px 12px 0 0 !important;
+  flex-shrink: 0 !important;
+  border-bottom: 2px solid #e2e8f0 !important; /* Garisan pemisah yang jelas */
+}
 
-  color: white !important; /* Mesti Putih */
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 8px 8px 0 0;
-  flex-shrink: 0;
-}
+/* 🛠️ Paksa Tulisan Tajuk Jadi Biru Pekat (Bukan Putih Lagi) */
 .modal-title-text {
-  margin: 0;
-  font-size: 1.1rem;
-  /* 🛠️ PERBAIKAN WARNA TEKS DENGAN !important */
-  color: white !important;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.25rem !important;
+  color: #004071 !important; /* Biru Pekat Korporat UKM */
+  font-weight: 700 !important;
+  letter-spacing: 0.025em !important;
 }
+
+/* 🛠️ Paksa Butang Pangkah (X) Jadi Gelap Supaya Nampak */
 .modal-close-x {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 5px;
-  line-height: 0;
+  background: none !important;
+  border: none !important;
+  color: #64748b !important; /* Warna kelabu gelap ikon */
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0.85 !important;
+  transition: all 0.2s !important;
+  font-size: 1.5rem !important;
+  line-height: 1 !important;
 }
 .modal-close-x:hover {
-  opacity: 0.8;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  opacity: 1 !important;
 }
 
 /* 🛑 KANDUNGAN UTAMA: Padding & Scrolling */
 .modal-content {
-  padding: 1.25rem;
-  padding-top: 0.5rem;
-  flex-grow: 1; /* Mengambil semua ruang yang tinggal */
-  /* 🛠️ Benarkan scroll hanya pada konten */
-  overflow-y: auto;
+  padding: 24px !important;
+  padding-top: 20px !important;
+  flex-grow: 1 !important;
+  overflow-y: auto !important;
+  background-color: #ffffff !important;
 }
 
 /* --- Top Section Layout --- */
 .detail-section-top {
-  margin-bottom: 1.25rem;
-  padding: 5px 0;
+  margin-bottom: 1.5rem !important;
+  padding: 16px !important;
+  background-color: #f8fafc !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
 }
 .detail-row {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
+  display: flex !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 10px !important;
 }
 .detail-row:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 }
 .detail-pair {
-  display: flex;
-  align-items: baseline;
-  flex-basis: calc(50% - 10px);
-  gap: 6px;
-  margin-bottom: 3px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  display: flex !important;
+  align-items: baseline !important;
+  flex-basis: calc(50% - 12px) !important;
+  gap: 12px !important;
 }
 .detail-pair-full {
-  flex-basis: 100%;
+  flex-basis: 100% !important;
 }
 .detail-label-inline {
-  font-size: 0.88em;
-  font-weight: 600;
-  color: var(--color-grey-text-label);
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-right: 4px;
+  font-size: 0.9em !important;
+  font-weight: 600 !important;
+  color: var(--color-grey-text-label) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  width: 140px !important;
 }
 .detail-value-inline {
-  font-size: 0.98em;
-  color: var(--color-text-dark);
-  font-weight: 500;
-  word-break: break-word;
-  line-height: 1.4;
+  font-size: 0.95rem !important;
+  color: var(--color-text-dark) !important;
+  font-weight: 600 !important;
+  word-break: break-word !important;
+  line-height: 1.5 !important;
 }
 /* --- End Top Section --- */
 
 /* --- Divider, Section Titles, Justification Box --- */
 .modal-divider {
-  border: none;
-  border-top: 1px solid var(--border-color-light);
-  margin: 1.25rem 0;
+  border: none !important;
+  border-top: 1px solid var(--border-color-light) !important;
+  margin: 1.5rem 0 !important;
 }
 h4.section-title {
-  margin-bottom: 10px;
-  margin-top: 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #334155;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 16px !important;
+  margin-top: 1.5rem !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #004071 !important;
+  padding-bottom: 8px !important;
+  border-bottom: 2px solid #e2e8f0 !important;
 }
 h4.section-title:first-of-type {
-  margin-top: 0;
+  margin-top: 0 !important;
 }
 .justifikasi-section {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem !important;
 }
 .justifikasi-title {
-  font-weight: 600;
-  display: block;
-  margin-bottom: 6px;
-  color: #475569;
-  font-size: 0.85rem;
+  font-weight: 600 !important;
+  display: block !important;
+  margin-bottom: 8px !important;
+  color: #475569 !important;
+  font-size: 0.88rem !important;
 }
 .highlight-box {
-  background-color: var(--color-grey-light-bg);
-  border: 1px solid var(--border-color-light);
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin: 0;
-  font-size: 0.875rem;
-  color: #334155;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  line-height: 1.5;
+  background-color: var(--color-grey-light-bg) !important;
+  border: 1px solid var(--border-color-light) !important;
+  border-radius: 8px !important;
+  padding: 14px 16px !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  line-height: 1.6 !important;
 }
 .no-data-text {
-  color: var(--color-grey-text-label);
-  font-style: italic;
-  font-size: 0.875rem;
+  color: var(--color-grey-text-label) !important;
+  font-style: italic !important;
+  font-size: 0.875rem !important;
 }
 
 /* --- Comment Textarea --- */
 .form-textarea {
-  padding: 10px 14px;
-  border: 1px solid var(--border-color-medium);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 70px;
-  font-family: inherit;
-  line-height: 1.6;
-  margin-top: 4px;
+  padding: 12px 14px !important;
+  border: 1px solid var(--border-color-medium) !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 90px !important;
+  font-family: inherit !important;
+  line-height: 1.6 !important;
+  margin-top: 8px !important;
+  transition: all 0.2s !important;
+  background-color: #ffffff !important;
+}
+.form-textarea:focus {
+  border-color: #004071 !important;
+  box-shadow: 0 0 0 3px rgba(0, 64, 113, 0.15) !important;
+  outline: none !important;
 }
 
 /* --- Footer Buttons --- */
 .modal-footer-aligned {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--border-color-light);
-  background-color: var(--color-grey-light-bg);
-  /* 🛠️ Radius Bawah */
-  border-radius: 0 0 8px 8px;
-  /* 🛠️ Kekalkan Footer pada tempatnya */
-  flex-shrink: 0;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--border-color-light) !important;
+  background-color: var(--color-grey-light-bg) !important;
+  border-radius: 0 0 12px 12px !important;
+  flex-shrink: 0 !important;
 }
 .admin-actions {
-  display: flex;
-  gap: 12px;
+  display: flex !important;
+  gap: 12px !important;
 }
 
 /* --- Button Styles --- */
 .btn {
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 0.875rem;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background-color 0.2s ease, border-color 0.2s ease,
-    color 0.2s ease;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 10px 20px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-size: 0.9rem !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
 }
-/* Green Button (Luluskan) */
 .btn-success {
-  background-color: var(--color-success);
-  color: white;
-  border-color: #15803d;
+  background-color: var(--color-success) !important;
+  color: white !important;
+  border-color: #15803d !important;
 }
 .btn-success:hover {
-  background-color: #15803d;
-  border-color: #14532d;
+  background-color: #15803d !important;
+  border-color: #14532d !important;
 }
-/* Red Button (Tolak) */
 .btn-danger {
-  background-color: var(--color-danger);
-  color: white;
-  border-color: #b91c1c;
+  background-color: var(--color-danger) !important;
+  color: white !important;
+  border-color: #b91c1c !important;
 }
 .btn-danger:hover {
-  background-color: #b91c1c;
-  border-color: #7f1d1d;
+  background-color: #b91c1c !important;
+  border-color: #7f1d1d !important;
 }
-/* Blue Button (Tutup) */
 .btn-default {
-  background-color: var(--color-info);
-  color: white;
-  border-color: #0c98d0;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
 }
 .btn-default:hover {
-  background-color: #0c98d0;
-  border-color: #0b8ac1;
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
 }
 
-/* --- Badge Styles (Updated Warning) --- */
+/* --- Badge Styles --- */
 .badge {
-  display: inline-block;
-  padding: 0.3em 0.65em;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 0.375rem;
-  margin: 0;
-  border: 1px solid;
+  display: inline-block !important;
+  padding: 6px 12px !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  vertical-align: baseline !important;
+  border-radius: 6px !important;
+  margin: 0 !important;
+  border: 1px solid !important;
 }
 .badge-default {
-  color: var(--color-default-text);
-  background-color: var(--color-default-bg);
-  border-color: var(--color-default-border);
+  color: var(--color-default-text) !important;
+  background-color: var(--color-default-bg) !important;
+  border-color: var(--color-default-border) !important;
 }
 .badge-success {
-  color: var(--color-success-text);
-  background-color: var(--color-success-bg);
-  border-color: var(--color-success-border);
+  color: var(--color-success-text) !important;
+  background-color: var(--color-success-bg) !important;
+  border-color: var(--color-success-border) !important;
 }
 .badge-danger {
-  color: var(--color-danger-text);
-  background-color: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
+  color: var(--color-danger-text) !important;
+  background-color: var(--color-danger-bg) !important;
+  border-color: var(--color-danger-border) !important;
 }
 .badge-warning {
-  color: var(--color-warning-text); /* White Text */
-  background-color: var(--color-warning-bg); /* Darker Orange BG */
-  border-color: var(--color-warning-border); /* Darker Orange Border */
+  color: var(--color-warning-text) !important;
+  background-color: var(--color-warning-bg) !important;
+  border-color: var(--color-warning-border) !important;
 }
 
 /* --- Comparison Table Styles --- */
 .comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.25rem;
-  font-size: 0.875rem;
-  border: 1px solid var(--border-color-medium);
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin-top: 8px !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 0.9rem !important;
+  border: 1px solid var(--border-color-medium) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
 }
 .comparison-td {
-  border: 1px solid var(--border-color-light);
-  padding: 8px 12px;
-  text-align: left;
-  vertical-align: top;
+  border: 1px solid var(--border-color-light) !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  vertical-align: top !important;
 }
 
-/* ▼▼▼ Darker Grey Header ▼▼▼ */
 .comparison-th {
-  border: 1px solid var(--border-color-dark); /* Darker Border */
-  padding: 10px 12px;
-  text-align: left;
-  vertical-align: middle;
-  font-weight: 600;
-  color: var(--color-grey-text-header);
-  background-color: var(--color-grey-dark-bg); /* Darker Grey BG */
+  border: 1px solid var(--border-color-medium) !important;
+  padding: 14px 16px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  font-weight: 700 !important;
+  color: #004071 !important; /* Warna teks biru pekat korporat */
+  background-color: #f1f5f9 !important; /* Kelabu lembut */
+  text-transform: uppercase !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.05em !important;
 }
-/* ▲▲▲ End Darker Grey Header ▲▲▲ */
 
 /* Center Align Specific Headers & Cells */
 .comparison-th.comparison-th-tahun,
 .comparison-th.comparison-th-before,
 .comparison-th.comparison-th-after {
-  text-align: center;
-}
-.comparison-td {
-  vertical-align: top;
+  text-align: center !important;
 }
 .comparison-td.comparison-td-tahun,
 .comparison-td.comparison-td-before,
 .comparison-td.comparison-td-after {
-  text-align: center;
-  vertical-align: middle;
+  text-align: center !important;
+  vertical-align: middle !important;
 }
 
 /* Column Widths */
 .comparison-th-key,
 .comparison-td-key {
-  width: 35%;
-  font-weight: 500;
-  color: #374151;
+  width: 35% !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
 }
 .comparison-th-tahun,
 .comparison-td-tahun {
-  width: 20%;
-  color: var(--color-grey-text-label);
-  font-size: 0.8rem;
+  width: 20% !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
 }
 .comparison-th-before,
 .comparison-td-before {
-  width: 22.5%;
-  color: #4b5563;
+  width: 22.5% !important;
+  color: #64748b !important;
 }
 .comparison-th-after,
 .comparison-td-after {
-  width: 22.5%;
-  font-weight: 500;
-  color: var(--color-text-dark);
+  width: 22.5% !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
 }
 
-/* ▼▼▼ Risk score badge inside table (White Text) ▼▼▼ */
+/* Risk score badge inside table (White Text) */
 .risk-score-badge-comparison {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-  text-align: center;
-  min-width: 30px;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--color-badge-text-white); /* Use white text variable */
+  display: inline-block !important;
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  min-width: 35px !important;
+  font-size: 0.8rem !important;
+  line-height: 1.4 !important;
+  color: var(--color-badge-text-white) !important;
 }

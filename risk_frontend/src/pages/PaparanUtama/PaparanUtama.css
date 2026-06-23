@@ -1,43 +1,61 @@
-/* Fail CSS ini kebanyakannya sama, hanya ubah suai kecil pada .filter-buttons */
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
+/* ===================================================================
+   Fail: PaparanUtama.css (Sistem Pengurusan Risiko UKM Holdings)
+   =================================================================== */
+
+/* 1. Gaya Komponen Utama & Header Halaman */
 .PaparanUtama {
-  padding: 20px;
-  font-family: "Roboto", sans-serif;
+  padding: 24px;
+  font-family: "Inter", sans-serif;
+  background: #ffffff;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .PaparanUtama-header {
   display: flex;
-  justify-content: space-between; /* Ini meletakkan butang ke hujung kanan */
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
 }
 
 .PaparanUtama-header h1 {
-  font-size: 28px;
+  font-size: 1.75rem; /* 28px - Selaras Urus Pengguna */
   font-weight: 700;
-  color: #0f172a;
+  color: #004071; /* Biru pekat korporat rujukan */
+  margin: 0;
 }
 
 .PaparanUtama-header button {
-  padding: 8px 16px;
-  background: #2563eb;
-  color: #fff;
+  padding: 10px 18px;
+  background: #004071;
+  color: #ffffff;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-weight: 600; /* Tambahan kecil */
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition:
+    background 0.2s,
+    transform 0.1s;
 }
 
-/* Bahagian CSS (.PaparanUtama-boxes, .boxes-grid, .box-card, .comparison-chart) 
-  dibiarkan seperti asal, kerana anda mungkin menggunakannya nanti. 
-*/
+.PaparanUtama-header button:hover {
+  background: #002d52;
+}
 
+/* ===================================================================
+   2. Bahagian Kotak Statistik (Dashboard Cards Grid)
+   =================================================================== */
 .PaparanUtama-boxes {
-  background: #f1f5f9;
-  padding: 20px;
+  background: #f8fafc;
+  padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 255, 0.05);
-  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .boxes-header {
@@ -48,127 +66,242 @@
 }
 
 .boxes-header img {
-  height: 60px;
+  height: 55px;
   object-fit: contain;
 }
 
 .boxes-header h3 {
   font-size: 14px;
   font-weight: 700;
-  color: #000;
+  color: #004071; /* Ditukar ke biru korporat untuk teks hak cipta/unit */
   text-align: right;
+  margin: 0;
 }
 
 .boxes-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(
+    4,
+    1fr
+  ); /* 4 Lajur sebaris seperti dalam dashboard */
   gap: 20px;
 }
 
 .box-card {
-  background: #cbd5e1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  padding: 24px 20px;
   min-height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.box-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
 }
 
 .box-title {
-  font-size: 14px;
-  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
   margin-bottom: 8px;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .box-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: #0f172a;
 }
 
+/* ===================================================================
+   3. Bahagian Ruang Carta (Charts Section)
+   =================================================================== */
 .comparison-chart {
-  background: #fff;
-  padding: 20px;
+  background: #ffffff;
+  padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
 }
 
-/* === CSS MODAL === */
+/* ===================================================================
+   4. PENYELESAIAN UTAMA: MODAL TAPISAN (BACKDROP & DIALOG BOX)
+   =================================================================== */
+
+/* Mengatasi isu limpahan/kelihatan sidebar & navbar semasa modal dibuka */
 .filter-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(
+    15,
+    23,
+    42,
+    0.3
+  ) !important; /* Gelap soft selaras Urus Pengguna */
+  backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 999999 !important; /* z-index tertinggi untuk kunci dan katup penuh sidebar/navbar */
 }
 
+/* Dialog Box Modal */
 .filter-modal {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 30px;
-  border-radius: 20px;
-  min-width: 400px;
-  max-width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(12px);
+  background: #ffffff !important; /* Putih solid matte */
+  padding: 32px 36px;
+  border-radius: 12px; /* Bucu melengkung standard korporat */
+  width: 100%;
+  max-width: 460px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  animation: modal-pop-up 0.2s ease-out;
+}
+
+@keyframes modal-pop-up {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .filter-modal h2 {
+  margin-top: 0;
   margin-bottom: 24px;
-  font-size: 24px;
+  font-size: 1.35rem; /* ~22px */
   font-weight: 700;
   color: #0f172a;
   text-align: center;
 }
 
+/* Kumpulan Elemen Input Dropdown */
 .filter-select {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-/* CSS untuk filter-grid dikekalkan (jika anda mahu tambah filter lain nanti) */
+.filter-select label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  text-align: left;
+}
+
+.filter-select select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #f8fafc; /* Rupa input soft gray */
+  color: #334155;
+  outline: none;
+  appearance: auto; /* Kekalkan bentuk arrow drop-down browser asli */
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.filter-select select:focus {
+  border-color: #0074c8;
+  box-shadow: 0 0 0 3px rgba(0, 116, 200, 0.15);
+  background-color: #ffffff;
+}
+
+/* Layout grid jika mahu dikembangkan di masa hadapan */
 .filter-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
+/* Pengendali Butang di Bahagian Bawah Modal */
 .filter-buttons {
-  margin-top: 24px;
+  margin-top: 28px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-/* TUKAR: Stail butang kini menggunakan class name, bukan :first-child */
 .filter-buttons button {
   padding: 10px 20px;
-  border-radius: 12px;
-  cursor: pointer;
+  font-size: 13.5px;
   font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
+/* Butang Batal (Sekunder Kelabu Soft) */
 .filter-buttons .btn-cancel {
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #333;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
 }
 
+.filter-buttons .btn-cancel:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Butang Guna Tapisan (Utama - Biru Pekat Korporat) */
 .filter-buttons .btn-apply {
-  border: none;
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid transparent;
+  background: #004071;
+  color: #ffffff;
+}
+
+.filter-buttons .btn-apply:hover {
+  background: #002d52;
+}
+
+/* ===================================================================
+   5. Responsif Untuk Skrin Sederhana & Kecil (Laptop / Tablet)
+   =================================================================== */
+@media (max-width: 1200px) {
+  .boxes-grid {
+    grid-template-columns: repeat(2, 1fr); /* Tukar ke 2 baris x 2 lajur */
+  }
+}
+
+@media (max-width: 768px) {
+  .PaparanUtama-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .boxes-grid {
+    grid-template-columns: 1fr; /* 1 Kotak penuh sebaris pada telefon */
+  }
+  .filter-modal {
+    padding: 24px;
+    max-width: 90%;
+  }
 }
