@@ -4,7 +4,7 @@ import api from "../../api/api.js";
 
 import FilterModal from "./FilterModal.jsx";
 import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx";
-import DashboardSubsidiari from "./DashboardSubsidiari.jsx";
+import DashboardSyarikat from "./DashboardSyarikat.jsx";
 import "./PaparanUtama.css";
 
 // ================================
@@ -18,16 +18,16 @@ const MinimalHeader = ({ setShowModal }) => (
 );
 
 // ================================
-// 🟦 Pemilih Dashboard (All/Subsidiari)
+// 🟦 Pemilih Dashboard (All/Syarikat)
 // ================================
 const DashboardRenderer = ({ filterValues, data, currentUser }) => {
   const adminRoles = [1, 2]; 
   const isAdmin = adminRoles.includes(currentUser?.peranan_id);
 
-  if (filterValues.subsidiari === "Semua Subsidiari" && isAdmin) {
+  if (filterValues.syarikat === "Semua Syarikat" && isAdmin) {
     return <DashboardKeseluruhan data={data} />;
   } else {
-    return <DashboardSubsidiari data={data} />;
+    return <DashboardSyarikat data={data} />;
   }
 };
 
@@ -44,8 +44,8 @@ export default function PaparanUtama() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [subsidiariOptions, setSubsidiariOptions] = useState([]);
-  const [subsidiariLoading, setSubsidiariLoading] = useState(true);
+  const [syarikatOptions, setSyarikatOptions] = useState([]);
+  const [syarikatLoading, setSyarikatLoading] = useState(true);
   
   const token = localStorage.getItem("token");
 
@@ -71,29 +71,29 @@ export default function PaparanUtama() {
     fetchCurrentUser();
   }, [token]);
 
-  // ----- DIBETULKAN: Ambil senarai subsidiari menggunakan 'api' -----
+  // ----- DIBETULKAN: Ambil senarai syarikat menggunakan 'api' -----
   useEffect(() => {
-    const fetchSubsidiari = async () => {
+    const fetchSyarikat = async () => {
       if (!token) return; 
       try {
-        setSubsidiariLoading(true);
-        const res = await api.get("/subsidiari");
-        setSubsidiariOptions(Array.isArray(res.data) ? res.data : []);
+        setSyarikatLoading(true);
+        const res = await api.get("/syarikat");
+        setSyarikatOptions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error("❌ Ralat ambil subsidiari:", err);
-        setError(err.response?.data?.error || "Gagal memuatkan senarai subsidiari.");
-        setSubsidiariOptions([]);
+        console.error("❌ Ralat ambil syarikat:", err);
+        setError(err.response?.data?.error || "Gagal memuatkan senarai syarikat.");
+        setSyarikatOptions([]);
       } finally {
-        setSubsidiariLoading(false);
+        setSyarikatLoading(false);
       }
     };
 
-    fetchSubsidiari();
+    fetchSyarikat();
   }, [token]);
 
   // Tetapkan filter default berdasarkan peranan pengguna
   useEffect(() => {
-    if (isUserLoading || subsidiariLoading || !currentUser || subsidiariOptions.length === 0) {
+    if (isUserLoading || syarikatLoading || !currentUser || syarikatOptions.length === 0) {
       return;
     }
 
@@ -102,26 +102,26 @@ export default function PaparanUtama() {
 
     if (isAdmin) {
       setFilterValues({
-        subsidiari: "Semua Subsidiari",
-        subsidiariId: "Semua",
-        subsidiariName: "Semua Subsidiari",
+        syarikat: "Semua Syarikat",
+        syarikatId: "Semua",
+        syarikatName: "Semua Syarikat",
       });
     } else {
-      const userSubsidiary = subsidiariOptions.find(
-        (s) => s.subsidiari_id === currentUser.subsidiari_id
+      const userSyarikat = syarikatOptions.find(
+        (s) => s.syarikat_id === currentUser.syarikat_id
       );
 
-      if (userSubsidiary) {
+      if (userSyarikat) {
         setFilterValues({
-          subsidiari: userSubsidiary.nama_subsidiari,
-          subsidiariId: userSubsidiary.subsidiari_id,
-          subsidiariName: userSubsidiary.nama_subsidiari,
+          syarikat: userSyarikat.nama_syarikat,
+          syarikatId: userSyarikat.syarikat_id,
+          syarikatName: userSyarikat.nama_syarikat,
         });
       } else {
-        setError(`Subsidiari ID ${currentUser.subsidiari_id} tidak ditemui.`);
+        setError(`Syarikat ID ${currentUser.syarikat_id} tidak ditemui.`);
       }
     }
-  }, [currentUser, subsidiariOptions, isUserLoading, subsidiariLoading]);
+  }, [currentUser, syarikatOptions, isUserLoading, syarikatLoading]);
 
   // ----- DIBETULKAN: Ambil data dashboard menggunakan 'api' -----
   useEffect(() => {
@@ -137,18 +137,18 @@ export default function PaparanUtama() {
         const adminRoles = [1, 2];
         const isAdmin = adminRoles.includes(currentUser?.peranan_id);
         
-        let finalSubsidiariId = filterValues.subsidiariId;
+        let finalSyarikatId = filterValues.syarikatId;
 
-        if (!isAdmin && filterValues.subsidiariId === "Semua") {
-           finalSubsidiariId = currentUser.subsidiari_id;
+        if (!isAdmin && filterValues.syarikatId === "Semua") {
+           finalSyarikatId = currentUser.syarikat_id;
         }
 
-        const subsidiariQuery =
-          finalSubsidiariId === "Semua"
+        const syarikatQuery =
+          finalSyarikatId === "Semua"
             ? "Semua"
-            : encodeURIComponent(finalSubsidiariId);
+            : encodeURIComponent(finalSyarikatId);
 
-        const res = await api.get(`/dashboard?subsidiari_id=${subsidiariQuery}`);
+        const res = await api.get(`/dashboard?syarikat_id=${syarikatQuery}`);
         setDashboardData(res.data);
       } catch (err) {
         console.error(err);
@@ -162,7 +162,7 @@ export default function PaparanUtama() {
     fetchDashboardData();
   }, [filterValues, token, currentUser]); 
 
-  if (isUserLoading || subsidiariLoading || !filterValues) {
+  if (isUserLoading || syarikatLoading || !filterValues) {
     return (
       <div className="PaparanUtama">
         <MinimalHeader setShowModal={() => {}} />
@@ -194,7 +194,7 @@ export default function PaparanUtama() {
           filterValues={filterValues}
           setFilterValues={setFilterValues}
           setShowModal={setShowModal}
-          subsidiariOptions={subsidiariOptions}
+          syarikatOptions={syarikatOptions}
           currentUser={currentUser} 
         />
       )}

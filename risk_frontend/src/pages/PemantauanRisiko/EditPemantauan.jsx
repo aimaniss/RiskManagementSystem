@@ -1,106 +1,19 @@
 import { useState, useEffect } from "react";
 import { X, BookOpen, Loader2, Trash2, PlusCircle, Pencil } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import "./EditPemantauan.css";
 import api from "../../api/api";
-import PanduanModal from "../Panduan/Panduan";
 import TambahLogModal from "./TambahLogModal";
-
-// (Komponen ListDisplay & utility functions kekal sama)
-const ListDisplay = ({ data, isLogContext = false }) => {
-  const getItemText = (item) => {
-    if (typeof item === "string") return item;
-    if (item?.punca) return item.punca;
-    if (item?.kesan) return item.kesan;
-    if (item?.punca_text) return item.punca_text;
-    if (item?.kesan_text) return item.kesan_text;
-    if (item?.nama_punca) return item.nama_punca;
-    if (item?.nama_kesan) return item.nama_kesan;
-    if (item?.butiran_punca) return item.butiran_punca;
-    if (item?.butiran_kesan) return item.butiran_kesan;
-    if (item?.butiran_aktiviti) return item.butiran_aktiviti;
-    if (item?.butiran_kakitangan) return item.butiran_kakitangan;
-    if (item?.butiran_log) return item.butiran_log;
-    if (item?.text) return item.text;
-    return "-";
-  };
-  const cleanedData = Array.isArray(data)
-    ? data.filter((item) => {
-        const text = getItemText(item);
-        return text && text.trim() !== "-";
-      })
-    : [];
-
-  if (cleanedData.length === 0)
-    return <span style={{ color: "#64748b" }}>-</span>;
-
-  return (
-    <ul style={{ listStyleType: "none", paddingLeft: "0", margin: "0" }}>
-      {cleanedData.map((item, index) => (
-        <li key={index} className="pemantauan-list-item">
-          <span className="pemantauan-data-inline">
-            {`${index + 1}. ${getItemText(item)}`}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-};
-
-const riskMatrix = {
-  1: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "R", color: "#22c55e" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "S", color: "#eab308" },
-    5: { label: "T", color: "#f97316" },
-  },
-  2: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "R", color: "#22c55e" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "S", color: "#eab308" },
-    5: { label: "T", color: "#f97316" },
-  },
-  3: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "S", color: "#eab308" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "T", color: "#f97316" },
-    5: { label: "T", color: "#f97316" },
-  },
-  4: {
-    1: { label: "S", color: "#eab308" },
-    2: { label: "S", color: "#eab308" },
-    3: { label: "T", color: "#f97316" },
-    4: { label: "T", color: "#f97316" },
-    5: { label: "ST", color: "#ef4444" },
-  },
-  5: {
-    1: { label: "S", color: "#eab308" },
-    2: { label: "T", color: "#f97316" },
-    3: { label: "T", color: "#f97316" },
-    4: { label: "ST", color: "#ef4444" },
-    5: { label: "ST", color: "#ef4444" },
-  },
-};
-
-const getRiskMatrix = (k, i) =>
-  riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-const getRiskLevel = (k, i) => getRiskMatrix(k, i).label;
-
-const formatSeparuhTahun = (value) => {
-  const num = parseInt(value);
-  if (num === 1) return "Pertama";
-  if (num === 2) return "Kedua";
-  return "-";
-};
+import ListDisplay from "../../components/ListDisplay";
+import { getAuthUser } from "../../utils/auth";
+import { riskMatrix, getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
+import { formatSeparuhTahun } from "../../utils/formatters";
+import { usePanduan } from "../../hooks/usePanduan";
 
 // KOMPONEN UTAMA EDIT PEMANTAUAN
 
 export default function EditPemantauan({ isOpen, risk, onClose }) {
-  const [isPanduanOpen, setIsPanduanOpen] = useState(false);
-  const [isTambahLogModalOpen, setIsTambahLogModalOpen] = useState(false);
+  const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
+  const [isTambahLogModalOpen, setIsTambahLogModalOpen] = useState(false);
   const [logData, setLogData] = useState([]);
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [logToEdit, setLogToEdit] = useState(null);
@@ -122,7 +35,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
     no_rujukan: "",
     tahun: "",
     separuh_tahun: null,
-    nama_subsidiari: "",
+      nama_syarikat: "",
     kategori: "",
     bahagian: "",
     risiko: "",
@@ -192,7 +105,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
       no_rujukan: risk.no_rujukan || "-",
       tahun: risk.tahun_asal || risk.tahun || "-",
       separuh_tahun: risk.separuh_tahun_asal || risk.separuh_tahun,
-      nama_subsidiari: risk.nama_subsidiari || "-",
+      nama_syarikat: risk.nama_syarikat || "-",
       kategori: risk.kategori || "-",
       bahagian: risk.bahagian || risk.bahagian_unit || "-",
       risiko: risk.risiko || "-",
@@ -333,7 +246,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
               <button
                 type="button"
                 className="pemantauan-panduan-btn"
-                onClick={() => setIsPanduanOpen(true)}
+                onClick={openPanduan}
               >
                 <BookOpen size={16} style={{ marginRight: "6px" }} />
                 Panduan
@@ -370,7 +283,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
           	 <div className="pemantauan-flex-item">
           	 	 <span className="pemantauan-label-inline">Syarikat:</span>
           	 	 <span className="pemantauan-data-inline">
-          	 	 	 {data.nama_subsidiari || "-"}
+           {data.nama_syarikat || "-"}
           	 	 </span>
           	 </div>
           </div>
@@ -805,13 +718,8 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         	 </div>
         </div>
 
-        {/* Modal Panduan */}
-        {isPanduanOpen && (
-        	 <PanduanModal
-        	 	 isOpen={isPanduanOpen}
-        	 	 onClose={() => setIsPanduanOpen(false)}
-        	 />
-        )}
+        {/* Modal Panduan */}
+        {PanduanRenderer}
 
         {/* ⭐️ 9. KEMASKINI PROP 'mode' DAN 'userRole' */}
         {isTambahLogModalOpen && (

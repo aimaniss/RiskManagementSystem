@@ -3,18 +3,10 @@ import { X, CheckSquare } from "lucide-react";
 
 // Import CSS KHUSUS for this modal
 import './MohonPindaanModal.css';
+import { riskMatrix, getRiskMatrix } from "../../constants/riskMatrix";
 
 // --- Helper function uses the 5x5 matrix directly ---
 const getRiskDetails = (likelihood, impact) => {
-    // Define the risk matrix here
-    const riskMatrix = {
-        1: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-        2: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-        3: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-        4: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-        5: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-    };
-
     const k_val = parseInt(likelihood);
     const i_val = parseInt(impact);
     const k = Math.min(Math.max(k_val, 1), 5);
@@ -51,11 +43,11 @@ const formatPelanTindakan = (pelanArray) => {
 
 
 function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
-    const { subsidiariList = [], userRole, userSubsidiariId, onRiskSelect, customClass } = props;
+    const { syarikatList = [], userRole, userSyarikatId, onRiskSelect, customClass } = props;
     
     // State Penapis
     const [search, setSearch] = useState("");
-    const [subsidiariFilter, setSubsidiariFilter] = useState("");
+    const [syarikatFilter, setSyarikatFilter] = useState("");
     const [tahunFilter, setTahunFilter] = useState("");
     const [separuhFilter, setSeparuhFilter] = useState("");
     
@@ -71,7 +63,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
         if (isOpen) {
             // Reset semua penapis
             setSearch("");
-            setSubsidiariFilter("");
+            setSyarikatFilter("");
             setTahunFilter("");
             setSeparuhFilter("");
             setActiveTab('pengenalpastian'); 
@@ -99,12 +91,12 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             .sort((a, b) => b - a);
             setUniqueYearsPemantauan(yearsM);
 
-            // Tetapkan penapis subsidiari jika pengguna bukan Admin
-            if (["Staff", "Ketua Subsidiari"].includes(userRole) && userSubsidiariId) {
-                setSubsidiariFilter(String(userSubsidiariId));
+            // Tetapkan penapis syarikat jika pengguna bukan Admin
+            if (["Staff", "Ketua Subsidiari"].includes(userRole) && userSyarikatId) {
+                setSyarikatFilter(String(userSyarikatId));
             }
         }
-    }, [isOpen, risks, userRole, userSubsidiariId]); 
+    }, [isOpen, risks, userRole, userSyarikatId]); 
 
     // 2. Reset penapis kontekstual apabila tab ditukar
     useEffect(() => {
@@ -112,7 +104,7 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
         setSeparuhFilter("");
     }, [activeTab]);
 
-    // 3. Penapisan Global (Search & Subsidiari)
+    // 3. Penapisan Global (Search & Syarikat)
     const baseFilteredRisks = useMemo(() => {
         let tempRisks = [...risks];
 
@@ -123,11 +115,11 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                  (r.risiko || "").toLowerCase().includes(lowerSearch))
             );
         }
-        if (subsidiariFilter) {
-            tempRisks = tempRisks.filter(r => String(r.subsidiari_id) === String(subsidiariFilter));
+        if (syarikatFilter) {
+            tempRisks = tempRisks.filter(r => String(r.syarikat_id) === String(syarikatFilter));
         }
         return tempRisks;
-    }, [risks, search, subsidiariFilter]);
+    }, [risks, search, syarikatFilter]);
 
     // 4. Penapisan Kontekstual (mengikut Tab) - DIKEMASKINI dengan penapis tahap risiko
     const risksToDisplay = useMemo(() => {
@@ -225,16 +217,16 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                             aria-label="Cari risiko"
                         />
                         <select
-                            value={subsidiariFilter} 
-                            onChange={e => setSubsidiariFilter(e.target.value)} 
+                            value={syarikatFilter} 
+                            onChange={e => setSyarikatFilter(e.target.value)} 
                             disabled={["Staff","Ketua Subsidiari"].includes(userRole)} 
                             className="form-select" 
-                            aria-label="Tapis mengikut subsidiari"
+                            aria-label="Tapis mengikut syarikat"
                         >
                             <option value="">-- Semua Syarikat --</option>
-                            {subsidiariList.map(s => ( 
-                                <option key={s.subsidiari_id} value={s.subsidiari_id}>
-                                    {s.nama_subsidiari}
+                            {syarikatList.map(s => ( 
+                                <option key={s.syarikat_id} value={s.syarikat_id}>
+                                    {s.nama_syarikat}
                                 </option> 
                             ))}
                         </select>

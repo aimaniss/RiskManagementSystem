@@ -1,6 +1,5 @@
 // src/components/Sidebar.jsx
 import { Link, useLocation } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import {
   LayoutDashboard,
   ListChecks,
@@ -15,23 +14,14 @@ import {
 } from "lucide-react";
 import "./Sidebar.css";
 import LogoImage from "../assets/images/Light Background/UKMH_light.png"; // Logo UKM Holdings
+import { getAuthUser } from "../utils/auth";
 
 function Sidebar() {
   const location = useLocation();
 
   // Get token and decode
-  const token = localStorage.getItem("token");
-  let role = null;
-
-  try {
-    if (token) {
-      const user = jwtDecode(token);
-      role = user?.nama_peranan;
-    }
-  } catch (err) {
-    console.error("Invalid token:", err);
-    localStorage.removeItem("token");
-  }
+  const authUser = getAuthUser();
+  const role = authUser?.roleTitle || null;
 
   if (!role) return null;
 

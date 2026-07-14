@@ -1,18 +1,12 @@
-// src/utils/auth.js
-import { jwtDecode } from "jwt-decode"; // v4 named import
-
-export function getUserRole() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    const decoded = jwtDecode(token);
-    if (decoded && decoded.nama_peranan) {
-      return decoded.nama_peranan; 
-    }
-    return null;
-  } catch (err) {
-    console.error("Invalid token:", err.message);
-    return null;
-  }
-}
+// src/utils/auth.js - Re-exports from hooks/useAuth.js for backwards compatibility
+export {
+  getAuthUser,
+  getUserRole,
+  getUserRoleTitle,
+  isAdmin,
+  canEditPenilaian,
+  canEdit,
+  hasRole,
+  canViewTindakan,
+  isRestrictedRole,
+} from "../hooks/useAuth";

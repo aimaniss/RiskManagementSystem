@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, BookOpen } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./DaftarRisiko.css";
-import PanduanModal from '../Panduan/Panduan'; 
+import { getAuthUser } from "../../utils/auth";
+import { useSyarikats } from "../../hooks/useSyarikats";
+import { usePanduan } from "../../hooks/usePanduan";
 
 // --- JADUAL RUJUKAN SKOR (DIBUANG) ---
 // (Konstanta KebarangkalianData dan ImpakData dibuang kerana kotak penilaian dibuang)
@@ -14,7 +15,7 @@ function DaftarRisiko() {
     noRujukan: "",
     tahun: "",
     separuhTahun: "",
-    subsidiari: "",
+    syarikat: "",
     kategori: "",
     bahagian: "",
     risiko: "",
@@ -26,28 +27,16 @@ function DaftarRisiko() {
     // tahapRisiko: "" 
   });
 
-  const [puncaList, setPuncaList] = useState([""]);
-  const [kesanList, setKesanList] = useState([""]);
-  // const [riskColor, setRiskColor] = useState("#f1f5f9"); // Dibuang
-  const [subsidiariList, setSubsidiariList] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
+  const [puncaList, setPuncaList] = useState([""]);
+  const [kesanList, setKesanList] = useState([""]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { syarikatList } = useSyarikats();
+  const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
 
-  // Ambil userRole dari JWT token
-  const token = localStorage.getItem("token");
-  let userRole = "";
-  let subsidiariId = "";
-  if (token) {
-    try {
-      const decoded = jwtDecode(token);
-      const roleMapping = { 1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER" };
-      userRole = roleMapping[decoded.peranan_id] || "";
-      subsidiariId = decoded.subsidiari_id || "";
-    } catch (err) {
-      console.error("❌ Invalid token", err);
-      localStorage.removeItem("token");
-    }
-  }
+  // Ambil userRole dari JWT token
+  const authUser = getAuthUser();
+  const userRole = authUser?.role || "";
+  const syarikatId = authUser?.syarikatId || "";
 
   // --- Logik Penilaian Dibuang ---
   // const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
@@ -55,24 +44,11 @@ function DaftarRisiko() {
   // const getRiskMatrix = (k, i) => ...;
   // const getRiskAbbreviation = (label) => ...;
 
-  useEffect(() => {
-    const fetchSubsidiari = async () => {
-      try {
-        const res = await api.get("/subsidiari");
-        const data = Array.isArray(res.data) ? res.data : res.data.subsidiari || [];
-        setSubsidiariList(data);
-
-        if (["STAFF", "KETUA SUBSIDIARI"].includes(userRole)) {
-          setFormData(prev => ({ ...prev, subsidiari: subsidiariId }));
-        }
-      } catch (err) {
-        console.error("❌ Error fetch subsidiari:", err);
-        alert("⚠️ Tidak dapat memuat subsidiari. Sila log masuk semula.");
-        window.location.href = "/login";
-      }
-    };
-    fetchSubsidiari();
-  }, []); // Dependency userRole dan subsidiariId dibuang kerana ia pembolehubah statik dalam render ini
+  useEffect(() => {
+    if (syarikatList.length > 0 && ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)) {
+      setFormData(prev => ({ ...prev, syarikat: syarikatId }));
+    }
+  }, [syarikatList, userRole, syarikatId]);
 
   // --- useEffect untuk skor dibuang ---
   // useEffect(() => {
@@ -91,7 +67,7 @@ function DaftarRisiko() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!formData.noRujukan || !formData.tahun || !formData.separuhTahun || !formData.subsidiari) {
+    if (!formData.noRujukan || !formData.tahun || !formData.separuhTahun || !formData.syarikat) {
     return alert("⚠️ Sila lengkapkan semua maklumat dalam Maklumat Risiko.");
   }
   if (!formData.kategori || !formData.bahagian || !formData.risiko || puncaList.every(p => p.trim() === "") || kesanList.every(k => k.trim() === "")) {
@@ -102,13 +78,13 @@ function DaftarRisiko() {
     // if (canEditPenilaian) { ... }
     // ------------------------------------
 
-    const finalSubsidiari = formData.subsidiari
-      ? parseInt(formData.subsidiari)
-      : ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)
-        ? parseInt(subsidiariId)
-        : null;
+    const finalSyarikat = formData.syarikat
+      ? parseInt(formData.syarikat)
+      : ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)
+        ? parseInt(syarikatId)
+        : null;
 
-    if (!finalSubsidiari) return alert("⚠️ Subsidiari tidak sah.");
+    if (!finalSyarikat) return alert("⚠️ Syarikat tidak sah.");
 
           const noRujukanTrimmed = formData.noRujukan.trim();
       const tahunInt = formData.tahun !== "" ? parseInt(formData.tahun) : null;
@@ -121,7 +97,7 @@ function DaftarRisiko() {
         noRujukan: noRujukanTrimmed,
         tahun: tahunInt,
         separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
-        subsidiari: finalSubsidiari,
+        syarikat: finalSyarikat,
         // --- Skor dibuang dari finalData ---
         // skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
         // skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
@@ -159,7 +135,7 @@ try {
       // Reset state, kini tanpa skor
       setFormData({
         noRujukan:"", tahun:"", separuhTahun:"", 
-        subsidiari: (["STAFF","KETUA SUBSIDIARI"].includes(userRole)) ? subsidiariId : "",
+        syarikat: (["STAFF","KETUA SUBSIDIARI"].includes(userRole)) ? syarikatId : "",
         kategori:"", bahagian:"", risiko:""
         // --- Skor dibuang ---
       });
@@ -184,11 +160,11 @@ try {
             <button 
               type="button" 
               className="pemantauan-panduan-btn" 
-              onClick={() => setIsPanduanOpen(true)}
-            >
-              <BookOpen size={16} style={{ marginRight: '6px' }} />
-              Panduan
-            </button>
+                onClick={openPanduan}
+              >
+                <BookOpen size={16} style={{ marginRight: '6px' }} />
+                Panduan
+              </button>
           </div>
 
           <div className="combined-info-section" style={{ padding:"16px", display:"grid", gap:"14px" }}>
@@ -215,15 +191,15 @@ try {
             <div className="info-row" style={{ display:"flex", gap:"12px" }}>
               <label className="label">Syarikat:</label>
               <select 
-                name="subsidiari" 
-                value={formData.subsidiari} 
+                name="syarikat" 
+                value={formData.syarikat} 
                 onChange={handleChange} 
                 className="input select-dropdown"
                 disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
               >
                 <option value="">-- Pilih --</option>
-                {subsidiariList.length > 0
-                  ? subsidiariList.map((s)=>(<option key={s.subsidiari_id} value={s.subsidiari_id}>{s.nama_subsidiari}</option>))
+                {syarikatList.length > 0
+                  ? syarikatList.map((s)=>(<option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>))
                   : <option disabled>Tiada syarikat</option>}
               </select>
             </div>
@@ -288,7 +264,7 @@ try {
         </div>
       </form>
 
-      {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+      {PanduanRenderer}
 
     </div>
   );

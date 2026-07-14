@@ -4,6 +4,8 @@ import api from "../../api/api";
 import EditRawatan from "./EditRawatan"; 
 import PenilaianModal from './PenilaianModal';
 import "./PenilaianRawatan.css";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
+import { formatSeparuhTahun } from "../../utils/formatters";
 
 function PenilaianDanRawatan() {
     const [data, setData] = useState([]);
@@ -11,9 +13,9 @@ function PenilaianDanRawatan() {
     const [search, setSearch] = useState("");
     const [tahunFilter, setTahunFilter] = useState("");
     const [separuhFilter, setSeparuhFilter] = useState("");
-    const [subsidiariFilter, setSubsidiariFilter] = useState("");
+    const [syarikatFilter, setSyarikatFilter] = useState("");
     const [kategoriFilter, setKategoriFilter] = useState("");
-    const [subsidiariList, setSubsidiariList] = useState([]);
+    const [syarikatList, setSyarikatList] = useState([]);
     const [loading, setLoading] = useState(true);
     
     const [showPenilaianModal, setShowPenilaianModal] = useState(false); 
@@ -24,26 +26,16 @@ function PenilaianDanRawatan() {
     const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
     const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
 
-    const riskMatrix = {
-        1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-        2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-        3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
-        4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-        5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-    };
-
-    const getRiskData = (k,i) => riskMatrix[k]?.[i] || {label:"-", color:"#f1f5f9"};
-    const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"-";
-    const renderSeparuhTahun = (v) => v===1?"Pertama":v===2?"Kedua":"-";
+    const getRiskData = (k,i) => getRiskMatrix(k, i);
 
     const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null);
     const hasRawatan = (d) => d.plan_tindakan && Array.isArray(d.plan_tindakan) && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0;
     
-    const fetchSubsidiariList = async () => {
+    const fetchSyarikatList = async () => {
         try {
-            const res = await api.get("/subsidiari");
-            setSubsidiariList(res.data);
-        } catch(err){ console.error("❌ Gagal fetch subsidiari:",err); }
+            const res = await api.get("/syarikat");
+            setSyarikatList(res.data);
+        } catch(err){ console.error("❌ Gagal fetch syarikat:",err); }
     };
 
     const fetchData = async () => {
@@ -79,7 +71,7 @@ function PenilaianDanRawatan() {
     };
 
     useEffect(()=>{ 
-        fetchSubsidiariList(); 
+        fetchSyarikatList(); 
         fetchData(); 
     }, []);
 
@@ -105,7 +97,7 @@ function PenilaianDanRawatan() {
         setSearch("");
         setTahunFilter("");
         setSeparuhFilter("");
-        setSubsidiariFilter("");
+        setSyarikatFilter("");
         setKategoriFilter("");
         fetchData(); 
     };
@@ -123,13 +115,13 @@ function PenilaianDanRawatan() {
 
         return tabFiltered.filter(d => {
             const matchSearch = !search || d.no_rujukan?.toLowerCase().includes(search.toLowerCase());
-            const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari === subsidiariFilter;
+            const matchSyarikat = !syarikatFilter || d.nama_syarikat === syarikatFilter;
             const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
             const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
             const matchKategori = !kategoriFilter || d.kategori === kategoriFilter;
-            return matchSearch && matchSubsidiari && matchTahun && matchSeparuh && matchKategori;
+            return matchSearch && matchSyarikat && matchTahun && matchSeparuh && matchKategori;
         });
-    }, [data, activeTab, search, subsidiariFilter, tahunFilter, separuhFilter, kategoriFilter]);
+    }, [data, activeTab, search, syarikatFilter, tahunFilter, separuhFilter, kategoriFilter]);
 
     const penilaianColSpan = 9; 
     const rawatanColSpan = 11; 
@@ -165,8 +157,8 @@ function PenilaianDanRawatan() {
                 {activeTab === 'penilaian' ? (
                     <>
                         <td>{d.no_rujukan}</td>
-                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
-                        <td>{d.nama_subsidiari||"-"}</td>
+                        <td>{d.tahun} <br/> {formatSeparuhTahun(d.separuh_tahun)}</td>
+                        <td>{d.nama_syarikat||"-"}</td>
                         <td>{d.kategori||"-"}</td> 
                         <td>{d.bahagian_unit||"-"}</td> 
                         <td className="pr-group-divider">{d.risiko}</td>
@@ -185,8 +177,8 @@ function PenilaianDanRawatan() {
                 ) : (
                     <>
                         <td>{d.no_rujukan}</td>
-                        <td>{d.tahun} <br/> {renderSeparuhTahun(d.separuh_tahun)}</td>
-                        <td>{d.nama_subsidiari||"-"}</td>
+                        <td>{d.tahun} <br/> {formatSeparuhTahun(d.separuh_tahun)}</td>
+                        <td>{d.nama_syarikat||"-"}</td>
                         <td>{d.kategori||"-"}</td>
                         <td>{d.bahagian_unit||"-"}</td>
                         <td>{d.risiko}</td>
@@ -245,9 +237,9 @@ function PenilaianDanRawatan() {
 
             <div className="pr-filter-container">
                 <input type="text" placeholder="Cari No Rujukan..." value={search} onChange={e=>setSearch(e.target.value)} />
-                <select value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
+                <select value={syarikatFilter} onChange={e=>setSyarikatFilter(e.target.value)}>
                     <option value="">-- Semua Syarikat --</option>
-                    {subsidiariList.map(s=><option key={s.subsidiari_id} value={s.nama_subsidiari}>{s.nama_subsidiari}</option>)}
+                    {syarikatList.map(s=><option key={s.syarikat_id} value={s.nama_syarikat}>{s.nama_syarikat}</option>)}
                 </select>
                 <select value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
                     <option value="">-- Semua Tahun --</option>
@@ -333,7 +325,7 @@ function PenilaianDanRawatan() {
                     isAddMode={true}
                     pelanList={pelanList} 
                     kakitanganList={kakitanganList} 
-                    subsidiariList={subsidiariList}
+                    syarikatList={syarikatList}
                     onClose={() => setShowRawatanModal(false)} 
                     onSave={handleSave} 
                 />

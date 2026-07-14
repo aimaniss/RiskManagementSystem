@@ -4,42 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { X, Save, Loader2, BookOpen, Plus } from "lucide-react"; 
 import api from "../../api/api";
 import "./KemaskiniPemantauan.css"; 
-import PanduanModal from '../Panduan/Panduan';
-
-const riskMatrix = {
-    1: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
-    2: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
-    3: { 1: { label: "R", color: "#22c55e" }, 2: { label: "S", color: "#eab308" }, 3: { label: "S", color: "#eab308" }, 4: { label: "T", color: "#f97316" }, 5: { label: "T", color: "#f97316" } },
-    4: { 1: { label: "S", color: "#eab308" }, 2: { label: "S", color: "#eab308" }, 3: { label: "T", color: "#f97316" }, 4: { label: "T", color: "#f97316" }, 5: { label: "ST", color: "#ef4444" } },
-    5: { 1: { label: "S", color: "#eab308" }, 2: { label: "T", color: "#f97316" }, 3: { label: "T", color: "#f97316" }, 4: { label: "ST", color: "#ef4444" }, 5: { label: "ST", color: "#ef4444" } },
-};
-
-const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
-
-const TAHAP_RISIKO_ORDER = {
-    "R": 1, "S": 2, "T": 3, "ST": 4, "Tiada Data": 0,
-};
-
-const KEBERKESANAN_MAPPING = {
-    "Ya": "Berkesan (Menurun atau Kekal)",
-    "Tidak": "Tidak Berkesan (Meningkat)",
-};
-
-const SKOR_KEBARANGKALIAN_DESC = [
-    { value: 1, label: "1 - Hampir Tiada Kemungkinan" },
-    { value: 2, label: "2 - Kemungkinan Rendah" },
-    { value: 3, label: "3 - Berpeluang Untuk Berlaku" },
-    { value: 4, label: "4 - Kemungkinan Tinggi" },
-    { value: 5, label: "5 - Hampir Pasti" },
-];
-
-const SKOR_IMPAK_DESC = [
-    { value: 1, label: "1 - Tidak Ketara" },
-    { value: 2, label: "2 - Boleh Diukur" },
-    { value: 3, label: "3 - Ketara" },
-    { value: 4, label: "4 - Besar" },
-    { value: 5, label: "5 - Sangat Besar" },
-];
+import { riskMatrix, getRiskMatrix, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING, SKOR_KEBARANGKALIAN_DESC, SKOR_IMPAK_DESC } from "../../constants/riskMatrix";
+import { usePanduan } from "../../hooks/usePanduan";
 
 export default function KemaskiniPemantauanModal({
     isOpen,
@@ -58,7 +24,7 @@ export default function KemaskiniPemantauanModal({
     const modalTitle = isEditMode ? "Kemaskini Pemantauan" : "Papar Pemantauan";
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false);
+    const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
     const [isLoadingData, setIsLoadingData] = useState(false);
 
     const [risikoTeks, setRisikoTeks] = useState("");
@@ -353,7 +319,7 @@ export default function KemaskiniPemantauanModal({
                         <div className="kemaskinipemantauan-box">
                             <div className="kemaskinipemantauan-box-header kemaskinipemantauan-header-with-btn">
                                 <span>Maklumat Pemantauan</span>
-                                <button type="button" className="kemaskinipemantauan-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
+                                <button type="button" className="kemaskinipemantauan-panduan-btn" onClick={openPanduan}>
                                     <BookOpen size={16} style={{ marginRight: '6px' }} />
                                     Panduan
                                 </button>
@@ -575,12 +541,7 @@ export default function KemaskiniPemantauanModal({
                     </div>
                 </form>
 
-                <PanduanModal
-                    isOpen={isPanduanOpen}
-                    onClose={() => setIsPanduanOpen(false)}
-                    title="Panduan Log Pemantauan"
-                    content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
-                />
+                {PanduanRenderer}
             </div>
         </div>
     );

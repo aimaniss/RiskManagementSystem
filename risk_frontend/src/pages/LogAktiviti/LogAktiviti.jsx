@@ -7,25 +7,17 @@ import {
   Filter 
 } from "lucide-react";
 import './LogAktiviti.css'; 
+import { formatDate } from "../../utils/formatters";
 
 // ===================================================================
 // 1. Data 'mock' (Hanya untuk Aktiviti)
 // ===================================================================
-// ⭐️ Data mock untuk Peranan & Subsidiari telah dibuang
+// ⭐️ Data mock untuk Peranan & Syarikat telah dibuang
 const mockSenaraiAktiviti = ["Tambah", "Lulus", "Kemaskini", "Padam", "Tolak", "Permohonan"];
 
 // ===================================================================
 // 2. Fungsi Helper (Kekal Sama)
 // ===================================================================
-const formatTarikh = (dateString) => {
-  if (!dateString) {
-    return "Tiada Tarikh";
-  }
-  const date = new Date(dateString);
-  return date.toLocaleString("ms-MY", {
-    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
-};
 
 const getAktivitiTeks = (aktiviti) => {
   if (!aktiviti) {
@@ -102,11 +94,11 @@ function LogDetailModal({ log, onTutup }) {
           </div>
           <div className="log-modal-detail-item">
             <strong>Syarikat:</strong>
-            <span>{log.subsidiari}</span>
+            <span>{log.nama_syarikat}</span>
           </div>
           <div className="log-modal-detail-item">
             <strong>Tarikh & Masa:</strong>
-            <span>{formatTarikh(log.tarikh_masa)}</span>
+            <span>{formatDate(log.tarikh_masa)}</span>
           </div>
           <div className="log-modal-detail-item">
             <strong>Aktiviti:</strong>
@@ -249,13 +241,13 @@ function LogAktiviti() {
   
   // ⭐️ 2. State untuk data API (menggantikan mock)
   const [senaraiPeranan, setSenaraiPeranan] = useState([]);
-  const [senaraiSubsidiari, setSenaraiSubsidiari] = useState([]);
+  const [senaraiSyarikat, setSenaraiSyarikat] = useState([]);
   const [senaraiAktiviti] = useState(mockSenaraiAktiviti); // Kekalkan mock untuk aktiviti
   
   const [tarikhMula, setTarikhMula] = useState("");
   const [tarikhAkhir, setTarikhAkhir] = useState("");
   const [filterPeranan, setFilterPeranan] = useState("");
-  const [filterSubsidiari, setFilterSubsidiari] = useState("");
+  const [filterSyarikat, setFilterSyarikat] = useState("");
   const [filterAktiviti, setFilterAktiviti] = useState("");
   
   const [selectedLogId, setSelectedLogId] = useState(null);
@@ -273,15 +265,15 @@ function LogAktiviti() {
     }
   };
 
-  // ⭐️ 4. Fungsi untuk fetch Subsidiari (dari rujukan)
-  const fetchSubsidiaries = async (token) => {
+  // ⭐️ 4. Fungsi untuk fetch Syarikat (dari rujukan)
+  const fetchSyarikats = async (token) => {
     try {
-      const res = await axios.get("http://localhost:5001/api/subsidiari", {
+      const res = await axios.get("http://localhost:5001/api/syarikat", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSenaraiSubsidiari(res.data);
+      setSenaraiSyarikat(res.data);
     } catch (err) {
-      console.error("Gagal memuatkan senarai subsidiari:", err);
+      console.error("Gagal memuatkan senarai syarikat:", err);
     }
   };
 
@@ -290,7 +282,7 @@ function LogAktiviti() {
     const token = localStorage.getItem("token");
     if (token) {
       fetchRoles(token);
-      fetchSubsidiaries(token);
+      fetchSyarikats(token);
     }
   }, []); // <-- Array dependensi kosong, berjalan sekali semasa 'mount'
 
@@ -304,7 +296,7 @@ function LogAktiviti() {
     if (tarikhMula) url.searchParams.append("tarikhMula", tarikhMula);
     if (tarikhAkhir) url.searchParams.append("tarikhAkhir", tarikhAkhir);
     if (filterPeranan) url.searchParams.append("peranan", filterPeranan);
-    if (filterSubsidiari) url.searchParams.append("subsidiari", filterSubsidiari);
+    if (filterSyarikat) url.searchParams.append("syarikat", filterSyarikat);
     if (filterAktiviti) url.searchParams.append("aktiviti_teks", filterAktiviti);
     
     try {
@@ -331,7 +323,7 @@ function LogAktiviti() {
     } finally {
       setIsLoading(false);
     }
-  }, [tarikhMula, tarikhAkhir, filterPeranan, filterSubsidiari, filterAktiviti]);
+  }, [tarikhMula, tarikhAkhir, filterPeranan, filterSyarikat, filterAktiviti]);
 
   // useEffect untuk fetchLogs kekal sama
   useEffect(() => {
@@ -371,7 +363,7 @@ function LogAktiviti() {
     setTarikhMula("");
     setTarikhAkhir("");
     setFilterPeranan("");
-    setFilterSubsidiari("");
+    setFilterSyarikat("");
     setFilterAktiviti("");
   };
 
@@ -412,14 +404,14 @@ function LogAktiviti() {
             </select>
           </div>
           
-          {/* ⭐️ 7. Dropdown Subsidiari dikemaskini */}
+          {/* ⭐️ 7. Dropdown Syarikat dikemaskini */}
           <div className="log-filter-input-wrapper">
             <Building className="log-filter-input-icon" />
-            <select value={filterSubsidiari} onChange={(e) => setFilterSubsidiari(e.target.value)} className="log-filter-select">
+            <select value={filterSyarikat} onChange={(e) => setFilterSyarikat(e.target.value)} className="log-filter-select">
               <option value="">Semua Syarikat</option>
-              {senaraiSubsidiari.map(s => (
-                <option key={s.subsidiari_id} value={s.nama_subsidiari}>
-                  {s.nama_subsidiari}
+              {senaraiSyarikat.map(s => (
+                <option key={s.syarikat_id} value={s.nama_syarikat}>
+                  {s.nama_syarikat}
                 </option>
               ))}
             </select>
@@ -476,12 +468,12 @@ function LogAktiviti() {
                       <div style={{ fontWeight: '600', color: '#1e293b' }}>{log.nama_pengguna}</div>
                       <div style={{ fontSize: '12px', color: '#475569' }}>{log.peranan_pengguna}</div>
                       <div style={{ fontSize: '12px', color: '#475569', fontStyle: 'italic' }}>
-                        {log.subsidiari}
+                        {log.nama_syarikat}
                       </div>
                     </td>
                     <td className="log-td"><AktivitiTag aktiviti={log.aktiviti} /></td>
                     <td className="log-td log-td-small-text">{log.ringkasan}</td>
-                    <td className="log-td log-td-small-text">{formatTarikh(log.tarikh_masa)}</td>
+                    <td className="log-td log-td-small-text">{formatDate(log.tarikh_masa)}</td>
                     <td className="log-td log-td-center">
                       <div className="log-action-buttons">
                         <button 

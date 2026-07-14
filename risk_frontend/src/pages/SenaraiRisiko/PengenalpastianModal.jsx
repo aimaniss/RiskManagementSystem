@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./PengenalpastianModal.css";
+import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
 
 // ✅ NOTA: Fail ini telah diperbetulkan - Kategori kini menggunakan dropdown select
 
@@ -13,7 +13,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         noRujukan: initialData.no_rujukan || "",
         tahun: initialData.tahun || "",
         separuhTahun: initialData.separuh_tahun || "",
-        subsidiari: initialData.subsidiari_id || initialData.subsidiari || "",
+        syarikat: initialData.syarikat_id || initialData.syarikat || "",
         kategori: initialData.kategori || "",
         bahagian: initialData.bahagian_unit || initialData.bahagian || "",
         risiko: initialData.risiko || "",
@@ -21,32 +21,24 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         kesan: initialData.kesan || ["", ""],
     });
 
-    const [subsidiariList, setSubsidiariList] = useState([]);
+    const [syarikatList, setSyarikatList] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    const token = localStorage.getItem("token");
-    let userRole = "";
-    if (token) {
-        try {
-            const decoded = jwtDecode(token);
-            const roleMapping = { 1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER" };
-            userRole = roleMapping[decoded.peranan_id] || "";
-        } catch (err) { console.error("❌ Invalid token", err); }
-    }
-
-    const canEditPengenalpastian = ["ADMIN", "EXECUTIVE"].includes(userRole);
+    const authUser = getAuthUser();
+    const userRole = authUser?.role || "";
+    const canEditPengenalpastian = checkCanEditPenilaian();
 
     useEffect(() => {
-        const fetchSubsidiari = async () => {
+        const fetchSyarikat = async () => {
             try {
-                const res = await api.get("/subsidiari");
-                const data = Array.isArray(res.data) ? res.data : res.data.subsidiari || [];
-                setSubsidiariList(data);
+                const res = await api.get("/syarikat");
+                const data = Array.isArray(res.data) ? res.data : res.data.syarikat || [];
+                setSyarikatList(data);
             } catch (err) {
-                console.error("❌ Error fetch subsidiari:", err);
+                console.error("❌ Error fetch syarikat:", err);
             }
         };
-        fetchSubsidiari();
+        fetchSyarikat();
     }, []); 
 
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -76,7 +68,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
             noRujukan: formData.noRujukan,
             tahun: formData.tahun,
             separuhTahun: formData.separuhTahun,
-            subsidiari: formData.subsidiari, 
+            syarikat: formData.syarikat, 
             kategori: formData.kategori,
             bahagian: formData.bahagian,
             risiko: formData.risiko,
@@ -101,7 +93,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         } finally { setIsSubmitting(false); }
     };
 
-    const subsidiariName = subsidiariList.find(s => s.subsidiari_id == formData.subsidiari)?.nama_subsidiari || "Memuat...";
+    const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat)?.nama_syarikat || "Memuat...";
 
     return (
         <div className="penilaian-modal-overlay">
@@ -134,7 +126,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
                                 <div className="penilaian-info-row" style={{ marginTop: '0px' }}>
                                     <div className="penilaian-input-group full-width">
                                         <label className="penilaian-label">Syarikat:</label>
-                                        <input readOnly value={subsidiariName} className="penilaian-input" />
+                                        <input readOnly value={syarikatName} className="penilaian-input" />
                                     </div>
                                 </div>
 

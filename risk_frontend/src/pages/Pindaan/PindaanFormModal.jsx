@@ -4,34 +4,16 @@ import './PindaanFormModal.css';
 
 // Import modal pengesahan
 import PengesahanPindaanModal from './PengesahanPindaanModal';
+import { riskMatrix, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
 
 // --- (MULA) DESKRIPSI SKOR MENGIKUT JADUAL YANG DIBERIKAN (JADUAL 2 & 3) ---
-const likelihoodDescriptions = {
-    5: "Hampir Pasti",
-    4: "Kemungkinan Tinggi",
-    3: "Berpeluang Untuk Berlaku",
-    2: "Kemungkinan Rendah",
-    1: "Hampir Tiada Kemungkinan",
-};
-
-const impactDescriptions = {
-    5: "Sangat Besar",
-    4: "Besar",
-    3: "Ketara",
-    2: "Boleh Diukur",
-    1: "Tidak Ketara",
-};
+const likelihoodDescriptions = KebarangkalianData;
+const impactDescriptions = ImpakData;
 // --- (TAMAT) DESKRIPSI SKOR MENGIKUT JADUAL YANG DIBERIKAN ---
 
 
 // Matriks Risiko LENGKAP (Kekalkan yang sedia ada)
-const riskMatrixDetails = {
-    1: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    2: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    3: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    4: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-    5: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, 2:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 3:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}, 4:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}, 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-};
+const riskMatrixDetails = riskMatrix;
 
 // Fungsi: Dapatkan butiran LENGKAP dari matriks
 const getRiskStylingFromMatrix = (likelihood, impact, matrix) => {
@@ -218,7 +200,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
             const initialValues = {
                 no_rujukan: risk.no_rujukan,
                 risiko: risk.risiko,
-                subsidiari: risk.nama_subsidiari || risk.subsidiari || 'N/A',
+                syarikat_display: risk.nama_syarikat || risk.syarikat_id || 'N/A',
                 bahagian: risk.bahagian,
                 tahun: risk.tahun,
                 separuh_tahun: risk.separuh_tahun,
@@ -266,7 +248,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
             const after = {};
             const allKeys = new Set([...Object.keys(original), ...Object.keys(current)]);
             const readOnlyKeys = [
-                'risiko', 'no_rujukan', 'subsidiari', 'bahagian', 'tahun', 'separuh_tahun',
+                'risiko', 'no_rujukan', 'syarikat_display', 'bahagian', 'tahun', 'separuh_tahun',
                 'tahun_pemantauan', 'separuh_tahun_pemantauan'
             ];
             allKeys.forEach(key => {
@@ -348,7 +330,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
 
                     <form onSubmit={handleSubmit} className="modal-content modal-form-body">
 
-                        {/* Baris Info Risiko & Subsidiari */}
+                        {/* Baris Info Risiko & Syarikat */}
                         <div className="form-info-row">
                             <div className="form-info-item">
                                 <span className="form-info-label">Risiko:</span>
@@ -356,7 +338,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                             </div>
                             <div className="form-info-item">
                                 <span className="form-info-label">Syarikat:</span>
-                                <span className="form-info-data">{formData.subsidiari || '-'}</span>
+                                <span className="form-info-data">{formData.syarikat_display || '-'}</span>
                             </div>
                         </div>
 

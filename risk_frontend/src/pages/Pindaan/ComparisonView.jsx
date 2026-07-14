@@ -1,14 +1,10 @@
 import React from 'react';
 
-// --- (SALIN FUNGSI HELPER & MATRIKS DARI pindaan.js) ---
-const riskMatrixDetails = { /* ... matriks penuh ... */
-    1: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, /*...*/ 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    2: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, /*...*/ 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    3: {1:{label:"Rendah", shortLabel:"R", color:"#22c55e", textColor:"#ffffff"}, /*...*/ 5:{label:"Tinggi", shortLabel:"T", color:"#f97316", textColor:"#ffffff"}},
-    4: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, /*...*/ 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-    5: {1:{label:"Sederhana", shortLabel:"S", color:"#eab308", textColor:"#854d0e"}, /*...*/ 5:{label:"Sangat Tinggi", shortLabel:"ST", color:"#ef4444", textColor:"#ffffff"}},
-};
-const getRiskStylingFromMatrix = (likelihood, impact, matrix) => { /* ... kod fungsi ... */
+// --- Import shared risk matrix ---
+import { riskMatrix, getRiskMatrix } from "../../constants/riskMatrix";
+
+const riskMatrixDetails = riskMatrix;
+const getRiskStylingFromMatrix = (likelihood, impact, matrix) => {
     const k_val = parseInt(likelihood, 10);
     const i_val = parseInt(impact, 10);
     if (!isNaN(k_val) && !isNaN(i_val) && k_val >= 1 && k_val <= 5 && i_val >= 1 && i_val <= 5 && matrix[k_val] && matrix[k_val][i_val]) {
@@ -16,7 +12,6 @@ const getRiskStylingFromMatrix = (likelihood, impact, matrix) => { /* ... kod fu
     }
     return { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
 };
-// --- (TAMAT SALINAN) ---
 
 
 // Pemetaan Nama Medan

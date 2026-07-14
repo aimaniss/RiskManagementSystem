@@ -24,7 +24,7 @@ function UrusPengguna() {
     nama_penuh: "",
     katalaluan: "",
     peranan_id: "",
-    subsidiari_id: "",
+    syarikat_id: "",
     profile_pic: null,
   });
   const [preview, setPreview] = useState("");
@@ -52,7 +52,7 @@ function UrusPengguna() {
 
   const fetchSubsidiaries = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/subsidiari", {
+      const res = await axios.get("http://localhost:5001/api/syarikat", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSubsidiaries(res.data);
@@ -80,7 +80,7 @@ function UrusPengguna() {
 
     const matchesRole = filterRoleId ? u.peranan_id === parseInt(filterRoleId) : true;
     const matchesSubsidiary = filterSubsidiaryId
-      ? u.subsidiari_id === parseInt(filterSubsidiaryId)
+      ? u.syarikat_id === parseInt(filterSubsidiaryId)
       : true;
 
     return matchesSearch && matchesRole && matchesSubsidiary;
@@ -92,8 +92,8 @@ function UrusPengguna() {
     const role = roles.find((r) => r.peranan_id === parseInt(roleId));
 
     if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
-      const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
-      if (ukm) setFilterSubsidiaryId(ukm.subsidiari_id.toString());
+      const ukm = subsidiaries.find((s) => s.nama_syarikat === "UKM Holdings");
+      if (ukm) setFilterSubsidiaryId(ukm.syarikat_id.toString());
       setFilterSubsidiaryLocked(true);
     } else {
       setFilterSubsidiaryId("");
@@ -113,8 +113,8 @@ function UrusPengguna() {
 
       const role = roles.find((r) => r.peranan_id === user.peranan_id);
       if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
-        const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
-        if (ukm) setFormData((f) => ({ ...f, subsidiari_id: ukm.subsidiari_id }));
+        const ukm = subsidiaries.find((s) => s.nama_syarikat === "UKM Holdings");
+        if (ukm) setFormData((f) => ({ ...f, syarikat_id: ukm.syarikat_id }));
         setSubsidiaryLocked(true);
       } else {
         setSubsidiaryLocked(false);
@@ -125,7 +125,7 @@ function UrusPengguna() {
         nama_penuh: "",
         katalaluan: "",
         peranan_id: "",
-        subsidiari_id: "",
+        syarikat_id: "",
         profile_pic: null,
       });
       setPreview("");
@@ -159,11 +159,11 @@ function UrusPengguna() {
     setFormData((f) => ({ ...f, peranan_id: parseInt(roleId) }));
 
     if (role && ["Admin", "Executive", "Viewer"].includes(role.nama_peranan)) {
-      const ukm = subsidiaries.find((s) => s.nama_subsidiari === "UKM Holdings");
-      if (ukm) setFormData((f) => ({ ...f, subsidiari_id: ukm.subsidiari_id }));
+      const ukm = subsidiaries.find((s) => s.nama_syarikat === "UKM Holdings");
+      if (ukm) setFormData((f) => ({ ...f, syarikat_id: ukm.syarikat_id }));
       setSubsidiaryLocked(true);
     } else {
-      setFormData((f) => ({ ...f, subsidiari_id: "" }));
+      setFormData((f) => ({ ...f, syarikat_id: "" }));
       setSubsidiaryLocked(false);
     }
   };
@@ -175,7 +175,7 @@ function UrusPengguna() {
       data.append("nama_penuh", formData.nama_penuh);
       data.append("katalaluan", formData.katalaluan);
       data.append("peranan_id", formData.peranan_id);
-      data.append("subsidiari_id", formData.subsidiari_id);
+      data.append("syarikat_id", formData.syarikat_id);
       if (formData.profile_pic) data.append("gambar_profil", formData.profile_pic);
       if (removeProfileFlag) data.append("hapus_gambar", "true");
 
@@ -269,8 +269,8 @@ function UrusPengguna() {
         >
           <option value="">Pilih Syarikat</option>
           {subsidiaries.map((s) => (
-            <option key={s.subsidiari_id} value={s.subsidiari_id}>
-              {s.nama_subsidiari}
+            <option key={s.syarikat_id} value={s.syarikat_id}>
+              {s.nama_syarikat}
             </option>
           ))}
         </select>
@@ -304,7 +304,7 @@ function UrusPengguna() {
             ) : (
               filteredUsers.map((u, i) => {
                 const subsidiary = subsidiaries.find(
-                  (s) => s.subsidiari_id === u.subsidiari_id
+                  (s) => s.syarikat_id === u.syarikat_id
                 );
                 const profileSrc = u.profile_pic
                   ? `data:image/png;base64,${u.profile_pic}`
@@ -324,7 +324,7 @@ function UrusPengguna() {
                       </div>
                     </td>
                     <td>{getDisplayRoleName(u.nama_peranan)}</td>
-                    <td>{subsidiary ? subsidiary.nama_subsidiari : "-"}</td>
+                    <td>{subsidiary ? subsidiary.nama_syarikat : "-"}</td>
                     <td>{u.staff_id}</td>
                     <td>{u.katalaluan || "-"}</td>
                     {/* DIPERBAIKI: Struktur butang tindakan yang mantap */}
@@ -450,16 +450,16 @@ function UrusPengguna() {
                 </select>
 
                 <select
-                  value={formData.subsidiari_id}
+                  value={formData.syarikat_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, subsidiari_id: e.target.value })
+                    setFormData({ ...formData, syarikat_id: e.target.value })
                   }
                   disabled={subsidiaryLocked}
                 >
                   <option value="">Pilih Syarikat</option>
                   {subsidiaries.map((s) => (
-                    <option key={s.subsidiari_id} value={s.subsidiari_id}>
-                      {s.nama_subsidiari}
+                    <option key={s.syarikat_id} value={s.syarikat_id}>
+                      {s.nama_syarikat}
                     </option>
                   ))}
                 </select>

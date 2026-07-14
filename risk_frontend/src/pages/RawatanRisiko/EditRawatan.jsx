@@ -2,38 +2,12 @@ import { useState, useEffect } from "react";
 import { X, Trash2, Plus, BookOpen, Save } from "lucide-react"; 
 import "./EditRawatan.css";
 import api from "../../api/api"; 
-import PanduanModal from '../Panduan/Panduan'; 
-
-const ListDisplay = ({ data }) => {
-    const cleanedData = Array.isArray(data) ? data.filter(item => item?.trim() !== "") : [];
-
-    if (cleanedData.length === 0) return <span style={{ color: '#64748b' }}>-</span>;
-
-    return (
-        <ul style={{ listStyleType: 'none', paddingLeft: '0', margin: '0' }}>
-            {cleanedData.map((item, index) => (
-                <li key={index} className="rawatan-list-item">
-                    <span className="rawatan-data-inline">
-                        {`${index + 1}. ${item}`}
-                    </span>
-                </li>
-            ))}
-        </ul>
-    );
-};
-
-const riskMatrix = {
-    1: { 1: { label: "R", color: "#14b8a6", fullLabel: "Rendah" }, 2: { label: "R", color: "#14b8a6", fullLabel: "Rendah" }, 3: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 4: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 5: { label: "T", color: "#f97316", fullLabel: "Tinggi" } },
-    2: { 1: { label: "R", color: "#14b8a6", fullLabel: "Rendah" }, 2: { label: "R", color: "#14b8a6", fullLabel: "Rendah" }, 3: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 4: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 5: { label: "T", color: "#f97316", fullLabel: "Tinggi" } },
-    3: { 1: { label: "R", color: "#14b8a6", fullLabel: "Rendah" }, 2: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 3: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 4: { label: "T", color: "#f97316", fullLabel: "Tinggi" }, 5: { label: "T", color: "#f97316", fullLabel: "Tinggi" } },
-    4: { 1: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 2: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 3: { label: "T", color: "#f97316", fullLabel: "Tinggi" }, 4: { label: "T", color: "#f97316", fullLabel: "Tinggi" }, 5: { label: "ST", color: "#ef4444", fullLabel: "Sangat Tinggi" } },
-    5: { 1: { label: "S", color: "#eab308", fullLabel: "Sederhana" }, 2: { label: "T", color: "#f97316", fullLabel: "Tinggi" }, 3: { label: "T", color: "#f97316", fullLabel: "Tinggi" }, 4: { label: "ST", color: "#ef4444", fullLabel: "Sangat Tinggi" }, 5: { label: "ST", color: "#ef4444", fullLabel: "Sangat Tinggi" } },
-};
-
-const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9", fullLabel: "" };
+import ListDisplay from "../../components/ListDisplay";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
+import { usePanduan } from "../../hooks/usePanduan";
 
 export default function EditRawatan({ isOpen, risk, onClose, onSave }) { 
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
+    const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
     const [formData, setFormData] = useState({
         planTindakan: [""],
         kakitanganBertanggungjawab: [""],
@@ -210,7 +184,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             <button 
                                 type="button" 
                                 className="rawatan-panduan-btn" 
-                                onClick={() => setIsPanduanOpen(true)}
+                                onClick={openPanduan}
                             >
                                 <BookOpen size={16} style={{ marginRight: '6px' }} />
                                 Panduan 
@@ -233,7 +207,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                             </div>
                             <div className="rawatan-flex-item">
                                 <span className="rawatan-label-inline">Syarikat:</span>
-                                <span className="rawatan-data-inline">{formData.nama_subsidiari || "-"}</span>
+                                <span className="rawatan-data-inline">{formData.nama_syarikat || "-"}</span>
                             </div>
                         </div>
                     </div>
@@ -455,7 +429,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                     </div>
                 </form>
                 
-                {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+                {PanduanRenderer}
             </div>
         </div>
     );

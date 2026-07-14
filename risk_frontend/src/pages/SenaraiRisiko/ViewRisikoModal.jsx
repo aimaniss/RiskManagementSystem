@@ -1,145 +1,22 @@
 import { useState, useEffect } from "react";
 import { X, BookOpen, Loader2, Pencil, Trash2 } from "lucide-react"; 
-import { jwtDecode } from "jwt-decode";
 import "./ViewRisikoModal.css";
 import api from "../../api/api";
-import PanduanModal from "../Panduan/Panduan";
 import TambahLogModal from "../PemantauanRisiko/TambahLogModal";
 import KemaskiniPemantauanModal from "./KemaskiniPemantauan";
 import PengenalpastianModal from "./PengenalpastianModal";
 import PenilaianRisikoModal from "./PenilaianRisikoModal";
 import KemaskiniRawatan from "./KemaskiniRawatan"; 
-
-// ==========================================================
-// ✅ HELPER FUNCTION - Parse Semicolon Separated String
-// ==========================================================
-const parseListData = (dataString) => {
-  if (!dataString || dataString === "-" || dataString.trim() === "") {
-    return [];
-  }
-  
-  return dataString.split(';')
-    .map(item => item.trim())
-    .filter(item => item !== "" && item !== "-");
-};
-
-// ==========================================================
-// ✅ LIST DISPLAY COMPONENT - FIXED VERSION
-// ==========================================================
-const ListDisplay = ({ data, isLogContext = false }) => {
-  const getItemText = (item) => {
-    if (typeof item === "string") return item;
-    if (item?.punca) return item.punca;
-    if (item?.kesan) return item.kesan;
-    if (item?.punca_text) return item.punca_text;
-    if (item?.kesan_text) return item.kesan_text;
-    if (item?.nama_punca) return item.nama_punca;
-    if (item?.nama_kesan) return item.nama_kesan;
-    if (item?.butiran_punca) return item.butiran_punca;
-    if (item?.butiran_kesan) return item.butiran_kesan;
-    if (item?.butiran_aktiviti) return item.butiran_aktiviti;
-    if (item?.butiran_kakitangan) return item.butiran_kakitangan;
-    if (item?.butiran_log) return item.butiran_log;
-    if (item?.text) return item.text;
-    return "-";
-  };
-  
-  // ✅ Handle both array and string (semicolon-separated)
-  let cleanedData = [];
-  
-  if (typeof data === "string") {
-    // Parse semicolon-separated string
-    cleanedData = parseListData(data);
-  } else if (Array.isArray(data)) {
-    // Filter array items
-    cleanedData = data.filter((item) => {
-      const text = getItemText(item);
-      return text && text.trim() !== "-";
-    });
-  }
-
-  if (cleanedData.length === 0)
-    return <span style={{ color: "#64748b" }}>-</span>;
-
-  // ✅ Show numbered list only if more than 1 item
-  if (cleanedData.length === 1) {
-    const itemText = typeof cleanedData[0] === "string" ? cleanedData[0] : getItemText(cleanedData[0]);
-    return <span className="viewrisiko-data-inline">{itemText}</span>;
-  }
-
-  return (
-    <ul style={{ listStyleType: "none", paddingLeft: "0", margin: "0" }}>
-      {cleanedData.map((item, index) => {
-        const itemText = typeof item === "string" ? item : getItemText(item);
-        return (
-          <li key={index} className="viewrisiko-list-item">
-            <span className="viewrisiko-data-inline">
-              {`${index + 1}. ${itemText}`}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-};
-
-// ==========================================================
-// RISK MATRIX CONSTANTS
-// ==========================================================
-const riskMatrix = {
-  1: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "R", color: "#22c55e" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "S", color: "#eab308" },
-    5: { label: "T", color: "#f97316" },
-  },
-  2: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "R", color: "#22c55e" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "S", color: "#eab308" },
-    5: { label: "T", color: "#f97316" },
-  },
-  3: {
-    1: { label: "R", color: "#22c55e" },
-    2: { label: "S", color: "#eab308" },
-    3: { label: "S", color: "#eab308" },
-    4: { label: "T", color: "#f97316" },
-    5: { label: "T", color: "#f97316" },
-  },
-  4: {
-    1: { label: "S", color: "#eab308" },
-    2: { label: "S", color: "#eab308" },
-    3: { label: "T", color: "#f97316" },
-    4: { label: "T", color: "#f97316" },
-    5: { label: "ST", color: "#ef4444" },
-  },
-  5: {
-    1: { label: "S", color: "#eab308" },
-    2: { label: "T", color: "#f97316" },
-    3: { label: "T", color: "#f97316" },
-    4: { label: "ST", color: "#ef4444" },
-    5: { label: "ST", color: "#ef4444" },
-  },
-};
-
-const getRiskMatrix = (k, i) =>
-  riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-const getRiskLevel = (k, i) => getRiskMatrix(k, i).label;
-
-const formatSeparuhTahun = (value) => {
-  const num = parseInt(value);
-  if (num === 1) return "Pertama";
-  if (num === 2) return "Kedua";
-  return "-";
-};
+import ListDisplay from "../../components/ListDisplay";
+import { getAuthUser } from "../../utils/auth";
+import { getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
+import { parseListData, formatSeparuhTahun } from "../../utils/formatters";
+import { usePanduan } from "../../hooks/usePanduan";
 
 // ==========================================================
 // MAIN COMPONENT: ViewRisikoModal
 // ==========================================================
 export default function ViewRisikoModal({ isOpen, risk, onClose }) {
-  const [isPanduanOpen, setIsPanduanOpen] = useState(false);
   const [logData, setLogData] = useState([]);
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   
@@ -153,8 +30,10 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   const [isPenilaianModalOpen, setIsPenilaianModalOpen] = useState(false);
   const [isRawatanModalOpen, setIsRawatanModalOpen] = useState(false);
   
-  const [userRole, setUserRole] = useState(null); 
   const [needsRefresh, setNeedsRefresh] = useState(false);
+  const authUser = getAuthUser();
+  const userRole = authUser?.role || null;
+  const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
   
   const [data, setData] = useState({
     risiko_id: null,
@@ -170,7 +49,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
     no_rujukan: "",
     tahun: "",
     separuh_tahun: null,
-    nama_subsidiari: "",
+    nama_syarikat: "",
     kategori: "",
     bahagian: "",
     risiko: "",
@@ -180,28 +59,6 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
   });
 
   const [riskColor, setRiskColor] = useState("#f1f5f9");
-
-  useEffect(() => {
-    const token = localStorage.getItem('token'); 
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const roleMapping = {
-          1: "ADMIN",
-          2: "EXECUTIVE",
-          3: "KETUA SUBSIDIARI",
-          4: "STAFF",
-          5: "VIEWER",
-        };
-        const role = roleMapping[decoded.peranan_id] || "";
-        setUserRole(role); 
-      } catch (error) {
-        console.error("❌ Invalid token", error);
-        localStorage.removeItem("token");
-        setUserRole(null);
-      }
-    }
-  }, []);
 
   const hasPenilaianData = () => {
     const k = parseInt(data.skor_kebarangkalian);
@@ -276,7 +133,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           no_rujukan: updatedRisk.no_rujukan || "-",
           tahun: updatedRisk.tahun_asal || updatedRisk.tahun || "-",
           separuh_tahun: updatedRisk.separuh_tahun_asal || updatedRisk.separuh_tahun,
-          nama_subsidiari: updatedRisk.subsidiari || updatedRisk.nama_subsidiari || "-", 
+          nama_syarikat: updatedRisk.syarikat || updatedRisk.nama_syarikat || "-", 
           kategori: updatedRisk.kategori || "-",
           bahagian: updatedRisk.bahagian || updatedRisk.bahagian_unit || "-",
           risiko: updatedRisk.risiko || "-",
@@ -328,7 +185,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
       no_rujukan: risk.no_rujukan || "-",
       tahun: risk.tahun_asal || risk.tahun || "-",
       separuh_tahun: risk.separuh_tahun_asal || risk.separuh_tahun,
-      nama_subsidiari: risk.subsidiari || risk.nama_subsidiari || "-", 
+      nama_syarikat: risk.syarikat || risk.nama_syarikat || "-", 
       kategori: risk.kategori || "-",
       bahagian: risk.bahagian || risk.bahagian_unit || "-",
       risiko: risk.risiko || "-",
@@ -499,7 +356,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                 <button
                   type="button"
                   className="viewrisiko-panduan-btn"
-                  onClick={() => setIsPanduanOpen(true)}
+                  onClick={openPanduan}
                 >
                   <BookOpen size={16} style={{ marginRight: "6px" }} />
                   Panduan
@@ -522,7 +379,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               </div>
               <div className="viewrisiko-flex-item">
                 <span className="viewrisiko-label-inline">Syarikat:</span>
-                <span className="viewrisiko-data-inline">{data.nama_subsidiari || "-"}</span>
+                <span className="viewrisiko-data-inline">{data.nama_syarikat || "-"}</span>
               </div>
             </div>
 
@@ -778,12 +635,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
           )}
         </div>
 
-        {isPanduanOpen && (
-          <PanduanModal
-            isOpen={isPanduanOpen}
-            onClose={() => setIsPanduanOpen(false)}
-          />
-        )}
+        {PanduanRenderer}
 
         {isLogModalOpen && (
           <TambahLogModal
@@ -820,8 +672,8 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               no_rujukan: data.no_rujukan,
               tahun: data.tahun,
               separuh_tahun: data.separuh_tahun,
-              subsidiari_id: risk?.subsidiari_id,
-              subsidiari: data.nama_subsidiari,
+              syarikat_id: risk?.syarikat_id,
+              syarikat: data.nama_syarikat,
               kategori: data.kategori,
               bahagian_unit: data.bahagian,
               bahagian: data.bahagian,
@@ -850,8 +702,8 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               no_rujukan: data.no_rujukan,
               tahun: data.tahun,
               separuh_tahun: data.separuh_tahun,
-              subsidiari_id: risk?.subsidiari_id,
-              subsidiari: data.nama_subsidiari,
+              syarikat_id: risk?.syarikat_id,
+              syarikat: data.nama_syarikat,
               kategori: data.kategori,
               bahagian_unit: data.bahagian,
               bahagian: data.bahagian,

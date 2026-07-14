@@ -2,14 +2,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 /* === RANGKA UTAMA === */
-.dashboard-subsidiari-layout {
+.dashboard-syarikat-layout {
   font-family: "Inter", sans-serif;
   background-color: #f3f4f6;
   padding: 24px;
 }
 
 /* === HEADER === */
-.dashboard-subsidiari-header {
+.dashboard-syarikat-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -20,7 +20,7 @@
   border: 1px solid #e5e7eb;
 }
 
-.dashboard-subsidiari-header-left {
+.dashboard-syarikat-header-left {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -28,14 +28,14 @@
 }
 
 /* --- PERUBAHAN DI SINI --- */
-.dashboard-subsidiari-image-placeholder {
+.dashboard-syarikat-image-placeholder {
   /* width: 50px; */ /* <- DIBUANG */
   /* height: 50px; */ /* <- DIBUANG */
   /* background: #e5e7eb; */ /* <- DIBUANG (untuk buang kelabu) */
   border-radius: 4px;
   overflow: hidden;
 }
-.dashboard-subsidiari-image-placeholder img {
+.dashboard-syarikat-image-placeholder img {
   /* TUKAR: Tetapkan tinggi, biarkan lebar auto */
   height: 50px; /* Boleh ubah jika perlu */
   width: auto; /* Ini akan auto-kira lebar */
@@ -43,25 +43,25 @@
 }
 /* --- TAMAT PERUBAHAN --- */
 
-/* Class ini (.dashboard-subsidiari-image-caption)
+/* Class ini (.dashboard-syarikat-image-caption)
   tidak lagi digunakan oleh JSX, tetapi ia tidak 
   mengganggu jika dibiarkan di sini.
 */
-.dashboard-subsidiari-image-caption {
+.dashboard-syarikat-image-caption {
   font-weight: 600;
   color: #374151;
   font-size: 0.75rem;
 }
 
-.dashboard-subsidiari-header-right {
+.dashboard-syarikat-header-right {
   text-align: right;
 }
-.dashboard-subsidiari-title-main {
+.dashboard-syarikat-title-main {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
 }
-.dashboard-subsidiari-title-sub {
+.dashboard-syarikat-title-sub {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0074c8;
@@ -69,7 +69,7 @@
 
 /* === FILTER BAR (FYP) === */
 /* (Class ini tidak digunakan dalam JSX, tapi dibiarkan jika perlu) */
-.dashboard-subsidiari-filter-bar {
+.dashboard-syarikat-filter-bar {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -79,12 +79,12 @@
   border: 1px solid #e5e7eb;
   margin-bottom: 24px;
 }
-.dashboard-subsidiari-filter-bar label {
+.dashboard-syarikat-filter-bar label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
 }
-.dashboard-subsidiari-filter-bar select {
+.dashboard-syarikat-filter-bar select {
   font-family: "Inter", sans-serif;
   font-size: 0.875rem;
   padding: 8px 12px;
@@ -94,7 +94,7 @@
 }
 
 /* === KAD SKOR (VERSI 5 KAD) === */
-.dashboard-subsidiari-scorecard-container {
+.dashboard-syarikat-scorecard-container {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
@@ -103,12 +103,12 @@
 
 /* Responsif untuk 5 kad pada skrin kecil */
 @media (max-width: 1200px) {
-  .dashboard-subsidiari-scorecard-container {
+  .dashboard-syarikat-scorecard-container {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 
-.dashboard-subsidiari-scorecard-box {
+.dashboard-syarikat-scorecard-box {
   display: flex;
   align-items: center;
   background: #ffffff;
@@ -122,36 +122,36 @@
 
 /* Kembali ke paparan sisi-ke-sisi pada skrin besar */
 @media (min-width: 1200px) {
-  .dashboard-subsidiari-scorecard-box {
+  .dashboard-syarikat-scorecard-box {
     flex-direction: row;
     text-align: left;
   }
 }
 
-.dashboard-subsidiari-scorecard-icon {
+.dashboard-syarikat-scorecard-icon {
   flex-shrink: 0;
 }
-.dashboard-subsidiari-scorecard-icon svg {
+.dashboard-syarikat-scorecard-icon svg {
   width: 32px;
   height: 32px;
 }
-.dashboard-subsidiari-scorecard-content {
+.dashboard-syarikat-scorecard-content {
   flex-grow: 1;
 }
-.dashboard-subsidiari-scorecard-value {
+.dashboard-syarikat-scorecard-value {
   font-size: 2rem;
   font-weight: 700;
   color: #111827;
   line-height: 1.2;
 }
-.dashboard-subsidiari-scorecard-label {
+.dashboard-syarikat-scorecard-label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #6b7280;
 }
 
 /* === GRID CARTA (FYP) === */
-.dashboard-subsidiari-charts-grid {
+.dashboard-syarikat-charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 24px;
@@ -159,7 +159,7 @@
 }
 
 /* Kotak untuk setiap carta */
-.dashboard-subsidiari-section-box {
+.dashboard-syarikat-section-box {
   background: #ffffff;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
@@ -169,7 +169,7 @@
 }
 
 /* Tajuk Dalam Kad */
-.dashboard-subsidiari-section-title {
+.dashboard-syarikat-section-title {
   font-size: 1rem;
   font-weight: 700;
   color: #1f2937;
@@ -182,13 +182,13 @@
 }
 
 /* Pemegang carta (recharts) */
-.dashboard-subsidiari-chart-wrapper {
+.dashboard-syarikat-chart-wrapper {
   flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.dashboard-subsidiari-chart-placeholder {
+.dashboard-syarikat-chart-placeholder {
   width: 100%;
   flex: 1;
   min-height: 300px;
@@ -206,31 +206,31 @@
 }
 
 /* === KOTAK JADUAL (FYP) === */
-.dashboard-subsidiari-table-container {
+.dashboard-syarikat-table-container {
   margin-bottom: 24px;
 }
-.dashboard-subsidiari-table-wrapper {
+.dashboard-syarikat-table-wrapper {
   overflow-x: auto;
 }
-.dashboard-subsidiari-table {
+.dashboard-syarikat-table {
   width: 100%;
   border-collapse: collapse;
 }
-.dashboard-subsidiari-table th,
-.dashboard-subsidiari-table td {
+.dashboard-syarikat-table th,
+.dashboard-syarikat-table td {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.875rem;
 }
-.dashboard-subsidiari-table th {
+.dashboard-syarikat-table th {
   background-color: #f9fafb;
   font-weight: 600;
   color: #374151;
 }
-.dashboard-subsidiari-table td {
+.dashboard-syarikat-table td {
   color: #4b5563;
 }
-.dashboard-subsidiari-table tbody tr:last-child td {
+.dashboard-syarikat-table tbody tr:last-child td {
   border-bottom: none;
 }

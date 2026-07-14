@@ -55,7 +55,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
     const tahunPemantauan = amendment.tahun_pemantauan || null;
     const separuhTahunPemantauan = amendment.separuh_tahun_pemantauan || null;
     const namaRisiko = amendment.risiko || 'N/A';
-    const namaSubsidiari = amendment.nama_subsidiari || 'N/A';
+    const namaSyarikat = amendment.nama_syarikat || 'N/A';
     // Get application date
     const tarikhMohon = amendment.created_at ? new Date(amendment.created_at).toLocaleDateString("ms-MY", { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
     // --- END ---
@@ -74,7 +74,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
 
                     {/* ▼▼▼ TOP SECTION RESTRUCTURED ▼▼▼ */}
                     <div className="detail-section-top">
-                        {/* Row 1: No Rujukan | Subsidiari */}
+                        {/* Row 1: No Rujukan | Syarikat */}
                         <div className="detail-row">
                             <div className="detail-pair">
                                 <span className="detail-label-inline">No Rujukan:</span>
@@ -82,7 +82,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                             </div>
                             <div className="detail-pair">
                                 <span className="detail-label-inline">Syarikat:</span>
-                                <span className="detail-value-inline">{namaSubsidiari}</span>
+                                <span className="detail-value-inline">{namaSyarikat}</span>
                             </div>
                         </div>
                         {/* Row 2: Risiko */}

@@ -3,50 +3,8 @@ import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react";
 import api from "../../api/api";
 import "./TambahLogModal.css";
 
-import PanduanModal from '../Panduan/Panduan';
-
-
-// Risk matrix (tahap risiko selepas kawalan)
-const riskMatrix = {
-    // Kebarangkalian (y-axis) : { Impak (x-axis) : { label, color } }
-    1: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
-    2: { 1: { label: "R", color: "#22c55e" }, 2: { label: "R", color: "#22c55e" }, 3: { label: "S", color: "#eab308" }, 4: { label: "S", color: "#eab308" }, 5: { label: "T", color: "#f97316" } },
-    3: { 1: { label: "R", color: "#22c55e" }, 2: { label: "S", color: "#eab308" }, 3: { label: "S", color: "#eab308" }, 4: { label: "T", color: "#f97316" }, 5: { label: "T", color: "#f97316" } },
-    4: { 1: { label: "S", color: "#eab308" }, 2: { label: "S", color: "#eab308" }, 3: { label: "T", color: "#f97316" }, 4: { label: "T", color: "#f97316" }, 5: { label: "ST", color: "#ef4444" } },
-    5: { 1: { label: "S", color: "#eab308" }, 2: { label: "T", color: "#f97316" }, 3: { label: "T", color: "#f97316" }, 4: { label: "ST", color: "#ef4444" }, 5: { label: "ST", color: "#ef4444" } },
-};
-
-const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "Tiada Data", color: "#f1f5f9" };
-
-/** * Fungsi untuk mendapatkan warna berdasarkan label risiko 
- */
-const getColorByTahapRisikoLabel = (label) => {
-    if (label === "Tiada Data") return "#f1f5f9";
-
-    for (const k in riskMatrix) {
-        for (const i in riskMatrix[k]) {
-            if (riskMatrix[k][i].label === label) {
-                return riskMatrix[k][i].color;
-            }
-        }
-    }
-    return "#f1f5f9";
-};
-
-
-// Tahap Risiko: R < S < T < ST
-const TAHAP_RISIKO_ORDER = {
-    "R": 1,
-    "S": 2,
-    "T": 3,
-    "ST": 4,
-    "Tiada Data": 0,
-};
-
-const KEBERKESANAN_MAPPING = {
-    "Ya": "Berkesan ",
-    "Tidak": "Tidak Berkesan ",
-};
+import { riskMatrix, getRiskMatrix, getColorByTahapRisikoLabel, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING } from "../../constants/riskMatrix";
+import { usePanduan } from "../../hooks/usePanduan";
 
 // ================================================================
 // Deskripsi untuk Skor
@@ -98,7 +56,7 @@ export default function TambahLogModal({
     // ================================================================
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false);
+    const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
 
 
     const [risikoTeks, setRisikoTeks] = useState("");
@@ -466,7 +424,7 @@ export default function TambahLogModal({
                         <div className="tambahlog-box">
                             <div className="tambahlog-box-header tambahlog-header-with-btn">
                                 <span>Maklumat Pemantauan</span>
-                                <button type="button" className="tambahlog-panduan-btn" onClick={() => setIsPanduanOpen(true)}>
+                                <button type="button" className="tambahlog-panduan-btn" onClick={openPanduan}>
                                     <BookOpen size={16} style={{ marginRight: '6px' }} />
                                     Panduan
                                 </button>
@@ -711,12 +669,7 @@ export default function TambahLogModal({
                 </form>
 
 
-                <PanduanModal
-                    isOpen={isPanduanOpen}
-                    onClose={() => setIsPanduanOpen(false)}
-                    title="Panduan Log Pemantauan"
-                    content="Sila rujuk panduan operasi standard (SOP) untuk mengisi maklumat pemantauan, pelan tindakan, kakitangan, dan penilaian risiko selepas kawalan."
-                />
+                {PanduanRenderer}
             </div>
         </div>
     );

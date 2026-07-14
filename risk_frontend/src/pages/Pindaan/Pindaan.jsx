@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import { FilePenLine, ShieldAlert, ShieldCheck, Archive } from "lucide-react";
 
@@ -11,31 +10,24 @@ import PindaanDetailsModal from "./PindaanDetailsModal";
 
 // Gaya CSS (Pastikan anda ada fail ini!)
 import "./PindaanRisiko.css";
-
-// --- MATRIKS RISIKO ---
-const riskMatrix = {
-  1: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-  2: {1:{label:"R", color:"#22c55e"},2:{label:"R", color:"#22c55e"},3:{label:"S", color:"#eab308"},4:{label:"S", color:"#eab308"},5:{label:"T", color:"#f97316"}},
-  3: {1:{label:"R", color:"#22c55e"},2:{label:"S", color:"#eab308"},3:{label:"S", color:"#eab308"},4:{label:"T", color:"#f97316"},5:{label:"T", color:"#f97316"}},
-  4: {1:{label:"S", color:"#eab308"},2:{label:"S", color:"#eab308"},3:{label:"T", color:"#f97316"},4:{label:"T", color:"#f97316"},5:{label:"ST", color:"#ef4444"}},
-  5: {1:{label:"S", color:"#eab308"},2:{label:"T", color:"#f97316"},3:{label:"T", color:"#f97316"},4:{label:"ST", color:"#ef4444"},5:{label:"ST", color:"#ef4444"}},
-};
+import { getAuthUser } from "../../utils/auth";
+import { riskMatrix } from "../../constants/riskMatrix";
 
 
 function PindaanRisiko() {
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentUserSubsidiariId, setCurrentUserSubsidiariId] = useState(null);
+  const [currentUserSyarikatId, setCurrentUserSyarikatId] = useState(null);
   const [allRisks, setAllRisks] = useState([]);
   const [loadingRisks, setLoadingRisks] = useState(false);
   const [amendments, setAmendments] = useState([]);
   const [loadingAmendments, setLoadingAmendments] = useState(true);
   const [amendmentsError, setAmendmentsError] = useState(null);
-  const [subsidiariList, setSubsidiariList] = useState([]);
+  const [syarikatList, setSyarikatList] = useState([]);
   
   
   const [filterStatus, setFilterStatus] = useState("Menunggu Kelulusan"); 
-  const [filterSubsidiari, setFilterSubsidiari] = useState("Semua"); 
+  const [filterSyarikat, setFilterSyarikat] = useState("Semua"); 
 
  
   const [amendmentStats, setAmendmentStats] = useState({
@@ -54,43 +46,25 @@ function PindaanRisiko() {
 
   // --- Decode token & load data awal ---
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    let role = null;
-    let userId = null;
-    let userSubsId = null;
+    const authUser = getAuthUser();
+    let role = authUser?.roleTitle || "Unauthorized";
+    let userId = authUser?.userId || null;
+    let userSubsId = authUser?.syarikatId || null;
 
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const roleMapping = {
-          1: "Admin",
-          2: "Executive",
-          3: "Ketua Subsidiari",
-          4: "Staff",
-        };
-      
-        role = decoded.nama_peranan || roleMapping[decoded.peranan_id] || "Unauthorized";
-        userId = decoded.id || decoded.pengguna_id; 
-        userSubsId = decoded.subsidiari_id;
-        if (role !== "Admin" && role !== "Executive" && role !== "Ketua Subsidiari" && role !== "Staff") {
-          role = "Unauthorized";
-        }
-      } catch (err) {
-        console.error("❌ Token tidak sah", err);
-        role = "Unauthorized";
-      }
-    } else {
+    if (!authUser) {
+      role = "Unauthorized";
+    } else if (role !== "Admin" && role !== "Executive" && role !== "Ketua Subsidiari" && role !== "Staff") {
       role = "Unauthorized";
     }
 
     setCurrentUserRole(role);
     setCurrentUserId(userId);
-    setCurrentUserSubsidiariId(userSubsId);
+    setCurrentUserSyarikatId(userSubsId);
 
     if (role === "Admin" || role === "Executive") {
       fetchAllRisks();
-      fetchAmendments(role, userId, "Menunggu Kelulusan", filterSubsidiari);
-      fetchSubsidiariList();
+      fetchAmendments(role, userId, "Menunggu Kelulusan", filterSyarikat);
+      fetchSyarikatList();
       if (role === "Admin") {
         fetchAmendmentStats(); 
       }
@@ -100,12 +74,12 @@ function PindaanRisiko() {
   }, []); 
 
 
-  const fetchSubsidiariList = async () => {
+  const fetchSyarikatList = async () => {
     try {
-      const res = await api.get("/subsidiari");
-      setSubsidiariList(res.data || []);
+      const res = await api.get("/syarikat");
+      setSyarikatList(res.data || []);
     } catch (err) {
-      console.error("Gagal fetch subsidiari:", err);
+      console.error("Gagal fetch syarikat:", err);
     }
   };
 
@@ -148,7 +122,7 @@ function PindaanRisiko() {
     }
   };
 
-  const fetchAmendments = async (role, userId, statusFilter, subsidiariFilter) => {
+  const fetchAmendments = async (role, userId, statusFilter, syarikatFilter) => {
     setLoadingAmendments(true);
     setAmendmentsError(null);
     try {
@@ -156,8 +130,8 @@ function PindaanRisiko() {
       
       if (statusFilter !== "Semua") params.status = statusFilter;
       
-      if (role === "Admin" && subsidiariFilter !== "Semua") {
-        params.subsidiari_id = subsidiariFilter;
+      if (role === "Admin" && syarikatFilter !== "Semua") {
+        params.syarikat_id = syarikatFilter;
       }
       
       const response = await api.get("/pindaan", { params }); 
@@ -174,9 +148,9 @@ function PindaanRisiko() {
   // useEffect untuk memuat semula data apabila penapis berubah
   useEffect(() => {
     if (currentUserRole === "Admin" || currentUserRole === "Executive") {
-      fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
+      fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
     }
-  }, [filterStatus, filterSubsidiari, currentUserRole, currentUserId]); 
+  }, [filterStatus, filterSyarikat, currentUserRole, currentUserId]); 
 
   // --- Handlers ---
   const handlePindaanSubmitted = async (justifikasi, perubahanDicadang) => {
@@ -198,7 +172,7 @@ function PindaanRisiko() {
       setSelectedRiskForPindaan(null);
       // Muat semula data (hanya jika Executive/Admin)
       if (currentUserRole === "Admin" || currentUserRole === "Executive") {
-        fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
+        fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
         if (currentUserRole === "Admin") {
           fetchAmendmentStats(); 
         }
@@ -230,7 +204,7 @@ function PindaanRisiko() {
       alert(`Permohonan #${pindaanId} berjaya ${action}.`);
       setIsDetailsModalOpen(false);
       // Muat semula data
-      fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSubsidiari);
+      fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
       if (currentUserRole === "Admin") {
         fetchAmendmentStats(); // Muat semula statistik
       }
@@ -297,9 +271,9 @@ function PindaanRisiko() {
           // Props Penapis
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
-          filterSubsidiari={filterSubsidiari}
-          setFilterSubsidiari={setFilterSubsidiari}
-          subsidiariList={subsidiariList}
+          filterSyarikat={filterSyarikat}
+          setFilterSyarikat={setFilterSyarikat}
+          syarikatList={syarikatList}
           // Props Jadual
           loading={loadingAmendments}
           error={amendmentsError}
@@ -341,9 +315,9 @@ function PindaanRisiko() {
           isOpen={isSelectRiskModalOpen}
           onClose={() => setIsSelectRiskModalOpen(false)}
           risks={allRisks} 
-          subsidiariList={subsidiariList}
+          syarikatList={syarikatList}
           userRole={currentUserRole}
-          userSubsidiariId={currentUserSubsidiariId}
+          userSyarikatId={currentUserSyarikatId}
           onRiskSelect={handleRiskSelected}
           customClass="modal-pilih-risiko"
         />
@@ -420,9 +394,9 @@ function AmendmentsListSection({
   // Props Penapis
   filterStatus,
   setFilterStatus,
-  filterSubsidiari,
-  setFilterSubsidiari,
-  subsidiariList,
+  filterSyarikat,
+  setFilterSyarikat,
+  syarikatList,
   // Props Jadual
   loading,
   error,
@@ -479,14 +453,14 @@ function AmendmentsListSection({
         
         {userRole === "Admin" && (
           <select
-            value={filterSubsidiari}
-            onChange={(e) => setFilterSubsidiari(e.target.value)}
+            value={filterSyarikat}
+            onChange={(e) => setFilterSyarikat(e.target.value)}
             className="form-select"
           >
             <option value="Semua">Semua Syarikat</option>
-            {subsidiariList.map((subs) => (
-              <option key={subs.subsidiari_id} value={subs.subsidiari_id}>
-                {subs.nama_subsidiari}
+            {syarikatList.map((subs) => (
+              <option key={subs.syarikat_id} value={subs.syarikat_id}>
+                {subs.nama_syarikat}
               </option>
             ))}
           </select>
@@ -531,7 +505,7 @@ function AmendmentsListSection({
                 <td>{index + 1}</td>
                 <td>{amend.no_rujukan || "N/A"}</td>
                 <td>{amend.risiko || "N/A"}</td> 
-                <td>{amend.nama_subsidiari || "N/A"}</td> 
+                <td>{amend.nama_syarikat || "N/A"}</td> 
                 {userRole === "Admin" && (
                   <td>{amend.nama_pemohon || "N/A"}</td>
                 )}

@@ -4,18 +4,8 @@ import LogPreviewModal from './LogPreviewModal';
 
 import api from '../../api/api'; 
 import './LaporanRisiko.css';
-
-const riskMatrixColors = {
-  "R": "#22c55e",  // Rendah (Hijau)
-  "S": "#eab308",  // Sederhana (Kuning)
-  "T": "#f97316",  // Tinggi (Oren)
-  "ST": "#ef4444", // Sangat Tinggi (Merah)
-  "Default": "#94a3b8" // Kelabu (Fallback)
-};
-
-const getRiskColor = (label) => {
-  return riskMatrixColors[label] || riskMatrixColors["Default"];
-};
+import { getRiskColor } from "../../constants/riskMatrix";
+import { formatSeparuhTahun } from "../../utils/formatters";
 
 export default function LaporanRisiko() {
   const [loading, setLoading] = useState(false);
@@ -38,9 +28,7 @@ export default function LaporanRisiko() {
   const [selectedRange, setSelectedRange] = useState(null);
 
   const renderSeparuhTahun = (val) => {
-    if (val === 1 || val === '1') return 'Pertama';
-    if (val === 2 || val === '2') return 'Kedua';
-    return '-'; 
+    return formatSeparuhTahun(val);
   };
 
   useEffect(() => {
@@ -53,17 +41,17 @@ export default function LaporanRisiko() {
 
   async function fetchSubsidiaries() {
     try {
-      const defaultOption = { subsidiari_id: 'all', nama_subsidiari: 'Semua Syarikat' };
-      const res = await api.get("/subsidiari"); 
+      const defaultOption = { syarikat_id: 'all', nama_syarikat: 'Semua Syarikat' };
+      const res = await api.get("/syarikat"); 
       const data = Array.isArray(res.data) ? res.data : [];
       setSubsidiaries([defaultOption, ...data]);
       
     } catch (err) {
       console.error("❌ Gagal fetch syarikat:", err);
       setSubsidiaries([
-        { subsidiari_id: 'all', nama_subsidiari: 'Semua Syarikat' },
-        { subsidiari_id: '1', nama_subsidiari: 'UKM HOLDINGS SDN. BHD.' },
-        { subsidiari_id: '2', nama_subsidiari: 'Subsidiari B' },
+        { syarikat_id: 'all', nama_syarikat: 'Semua Syarikat' },
+        { syarikat_id: '1', nama_syarikat: 'UKM HOLDINGS SDN. BHD.' },
+        { syarikat_id: '2', nama_syarikat: 'Syarikat B' },
       ]);
     }
   }
@@ -150,8 +138,8 @@ export default function LaporanRisiko() {
           <label>Syarikat</label>
           <select name="subsidiary" value={filters.subsidiary} onChange={handleFilterChange}>
             {subsidiaries.map((s) => (
-              <option key={s.subsidiari_id} value={s.subsidiari_id}>
-                {s.nama_subsidiari}
+              <option key={s.syarikat_id} value={s.syarikat_id}>
+                {s.nama_syarikat}
               </option>
             ))}
           </select>
@@ -224,7 +212,7 @@ export default function LaporanRisiko() {
                         <td>
                           {r.tahun} <br /> {renderSeparuhTahun(r.separuh_tahun)}
                         </td>
-                        <td>{r.nama_subsidiari}</td>
+                        <td>{r.nama_syarikat}</td>
                         
                         <td className="risk-score-cell">
                           <div 

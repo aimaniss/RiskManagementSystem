@@ -7,8 +7,8 @@ import "./Navbar.css";
 function Navbar() {
   const [user, setUser] = useState({
     role: "",
-    subsidiari: "",
-    subsidiariPenuh: "",
+    syarikat: "",
+    syarikatPenuh: "",
     staffId: "",
     profileImage: "",
     fullName: "",
@@ -50,8 +50,8 @@ function Navbar() {
         const u = res.data;
         setUser({
           role: roleMapping[u.peranan_id] || "",
-          subsidiari: u.singkatan_subsidiari || "",
-          subsidiariPenuh: u.nama_subsidiari || "",
+          syarikat: u.singkatan_syarikat || "",
+          syarikatPenuh: u.nama_syarikat || "",
           staffId: u.staff_id || "",
           profileImage: u.profile_pic
             ? `data:image/png;base64,${u.profile_pic}`
@@ -157,7 +157,7 @@ function Navbar() {
       <div className={`navbar ${modalOpen ? "blurred" : ""}`}>
         <div className="navbar-user" ref={dropdownRef}>
           <div className="navbar-user-info">
-            <div className="user-subsidiari-bold">{user.subsidiari}</div>
+            <div className="user-syarikat-bold">{user.syarikat}</div>
             <div className="user-role-small">{getDisplayRoleName(user.role)}</div>
           </div>
 
@@ -180,7 +180,7 @@ function Navbar() {
                   )}
                 </div>
                 <p className="dropdown-fullname">{user.fullName || "Nama Penuh"}</p>
-                <p className="dropdown-subsidiari">{user.subsidiariPenuh || "Subsidiari"}</p>
+                <p className="dropdown-syarikat">{user.syarikatPenuh || "Syarikat"}</p>
                 <p className="dropdown-staffid">{user.staffId || "ID Staf"}</p>
               </div>
               <button className="edit-btn" onClick={openModal}>
@@ -224,8 +224,8 @@ function Navbar() {
               <label>Nama Penuh</label>
               <input type="text" value={user.fullName} readOnly />
 
-              <label>Subsidiari</label>
-              <input type="text" value={user.subsidiariPenuh} readOnly />
+              <label>Syarikat</label>
+              <input type="text" value={user.syarikatPenuh} readOnly />
 
               <label>Staff ID</label>
               <input type="text" value={user.staffId} readOnly />

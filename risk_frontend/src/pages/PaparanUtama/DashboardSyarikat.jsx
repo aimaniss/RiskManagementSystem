@@ -1,7 +1,7 @@
-// Fail: DashboardSubsidiari.jsx
+// Fail: DashboardSyarikat.jsx
 
 import React from "react";
-import "./DashboardSubsidiari.css";
+import "./DashboardSyarikat.css";
 import { File, RefreshCw, Eye, Check, CheckCircle2 } from "lucide-react";
 
 // IMPORT CARTA
@@ -58,7 +58,7 @@ const renderSkorBadge = (skorLabel) => {
 // <-- TAMAT BLOK PERUBAHAN -->
 
 
-export default function DashboardSubsidiari({ data }) {
+export default function DashboardSyarikat({ data }) {
   // Kad Skor
   const skorData = [
     { label: "Jumlah Risiko Buka", value: data?.skor?.jumlahBuka || 0, icon: File, color: "#dc3545" },
@@ -71,37 +71,37 @@ export default function DashboardSubsidiari({ data }) {
   const topRisksData = data?.topRisks || [];
 
   return (
-    <div className="dashboard-subsidiari-layout">
+    <div className="dashboard-syarikat-layout">
       {/* Header */}
-      <div className="dashboard-subsidiari-header">
-      <div className="dashboard-subsidiari-header-left">
-        <div className="dashboard-subsidiari-image-placeholder">
+      <div className="dashboard-syarikat-header">
+      <div className="dashboard-syarikat-header-left">
+        <div className="dashboard-syarikat-image-placeholder">
         <img 
           src={data?.logoUrl || "path/ke/logo/default.png"} 
-          alt={data?.namaSubsidiari || "Logo Subsidiari"} 
+          alt={data?.namaSyarikat || "Logo Syarikat"} 
         />
         </div>
       </div>
-      <div className="dashboard-subsidiari-header-right">
-        <div className="dashboard-subsidiari-title-main">Dashboard Pengurusan Risiko</div>
-        <div className="dashboard-subsidiari-title-sub">
-        {data?.namaSubsidiari || "Status Subsidiari"}
+      <div className="dashboard-syarikat-header-right">
+        <div className="dashboard-syarikat-title-main">Dashboard Pengurusan Risiko</div>
+        <div className="dashboard-syarikat-title-sub">
+        {data?.namaSyarikat || "Status Syarikat"}
         </div> 
       </div>
       </div>
 
       {/* Kad Skor */}
-      <div className="dashboard-subsidiari-scorecard-container">
+      <div className="dashboard-syarikat-scorecard-container">
       {skorData.map((item, index) => {
         const IconComponent = item.icon;
         return (
-        <div key={index} className="dashboard-subsidiari-scorecard-box">
-          <div className="dashboard-subsidiari-scorecard-icon">
+        <div key={index} className="dashboard-syarikat-scorecard-box">
+          <div className="dashboard-syarikat-scorecard-icon">
           <IconComponent style={{ color: item.color }} />
           </div>
-          <div className="dashboard-subsidiari-scorecard-content">
-          <div className="dashboard-subsidiari-scorecard-value">{item.value}</div>
-          <div className="dashboard-subsidiari-scorecard-label">{item.label}</div>
+          <div className="dashboard-syarikat-scorecard-content">
+          <div className="dashboard-syarikat-scorecard-value">{item.value}</div>
+          <div className="dashboard-syarikat-scorecard-label">{item.label}</div>
           </div>
         </div>
         );
@@ -109,33 +109,33 @@ export default function DashboardSubsidiari({ data }) {
       </div>
 
       {/* Grid Carta */}
-      <div className="dashboard-subsidiari-charts-grid">
-      <div className="dashboard-subsidiari-section-box">
-        <h4 className="dashboard-subsidiari-section-title">Tahap Risiko</h4>
-        <div className="dashboard-subsidiari-chart-wrapper">
+      <div className="dashboard-syarikat-charts-grid">
+      <div className="dashboard-syarikat-section-box">
+        <h4 className="dashboard-syarikat-section-title">Tahap Risiko</h4>
+        <div className="dashboard-syarikat-chart-wrapper">
         <TahapRisikoChart data={data?.tahapRisikoData} />
         </div>
       </div>
-      <div className="dashboard-subsidiari-section-box">
-        <h4 className="dashboard-subsidiari-section-title">Kategori Risiko</h4>
-        <div className="dashboard-subsidiari-chart-wrapper">
+      <div className="dashboard-syarikat-section-box">
+        <h4 className="dashboard-syarikat-section-title">Kategori Risiko</h4>
+        <div className="dashboard-syarikat-chart-wrapper">
         <KategoriRisikoChart data={data?.kategoriRisikoData} />
         </div>
       </div>
-      <div className="dashboard-subsidiari-section-box">
-        <h4 className="dashboard-subsidiari-section-title">Jenis Kawalan</h4>
-        <div className="dashboard-subsidiari-chart-wrapper">
+      <div className="dashboard-syarikat-section-box">
+        <h4 className="dashboard-syarikat-section-title">Jenis Kawalan</h4>
+        <div className="dashboard-syarikat-chart-wrapper">
         <JenisKawalanChart data={data?.jenisKawalanData} />
         </div>
       </div>
       </div>
 
       {/* Jadual */}
-      <div className="dashboard-subsidiari-table-container">
-      <div className="dashboard-subsidiari-section-box">
-        <h4 className="dashboard-subsidiari-section-title">6 Risiko Teratas</h4>
-        <div className="dashboard-subsidiari-table-wrapper">
-        <table className="dashboard-subsidiari-table">
+      <div className="dashboard-syarikat-table-container">
+      <div className="dashboard-syarikat-section-box">
+        <h4 className="dashboard-syarikat-section-title">6 Risiko Teratas</h4>
+        <div className="dashboard-syarikat-table-wrapper">
+        <table className="dashboard-syarikat-table">
           <thead>
           <tr>
             <th>No Rujukan</th> <th>Nama Risiko</th> <th>Kategori</th> <th>Bahagian/Unit</th>

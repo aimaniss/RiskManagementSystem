@@ -1,27 +1,14 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import "./EditModalRisiko.css";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
 
-export default function EditModalRisiko({ isOpen, risk, subsidiariList, userRole, userSubsidiariId, onClose, onSave }) {
+export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, userSyarikatId, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...risk });
   const [puncaList, setPuncaList] = useState(risk.punca || [""]);
   const [kesanList, setKesanList] = useState(risk.kesan || [""]);
   const [riskColor, setRiskColor] = useState(risk.risk_color || "#f1f5f9");
   const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
-
-  // Risk matrix sama seperti main component
-  const riskMatrix = {
-    1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
-    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-  };
-
-  const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-  const getRiskAbbreviation = (label) => {
-    switch(label){case "Rendah": return "R"; case "Sederhana": return "S"; case "Tinggi": return "T"; case "Sangat Tinggi": return "ST"; default: return "";}
-  };
 
   // Auto update skor & color bila user pilih skor
   useEffect(() => {
@@ -78,10 +65,10 @@ export default function EditModalRisiko({ isOpen, risk, subsidiariList, userRole
                 </select>
               </div>
               <div style={{ display:"flex", gap:"12px" }}>
-                <label className="label">Subsidiari:</label>
-                <select name="subsidiari" value={formData.subsidiari} onChange={handleChange} className="input select-dropdown" disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}>
+                <label className="label">Syarikat:</label>
+                <select name="syarikat" value={formData.syarikat} onChange={handleChange} className="input select-dropdown" disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}>
                   <option value="">-- Pilih --</option>
-                  {subsidiariList.map(s=><option key={s.subsidiari_id} value={s.subsidiari_id}>{s.nama_subsidiari}</option>)}
+                  {syarikatList.map(s=><option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)}
                 </select>
               </div>
             </div>

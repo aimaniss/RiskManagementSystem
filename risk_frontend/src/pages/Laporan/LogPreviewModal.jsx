@@ -5,54 +5,7 @@ import './LogPreviewModal.css';
 
 
 import Ukhmlogo from '../../assets/images/Light Background/UKMH_light.png';
-
-// =================================================================
-// ⭐️ LOGIK RISK MATRIX & WARNA
-// =================================================================
-const riskMatrix = {
-  1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
-  2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
-  3: {1:{label:"R"}, 2:{label:"S"}, 3:{label:"S"}, 4:{label:"T"}, 5:{label:"T"}},
-  4: {1:{label:"S"}, 2:{label:"S"}, 3:{label:"T"}, 4:{label:"T"}, 5:{label:"ST"}},
-  5: {1:{label:"S"}, 2:{label:"T"}, 3:{label:"T"}, 4:{label:"ST"}, 5:{label:"ST"}},
-};
-
-const getRiskLevel = (k, i) => {
-  const kk = parseInt(k);
-  const ii = parseInt(i);
-  if (kk >= 1 && kk <= 5 && ii >= 1 && ii <= 5) {
-    return riskMatrix[kk][ii].label;
-  }
-  return null; 
-};
-
-// Fungsi helper baru untuk gaya warna
-const getRiskStyles = (level) => {
-  const styles = { halign: 'center' };
-  switch (level) {
-    case 'ST':
-      styles.fillColor = '#FF0000'; // Merah
-      styles.textColor = '#FFFFFF'; // Teks Putih
-      break;
-    case 'T':
-      styles.fillColor = '#FFA500'; // Oren
-      styles.textColor = '#000000'; // Teks Hitam
-      break;
-    case 'S':
-      styles.fillColor = '#FFFF00'; // Kuning
-      styles.textColor = '#000000'; // Teks Hitam
-      break;
-    case 'R':
-      styles.fillColor = '#92D050'; // Hijau
-      styles.textColor = '#000000'; // Teks Hitam
-      break;
-    default:
-      // Tiada warna jika tiada tahap (cth: 'Ya', null)
-      break;
-  }
-  return styles;
-};
-// =================================================================
+import { riskMatrix, getRiskLevel, getRiskStylesPDF } from "../../constants/riskMatrix";
 
 
 // =================================================================

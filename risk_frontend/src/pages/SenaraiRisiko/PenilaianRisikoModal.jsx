@@ -1,37 +1,10 @@
 import { useState, useEffect } from "react";
 import { X, BookOpen, Save } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./PenilaianRisikoModal.css"; 
-import PanduanModal from '../Panduan/Panduan'; 
-
-// --- JADUAL RUJUKAN SKOR ---
-const KebarangkalianData = {
-    5: "Hampir Pasti", 4: "Kemungkinan Tinggi", 3: "Berpeluang Untuk Berlaku", 2: "Kemungkinan Rendah", 1: "Hampir Tiada Kemungkinan",
-};
-const ImpakData = {
-    5: "Sangat Besar", 4: "Besar", 3: "Ketara", 2: "Boleh Diukur", 1: "Tidak Ketara",
-};
-// --- MATRIKS RISIKO ---
-const riskMatrix = {
-    1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-    3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
-    4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-    5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-};
-
-const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-const getRiskAbbreviation = (label) => {
-    switch(label) {
-        case "Rendah": return "R";
-        case "Sederhana": return "S";
-        case "Tinggi": return "T";
-        case "Sangat Tinggi": return "ST";
-        default: return ""; 
-    }
-};
-// ---------------------------------
+import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
+import { usePanduan } from "../../hooks/usePanduan";
 
 function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
     if (!isOpen) return null;
@@ -48,19 +21,12 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
 
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
+    const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan(); 
     
     // Auth Check
-    const token = localStorage.getItem("token");
-    let userRole = "";
-    if (token) {
-        try {
-            const decoded = jwtDecode(token);
-            const roleMapping = { 1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER" };
-            userRole = roleMapping[decoded.peranan_id] || "";
-        } catch (err) { console.error("❌ Invalid token", err); }
-    }
-    const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
+    const authUser = getAuthUser();
+    const userRole = authUser?.role || "";
+    const canEditPenilaian = checkCanEditPenilaian();
 
     // Effect untuk mengira skor Risiko berdasarkan K & I
     useEffect(() => {
@@ -115,7 +81,7 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
             noRujukan: initialData.no_rujukan,
             tahun: initialData.tahun,
             separuhTahun: initialData.separuh_tahun,
-            subsidiari: initialData.subsidiari_id || initialData.subsidiari, 
+            syarikat: initialData.syarikat_id || initialData.syarikat, 
             kategori: initialData.kategori,
             bahagian: initialData.bahagian_unit || initialData.bahagian,
             risiko: initialData.risiko,
@@ -159,7 +125,7 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
                                 <button 
                                     type="button" 
                                     className="penilaian-panduan-btn" 
-                                    onClick={() => setIsPanduanOpen(true)}
+                                    onClick={openPanduan}
                                 >
                                     <BookOpen size={16} style={{ marginRight: '6px' }} />
                                     Panduan Matriks
@@ -233,7 +199,7 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
                     </form>
                 </div>
 
-                {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+                {PanduanRenderer}
             </div>
         </div>
     );

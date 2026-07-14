@@ -1,25 +1,11 @@
 import { useState, useEffect } from "react";
 import { X, BookOpen, Save } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import api from "../../api/api";
 import "./PenilaianModal.css";
-import PanduanModal from '../Panduan/Panduan'; 
-
-const KebarangkalianData = {
-    5: "Hampir Pasti",
-    4: "Kemungkinan Tinggi",
-    3: "Berpeluang Untuk Berlaku",
-    2: "Kemungkinan Rendah",
-    1: "Hampir Tiada Kemungkinan",
-};
-
-const ImpakData = {
-    5: "Sangat Besar",
-    4: "Besar",
-    3: "Ketara",
-    2: "Boleh Diukur",
-    1: "Tidak Ketara",
-};
+import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
+import { useSyarikats } from "../../hooks/useSyarikats";
+import { usePanduan } from "../../hooks/usePanduan";
 
 function PenilaianModal({ isOpen, onClose, initialData = {} }) {
     if (!isOpen) return null;
@@ -28,7 +14,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
         noRujukan: initialData.no_rujukan || "",
         tahun: initialData.tahun || "",
         separuhTahun: initialData.separuh_tahun || "",
-        subsidiari: initialData.subsidiari_id || initialData.subsidiari || "",
+        syarikat_id: initialData.syarikat_id || initialData.syarikat_id || "",
         kategori: initialData.kategori || "",
         bahagian: initialData.bahagian_unit || initialData.bahagian || "",
         risiko: initialData.risiko || "",
@@ -43,57 +29,13 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
     const [kesanList] = useState(initialData.kesan || []);
 
     const [riskColor, setRiskColor] = useState("#f1f5f9");
-    const [subsidiariList, setSubsidiariList] = useState([]);
+    const { syarikatList } = useSyarikats();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isPanduanOpen, setIsPanduanOpen] = useState(false); 
+    const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan(); 
 
-    const token = localStorage.getItem("token");
-    let userRole = "";
-    if (token) {
-        try {
-            const decoded = jwtDecode(token);
-            const roleMapping = { 1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER" };
-            userRole = roleMapping[decoded.peranan_id] || "";
-        } catch (err) {
-            console.error("❌ Invalid token", err);
-            localStorage.removeItem("token");
-        }
-    }
-
-    const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
-
-    const riskMatrix = {
-        1: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-        2: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Rendah", color:"#22c55e"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Sederhana", color:"#eab308"},5:{label:"Tinggi", color:"#f97316"}},
-        3: {1:{label:"Rendah", color:"#22c55e"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Sederhana", color:"#eab308"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Tinggi", color:"#f97316"}},
-        4: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Sederhana", color:"#eab308"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Tinggi", color:"#f97316"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-        5: {1:{label:"Sederhana", color:"#eab308"},2:{label:"Tinggi", color:"#f97316"},3:{label:"Tinggi", color:"#f97316"},4:{label:"Sangat Tinggi", color:"#ef4444"},5:{label:"Sangat Tinggi", color:"#ef4444"}},
-    };
-
-    const getRiskMatrix = (k, i) => riskMatrix[k]?.[i] || { label: "", color: "#f1f5f9" };
-
-    const getRiskAbbreviation = (label) => {
-        switch(label) {
-            case "Rendah": return "R";
-            case "Sederhana": return "S";
-            case "Tinggi": return "T";
-            case "Sangat Tinggi": return "ST";
-            default: return ""; 
-        }
-    };
-
-    useEffect(() => {
-        const fetchSubsidiari = async () => {
-            try {
-                const res = await api.get("/subsidiari");
-                const data = Array.isArray(res.data) ? res.data : res.data.subsidiari || [];
-                setSubsidiariList(data);
-            } catch (err) {
-                console.error("❌ Error fetch subsidiari:", err);
-            }
-        };
-        fetchSubsidiari();
-    }, []); 
+    const authUser = getAuthUser();
+    const userRole = authUser?.role || "";
+    const canEditPenilaian = checkCanEditPenilaian();
 
     useEffect(() => {
         const k = parseInt(formData.skorKebarangkalian);
@@ -174,7 +116,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
         } finally { setIsSubmitting(false); }
     };
 
-    const subsidiariName = subsidiariList.find(s => s.subsidiari_id == formData.subsidiari)?.nama_subsidiari || "Memuat...";
+    const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat_id)?.nama_syarikat || "Memuat...";
 
     return (
         <div className="penilaian-modal-overlay">
@@ -193,7 +135,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                 <button 
                                     type="button" 
                                     className="penilaian-panduan-btn" 
-                                    onClick={() => setIsPanduanOpen(true)}
+                                    onClick={openPanduan}
                                 >
                                     <BookOpen size={16} style={{ marginRight: '6px' }} />
                                     Panduan
@@ -219,7 +161,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                 <div className="penilaian-info-row" style={{ marginTop: '0px' }}>
                                     <div className="penilaian-input-group full-width">
                                         <label className="penilaian-label">Syarikat:</label>
-                                        <input readOnly value={subsidiariName} className="penilaian-input" />
+                                        <input readOnly value={syarikatName} className="penilaian-input" />
                                     </div>
                                 </div>
 
@@ -326,7 +268,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                     </form>
                 </div>
 
-                {isPanduanOpen && <PanduanModal isOpen={isPanduanOpen} onClose={() => setIsPanduanOpen(false)} />}
+                {PanduanRenderer}
 
             </div>
         </div>

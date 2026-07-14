@@ -5,10 +5,10 @@ export default function FilterModal({
   filterValues,
   setFilterValues,
   setShowModal,
-  subsidiariOptions,
+  syarikatOptions,
   currentUser, // <-- 1. Terima prop currentUser
 }) {
-  const initialId = filterValues.subsidiariId ?? "Semua";
+  const initialId = filterValues.syarikatId ?? "Semua";
   const [tempId, setTempId] = useState(initialId);
 
   // 2. Tentukan peranan pengguna
@@ -17,33 +17,33 @@ export default function FilterModal({
 
   // 3. Bina senarai pilihan (options) secara dinamik
   // Mula dengan senarai asas
-  const baseOptions = Array.isArray(subsidiariOptions) ? subsidiariOptions : [];
+  const baseOptions = Array.isArray(syarikatOptions) ? syarikatOptions : [];
   
-  // Hanya tambah "Semua Subsidiari" jika pengguna ialah Admin atau Executive
+  // Hanya tambah "Semua Syarikat" jika pengguna ialah Admin atau Executive
   const options = isAdmin
     ? [
-        { subsidiari_id: "Semua", nama_subsidiari: "Semua Subsidiari" },
+        { syarikat_id: "Semua", nama_syarikat: "Semua Syarikat" },
         ...baseOptions,
       ]
-    : baseOptions; // Pengguna biasa hanya nampak senarai subsidiari
+    : baseOptions; // Pengguna biasa hanya nampak senarai syarikat
 
   const handleApply = () => {
     // Logik ini sepatutnya masih berfungsi dengan betul
-    const selected = options.find((o) => String(o.subsidiari_id) === String(tempId));
+    const selected = options.find((o) => String(o.syarikat_id) === String(tempId));
     
     // Jika 'selected' tidak ditemui (cth: pengguna bukan admin tapi 'tempId' entah bagaimana 'Semua'),
-    // ia akan menggunakan 'fallback' "Semua Subsidiari",
-    // tetapi 'PaparanUtama' akan menukarnya kembali ke dashboard subsidiari pengguna.
+    // ia akan menggunakan 'fallback' "Semua Syarikat",
+    // tetapi 'PaparanUtama' akan menukarnya kembali ke dashboard syarikat pengguna.
     // Walau bagaimanapun, 'fallback' yang lebih selamat ialah pilihan pertama yang ada.
     const safeSelected = selected || options[0]; // Fallback ke item pertama jika berlaku ralat
 
-    const nama = safeSelected ? safeSelected.nama_subsidiari : "";
-    const id = safeSelected ? String(safeSelected.subsidiari_id) : "";
+    const nama = safeSelected ? safeSelected.nama_syarikat : "";
+    const id = safeSelected ? String(safeSelected.syarikat_id) : "";
     
     setFilterValues({
-      subsidiari: nama,
-      subsidiariId: id,
-      subsidiariName: nama,
+      syarikat: nama,
+      syarikatId: id,
+      syarikatName: nama,
     });
     setShowModal(false);
   };
@@ -58,8 +58,8 @@ export default function FilterModal({
           {/* 4. Dropdown kini memaparkan 'options' yang telah ditapis */}
           <select value={tempId} onChange={(e) => setTempId(e.target.value)}>
             {options.map((opt) => (
-              <option key={opt.subsidiari_id} value={opt.subsidiari_id}>
-                {opt.nama_subsidiari}
+              <option key={opt.syarikat_id} value={opt.syarikat_id}>
+                {opt.nama_syarikat}
               </option>
             ))}
           </select>

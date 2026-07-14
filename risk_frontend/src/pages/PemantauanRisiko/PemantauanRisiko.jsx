@@ -3,17 +3,12 @@ import api from "../../api/api";
 import { Eye, Loader2, ChevronRight, ChevronDown, Filter } from "lucide-react";
 import EditPemantauan from "./EditPemantauan";
 import "./PemantauanRisiko.css";
+import { riskMatrix, getRiskMatrix, getRiskAbbreviation, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
+import { formatSeparuhTahun } from "../../utils/formatters";
 
 // =======================================================
 // UTILITIES
 // =======================================================
-const riskMatrix = {
-    1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-    2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-    3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
-    4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-    5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-};
 const getRiskData = (k, i) => {
     if (!k || !i) {
         return { label: "Tiada Data", color: "#9ca3af" };
@@ -22,7 +17,6 @@ const getRiskData = (k, i) => {
     const ii = Math.min(Math.max(parseInt(i), 1), 5);
     return riskMatrix[kk]?.[ii] || { label: "-", color: "#9ca3af" };
 };
-const shortForm = (label) => label==="Rendah"?"R":label==="Sederhana"?"S":label==="Tinggi"?"T":label==="Sangat Tinggi"?"ST":"";
 const getSeparuhTahunLabel = (separuh) => separuh === 1 ? "Pertama" : separuh === 2 ? "Kedua" : "";
 
 const STATUS_COLORS = {
@@ -108,7 +102,7 @@ const DateFilterModal = ({ isOpen, onClose, allData, currentType, currentTahun, 
 function PemantauanRisiko() {
     const [data, setData] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [subsidiariFilter, setSubsidiariFilter] = useState("");
+    const [syarikatFilter, setSyarikatFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [kategoriFilter, setKategoriFilter] = useState(""); 
     
@@ -116,7 +110,7 @@ function PemantauanRisiko() {
     const [riskLevelFilter, setRiskLevelFilter] = useState("");
     
     const [loading, setLoading] = useState(true);
-    const [subsidiariList, setSubsidiariList] = useState([]);
+    const [syarikatList, setSyarikatList] = useState([]);
     const [kategoriList, setKategoriList] = useState([]); 
     
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,17 +186,17 @@ function PemantauanRisiko() {
         setIsDateFilterModalOpen(false);
     }
     
-    // Logik fetchSubsidiariList
-    const fetchSubsidiariList = useCallback(async () => {
+    // Logik fetchSyarikatList
+    const fetchSyarikatList = useCallback(async () => {
         try {
-          const res = await api.get("/subsidiari");
+          const res = await api.get("/syarikat");
           if (Array.isArray(res.data)) {
-            setSubsidiariList(res.data);
+            setSyarikatList(res.data);
           } else {
-            console.warn("⚠️ Format respons subsidiari tidak dijangka:", res.data);
+            console.warn("⚠️ Format respons syarikat tidak dijangka:", res.data);
           }
         } catch (err) {
-          console.error("❌ Ralat memuat senarai subsidiari:", err);
+          console.error("❌ Ralat memuat senarai syarikat:", err);
         }
     }, []);
 
@@ -239,9 +233,9 @@ function PemantauanRisiko() {
     
     // Logik useEffect
     useEffect(()=>{
-        fetchSubsidiariList();
+        fetchSyarikatList();
         fetchData();
-    }, [fetchData, fetchSubsidiariList]);
+    }, [fetchData, fetchSyarikatList]);
 
 
     // Logik filteredData
@@ -250,9 +244,9 @@ function PemantauanRisiko() {
         const matchSearch = !searchTerm ||
             (d.no_rujukan && d.no_rujukan.toLowerCase().includes(searchLower)) ||
             (d.risiko && d.risiko.toLowerCase().includes(searchLower)) ||
-            (d.nama_subsidiari && d.nama_subsidiari.toLowerCase().includes(searchLower));
+            (d.nama_syarikat && d.nama_syarikat.toLowerCase().includes(searchLower));
 
-        const matchSubsidiari = !subsidiariFilter || d.nama_subsidiari===subsidiariFilter;
+        const matchSyarikat = !syarikatFilter || d.nama_syarikat===syarikatFilter;
         
         // Logik Penapisan Tarikh (Data Asal sahaja)
         const isFilteringByDate = selectedFilterTahun || selectedFilterSeparuh;
@@ -280,7 +274,7 @@ function PemantauanRisiko() {
         const matchRiskLevel = !riskLevelFilter || currentRiskLevel === riskLevelFilter;
         
         // Gabungkan semua penapis
-        return matchSearch && matchSubsidiari && matchTahunSeparuh && matchKategori && matchStatus && matchRiskLevel; 
+        return matchSearch && matchSyarikat && matchTahunSeparuh && matchKategori && matchStatus && matchRiskLevel; 
     });
 
     // Logik Kad Ringkasan
@@ -394,11 +388,11 @@ function PemantauanRisiko() {
                     onChange={e => setSearchTerm(e.target.value)}
                 />
                 
-                {/* Filter Subsidiari */}
-                <select className="senaraipemantauan-filter-select" value={subsidiariFilter} onChange={e=>setSubsidiariFilter(e.target.value)}>
+                {/* Filter Syarikat */}
+                <select className="senaraipemantauan-filter-select" value={syarikatFilter} onChange={e=>setSyarikatFilter(e.target.value)}>
                     <option value="">-- Semua Syarikat --</option>
-                    {subsidiariList.map(s=>(
-                        <option key={s.subsidiari_id} value={s.nama_subsidiari}>{s.nama_subsidiari}</option>
+                    {syarikatList.map(s=>(
+                        <option key={s.syarikat_id} value={s.nama_syarikat}>{s.nama_syarikat}</option>
                     ))}
                 </select>
                 
@@ -501,13 +495,13 @@ function PemantauanRisiko() {
                                         </td>
                                         <td className="senaraipemantauan-center">
                                             <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color_daftar}}>
-                                                {shortForm(d.tahap_risiko_daftar)}
+                                                {getRiskAbbreviation(d.tahap_risiko_daftar)}
                                             </div>
                                         </td>
                                         <td>{d.status_pemantauan_terkini || ""}</td>
                                         <td className="senaraipemantauan-center">
                                             <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color}}>
-                                                {shortForm(d.tahap_risiko)}
+                                                {getRiskAbbreviation(d.tahap_risiko)}
                                             </div>
                                         </td>
                                         <td className="senaraipemantauan-center">
@@ -534,7 +528,7 @@ function PemantauanRisiko() {
                                                         
                                                         <p>
                                                             <strong>Syarikat:</strong> 
-                                                            {d.nama_subsidiari || "-"}
+                                                            {d.nama_syarikat || "-"}
                                                         </p>
                                                         
                                                         <p>
