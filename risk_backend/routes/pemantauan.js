@@ -90,7 +90,7 @@ router.get("/", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.tahun, 
         r.separuh_tahun,
-        s.nama_subsidiari,
+        s.nama_syarikat,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
         r.justifikasi_pindaan_penilaian,
@@ -113,15 +113,15 @@ router.get("/", verifyToken, async (req, res) => {
 
       FROM Risiko r
       -- ❌ JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id  -- <<< Baris ini telah dibuang
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
     `;
 
     const params = [];
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`;
-      params.push(user.subsidiari_id);
+      query += ` WHERE CAST(r.syarikat_id AS INTEGER) = $1`;
+      params.push(user.syarikat_id);
     }
 
     query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
@@ -152,9 +152,9 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
         r.tahun AS tahun_risiko_asal,
         r.separuh_tahun AS separuh_tahun_risiko_asal,
         r.justifikasi_pindaan_penilaian,
-        s.nama_subsidiari
+        s.nama_syarikat
       FROM Risiko r
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       WHERE r.risiko_id = $1;
     `;
 

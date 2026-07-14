@@ -94,7 +94,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.tahun,
         r.separuh_tahun,
-        s.nama_subsidiari,
+        s.nama_syarikat,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
 
@@ -123,7 +123,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
       -- =================================================================
       -- ⭐️ DIKEMASKINI: 'JOIN RisikoAdaRawatan' dibuang
       -- =================================================================
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
     `;
@@ -135,8 +135,8 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
     let whereClause = ["r.skor_risiko IS NOT NULL"]; // Syarat baharu
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      params.push(user.subsidiari_id);
-      whereClause.push(`CAST(r.subsidiari AS INTEGER) = $${params.length}`);
+      params.push(user.syarikat_id);
+      whereClause.push(`CAST(r.syarikat_id AS INTEGER) = $${params.length}`);
     }
 
     query += ` WHERE ${whereClause.join(" AND ")}`;
@@ -369,7 +369,7 @@ router.get("/stats", verifyToken, authorizeRoles("Admin"), async (req, res) => {
  */
 router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
   try {
-    const { status, subsidiari_id } = req.query;
+    const { status, syarikat_id } = req.query;
     const user = req.user;
 
     let query = `
@@ -388,13 +388,13 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
         r.tahun AS tahun_daftar,
         r.separuh_tahun AS separuh_tahun_daftar,
         u.nama_penuh AS nama_pemohon,
-        s.nama_subsidiari,
+        s.nama_syarikat,
         lt.tahun_pemantauan,
         lt.separuh_tahun_pemantauan
       FROM permohonan_pindaan p
       JOIN "risiko" r ON p.risiko_id = r.risiko_id
       JOIN pengguna u ON p.pengguna_id_pemohon = u.pengguna_id -- Pastikan pengguna_id_pemohon adalah INTEGER
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN LogTerkini lt ON p.risiko_id = lt.risiko_id AND lt.rn = 1
       WHERE 1=1
     `;
@@ -409,9 +409,9 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
       params.push(status);
     }
 
-    if (user.nama_peranan === "Admin" && subsidiari_id && subsidiari_id !== "Semua") {
-      query += ` AND CAST(r.subsidiari AS INTEGER) = $${paramIndex++}`;
-      params.push(subsidiari_id);
+    if (user.nama_peranan === "Admin" && syarikat_id && syarikat_id !== "Semua") {
+      query += ` AND CAST(r.syarikat_id AS INTEGER) = $${paramIndex++}`;
+      params.push(syarikat_id);
     }
 
     query += ` ORDER BY p.created_at DESC;`;

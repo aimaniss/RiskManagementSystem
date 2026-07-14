@@ -31,7 +31,7 @@ router.post("/", verifyToken, async (req, res) => {
   
   const user = req.user; 
   const {
-    noRujukan, tahun, separuhTahun, subsidiari,
+    noRujukan, tahun, separuhTahun, syarikatId,
     kategori, bahagian, risiko,
     skorKebarangkalian, skorImpak, skorRisiko,
     statusRisiko, punca, kesan
@@ -45,7 +45,7 @@ router.post("/", verifyToken, async (req, res) => {
     }
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      if (parseInt(subsidiari) !== user.subsidiari_id) {
+      if (parseInt(syarikatId) !== user.syarikat_id) {
         client.release(); 
         return res.status(403).json({ error: "No permission for other subsidiari" });
       }
@@ -55,11 +55,11 @@ router.post("/", verifyToken, async (req, res) => {
 
     const result = await client.query(
       `INSERT INTO risiko
-      (no_rujukan, tahun, separuh_tahun, subsidiari, kategori, bahagian, risiko, 
+      (no_rujukan, tahun, separuh_tahun, syarikat_id, kategori, bahagian, risiko, 
         skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING risiko_id`,
-      [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian, risiko,
+      [noRujukan, tahun, separuhTahun, syarikatId, kategori, bahagian, risiko,
         skorKebarangkalian, skorImpak, skorRisiko, statusRisiko]
     );
 
@@ -176,8 +176,9 @@ router.get("/", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.tahun, 
         r.separuh_tahun,
-        s.nama_subsidiari AS subsidiari,
-        r.subsidiari AS subsidiari_id,
+        s.nama_syarikat AS syarikat,
+        s.singkatan AS singkatan_syarikat,
+        r.syarikat_id AS syarikat_id,
         r.bahagian,
         r.kategori,
         r.risiko,
@@ -209,7 +210,7 @@ router.get("/", verifyToken, async (req, res) => {
         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan
 
       FROM risiko r
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN RawatanAgregat raw ON raw.risiko_id = r.risiko_id
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
@@ -217,8 +218,8 @@ router.get("/", verifyToken, async (req, res) => {
 
     const params = [];
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE r.subsidiari::integer = $1`;
-      params.push(user.subsidiari_id);
+      query += ` WHERE r.syarikat_id::integer = $1`;
+      params.push(user.syarikat_id);
     }
 
     query += " ORDER BY r.tahun DESC, r.risiko_id DESC";
@@ -538,7 +539,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
   const risikoId = req.params.risiko_id;
   const user = req.user;
   const {
-    noRujukan, tahun, separuhTahun, subsidiari,
+    noRujukan, tahun, separuhTahun, syarikatId,
     kategori, bahagian, risiko,
     skorKebarangkalian, skorImpak, skorRisiko,
     statusRisiko, punca, kesan
@@ -546,7 +547,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
 
   try {
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      if (parseInt(subsidiari) !== user.subsidiari_id) {
+      if (parseInt(syarikatId) !== user.syarikat_id) {
         client.release();
         return res.status(403).json({ error: "No permission to update other subsidiari" });
       }
@@ -567,11 +568,11 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
 
     await client.query(
       `UPDATE risiko SET
-        no_rujukan=$1, tahun=$2, separuh_tahun=$3, subsidiari=$4, kategori=$5, bahagian=$6,
+        no_rujukan=$1, tahun=$2, separuh_tahun=$3, syarikat_id=$4, kategori=$5, bahagian=$6,
         risiko=$7, skor_kebarangkalian=$8, skor_impak=$9, skor_risiko=$10,
         status_risiko=$11
         WHERE risiko_id=$12`,
-      [noRujukan, tahun, separuhTahun, subsidiari, kategori, bahagian,
+      [noRujukan, tahun, separuhTahun, syarikatId, kategori, bahagian,
         risiko, skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, risikoId]
     );
 

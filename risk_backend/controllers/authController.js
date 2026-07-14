@@ -10,7 +10,7 @@ console.log("===============================");
   try {
     const { rows } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan, 
-              u.peranan_id, u.subsidiari_id, p.nama_peranan
+              u.peranan_id, u.syarikat_id, p.nama_peranan
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
        WHERE u.staff_id = $1`,
@@ -30,7 +30,7 @@ console.log("===============================");
         staff_id: user.staff_id,
         peranan_id: user.peranan_id,
         nama_peranan: user.nama_peranan,
-        subsidiari_id: user.subsidiari_id,
+        syarikat_id: user.syarikat_id,
       },
       process.env.JWT_SECRET,
       { expiresIn: "5d" }

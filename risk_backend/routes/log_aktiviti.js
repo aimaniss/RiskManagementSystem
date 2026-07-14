@@ -17,7 +17,7 @@ router.get("/", verifyToken, async (req, res) => {
     tarikhMula,
     tarikhAkhir,
     peranan,
-    subsidiari,
+    syarikat,
     aktiviti_teks,
   } = req.query;
 
@@ -40,9 +40,9 @@ router.get("/", verifyToken, async (req, res) => {
     whereClauses.push(`r.nama_peranan = $${paramIndex++}`);
     queryParams.push(peranan);
   }
-  if (subsidiari) {
-    whereClauses.push(`s.nama_subsidiari = $${paramIndex++}`);
-    queryParams.push(subsidiari);
+  if (syarikat) {
+    whereClauses.push(`s.nama_syarikat = $${paramIndex++}`);
+    queryParams.push(syarikat);
   }
   if (aktiviti_teks) {
     whereClauses.push(`la.aktiviti ILIKE $${paramIndex++}`);
@@ -57,7 +57,7 @@ router.get("/", verifyToken, async (req, res) => {
       p.staff_id,
       p.nama_penuh AS nama_pengguna,
       r.nama_peranan AS peranan_pengguna,
-      s.nama_subsidiari AS subsidiari,
+      s.nama_syarikat AS syarikat,
       la.aktiviti,
       la.ringkasan,
       la.perincian,
@@ -65,7 +65,7 @@ router.get("/", verifyToken, async (req, res) => {
     FROM log_aktiviti la
     JOIN pengguna p ON la.pengguna_id = p.pengguna_id
     JOIN peranan r ON p.peranan_id = r.peranan_id
-    JOIN subsidiari s ON p.subsidiari_id = s.subsidiari_id
+    JOIN syarikat s ON p.syarikat_id = s.syarikat_id
   `;
 
   if (whereClauses.length > 0) {

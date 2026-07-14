@@ -1,4 +1,4 @@
-// routes/subsidiariRoute.js
+// routes/syarikatRoute.js
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
@@ -8,17 +8,17 @@ const router = express.Router();
 router.get("/", verifyToken, async (req, res) => {
   try {
     const userRole = req.user.nama_peranan;  // ambil nama peranan dari JWT
-    const userSubsidiari = req.user.subsidiari_id;
+    const userSyarikat = req.user.syarikat_id;
 
-    let query = "SELECT * FROM subsidiari";
+    let query = "SELECT * FROM syarikat";
     let params = [];
 
     if (userRole === "Staff" || userRole === "Ketua Subsidiari") {
-      query += " WHERE subsidiari_id = $1";
-      params.push(userSubsidiari);
+      query += " WHERE syarikat_id = $1";
+      params.push(userSyarikat);
     }
 
-    query += " ORDER BY subsidiari_id";
+    query += " ORDER BY syarikat_id";
 
     const { rows } = await pool.query(query, params);
     res.json(rows);

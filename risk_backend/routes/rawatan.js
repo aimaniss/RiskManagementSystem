@@ -15,7 +15,7 @@ router.get("/", verifyToken, async (req, res) => {
         let query = `
 SELECT 
     r.risiko_id, r.no_rujukan, r.tahun, r.separuh_tahun,
-    r.subsidiari::integer AS subsidiari_id, s.nama_subsidiari AS nama_subsidiari,
+    r.syarikat_id AS syarikat_id, s.nama_syarikat AS nama_syarikat,
     r.kategori, r.bahagian, r.status_risiko, r.risiko,
     r.skor_kebarangkalian, r.skor_impak, r.skor_risiko,
     rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap AS tempoh_jangkaan_siap,
@@ -33,13 +33,13 @@ SELECT
     ) AS kakitangan_bertanggungjawab
 FROM risiko r
 LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)`;
+LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)`;
 
         const params = [];
 
         if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-            query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`; 
-            params.push(user.subsidiari_id);
+            query += ` WHERE CAST(r.syarikat_id AS INTEGER) = $1`; 
+            params.push(user.syarikat_id);
         }
 
         query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
@@ -62,7 +62,7 @@ router.get("/with-status", verifyToken, async (req, res) => {
         let query = `
 SELECT 
     r.risiko_id, r.no_rujukan, r.tahun, r.separuh_tahun,
-    r.subsidiari::integer AS subsidiari_id, s.nama_subsidiari AS nama_subsidiari,
+    r.syarikat_id AS syarikat_id, s.nama_syarikat AS nama_syarikat,
     r.kategori, r.bahagian, r.status_risiko, r.risiko,
     r.skor_kebarangkalian, r.skor_impak, r.skor_risiko,
     rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap AS tempoh_jangkaan_siap,
@@ -81,7 +81,7 @@ SELECT
     ) AS kakitangan_bertanggungjawab
 FROM risiko r
 LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
 LEFT JOIN LogPemantauan lp 
     ON lp.risiko_id = r.risiko_id 
     AND lp.tahun_pemantauan = r.tahun 
@@ -90,8 +90,8 @@ LEFT JOIN LogPemantauan lp
         const params = [];
 
         if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-            query += ` WHERE CAST(r.subsidiari AS INTEGER) = $1`; 
-            params.push(user.subsidiari_id);
+            query += ` WHERE CAST(r.syarikat_id AS INTEGER) = $1`; 
+            params.push(user.syarikat_id);
         }
 
         query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
@@ -442,8 +442,8 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
                 r.no_rujukan,
                 r.tahun,
                 r.separuh_tahun,
-                r.subsidiari::integer AS subsidiari_id,
-                s.nama_subsidiari AS nama_subsidiari,
+                r.syarikat_id AS syarikat_id,
+                s.nama_syarikat AS nama_syarikat,
                 r.kategori,
                 r.bahagian,
                 r.risiko,
@@ -459,7 +459,7 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
                 ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id) AS kesan
             FROM risiko r
             LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
-            LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+            LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
             WHERE r.risiko_id = $1
         `, [risiko_id]);
 

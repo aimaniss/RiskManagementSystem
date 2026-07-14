@@ -87,7 +87,7 @@ router.get("/", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.tahun, 
         r.separuh_tahun,
-        s.nama_subsidiari,
+        s.nama_syarikat,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
         r.justifikasi_pindaan_penilaian,
@@ -111,7 +111,7 @@ router.get("/", verifyToken, async (req, res) => {
 
       FROM Risiko r
       JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
     `;
@@ -120,12 +120,12 @@ router.get("/", verifyToken, async (req, res) => {
     let whereClause = [];
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      params.push(user.subsidiari_id);
-      whereClause.push(`CAST(r.subsidiari AS INTEGER) = $${params.length}`);
+      params.push(user.syarikat_id);
+      whereClause.push(`CAST(r.syarikat_id AS INTEGER) = $${params.length}`);
     } 
     else if (subsidiary && subsidiary !== 'all') {
       params.push(subsidiary); 
-      whereClause.push(`CAST(r.subsidiari AS INTEGER) = $${params.length}`);
+      whereClause.push(`CAST(r.syarikat_id AS INTEGER) = $${params.length}`);
     }
     if (tahun && tahun !== 'all') {
       params.push(parseInt(tahun, 10));
@@ -270,7 +270,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
       -- 3. Gabungkan Semua Data (Jadual Utama Risiko)
       SELECT 
         r.risiko_id,
-        s.nama_subsidiari AS subsidiary,
+        s.nama_syarikat AS subsidiary,
         r.tahun AS tahun_daftar,
         r.separuh_tahun AS separuh_tahun_daftar,
         r.bahagian AS bahagian_unit, 
@@ -309,7 +309,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
         
       FROM Risiko r
       
-      LEFT JOIN subsidiari s ON s.subsidiari_id = CAST(r.subsidiari AS INTEGER)
+      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN RawatanAsal ra ON ra.risiko_id = r.risiko_id
       LEFT JOIN LogsTerkumpul lt ON lt.risiko_id = r.risiko_id
       
@@ -326,9 +326,9 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
 
     // Semakan keselamatan
     if (
-      user.nama_subsidiari && 
+      user.nama_syarikat && 
       ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan) &&
-      riskData.subsidiary !== user.nama_subsidiari
+      riskData.subsidiary !== user.nama_syarikat
     ) {
       return res.status(403).json({ message: "Akses tidak dibenarkan." });
     }

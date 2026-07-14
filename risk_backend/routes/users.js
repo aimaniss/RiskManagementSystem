@@ -12,12 +12,12 @@ router.get("/", verifyToken, authorizeRoles("Admin"), async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan,
-             u.subsidiari_id, p.peranan_id, p.nama_peranan,
-             s.nama_subsidiari, s.singkatan as singkatan_subsidiari,
+             u.syarikat_id, p.peranan_id, p.nama_peranan,
+             s.nama_syarikat, s.singkatan as singkatan_syarikat,
              encode(u.gambar_profil,'base64') as profile_pic
       FROM pengguna u
       JOIN peranan p ON u.peranan_id = p.peranan_id
-      LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+      LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
       ORDER BY u.pengguna_id
     `);
     res.json(rows);
@@ -36,13 +36,13 @@ router.get("/me", verifyToken, async (req, res) => {
         u.nama_penuh,
         u.peranan_id,
         p.nama_peranan,
-        u.subsidiari_id,
-        s.nama_subsidiari,
-        s.singkatan as singkatan_subsidiari,
+        u.syarikat_id,
+        s.nama_syarikat,
+        s.singkatan as singkatan_syarikat,
         encode(u.gambar_profil,'base64') as profile_pic
       FROM pengguna u
       JOIN peranan p ON u.peranan_id = p.peranan_id
-      LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+      LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
       WHERE u.staff_id = $1
     `, [req.user.staff_id]);
 
@@ -106,12 +106,12 @@ router.put("/me", verifyToken, upload.single("gambar_profil"), async (req, res) 
 
     const { rows: updatedUser } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan,
-             u.subsidiari_id, p.peranan_id, p.nama_peranan,
-             s.nama_subsidiari, s.singkatan as singkatan_subsidiari,
+             u.syarikat_id, p.peranan_id, p.nama_peranan,
+             s.nama_syarikat, s.singkatan as singkatan_syarikat,
              CASE WHEN u.gambar_profil IS NOT NULL THEN encode(u.gambar_profil,'base64') END as profile_pic
       FROM pengguna u
       JOIN peranan p ON u.peranan_id = p.peranan_id
-      LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+      LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
       WHERE u.pengguna_id=$1`,
       [pengguna_id]
     );
@@ -127,26 +127,26 @@ router.put("/me", verifyToken, upload.single("gambar_profil"), async (req, res) 
 // POST add new user (Admin only) - (Kekal Sama)
 router.post("/", verifyToken, authorizeRoles("Admin"), upload.single("gambar_profil"), async (req, res) => {
   try {
-    const { staff_id, nama_penuh, katalaluan, peranan_id, subsidiari_id } = req.body;
+    const { staff_id, nama_penuh, katalaluan, peranan_id, syarikat_id } = req.body;
     const profileBuffer = req.file ? req.file.buffer : null;
     const pelaku = req.user;
 
     const { rows } = await pool.query(
-      `INSERT INTO pengguna (staff_id, nama_penuh, katalaluan, peranan_id, subsidiari_id, gambar_profil)
+      `INSERT INTO pengguna (staff_id, nama_penuh, katalaluan, peranan_id, syarikat_id, gambar_profil)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING pengguna_id`,
-      [staff_id, nama_penuh, katalaluan, peranan_id, subsidiari_id, profileBuffer]
+      [staff_id, nama_penuh, katalaluan, peranan_id, syarikat_id, profileBuffer]
     );
 
     const newUserId = rows[0].pengguna_id;
 
     const { rows: userWithJoin } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan,
-             u.subsidiari_id, p.peranan_id, p.nama_peranan,
-             s.nama_subsidiari, s.singkatan as singkatan_subsidiari,
+             u.syarikat_id, p.peranan_id, p.nama_peranan,
+             s.nama_syarikat, s.singkatan as singkatan_syarikat,
              encode(u.gambar_profil,'base64') as profile_pic
       FROM pengguna u
       JOIN peranan p ON u.peranan_id = p.peranan_id
-      LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+      LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
       WHERE u.pengguna_id = $1`,
       [newUserId]
     );
@@ -166,16 +166,16 @@ router.post("/", verifyToken, authorizeRoles("Admin"), upload.single("gambar_pro
 router.put("/:id", verifyToken, authorizeRoles("Admin"), upload.single("gambar_profil"), async (req, res) => {
   try {
     const { id } = req.params; // ID pengguna yang di-edit
-    const { staff_id, nama_penuh, katalaluan, peranan_id, subsidiari_id, hapus_gambar } = req.body;
+    const { staff_id, nama_penuh, katalaluan, peranan_id, syarikat_id, hapus_gambar } = req.body;
     const file = req.file;
     const pelaku = req.user; // Pentadbir yang sedang log masuk
 
     // 1. Dapatkan data asal pengguna SEBELUM kemaskini
     const { rows: originalUserRows } = await pool.query(
-      `SELECT u.staff_id, u.nama_penuh, u.katalaluan, u.peranan_id, p.nama_peranan, u.subsidiari_id, s.nama_subsidiari, u.gambar_profil
+      `SELECT u.staff_id, u.nama_penuh, u.katalaluan, u.peranan_id, p.nama_peranan, u.syarikat_id, s.nama_syarikat, u.gambar_profil
        FROM pengguna u
        LEFT JOIN peranan p ON u.peranan_id = p.peranan_id
-       LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+       LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
        WHERE u.pengguna_id = $1`,
       [id]
     );
@@ -201,10 +201,10 @@ router.put("/:id", verifyToken, authorizeRoles("Admin"), upload.single("gambar_p
            nama_penuh=$2,
            katalaluan=$3,
            peranan_id=$4,
-           subsidiari_id=$5,
+           syarikat_id=$5,
            gambar_profil=$6
        WHERE pengguna_id=$7`,
-      [staff_id, nama_penuh, newPassword, peranan_id, subsidiari_id, newProfile, id]
+      [staff_id, nama_penuh, newPassword, peranan_id, syarikat_id, newProfile, id]
     );
 
     if (rowCount === 0) return res.status(404).json({ error: "User not found" });
@@ -212,12 +212,12 @@ router.put("/:id", verifyToken, authorizeRoles("Admin"), upload.single("gambar_p
     // 4. Dapatkan data yang telah dikemaskini
     const { rows: updatedUserRows } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan,
-             u.subsidiari_id, p.peranan_id, p.nama_peranan,
-             s.nama_subsidiari, s.singkatan as singkatan_subsidiari,
+             u.syarikat_id, p.peranan_id, p.nama_peranan,
+             s.nama_syarikat, s.singkatan as singkatan_syarikat,
              CASE WHEN u.gambar_profil IS NOT NULL THEN encode(u.gambar_profil,'base64') END as profile_pic
       FROM pengguna u
       JOIN peranan p ON u.peranan_id = p.peranan_id
-      LEFT JOIN subsidiari s ON u.subsidiari_id = s.subsidiari_id
+      LEFT JOIN syarikat s ON u.syarikat_id = s.syarikat_id
       WHERE u.pengguna_id=$1`,
       [id]
     );
@@ -250,7 +250,7 @@ router.put("/:id", verifyToken, authorizeRoles("Admin"), upload.single("gambar_p
       if (nama_penuh !== originalUser.nama_penuh) changes.push(`Nama Penuh (kepada ${nama_penuh})`);
       if (newPassword !== originalUser.katalaluan) changes.push("kata laluan");
       if (peranan_id != originalUser.peranan_id) changes.push(`peranan (kepada ${updatedUser.nama_peranan})`);
-      if (subsidiari_id != originalUser.subsidiari_id) changes.push(`subsidiari (kepada ${updatedUser.nama_subsidiari || 'N/A'})`);
+      if (syarikat_id != originalUser.syarikat_id) changes.push(`syarikat (kepada ${updatedUser.nama_syarikat || 'N/A'})`);
       if (newProfile !== originalUser.gambar_profil) changes.push("gambar profil");
     }
 

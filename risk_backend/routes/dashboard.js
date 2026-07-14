@@ -16,27 +16,27 @@ const getSkorRisikoLabel = (shortCode) => {
   return mapping[shortCode] || shortCode;
 };
 
-// GET /api/dashboard?subsidiari_id=Semua OR ?subsidiari_id=<id>
+// GET /api/dashboard?syarikat_id=Semua OR ?syarikat_id=<id>
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const { subsidiari_id } = req.query;
+    const { syarikat_id } = req.query;
     const user = req.user;
 
-    console.log("📊 Dashboard Request:", { subsidiari_id, user_role: user.nama_peranan });
+    console.log("📊 Dashboard Request:", { syarikat_id, user_role: user.nama_peranan });
 
     // === 1. WHERE clause ===
-    // 'whereClause' ini HANYA menapis subsidiari, BUKAN status
+    // 'whereClause' ini HANYA menapis syarikat, BUKAN status
     let whereConditions = []; 
     let params = [];
     let paramIndex = 1;
 
-    // Syarat 1: Tapisan Subsidiari
+    // Syarat 1: Tapisan Syarikat
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      whereConditions.push(`r.subsidiari::integer = $${paramIndex++}`);
-      params.push(user.subsidiari_id);
-    } else if (subsidiari_id && subsidiari_id !== "Semua") {
-      whereConditions.push(`r.subsidiari::integer = $${paramIndex++}`);
-      params.push(parseInt(subsidiari_id));
+      whereConditions.push(`r.syarikat_id::integer = $${paramIndex++}`);
+      params.push(user.syarikat_id);
+    } else if (syarikat_id && syarikat_id !== "Semua") {
+      whereConditions.push(`r.syarikat_id::integer = $${paramIndex++}`);
+      params.push(parseInt(syarikat_id));
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
@@ -73,7 +73,7 @@ router.get("/", verifyToken, async (req, res) => {
         r.risiko_id,
         r.no_rujukan,
         r.risiko AS nama_risiko,
-        r.subsidiari::integer AS subsidiari_id,
+        r.syarikat_id::integer AS syarikat_id,
         r.kategori,
         r.bahagian,
         
@@ -249,23 +249,23 @@ router.get("/", verifyToken, async (req, res) => {
     }));
 
 
-    // === 8. Nama & logo subsidiari ===
-    let namaSubsidiari = "Keseluruhan";
+    // === 8. Nama & logo syarikat ===
+    let namaSyarikat = "Keseluruhan";
     let logoUrl = null;
 
-    if (subsidiari_id && subsidiari_id !== "Semua") {
+    if (syarikat_id && syarikat_id !== "Semua") {
       const idToQuery = ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)
-        ? user.subsidiari_id
-        : parseInt(subsidiari_id);
+        ? user.syarikat_id
+        : parseInt(syarikat_id);
 
-      const { rows: subsidiariInfo } = await pool.query(
-        "SELECT nama_subsidiari, light_logo_url FROM subsidiari WHERE subsidiari_id = $1",
+      const { rows: syarikatInfo } = await pool.query(
+        "SELECT nama_syarikat, light_logo_url FROM syarikat WHERE syarikat_id = $1",
         [idToQuery]
       );
 
-      if (subsidiariInfo.length > 0) {
-        namaSubsidiari = subsidiariInfo[0].nama_subsidiari;
-        logoUrl = subsidiariInfo[0].light_logo_url;
+      if (syarikatInfo.length > 0) {
+        namaSyarikat = syarikatInfo[0].nama_syarikat;
+        logoUrl = syarikatInfo[0].light_logo_url;
       }
     }
 
@@ -276,7 +276,7 @@ router.get("/", verifyToken, async (req, res) => {
       kategoriRisikoData,
       jenisKawalanData,
       topRisks: formattedTopRisks,
-      namaSubsidiari,
+      namaSyarikat,
       logoUrl,
       debug: {
         totalRisiko: risikoData.length,

@@ -28,7 +28,7 @@ const verifyToken = async (req, res, next) => {
          u.nama_penuh,   
          u.peranan_id, 
          p.nama_peranan, 
-         u.subsidiari_id
+         u.syarikat_id
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
        WHERE u.pengguna_id = $1`,
