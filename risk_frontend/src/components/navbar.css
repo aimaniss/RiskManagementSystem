@@ -149,7 +149,7 @@
   text-align: center;
   line-height: 1.2;
 }
-.user-subsidiari-bold {
+.user-syarikat-bold {
   font-size: 14px;
   font-weight: 700;
   color: var(--sidebar-blue);
@@ -212,7 +212,7 @@
   font-size: 14px;
   color: #222;
 }
-.dropdown-subsidiari {
+.dropdown-syarikat {
   text-align: center;
   font-weight: 700;
   font-size: 13px;

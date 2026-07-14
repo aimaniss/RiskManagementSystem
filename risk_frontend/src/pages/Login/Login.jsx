@@ -17,7 +17,8 @@ export default function Login() {
   useEffect(() => {
     const role = getUserRole();
     if (role) {
-      if (["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"].includes(role)) {
+      const validRoles = ["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"];
+      if (validRoles.some(r => r.toLowerCase() === role?.toLowerCase())) {
         navigate("/");
       } else {
         navigate("/unauthorized");
@@ -37,7 +38,8 @@ export default function Login() {
       const decoded = jwtDecode(res.data.token);
       const role = decoded.nama_peranan;
 
-      if (["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"].includes(role)) {
+      const validRoles = ["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"];
+      if (validRoles.some(r => r.toLowerCase() === role?.toLowerCase())) {
         navigate("/");
       } else {
         navigate("/unauthorized");

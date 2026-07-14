@@ -1,37 +1,58 @@
 // src/pages/Unauthorized/Unauthorized.jsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ShieldOff, LogIn } from "lucide-react";
+import "./Unauthorized.css";
+import ukmhLogo from "../../assets/images/Light Background/UKMH_light.png";
 
 export default function Unauthorized() {
   const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // 1. **TAMBAH: Padamkan token lama dari localStorage**
-    // Ini memastikan sesi lama dimatikan sepenuhnya.
-    localStorage.removeItem("token"); 
+    localStorage.removeItem("token");
 
-    // 2. Tetapkan timer untuk redirect
-    const timer = setTimeout(() => {
-      // Halakan pengguna ke page log masuk
-      navigate("/login"); 
-    }, 3000); // 3 saat delay
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate("/login");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    // Cleanup: Membersihkan timer apabila komponen dibongkar
-    return () => clearTimeout(timer); 
-
-  }, [navigate]); 
+    return () => clearInterval(timer);
+  }, [navigate]);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>❌ Anda tidak dibenarkan mengakses halaman ini.</h2>
-      <p>Sesi anda mungkin telah tamat tempoh. Menghalakan ke log masuk...</p>
-      {/* Jika anda mahu pengguna klik butang untuk log masuk tanpa menunggu */}
-      <button 
-        onClick={() => navigate("/login")} 
-        style={{ padding: '10px 20px', marginTop: '20px', cursor: 'pointer' }}
-      >
-        Log Masuk Sekarang
-      </button>
+    <div className="unauth-container">
+      <div className="unauth-overlay" />
+
+      <div className="unauth-card">
+        <img src={ukmhLogo} alt="Logo UKM Holdings" className="unauth-logo" />
+
+        <div className="unauth-icon-wrapper">
+          <ShieldOff size={48} strokeWidth={1.5} />
+        </div>
+
+        <h1 className="unauth-title">Akses Ditolak</h1>
+        <p className="unauth-subtitle">
+          Anda tidak mempunyai kebenaran untuk mengakses halaman ini.
+          <br />
+          Sesi anda telah tamat tempoh atau tidak sah.
+        </p>
+
+        <p className="unauth-countdown">
+          Menghalakan ke log masuk dalam <span>{countdown}</span> saat...
+        </p>
+
+        <button className="unauth-btn" onClick={() => navigate("/login")}>
+          <LogIn size={18} />
+          Log Masuk Sekarang
+        </button>
+      </div>
     </div>
   );
 }

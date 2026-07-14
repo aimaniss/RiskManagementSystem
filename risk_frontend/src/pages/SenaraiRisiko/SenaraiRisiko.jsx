@@ -1,371 +1,309 @@
-import { useState, useEffect } from "react";
-import { Trash2, Search } from "lucide-react"; 
-import { jwtDecode } from "jwt-decode";
+import { useState, useMemo } from "react";
+import { Trash2, Search, Eye, X, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { getAuthUser } from "../../utils/auth";
+import { getRiskAbbreviation, getRiskColor } from "../../constants/riskMatrix";
+import { formatSeparuhTahun } from "../../utils/formatters";
+import { useRisks } from "../../hooks/useRisks";
+import { useSyarikats } from "../../hooks/useSyarikats";
 import api from "../../api/api";
 import ViewRisikoModal from "./ViewRisikoModal";
 import "./SenaraiRisiko.css";
 
+function sortRisks(risks, sortKey, sortDir) {
+  if (!sortKey) return risks;
+  return [...risks].sort((a, b) => {
+    let va = a[sortKey] ?? "";
+    let vb = b[sortKey] ?? "";
+    if (sortKey === "semasa_skor_kebarangkalian" || sortKey === "semasa_skor_impak" || sortKey === "skor_kebarangkalian" || sortKey === "skor_impak") {
+      va = parseInt(va) || 0;
+      vb = parseInt(vb) || 0;
+    }
+    if (typeof va === "string") va = va.toLowerCase();
+    if (typeof vb === "string") vb = vb.toLowerCase();
+    if (va < vb) return sortDir === "asc" ? -1 : 1;
+    if (va > vb) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+}
+
+function RiskLevelBadge({ level }) {
+  const color = getRiskColor(level);
+  const abbr = getRiskAbbreviation(level);
+  if (!level || !abbr) return <span>-</span>;
+
+  const colorMap = {
+    "#22c55e": { bg: "#d1fae5", text: "#065f46", border: "#a7f3d0" },
+    "#eab308": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+    "#f97316": { bg: "#ffedd5", text: "#9a3412", border: "#fed7aa" },
+    "#ef4444": { bg: "#fee2e2", text: "#991b1b", border: "#fecaca" },
+  };
+  const c = colorMap[color] || { bg: "#f1f5f9", text: "#334155", border: "#e2e8f0" };
+
+  return (
+    <span className="rl-badge" style={{ backgroundColor: c.bg, color: c.text, borderColor: c.border }}>
+      {abbr}
+    </span>
+  );
+}
+
 function SenaraiRisiko({ refreshTrigger }) {
-  const [risks, setRisks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { risks, loading, refetch } = useRisks();
+  const { syarikatList } = useSyarikats();
   const [search, setSearch] = useState("");
-  const [subsidiariFilter, setSubsidiariFilter] = useState("");
+  const [syarikatFilter, setSyarikatFilter] = useState("");
   const [tahunFilter, setTahunFilter] = useState("");
   const [separuhFilter, setSeparuhFilter] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("");
-  const [subsidiariList, setSubsidiariList] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortKey, setSortKey] = useState("no_rujukan");
+  const [sortDir, setSortDir] = useState("asc");
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [riskToView, setRiskToView] = useState(null);
 
-  const token = localStorage.getItem("token");
-  let userRole = "";
-  let userSubsidiariId = "";
-  if (token) {
-    try {
-      const decoded = jwtDecode(token);
-      const roleMapping = {
-        1: "ADMIN",
-        2: "EXECUTIVE",
-        3: "KETUA SUBSIDIARI",
-        4: "STAFF",
-        5: "VIEWER",
-      };
-      userRole = roleMapping[decoded.peranan_id] || "";
-      userSubsidiariId = decoded.subsidiari_id || "";
-    } catch (err) {
-      console.error("❌ Invalid token", err);
-      localStorage.removeItem("token");
-    }
-  }
+  const authUser = getAuthUser();
+  const userRole = authUser?.role || "";
+  const userSyarikatId = authUser?.syarikatId || "";
+  const isRestricted = ["STAFF", "KETUA SUBSIDIARI"].includes(userRole);
 
-  const formatListDisplay = (dataString) => {
-    if (!dataString || dataString === "—" || dataString.trim() === "") return "—";
-    const items = dataString.split(';').map(item => item.trim()).filter(item => item !== "");
-    if (items.length === 1) return items[0];
-    return items.map((item, index) => `${index + 1}. ${item}`).join('\n');
-  };
-
- const riskMatrix = {
-        1: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-        2: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Rendah",color:"#22c55e"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Sederhana",color:"#eab308"},5:{label:"Tinggi",color:"#f97316"}},
-        3: {1:{label:"Rendah",color:"#22c55e"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Sederhana",color:"#eab308"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Tinggi",color:"#f97316"}},
-        4: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Sederhana",color:"#eab308"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Tinggi",color:"#f97316"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-        5: {1:{label:"Sederhana",color:"#eab308"},2:{label:"Tinggi",color:"#f97316"},3:{label:"Tinggi",color:"#f97316"},4:{label:"Sangat Tinggi",color:"#ef4444"},5:{label:"Sangat Tinggi",color:"#ef4444"}},
-    };
-
-  const getRiskData = (k, i) => {
-    if (!riskMatrix[k] || !riskMatrix[k][i]) return { label: "-", color: "#f1f5f9", textColor: "#64748b" };
-    return riskMatrix[k][i];
-  };
-
-  const formatSeparuhTahun = (value) => {
-    if (value === null || value === undefined) return "—";
-    const strValue = String(value).toLowerCase();
-    if (strValue === "1" || strValue === "pertama") return "T1";
-    if (strValue === "2" || strValue === "kedua") return "T2";
-    return value;
-  };
-
-  const fetchRisks = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/risiko");
-      
-      const risksWithColor = res.data.map(r => {
-        const k = parseInt(r.skor_kebarangkalian) || 0;
-        const i = parseInt(r.skor_impak) || 0;
-        const { label, color, textColor } = getRiskData(k, i);
-        
-        const k_semasa = parseInt(r.semasa_skor_kebarangkalian) || 0;
-        const i_semasa = parseInt(r.semasa_skor_impak) || 0;
-        const { label: label_semasa, color: color_semasa, textColor: textColor_semasa } = getRiskData(k_semasa, i_semasa);
-
-        return { 
-          ...r, 
-          tahap_risiko: label,
-          risk_color: color,
-          risk_text_color: textColor,
-          tahap_risiko_semasa: label_semasa,
-          risk_color_semasa: color_semasa,
-          risk_text_color_semasa: textColor_semasa,
-          status_pemantauan: r.status_pemantauan || ""
-        };
-      });
-
-      setRisks(risksWithColor);
-    } catch (err) {
-      console.error(err);
-      alert("⚠️ Gagal memuatkan data risiko. Sila log masuk semula.");
-      window.location.href = "/login";
-    } finally { setLoading(false); }
-  };
-
-  const fetchSubsidiari = async () => {
-    try {
-      const res = await api.get("/subsidiari");
-      setSubsidiariList(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  useEffect(() => { fetchRisks(); fetchSubsidiari(); }, [refreshTrigger]);
-
-  const filteredRisks = risks.filter(r => {
-    const matchSearch = (r.no_rujukan || "").toLowerCase().includes(search.toLowerCase());
-    const matchSubsidiari = ["STAFF","KETUA SUBSIDIARI"].includes(userRole)
-      ? r.subsidiari_id === userSubsidiariId
-      : !subsidiariFilter || r.subsidiari_id === parseInt(subsidiariFilter);
+  const filteredRisks = useMemo(() => risks.filter(r => {
+    const matchSearch = !search ||
+      (r.no_rujukan || "").toLowerCase().includes(search.toLowerCase()) ||
+      (r.risiko || "").toLowerCase().includes(search.toLowerCase()) ||
+      (r.syarikat || "").toLowerCase().includes(search.toLowerCase());
+    const matchSyarikat = isRestricted
+      ? r.syarikat_id === userSyarikatId
+      : !syarikatFilter || r.syarikat_id === parseInt(syarikatFilter);
     const matchTahun = !tahunFilter || r.tahun === parseInt(tahunFilter);
-    const matchSeparuh = !separuhFilter || r.separuh_tahun === separuhFilter;
-    const matchKategori = !kategoriFilter || r.kategori === kategoriFilter; 
-    return matchSearch && matchSubsidiari && matchTahun && matchSeparuh && matchKategori;
-  });
+    const matchSeparuh = !separuhFilter || r.separuh_tahun === parseInt(separuhFilter);
+    const matchKategori = !kategoriFilter || r.kategori === kategoriFilter;
+    const matchStatus = !statusFilter || r.status_pemantauan === statusFilter;
+    return matchSearch && matchSyarikat && matchTahun && matchSeparuh && matchKategori && matchStatus;
+  }), [risks, search, syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter, isRestricted, userSyarikatId]);
+
+  const sortedRisks = useMemo(() => sortRisks(filteredRisks, sortKey, sortDir), [filteredRisks, sortKey, sortDir]);
+
+  const stats = useMemo(() => {
+    const total = risks.length;
+    const displayed = filteredRisks.length;
+    const byLevel = { "Rendah": 0, "Sederhana": 0, "Tinggi": 0, "Sangat Tinggi": 0 };
+    filteredRisks.forEach(r => {
+      const level = r.tahap_risiko_semasa && r.tahap_risiko_semasa !== "Tiada Data" ? r.tahap_risiko_semasa : r.tahap_risiko;
+      if (level && byLevel[level] !== undefined) byLevel[level]++;
+    });
+    return { total, displayed, byLevel };
+  }, [risks, filteredRisks]);
 
   const handleDelete = async id => {
     if (!window.confirm("Adakah anda pasti mahu padam risiko ini?")) return;
-    try { await api.delete(`/risiko/${id}`); fetchRisks(); }
-    catch (err) { console.error(err); alert("⚠️ Gagal padam risiko."); }
+    try { await api.delete(`/risiko/${id}`); refetch(); }
+    catch (err) { console.error(err); alert("Gagal padam risiko."); }
   };
 
-  const handleViewRisk = (risk) => {
-    setRiskToView(risk);
-    setIsViewModalOpen(true);
-  };
-
+  const handleViewRisk = (risk) => { setRiskToView(risk); setIsViewModalOpen(true); };
   const handleCloseViewModal = (shouldRefresh = false) => {
     setIsViewModalOpen(false);
     setRiskToView(null);
-    if (shouldRefresh) fetchRisks();
+    if (shouldRefresh) refetch();
   };
 
-  const shortForm = label => {
-    if (label === "Rendah") return "R";
-    if (label === "Sederhana") return "S";
-    if (label === "Tinggi") return "T";
-    if (label === "Sangat Tinggi") return "ST";
-    return "-";
+  const clearFilters = () => {
+    setSearch("");
+    setSyarikatFilter("");
+    setTahunFilter("");
+    setSeparuhFilter("");
+    setKategoriFilter("");
+    setStatusFilter("");
   };
 
-  const totalColumns = 28;
-  const kategoriOptions = [...new Set(risks.map(r => r.kategori).filter(k => k))].sort();
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const activeFilterCount = [syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter].filter(Boolean).length;
+  const hasFilters = activeFilterCount > 0 || !!search;
+  const uniqueYears = [...new Set(risks.map(r => r.tahun).filter(Boolean))].sort((a, b) => b - a);
+  const uniqueKategori = [...new Set(risks.map(r => r.kategori).filter(Boolean))].sort();
+  const uniqueStatuses = [...new Set(risks.map(r => r.status_pemantauan).filter(Boolean))].sort();
 
   return (
-    <div className="rm-container">
-      <div className="rm-header-section">
-        <h1>Senarai Risiko</h1>
-        <span className="rm-subtitle">Klik pada mana-mana baris untuk melihat maklumat lengkap</span>
-      </div>
+    <div className="senarai-container">
+      <h2>Senarai Risiko</h2>
 
-      <div className="rm-filter-container">
-        <div className="rm-search-wrapper">
-          <Search size={16} className="rm-search-icon" />
-          <input 
-            type="text" 
-            placeholder="Cari No Rujukan..." 
-            value={search} 
-            onChange={e => setSearch(e.target.value)} 
+      <div className="senarai-toolbar">
+        <div className="senarai-search">
+          <Search size={15} className="senarai-search-icon" />
+          <input
+            className="senarai-search-input"
+            placeholder="Cari no rujukan, risiko, syarikat..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
+          {search && (
+            <button className="senarai-search-clear" onClick={() => setSearch("")}>
+              <X size={14} />
+            </button>
+          )}
         </div>
-        
-        <div className="rm-select-group">
-          <select
-            value={["STAFF","KETUA SUBSIDIARI"].includes(userRole) ? userSubsidiariId : subsidiariFilter}
-            onChange={e => setSubsidiariFilter(e.target.value)}
-            disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
-          >
-            <option value="">Semua Syarikat</option>
-            {subsidiariList.map(s => (
-              <option key={s.subsidiari_id} value={s.subsidiari_id}>
-                {s.nama_subsidiari}
-              </option>
-            ))}
-          </select>
-
-          <select value={tahunFilter} onChange={e => setTahunFilter(e.target.value)}>
-            <option value="">Semua Tahun</option>
-            {[...new Set(risks.map(r => r.tahun))].sort((a,b)=>b-a).map(t=>(<option key={t} value={t}>{t}</option>))}
-          </select>
-
-          <select value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)}>
-            <option value="">Semua Term</option>
-            <option value="1">Pertama (T1)</option>
-            <option value="2">Kedua (T2)</option>
-          </select>
-          
-          <select value={kategoriFilter} onChange={e => setKategoriFilter(e.target.value)}>
-            <option value="">Semua Kategori</option>
-            {kategoriOptions.map(k => (
-              <option key={k} value={k}>{k}</option>
-            ))}
-          </select>
-        </div>
+        <button
+          className={`senarai-filter-btn ${showFilters ? "active" : ""}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <Filter size={14} />
+          Tapisan
+          {hasFilters && <span className="senarai-filter-count">{activeFilterCount || 1}</span>}
+        </button>
       </div>
 
-      <div className="rm-table-wrapper">
-        <table className="rm-risiko-table">
-          <thead>
-            <tr>
-              <th rowSpan="2" className="rm-sticky-bil">Bil</th>
-              <th colSpan="6">Pengenalpastian Risiko</th>
-              <th colSpan="5">Penilaian Risiko</th>
-              <th colSpan="4">Rawatan atas Risiko</th>
-              <th colSpan="4">Pemantauan Risiko</th>
-              <th colSpan="7">Keberkesanan Tindakan</th>
-              <th rowSpan="2" className="rm-sticky-action">Tindakan</th>
-            </tr>
-            <tr>
-              <th className="rm-sticky-ref">No Rujukan</th>
-              <th>Sesi Daftar</th>
-              <th>Syarikat</th>
-              <th>Bahagian / Unit</th>
-              <th>Kategori Risiko</th>
-              <th>Risiko</th>
-              
-              <th>Skor K</th>
-              <th>Skor I</th>
-              <th>Tahap</th>
-              <th>Status Risiko</th>
-              <th>Pindaan Penilaian</th>
-              
-              <th>Pelan Tindakan</th>
-              <th>Jenis Kawalan</th>
-              <th>Jangka Siap</th>
-              <th>Staf Bertanggungjawab</th>
-              
-              <th>Sesi Pantau</th>
-              <th>Pelan Tindakan Pantau</th>
-              <th>Kekerapan</th>
-              <th>Staf Bertanggungjawab</th>
-              
-              <th>Skor K (Semasa)</th>
-              <th>Skor I (Semasa)</th>
-              <th>Tahap (Semasa)</th>
-              <th>Keberkesanan</th>
-              <th>Status Pemantauan</th>
-              <th>Pindaan Keberkesanan</th>
-              <th>Catatan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr className="rm-loader-row">
-                <td colSpan={totalColumns} className="rm-center">⏳ Sedang memuat data...</td>
-              </tr>
-            ) : filteredRisks.length === 0 ? (
-              <tr>
-                <td colSpan={totalColumns} className="rm-center">🚫 Tiada data risiko</td>
-              </tr>
-            ) : filteredRisks.map((r, index) => (
-              <tr 
-                key={r.id} 
-                onClick={() => handleViewRisk(r)} 
-                className="rm-row-clickable"
+      {showFilters && (
+        <div className="senarai-filter-panel">
+          <div className="senarai-filter-grid">
+            <div className="senarai-filter-item">
+              <label>Syarikat</label>
+              <select
+                value={isRestricted ? userSyarikatId : syarikatFilter}
+                onChange={e => setSyarikatFilter(e.target.value)}
+                disabled={isRestricted}
               >
-                <td className="rm-center rm-no-bil rm-sticky-bil">{index + 1}</td>
-                <td className="rm-left rm-sticky-ref font-semibold">{r.no_rujukan}</td>
-                
-                <td className="rm-center">
-                  <div className="rm-session-tag">{r.tahun} - {formatSeparuhTahun(r.separuh_tahun)}</div>
-                </td>
+                <option value="">Semua Syarikat</option>
+                {syarikatList.map(s => (
+                  <option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>
+                ))}
+              </select>
+            </div>
+            <div className="senarai-filter-item">
+              <label>Tahun</label>
+              <select value={tahunFilter} onChange={e => setTahunFilter(e.target.value)}>
+                <option value="">Semua Tahun</option>
+                {uniqueYears.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="senarai-filter-item">
+              <label>Term</label>
+              <select value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)}>
+                <option value="">Semua Term</option>
+                <option value="1">Pertama (T1)</option>
+                <option value="2">Kedua (T2)</option>
+              </select>
+            </div>
+            <div className="senarai-filter-item">
+              <label>Kategori</label>
+              <select value={kategoriFilter} onChange={e => setKategoriFilter(e.target.value)}>
+                <option value="">Semua Kategori</option>
+                {uniqueKategori.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div className="senarai-filter-item">
+              <label>Status</label>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="">Semua Status</option>
+                {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            {hasFilters && (
+              <button className="senarai-clear-btn" onClick={clearFilters}>
+                <X size={13} /> Set Semula
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-                <td className="rm-center">
-                  <div className="rm-text-truncate">{r.subsidiari}</div>
-                </td>
-                <td className="rm-center">
-                  <div className="rm-text-truncate">{r.bahagian}</div>
-                </td>
-                <td className="rm-center">
-                  <div className="rm-text-truncate">{r.kategori}</div>
-                </td>
-                <td className="rm-justify">
-                  <div className="rm-text-truncate-large">{r.risiko}</div>
-                </td>
-                
-                <td className="rm-center font-medium">{r.skor_kebarangkalian || "-"}</td>
-                <td className="rm-center font-medium">{r.skor_impak || "-"}</td>
-                <td className="rm-center">
-                  <span className="rm-badge" style={{ backgroundColor: r.risk_color, color: r.risk_text_color }}>
-                    {shortForm(r.tahap_risiko)}
-                  </span>
-                </td>
-                <td className="rm-center">{r.status_risiko || "—"}</td>
-                <td className="rm-center">
-                  <div className="rm-text-truncate">{r.pindaan_penilaian || "—"}</div>
-                </td>
-                
-                <td className="rm-left">
-                  <div className="rm-text-truncate-large" style={{ whiteSpace: 'pre-line' }}>
-                    {formatListDisplay(r.pelan_tindakan)}
-                  </div>
-                </td>
-                <td className="rm-center">{r.jenis_kawalan || "—"}</td>
-                <td className="rm-center">{r.tempoh_jangkaan_siap_tindakan || "—"}</td>
-                <td className="rm-center">
-                  <div className="rm-text-truncate" style={{ whiteSpace: 'pre-line' }}>
-                    {formatListDisplay(r.kakitangan_bertanggungjawab)}
-                  </div>
-                </td>
-                
-                <td className="rm-center">
-                  {(() => {
-                    const data = r.pemantauan_tahun_separuh;
-                    if (!data) return "—";
-                    const parts = data.split(' - ');
-                    if (parts.length === 2) return `${parts[0]} - ${formatSeparuhTahun(parts[1])}`;
-                    return data;
-                  })()}
-                </td>
-              
-                <td className="rm-left">
-                  <div className="rm-text-truncate-large" style={{ whiteSpace: 'pre-line' }}>
-                    {formatListDisplay(r.pemantauan_pelan_tindakan)}
-                  </div>
-                </td>
-                <td className="rm-center">{r.pemantauan_kekerapan || "—"}</td>
-                <td className="rm-center">
-                  <div className="rm-text-truncate" style={{ whiteSpace: 'pre-line' }}>
-                    {formatListDisplay(r.pemantauan_kakitangan)}
-                  </div>
-                </td>
-                
-                <td className="rm-center font-medium">{r.semasa_skor_kebarangkalian || "—"}</td>
-                <td className="rm-center font-medium">{r.semasa_skor_impak || "—"}</td>
-                <td className="rm-center">
-                  <span className="rm-badge" style={{ backgroundColor: r.risk_color_semasa, color: r.risk_text_color_semasa }}>
-                    {shortForm(r.tahap_risiko_semasa)}
-                  </span>
-                </td>
-                <td className="rm-center">{r.keberkesanan || "—"}</td>
-                <td className="rm-center">{r.status_pemantauan || "—"}</td>
-                <td className="rm-center">{r.pindaan_keberkesanan || "—"}</td>
-                <td className="rm-left">
-                  <div className="rm-text-truncate-large">{r.catatan || "—"}</div>
-                </td>
-
-                <td className="rm-center rm-sticky-action">
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      handleDelete(r.id); 
-                    }} 
-                    className="rm-delete-btn"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="senarai-stats-row">
+        <span className="senarai-stat">Jumlah: <strong>{stats.displayed}</strong>{stats.displayed !== stats.total ? ` / ${stats.total}` : ""}</span>
+        <span className="senarai-stat senarai-stat-r">Rendah: <strong>{stats.byLevel["Rendah"]}</strong></span>
+        <span className="senarai-stat senarai-stat-s">Sederhana: <strong>{stats.byLevel["Sederhana"]}</strong></span>
+        <span className="senarai-stat senarai-stat-t">Tinggi: <strong>{stats.byLevel["Tinggi"]}</strong></span>
+        <span className="senarai-stat senarai-stat-st">Sangat Tinggi: <strong>{stats.byLevel["Sangat Tinggi"]}</strong></span>
       </div>
+
+      {loading ? (
+        <div className="senarai-loading">
+          <div className="senarai-spinner" />
+          <span>Memuat data risiko...</span>
+        </div>
+      ) : sortedRisks.length === 0 ? (
+        <div className="senarai-empty">
+          <span>Tiada data risiko ditemui.</span>
+          {hasFilters && (
+            <button className="senarai-clear-btn" onClick={clearFilters}>
+              <X size={13} /> Set Semula Tapisan
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="box">
+          <div style={{ overflowX: "auto" }}>
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  {[
+                    { key: "no_rujukan", label: "No. Rujukan" },
+                    { key: "risiko", label: "Penerangan Risiko" },
+                    { key: "syarikat", label: "Syarikat" },
+                    { key: "kategori", label: "Kategori" },
+                    { key: "semasa_skor_kebarangkalian", label: "K" },
+                    { key: "semasa_skor_impak", label: "I" },
+                    { key: "tahap_risiko", label: "Tahap Risiko" },
+                    { key: "status_risiko", label: "Status" },
+                    { key: "tahun", label: "Sesi" },
+                  ].map(col => (
+                    <th key={col.key} onClick={() => handleSort(col.key)} style={{ cursor: "pointer" }}>
+                      {col.label}
+                      {sortKey === col.key && (
+                        sortDir === "asc" ? <ChevronUp size={13} style={{ marginLeft: 4 }} /> : <ChevronDown size={13} style={{ marginLeft: 4 }} />
+                      )}
+                    </th>
+                  ))}
+                  <th style={{ width: 80, textAlign: "center" }}>Tindakan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedRisks.map((risk) => (
+                  <tr key={risk.id} onClick={() => handleViewRisk(risk)}>
+                    <td className="senarai-td-ref">{risk.no_rujukan || "-"}</td>
+                    <td className="senarai-td-desc">{risk.risiko || "-"}</td>
+                    <td>{risk.singkatan_syarikat || risk.syarikat || "-"}</td>
+                    <td>{risk.kategori || "-"}</td>
+                    <td style={{ textAlign: "center", fontWeight: 600 }}>{risk.semasa_skor_kebarangkalian || risk.skor_kebarangkalian || "-"}</td>
+                    <td style={{ textAlign: "center", fontWeight: 600 }}>{risk.semasa_skor_impak || risk.skor_impak || "-"}</td>
+                    <td><RiskLevelBadge level={risk.tahap_risiko_semasa && risk.tahap_risiko_semasa !== "Tiada Data" ? risk.tahap_risiko_semasa : risk.tahap_risiko} /></td>
+                    <td>
+                      {(() => {
+                        const latestLevel = risk.tahap_risiko_semasa && risk.tahap_risiko_semasa !== "Tiada Data" ? risk.tahap_risiko_semasa : risk.tahap_risiko;
+                        const status = latestLevel && latestLevel !== "Rendah" && latestLevel !== "Tiada Data" ? "Ya" : "Tidak";
+                        return (
+                          <span className={`senarai-status ${status === "Ya" ? "senarai-status-ya" : "senarai-status-tidak"}`}>
+                            {status}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {risk.tahun || "-"}{risk.separuh_tahun ? ` / ${formatSeparuhTahun(risk.separuh_tahun)}` : ""}
+                    </td>
+                    <td style={{ textAlign: "center" }} onClick={e => e.stopPropagation()}>
+                      <div className="senarai-actions">
+                        <button className="senarai-action-btn" onClick={() => handleViewRisk(risk)} title="Lihat">
+                          <Eye size={15} />
+                        </button>
+                        <button className="senarai-action-btn senarai-action-delete" onClick={() => handleDelete(risk.id)} title="Padam">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {isViewModalOpen && (
-        <ViewRisikoModal
-          isOpen={isViewModalOpen}
-          risk={riskToView}
-          userRole={userRole}
-          onClose={handleCloseViewModal}
-        />
+        <ViewRisikoModal isOpen={isViewModalOpen} risk={riskToView} userRole={userRole} onClose={handleCloseViewModal} />
       )}
     </div>
   );
