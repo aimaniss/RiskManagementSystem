@@ -98,6 +98,134 @@ function Field({ label, children }) {
   );
 }
 
+function LogEntryCard({ log, userRole, handleViewLog, handleEditLog, handleDeleteLog }) {
+  const [expanded, setExpanded] = useState(false);
+  const k_selepas = log.skor_kebarangkalian_selepas;
+  const i_selepas = log.skor_impak_selepas;
+  const tahap_risiko = log.skor_risiko_pemantauan || getRiskLevel(k_selepas, i_selepas);
+  const { color } = getRiskMatrix(k_selepas, i_selepas);
+  const isNaColor = color === "#f1f5f9";
+  const sem_tahun_text = formatSeparuhTahun(log.separuh_tahun_pemantauan);
+  const pelanTindakanLog = Array.isArray(log.pelan_tindakan_log) ? log.pelan_tindakan_log : [];
+  const kakitanganLog = Array.isArray(log.kakitangan_log) ? log.kakitangan_log : [];
+  const pelanTindakanText = pelanTindakanLog.map(getItemText).filter(Boolean).join("; ");
+  const keberkesananKey = (log.keberkesanan || "").toLowerCase().replace(/\s+/g, "");
+  const kelulusanText = log.no_bil_kelulusan || "";
+  const pindaanText = log.justifikasi_pindaan_pemantauan || "";
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 transition-colors hover:bg-muted/50">
+      <div
+        className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3">
+          {expanded ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {log.tahun_pemantauan || "-"} {sem_tahun_text ? `· ${sem_tahun_text}` : ""}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {pelanTindakanText ? pelanTindakanText.substring(0, 60) + (pelanTindakanText.length > 60 ? "..." : "") : "Tiada pelan tindakan"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {k_selepas && i_selepas && (
+            <Badge
+              className={isNaColor ? "bg-muted text-muted-foreground" : "text-white"}
+              style={isNaColor ? undefined : { backgroundColor: color }}
+            >
+              {k_selepas}×{i_selepas} {tahap_risiko}
+            </Badge>
+          )}
+          <Badge variant="outline" className={
+            log.status_pemantauan === "YA"
+              ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+              : log.status_pemantauan === "TIDAK"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+              : ""
+          }>
+            {log.status_pemantauan || "-"}
+          </Badge>
+          {userRole === "ADMIN" && (
+            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" onClick={(e) => handleEditLog(log, e)} title="Kemaskini Log">
+                <Pencil size={13} />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={(e) => handleDeleteLog(log, e)} title="Padam Log">
+                <Trash2 size={13} />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-border px-4 py-3 space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Skor Kebarangkalian × Impak</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-foreground">{k_selepas && i_selepas ? `${k_selepas} × ${i_selepas}` : "-"}</span>
+                {tahap_risiko && (
+                  <Badge className={isNaColor ? "bg-muted text-muted-foreground" : "text-white"} style={isNaColor ? undefined : { backgroundColor: color }}>
+                    {tahap_risiko}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status & Keberkesanan</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-foreground">{log.status_pemantauan || "-"}</span>
+                {log.keberkesanan && (
+                  <span className={`text-xs font-medium ${KEBERKESANAN_STYLES[keberkesananKey] || "text-muted-foreground"}`}>{log.keberkesanan}</span>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pelan Tindakan</p>
+              {pelanTindakanLog.length > 0 ? (
+                <ul className="list-inside list-disc space-y-0.5 text-sm text-foreground">
+                  {pelanTindakanLog.map((pt, idx) => (<li key={idx}>{getItemText(pt)}</li>))}
+                </ul>
+              ) : (<p className="text-sm text-muted-foreground">-</p>)}
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Kakitangan Bertanggungjawab</p>
+              {kakitanganLog.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {kakitanganLog.map((orang, idx) => (
+                    <span key={idx} className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground">{getItemText(orang)}</span>
+                  ))}
+                </div>
+              ) : (<p className="text-sm text-muted-foreground">-</p>)}
+            </div>
+          </div>
+          {log.catatan && (
+            <div className="space-y-1">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Catatan</p>
+              <p className="text-sm text-foreground">{log.catatan}</p>
+            </div>
+          )}
+          {(kelulusanText || pindaanText) && (
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              {kelulusanText && <span>Kelulusan: <span className="text-foreground">{kelulusanText}</span></span>}
+              {pindaanText && <span>Pindaan: <span className="text-foreground">{pindaanText}</span></span>}
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => handleViewLog(log)}>
+              Papar Penuh
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionCard({ number, title, actions, children }) {
   return (
     <Card className="overflow-hidden rounded-xl">
@@ -730,171 +858,17 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
 
                 {/* Log entries — card-based layout */}
                 <div className="space-y-3">
-                  {logData.map((log, index) => {
-                    const k_selepas = log.skor_kebarangkalian_selepas;
-                    const i_selepas = log.skor_impak_selepas;
-                    const tahap_risiko = log.skor_risiko_pemantauan || getRiskLevel(k_selepas, i_selepas);
-                    const { color } = getRiskMatrix(k_selepas, i_selepas);
-                    const isNaColor = color === "#f1f5f9";
-                    const sem_tahun_text = formatSeparuhTahun(log.separuh_tahun_pemantauan);
-                    const pelanTindakanLog = Array.isArray(log.pelan_tindakan_log) ? log.pelan_tindakan_log : [];
-                    const kakitanganLog = Array.isArray(log.kakitangan_log) ? log.kakitangan_log : [];
-                    const pelanTindakanText = pelanTindakanLog.map(getItemText).filter(Boolean).join("; ");
-                    const keberkesananKey = (log.keberkesanan || "").toLowerCase().replace(/\s+/g, "");
-                    const kelulusanText = log.no_bil_kelulusan || "";
-                    const pindaanText = log.justifikasi_pindaan_pemantauan || "";
-                    const [expanded, setExpanded] = useState(false);
-
-                    return (
-                      <div
-                        key={log.log_id || index}
-                        className="rounded-lg border border-border bg-muted/30 transition-colors hover:bg-muted/50"
-                      >
-                        {/* Card header — always visible */}
-                        <div
-                          className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3"
-                          onClick={() => setExpanded(!expanded)}
-                        >
-                          <div className="flex items-center gap-3">
-                            {expanded ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
-                            <div>
-                              <p className="text-sm font-medium text-foreground">
-                                {log.tahun_pemantauan || "-"} {sem_tahun_text ? `· ${sem_tahun_text}` : ""}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {pelanTindakanText ? pelanTindakanText.substring(0, 60) + (pelanTindakanText.length > 60 ? "..." : "") : "Tiada pelan tindakan"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {k_selepas && i_selepas && (
-                              <Badge
-                                className={isNaColor ? "bg-muted text-muted-foreground" : "text-white"}
-                                style={isNaColor ? undefined : { backgroundColor: color }}
-                              >
-                                {k_selepas}×{i_selepas} {tahap_risiko}
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className={
-                              log.status_pemantauan === "YA"
-                                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
-                                : log.status_pemantauan === "TIDAK"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                                : ""
-                            }>
-                              {log.status_pemantauan || "-"}
-                            </Badge>
-                            {userRole === "ADMIN" && (
-                              <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-primary hover:bg-primary/10"
-                                  onClick={(e) => handleEditLog(log, e)}
-                                  title="Kemaskini Log"
-                                >
-                                  <Pencil size={13} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                  onClick={(e) => handleDeleteLog(log, e)}
-                                  title="Padam Log"
-                                >
-                                  <Trash2 size={13} />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Card detail — expanded */}
-                        {expanded && (
-                          <div className="border-t border-border px-4 py-3 space-y-3">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                              <div className="space-y-1.5">
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Skor Kebarangkalian × Impak</p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-foreground">{k_selepas && i_selepas ? `${k_selepas} × ${i_selepas}` : "-"}</span>
-                                  {tahap_risiko && (
-                                    <Badge
-                                      className={isNaColor ? "bg-muted text-muted-foreground" : "text-white"}
-                                      style={isNaColor ? undefined : { backgroundColor: color }}
-                                    >
-                                      {tahap_risiko}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status & Keberkesanan</p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-foreground">{log.status_pemantauan || "-"}</span>
-                                  {log.keberkesanan && (
-                                    <span className={`text-xs font-medium ${KEBERKESANAN_STYLES[keberkesananKey] || "text-muted-foreground"}`}>
-                                      {log.keberkesanan}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pelan Tindakan</p>
-                                {pelanTindakanLog.length > 0 ? (
-                                  <ul className="list-inside list-disc space-y-0.5 text-sm text-foreground">
-                                    {pelanTindakanLog.map((pt, idx) => (
-                                      <li key={idx}>{getItemText(pt)}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground">-</p>
-                                )}
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Kakitangan Bertanggungjawab</p>
-                                {kakitanganLog.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1">
-                                    {kakitanganLog.map((orang, idx) => (
-                                      <span key={idx} className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground">
-                                        {getItemText(orang)}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground">-</p>
-                                )}
-                              </div>
-                            </div>
-
-                            {log.catatan && (
-                              <div className="space-y-1">
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Catatan</p>
-                                <p className="text-sm text-foreground">{log.catatan}</p>
-                              </div>
-                            )}
-
-                            {(kelulusanText || pindaanText) && (
-                              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                                {kelulusanText && <span>Kelulusan: <span className="text-foreground">{kelulusanText}</span></span>}
-                                {pindaanText && <span>Pindaan: <span className="text-foreground">{pindaanText}</span></span>}
-                              </div>
-                            )}
-
-                            <div className="flex justify-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs text-muted-foreground"
-                                onClick={() => handleViewLog(log)}
-                              >
-                                Papar Penuh
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {logData.map((log, index) => (
+                    <LogEntryCard
+                      key={log.log_id || index}
+                      log={log}
+                      userRole={userRole}
+                      handleViewLog={handleViewLog}
+                      handleEditLog={handleEditLog}
+                      handleDeleteLog={handleDeleteLog}
+                    />
+                  ))}
+                </div>
               </>
             )}
           </SectionCard>
