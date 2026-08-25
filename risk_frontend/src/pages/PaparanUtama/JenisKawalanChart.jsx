@@ -7,8 +7,12 @@ import {
   CartesianGrid,
   Tooltip,
   LabelList,
+  Cell,
   ResponsiveContainer,
 } from "recharts";
+
+const KAWALAN_COLORS_LIGHT = ["#dc2626", "#d97706", "#059669", "#2563eb"];
+const KAWALAN_COLORS_DARK = ["#f87171", "#fbbf24", "#34d399", "#60a5fa"];
 import { useDarkMode } from "../../hooks/useDarkMode";
 
 const TOOLTIP_STYLE = {
@@ -23,7 +27,6 @@ export default function JenisKawalanChart({ data }) {
   const isDark = useDarkMode();
   const gridColor = isDark ? "#3f3f46" : "#e2e8f0";
   const tickColor = isDark ? "#a1a1aa" : "#64748b";
-  const barColor = isDark ? "#60a5fa" : "#2563eb";
 
   const safeData = Array.isArray(data) ? data : [];
 
@@ -61,10 +64,13 @@ export default function JenisKawalanChart({ data }) {
         <Bar
           dataKey="value"
           name="Jumlah"
-          fill={barColor}
           radius={[0, 6, 6, 0]}
           barSize={18}
         >
+          {safeData.map((_, index) => {
+            const palette = isDark ? KAWALAN_COLORS_DARK : KAWALAN_COLORS_LIGHT;
+            return <Cell key={index} fill={palette[index % palette.length]} />;
+          })}
           <LabelList dataKey="value" position="right" fontSize={11} fill={tickColor} />
         </Bar>
       </BarChart>

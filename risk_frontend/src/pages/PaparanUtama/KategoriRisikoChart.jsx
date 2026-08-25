@@ -7,8 +7,12 @@ import {
   CartesianGrid,
   Tooltip,
   LabelList,
+  Cell,
   ResponsiveContainer,
 } from "recharts";
+
+const CATEGORY_COLORS_LIGHT = ["#2563eb", "#7c3aed", "#0891b2", "#059669", "#d97706", "#dc2626"];
+const CATEGORY_COLORS_DARK = ["#60a5fa", "#a78bfa", "#22d3ee", "#34d399", "#fbbf24", "#f87171"];
 import { useDarkMode } from "../../hooks/useDarkMode";
 
 const TOOLTIP_STYLE = {
@@ -23,7 +27,6 @@ export default function KategoriRisikoChart({ data }) {
   const isDark = useDarkMode();
   const gridColor = isDark ? "#3f3f46" : "#e2e8f0";
   const tickColor = isDark ? "#a1a1aa" : "#64748b";
-  const barColor = isDark ? "#60a5fa" : "#2563eb";
 
   const safeData = Array.isArray(data) ? data : [];
 
@@ -61,10 +64,13 @@ export default function KategoriRisikoChart({ data }) {
         <Bar
           dataKey="value"
           name="Jumlah"
-          fill={barColor}
           radius={[0, 6, 6, 0]}
           barSize={18}
         >
+          {safeData.map((_, index) => {
+            const palette = isDark ? CATEGORY_COLORS_DARK : CATEGORY_COLORS_LIGHT;
+            return <Cell key={index} fill={palette[index % palette.length]} />;
+          })}
           <LabelList dataKey="value" position="right" fontSize={11} fill={tickColor} />
         </Bar>
       </BarChart>

@@ -8,7 +8,6 @@ import {
   Eye,
   Check,
   CheckCircle2,
-  AlertTriangle,
 } from "lucide-react";
 import {
   BarChart,
@@ -180,10 +179,6 @@ export default function DashboardKeseluruhan({ data }) {
     { label: "Jumlah Risiko Tutup", value: data?.skor?.jumlahTutup || 0, icon: CheckCircle2 },
   ];
 
-  const risikoPerhatian = data?.risikoPerhatian || 0;
-  const belumDinilaiAktif = data?.belumDinilaiAktif || 0;
-  const adaPerhatian = risikoPerhatian > 0 || belumDinilaiAktif > 0;
-
   const topRisksData = data?.topRisks || [];
   const risikoSyarikatData = data?.risikoSyarikat;
 
@@ -227,23 +222,6 @@ export default function DashboardKeseluruhan({ data }) {
           );
         })}
       </div>
-
-      {/* --- Baris 1b: Jalur perhatian --- */}
-      {adaPerhatian && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-accent px-4 py-3 text-sm">
-          <AlertTriangle size={16} className="shrink-0 text-primary" />
-          <span className="text-foreground">
-            <b>{risikoPerhatian}</b> risiko aktif berstatus Tinggi/Sangat Tinggi
-            memerlukan perhatian
-            {belumDinilaiAktif > 0 && (
-              <>
-                <span className="mx-2 text-primary">&bull;</span>
-                {belumDinilaiAktif} risiko aktif belum dinilai
-              </>
-            )}
-          </span>
-        </div>
-      )}
 
       {/* --- Baris 2: Grid carta --- */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
