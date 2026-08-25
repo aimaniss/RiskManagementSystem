@@ -83,43 +83,56 @@ function AktivitiTag({ aktiviti, size = "default" }) {
 function LogDetailSheet({ log, onClose }) {
   if (!log) return null;
 
-  const fields = [
-    { label: "Pengguna", value: log.nama_pengguna },
-    { label: "ID Staff", value: log.staff_id },
-    { label: "Peranan", value: log.peranan_pengguna },
-    { label: "Syarikat", value: log.nama_syarikat },
-    { label: "Tarikh & Masa", value: formatDate(log.tarikh_masa) },
-  ];
-
   return (
     <Sheet open={!!log} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+        <SheetHeader className="pb-2">
           <SheetTitle className="pr-8">Perincian Log Aktiviti</SheetTitle>
           <SheetDescription>{log.ringkasan || "Tiada ringkasan"}</SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-5">
+        <div className="mt-6 space-y-4">
           {/* Aktiviti badge */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Aktiviti:</span>
-            <AktivitiTag aktiviti={log.aktiviti} />
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Aktiviti</span>
+            <div className="mt-1.5">
+              <AktivitiTag aktiviti={log.aktiviti} />
+            </div>
           </div>
 
-          {/* Fields */}
-          <div className="space-y-3">
-            {fields.map((f) => (
-              <div key={f.label} className="grid grid-cols-[120px_1fr] items-baseline gap-2">
-                <span className="text-xs text-muted-foreground">{f.label}</span>
-                <span className="text-sm font-medium text-foreground">{f.value || "-"}</span>
+          {/* Info pengguna */}
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-2.5">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Maklumat Pengguna</span>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div>
+                <p className="text-[11px] text-muted-foreground">Pengguna</p>
+                <p className="text-sm font-medium text-foreground">{log.nama_pengguna || "-"}</p>
               </div>
-            ))}
+              <div>
+                <p className="text-[11px] text-muted-foreground">ID Staff</p>
+                <p className="text-sm font-medium text-foreground">{log.staff_id || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Peranan</p>
+                <p className="text-sm font-medium text-foreground">{log.peranan_pengguna || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Syarikat</p>
+                <p className="text-sm font-medium text-foreground">{log.nama_syarikat || "-"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarikh & Masa */}
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tarikh & Masa</span>
+            <p className="mt-1.5 text-sm font-medium text-foreground">{formatDate(log.tarikh_masa) || "-"}</p>
           </div>
 
           {/* Perincian penuh */}
-          <div className="space-y-2">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Perincian Penuh</span>
-            <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Perincian Penuh</span>
+            <div className="mt-2 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
               {log.perincian || "-"}
             </div>
           </div>
@@ -288,19 +301,32 @@ function LogCard({ log, onView, onDelete }) {
       </div>
 
       {expanded && (
-        <div className="border-t border-border bg-muted/20 px-4 py-3 space-y-2">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
-            <div><span className="text-muted-foreground">Staff ID: </span><span className="text-foreground">{log.staff_id || "-"}</span></div>
-            <div><span className="text-muted-foreground">Syarikat: </span><span className="text-foreground">{log.nama_syarikat || "-"}</span></div>
-            <div><span className="text-muted-foreground">Tarikh: </span><span className="text-foreground">{formatDate(log.tarikh_masa)}</span></div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-muted-foreground">Aktiviti: </span>
-              <AktivitiTag aktiviti={log.aktiviti} size="sm" />
+        <div className="border-t border-border px-4 py-3 space-y-3">
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div>
+                <p className="text-[11px] text-muted-foreground">Staff ID</p>
+                <p className="text-sm font-medium text-foreground">{log.staff_id || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Syarikat</p>
+                <p className="text-sm font-medium text-foreground">{log.nama_syarikat || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Tarikh</p>
+                <p className="text-sm font-medium text-foreground">{formatDate(log.tarikh_masa)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Aktiviti</p>
+                <div className="mt-0.5">
+                  <AktivitiTag aktiviti={log.aktiviti} size="sm" />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="pt-1">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Perincian Penuh</p>
-            <p className="text-sm text-foreground whitespace-pre-wrap">{log.perincian || "-"}</p>
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Perincian Penuh</p>
+            <p className="mt-1.5 text-sm text-foreground whitespace-pre-wrap">{log.perincian || "-"}</p>
           </div>
         </div>
       )}
