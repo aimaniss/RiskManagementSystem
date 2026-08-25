@@ -20,14 +20,6 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import EmptyState from "@/components/ui/empty-state";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 
 import TahapRisikoChart from "./TahapRisikoChart";
 import KategoriRisikoChart from "./KategoriRisikoChart";
@@ -60,20 +52,6 @@ const TOOLTIP_STYLE = {
   borderRadius: "8px",
   fontSize: "12px",
   color: "var(--color-foreground)",
-};
-
-const renderTahapBadge = (label) => {
-  if (!label || label === "Belum Dinilai") {
-    return <span className="text-sm italic text-muted-foreground">Belum Dinilai</span>;
-  }
-  return (
-    <Badge
-      className="border-transparent text-white"
-      style={{ backgroundColor: RISK_COLORS[label] || "#94a3b8" }}
-    >
-      {label}
-    </Badge>
-  );
 };
 
 function TrendPendaftaranChart({ data, colors }) {
@@ -243,58 +221,65 @@ export default function DashboardSyarikat({ data }) {
         </CardContent>
       </Card>
 
+      {/* --- Risiko Teratas — compact ranking list --- */}
       <Card className="rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-[15px] font-semibold">Risiko Teratas</CardTitle>
-          <CardDescription>Enam risiko mengikut tahap kepentingan</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto pb-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>No Rujukan</TableHead>
-                  <TableHead>Nama Risiko</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Bahagian/Unit</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tahap Terkini</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topRisksData.length > 0 ? (
-                  topRisksData.map((risk, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="whitespace-nowrap font-medium">
-                        {risk.noRujukan || "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[220px] truncate" title={risk.nama}>
-                        {risk.nama || "-"}
-                      </TableCell>
-                      <TableCell>{risk.kategori || "-"}</TableCell>
-                      <TableCell>{risk.bahagian || "-"}</TableCell>
-                      <TableCell>
-                        {risk.status_pemantauan === "Tutup" ? (
-                          <Badge variant="success">{risk.status_pemantauan}</Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            {risk.status_pemantauan || "-"}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{renderTahapBadge(risk.skor_risiko_terkini)}</TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="p-4">
-                      <EmptyState title="Tiada risiko" className="border-0" />
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+        <CardHeader className="pb-3">
+          <div>
+            <CardTitle className="text-[15px] font-semibold">Risiko Teratas</CardTitle>
+            <CardDescription>Enam risiko mengikut tahap kepentingan</CardDescription>
           </div>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          {topRisksData.length > 0 ? (
+            <div className="divide-y divide-border">
+              {topRisksData.map((risk, index) => {
+                const riskColor = RISK_COLORS[risk.skor_risiko_terkini] || "#94a3b8";
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                      {index + 1}
+                    </div>
+
+                    <div className="h-8 w-1 shrink-0 rounded-full" style={{ backgroundColor: riskColor }} />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-muted-foreground">{risk.noRujukan || "-"}</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate">{risk.nama || "-"}</p>
+                      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                        {risk.kategori && <span>{risk.kategori}</span>}
+                        {risk.kategori && risk.bahagian && <span>·</span>}
+                        {risk.bahagian && <span>{risk.bahagian}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge
+                        variant={risk.status_pemantauan === "Tutup" ? "success" : "secondary"}
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {risk.status_pemantauan || "-"}
+                      </Badge>
+                      <Badge
+                        className="border-transparent text-white text-[10px] px-1.5 py-0"
+                        style={{ backgroundColor: riskColor }}
+                      >
+                        {risk.skor_risiko_terkini || "-"}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-4">
+              <EmptyState title="Tiada risiko" className="border-0" />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
