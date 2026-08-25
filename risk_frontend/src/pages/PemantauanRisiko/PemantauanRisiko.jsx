@@ -294,70 +294,94 @@ function PemantauanDetailSheet({ isOpen, onClose, data }) {
     return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent className="sm:max-w-lg overflow-y-auto">
-                <SheetHeader>
+                <SheetHeader className="pb-2">
                     <SheetTitle className="pr-8">{data.no_rujukan || "Detail Pemantauan"}</SheetTitle>
                     <SheetDescription className="line-clamp-1">{data.risiko}</SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-6">
+                <div className="mt-6 space-y-4">
                     {/* Risk badges */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-center">
-                            <p className="text-[10px] text-muted-foreground mb-1">Sebelum</p>
-                            <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskBadgeColor(skorDaftarLabel) }}>
-                                {skorDaftarLabel} ({data.skor_kebarangkalian_sebelum || "-"} × {data.skor_impak_sebelum || "-"})
-                            </Badge>
-                        </div>
-                        <ChevronRight size={14} className="text-muted-foreground mt-3" />
-                        <div className="text-center">
-                            <p className="text-[10px] text-muted-foreground mb-1">Terkini</p>
-                            <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskColorTerkini }}>
-                                {tahapRisikoTerkini} ({data.skor_kebarangkalian_terkini || "-"} × {data.skor_impak_terkini || "-"})
-                            </Badge>
-                        </div>
-                        <div className="mt-3">
-                            <Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)}>
-                                {data.status_pemantauan_terkini || "-"}
-                            </Badge>
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Penilaian Risiko</span>
+                        <div className="mt-2 flex items-center gap-3">
+                            <div className="text-center">
+                                <p className="text-[10px] text-muted-foreground mb-1">Sebelum</p>
+                                <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskBadgeColor(skorDaftarLabel) }}>
+                                    {skorDaftarLabel} ({data.skor_kebarangkalian_sebelum || "-"} × {data.skor_impak_sebelum || "-"})
+                                </Badge>
+                            </div>
+                            <ChevronRight size={14} className="text-muted-foreground mt-3" />
+                            <div className="text-center">
+                                <p className="text-[10px] text-muted-foreground mb-1">Terkini</p>
+                                <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskColorTerkini }}>
+                                    {tahapRisikoTerkini} ({data.skor_kebarangkalian_terkini || "-"} × {data.skor_impak_terkini || "-"})
+                                </Badge>
+                            </div>
+                            <div className="mt-3">
+                                <Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)}>
+                                    {data.status_pemantauan_terkini || "-"}
+                                </Badge>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Info sections */}
-                    <div className="space-y-4">
-                        <div className="rounded-lg border border-border p-4 space-y-2">
-                            <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pengenalpastian</h4>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="text-muted-foreground">Syarikat: </span><span className="text-foreground">{data.nama_syarikat || "-"}</span></div>
-                                <div><span className="text-muted-foreground">Kategori: </span><span className="text-foreground">{data.kategori_risiko || "-"}</span></div>
-                                <div><span className="text-muted-foreground">Tahun Asal: </span><span className="text-foreground">{data.tahun_asal || data.tahun || "-"} ({getSeparuhTahunLabel(data.separuh_tahun_asal || data.separuh_tahun)})</span></div>
-                                <div><span className="text-muted-foreground">Status: </span><Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)} className="text-[10px]">{data.status_pemantauan_terkini || "-"}</Badge></div>
+                    {/* Pengenalpastian */}
+                    <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pengenalpastian</span>
+                        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                            <div>
+                                <p className="text-[11px] text-muted-foreground">Syarikat</p>
+                                <p className="text-sm font-medium text-foreground">{data.nama_syarikat || "-"}</p>
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-muted-foreground">Kategori</p>
+                                <p className="text-sm font-medium text-foreground">{data.kategori_risiko || "-"}</p>
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-muted-foreground">Tahun Asal</p>
+                                <p className="text-sm font-medium text-foreground">{data.tahun_asal || data.tahun || "-"} ({getSeparuhTahunLabel(data.separuh_tahun_asal || data.separuh_tahun)})</p>
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-muted-foreground">Status</p>
+                                <Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)} className="mt-0.5 text-[10px]">{data.status_pemantauan_terkini || "-"}</Badge>
                             </div>
                         </div>
+                    </div>
 
-                        {data.tahun_pemantauan && (
-                            <div className="rounded-lg border border-border p-4 space-y-2">
-                                <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pemantauan</h4>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div><span className="text-muted-foreground">Tahun Sesi: </span><span className="text-foreground">{data.tahun_pemantauan}</span></div>
-                                    <div><span className="text-muted-foreground">Separuh Tahun: </span><span className="text-foreground">{getSeparuhTahunLabel(data.separuh_tahun_pemantauan)}</span></div>
+                    {/* Pemantauan */}
+                    {data.tahun_pemantauan && (
+                        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pemantauan</span>
+                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                                <div>
+                                    <p className="text-[11px] text-muted-foreground">Tahun Sesi</p>
+                                    <p className="text-sm font-medium text-foreground">{data.tahun_pemantauan}</p>
                                 </div>
-                                {data.catatan && (
-                                    <div className="text-sm"><span className="text-muted-foreground">Catatan: </span><span className="text-foreground">{data.catatan}</span></div>
-                                )}
+                                <div>
+                                    <p className="text-[11px] text-muted-foreground">Separuh Tahun</p>
+                                    <p className="text-sm font-medium text-foreground">{getSeparuhTahunLabel(data.separuh_tahun_pemantauan)}</p>
+                                </div>
                             </div>
-                        )}
+                            {data.catatan && (
+                                <div className="mt-2">
+                                    <p className="text-[11px] text-muted-foreground">Catatan</p>
+                                    <p className="text-sm font-medium text-foreground">{data.catatan}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                        {Array.isArray(data.pelan_tindakan_pemantauan) && data.pelan_tindakan_pemantauan.filter(Boolean).length > 0 && (
-                            <div className="rounded-lg border border-border p-4 space-y-2">
-                                <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pelan Tindakan</h4>
-                                <ol className="list-inside list-decimal space-y-1 text-sm text-foreground">
-                                    {data.pelan_tindakan_pemantauan.filter(Boolean).map((plan, idx) => (
-                                        <li key={idx}>{plan}</li>
-                                    ))}
-                                </ol>
-                            </div>
-                        )}
-                    </div>
+                    {/* Pelan Tindakan */}
+                    {Array.isArray(data.pelan_tindakan_pemantauan) && data.pelan_tindakan_pemantauan.filter(Boolean).length > 0 && (
+                        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pelan Tindakan</span>
+                            <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-foreground">
+                                {data.pelan_tindakan_pemantauan.filter(Boolean).map((plan, idx) => (
+                                    <li key={idx}>{plan}</li>
+                                ))}
+                            </ol>
+                        </div>
+                    )}
                 </div>
             </SheetContent>
         </Sheet>
