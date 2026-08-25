@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, Trash2, Plus, Save } from "lucide-react"; 
-import "./kemaskinirawatan.css";
-import api from "../../api/api"; 
+import { X, Trash2, Plus, Save, Stethoscope, Loader2 } from "lucide-react";
+import api from "../../api/api";
+import Toast from "@/components/ui/toast";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export default function KemaskiniRawatan({ isOpen, risk, onClose }) { 
     const [formData, setFormData] = useState({
@@ -14,6 +19,7 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
     });
     const [saving, setSaving] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         if (!isOpen || !risk?.risiko_id) {
@@ -57,8 +63,8 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
                 
             } catch (err) {
                 console.warn("⚠️ Rawatan tidak dijumpai:", err.message);
-                alert("⚠️ Rawatan risiko belum wujud. Sila tambah rawatan terlebih dahulu.");
-                onClose(false);
+                setToast({ variant: "warning", title: "Rawatan Tidak Dijumpai", message: "Rawatan risiko belum wujud. Sila tambah rawatan terlebih dahulu." });
+                setTimeout(() => onClose(false), 2000);
             } finally {
                 setIsLoadingData(false);
             }
@@ -72,7 +78,7 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
         const cleanedKakitangan = formData.kakitanganBertanggungjawab.filter(k => k.trim() !== "");
 
         if (!formData.rawatan_id) {
-            alert("⚠️ Ralat: Rawatan ID tidak dijumpai. Sila tutup modal dan cuba lagi.");
+            setToast({ variant: "error", title: "Ralat", message: "Rawatan ID tidak dijumpai. Sila tutup modal dan cuba lagi." });
             return;
         }
 
@@ -82,7 +88,7 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
             !formData.jenisKawalan || 
             !formData.tempohSiap
         ) {
-            alert("Sila lengkapkan semua medan wajib.");
+            setToast({ variant: "warning", title: "Medan Tidak Lengkap", message: "Sila lengkapkan semua medan wajib." });
             return;
         }
 
@@ -104,13 +110,13 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
             
             console.log("✅ Rawatan saved successfully");
             
-            alert(`✅ Rawatan risiko berjaya dikemaskini!`);
+            setToast({ variant: "success", title: "Berjaya", message: "Rawatan risiko berjaya dikemaskini!" });
             
-            onClose(true);
+            setTimeout(() => onClose(true), 1500);
             
         } catch (err) {
             console.error("❌ Gagal menyimpan rawatan:", err.response?.data || err.message);
-            alert(`⚠️ Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}`);
+            setToast({ variant: "error", title: "Gagal Menyimpan", message: `Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}` });
         } finally {
             setSaving(false);
         }
@@ -120,39 +126,60 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
 
     if (isLoadingData) {
         return (
-            <div className="kemaskini-rawatan-modal-overlay">
-                <div className="kemaskini-rawatan-modal-container">
-                    <div className="kemaskini-rawatan-box-header-main">
-                        <span>Memuat data...</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="flex max-h-[92vh] w-full max-w-sm flex-col rounded-xl bg-white shadow-xl">
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Stethoscope className="h-4 w-4" />
+                            </span>
+                            <h3 className="truncate text-[15px] font-semibold text-foreground">Memuat data...</h3>
+                        </div>
                     </div>
-                    <div style={{ padding: '40px', textAlign: 'center' }}>
-                        <div className="spinner"></div>
-                        <p>Sila tunggu...</p>
+                    <div className="p-10">
+                        <LoadingSpinner text="Sila tunggu..." size="md" />
                     </div>
                 </div>
+
+                {toast && (
+                    <Toast
+                        variant={toast.variant}
+                        title={toast.title}
+                        message={toast.message}
+                        onClose={() => setToast(null)}
+                        autoClose={4000}
+                    />
+                )}
             </div>
         );
     }
 
     return (
-        <div className="kemaskini-rawatan-modal-overlay">
-            <div className="kemaskini-rawatan-modal-container">
-                <div className="kemaskini-rawatan-box-header-main">
-                    <span>Kemaskini Rawatan Risiko</span>
-                    <button className="kemaskini-rawatan-close-btn" onClick={() => onClose(false)} aria-label="Tutup Borang">
-                        <X size={16} />
-                    </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-xl bg-white shadow-xl">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Stethoscope className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                            <h3 className="truncate text-[15px] font-semibold text-foreground">Kemaskini Rawatan Risiko</h3>
+                            <p className="truncate text-xs text-muted-foreground">Pelan tindakan dan kawalan risiko</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onClose(false)} aria-label="Tutup Borang">
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
 
-                <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-                    <div className="kemaskini-rawatan-box kemaskini-rawatan-form-section" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
-                        <div style={{ padding: "0 18px 18px 18px" }}> 
-                            
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="kemaskini-rawatan-label kemaskini-rawatan-label-required">Pelan Tindakan:</label>
+                <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                        <div className="rounded-lg border border-border p-4">
+                            <Label className="text-xs font-medium">Pelan Tindakan: <span className="text-destructive">*</span></Label>
+                            <div className="mt-2 space-y-2">
                                 {formData.planTindakan.map((p, idx) => (
-                                    <div key={`plan-${idx}`} className="kemaskini-rawatan-dynamic-row">
-                                        <input
+                                    <div key={`plan-${idx}`} className="flex items-center gap-2">
+                                        <Input
                                             value={p}
                                             onChange={(e) => {
                                                 const newList = [...formData.planTindakan];
@@ -160,76 +187,83 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
                                                 setFormData((prev) => ({ ...prev, planTindakan: newList }));
                                             }}
                                             placeholder={`Langkah Tindakan ${idx + 1}`}
-                                            className="kemaskini-rawatan-input"
                                             required={idx === 0} 
                                         />
                                         {formData.planTindakan.length > 1 && (
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
                                                 onClick={() =>
                                                     setFormData((prev) => ({
                                                         ...prev,
                                                         planTindakan: prev.planTindakan.filter((_, i) => i !== idx),
                                                     }))
                                                 }
-                                                className="kemaskini-rawatan-button-circle kemaskini-rawatan-button-remove"
                                                 aria-label="Buang Plan Tindakan"
                                             >
-                                                <Trash2 size={16} />
-                                            </button>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         )}
                                         {idx === formData.planTindakan.length - 1 && (
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10"
                                                 onClick={() =>
                                                     setFormData((prev) => ({
                                                         ...prev,
                                                         planTindakan: [...prev.planTindakan, ""],
                                                     }))
                                                 }
-                                                className="kemaskini-rawatan-button-circle kemaskini-rawatan-button-add" 
                                                 aria-label="Tambah Plan Tindakan"
                                             >
-                                                <Plus size={16} />
-                                            </button>
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
                                         )}
                                     </div>
                                 ))}
                             </div>
+                        </div>
 
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="kemaskini-rawatan-label kemaskini-rawatan-label-required">Jenis Kawalan:</label>
-                                <select
-                                    value={formData.jenisKawalan || ""}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, jenisKawalan: e.target.value }))}
-                                    className="kemaskini-rawatan-select"
-                                    required
-                                >
-                                    <option value="">-- Pilih Strategi Kawalan --</option>
-                                    <option value="Terima">Terima – Menerima risiko </option>
-                                    <option value="Kurang">Kurang – Mengurangkan kebarangkalian dan impak risiko</option>
-                                    <option value="Pindah">Pindah – Pindahkan risiko </option>
-                                    <option value="Elak">Elak – Berhenti menjalankan aktiviti / program atau mengubah objektif aktiviti yang boleh menyebabkan risiko</option>
-                                </select>
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Jenis Kawalan: <span className="text-destructive">*</span></Label>
+                                    <Select
+                                        value={formData.jenisKawalan || ""}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, jenisKawalan: e.target.value }))}
+                                        required
+                                    >
+                                        <option value="">-- Pilih Strategi Kawalan --</option>
+                                        <option value="Terima">Terima – Menerima risiko </option>
+                                        <option value="Kurang">Kurang – Mengurangkan kebarangkalian dan impak risiko</option>
+                                        <option value="Pindah">Pindah – Pindahkan risiko </option>
+                                        <option value="Elak">Elak – Berhenti menjalankan aktiviti / program atau mengubah objektif aktiviti yang boleh menyebabkan risiko</option>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Tempoh Jangkaan Siap Tindakan: <span className="text-destructive">*</span></Label>
+                                    <Input
+                                        type="text" 
+                                        value={formData.tempohSiap || ""}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
+                                        placeholder="Cth: 2 bulan"
+                                        required
+                                    />
+                                </div>
                             </div>
+                        </div>
 
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="kemaskini-rawatan-label kemaskini-rawatan-label-required">Tempoh Jangkaan Siap Tindakan:</label>
-                                <input
-                                    type="text" 
-                                    value={formData.tempohSiap || ""}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
-                                    className="kemaskini-rawatan-input"
-                                    placeholder="Cth: 2 bulan"
-                                    required
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: "20px" }}>
-                                <label className="kemaskini-rawatan-label kemaskini-rawatan-label-required">Kakitangan Bertanggungjawab:</label> 
+                        <div className="rounded-lg border border-border p-4">
+                            <Label className="text-xs font-medium">Kakitangan Bertanggungjawab: <span className="text-destructive">*</span></Label> 
+                            <div className="mt-2 space-y-2">
                                 {formData.kakitanganBertanggungjawab.map((s, idx) => (
-                                    <div key={`kakitangan-${idx}`} className="kemaskini-rawatan-dynamic-row">
-                                        <input
+                                    <div key={`kakitangan-${idx}`} className="flex items-center gap-2">
+                                        <Input
                                             value={s}
                                             onChange={(e) => {
                                                 const newList = [...formData.kakitanganBertanggungjawab];
@@ -237,61 +271,72 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
                                                 setFormData((prev) => ({ ...prev, kakitanganBertanggungjawab: newList }));
                                             }}
                                             placeholder={`Nama kakitangan / jawatan ${idx + 1}`}
-                                            className="kemaskini-rawatan-input"
                                             required={idx === 0} 
                                         />
                                         {formData.kakitanganBertanggungjawab.length > 1 && (
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
                                                 onClick={() =>
                                                     setFormData((prev) => ({
                                                         ...prev,
                                                         kakitanganBertanggungjawab: prev.kakitanganBertanggungjawab.filter((_, i) => i !== idx),
                                                     }))
                                                 }
-                                                className="kemaskini-rawatan-button-circle kemaskini-rawatan-button-remove"
                                                 aria-label="Buang Kakitangan"
                                             >
-                                                <Trash2 size={16} />
-                                            </button>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         )}
                                         {idx === formData.kakitanganBertanggungjawab.length - 1 && (
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10"
                                                 onClick={() =>
                                                     setFormData((prev) => ({
                                                         ...prev,
                                                         kakitanganBertanggungjawab: [...prev.kakitanganBertanggungjawab, ""],
                                                     }))
                                                 }
-                                                className="kemaskini-rawatan-button-circle kemaskini-rawatan-button-add" 
                                                 aria-label="Tambah Kakitangan"
                                             >
-                                                <Plus size={16} />
-                                            </button>
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
                                         )}
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="kemaskini-rawatan-save-btn-wrapper">
-                                <button
-                                    type="submit"
-                                    className="kemaskini-rawatan-save-btn-dark-blue" 
-                                    disabled={saving}
-                                >
-                                    {saving ? "Menyimpan..." : (
-                                        <>
-                                            <Save size={18} style={{ marginRight: '8px' }} />
-                                            Simpan Rawatan
-                                        </>
-                                    )}
-                                </button>
-                            </div>
                         </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+                        <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={saving}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={saving}>
+                            {saving ? (
+                                <><Loader2 className="h-4 w-4 animate-spin" />Menyimpan...</>
+                            ) : (
+                                <><Save className="h-4 w-4" />Simpan Rawatan</>
+                            )}
+                        </Button>
                     </div>
                 </form>
             </div>
+
+            {toast && (
+                <Toast
+                    variant={toast.variant}
+                    title={toast.title}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                    autoClose={4000}
+                />
+            )}
         </div>
     );
 }

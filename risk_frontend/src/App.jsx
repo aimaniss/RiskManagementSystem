@@ -13,6 +13,7 @@ import Laporan from "./pages/Laporan/Laporan";
 import UrusPengguna from "./pages/UrusPengguna/UrusPengguna";
 import LogAktiviti from "./pages/LogAktiviti/LogAktiviti";
 import LogKeluar from "./pages/LogKeluar/LogKeluar";
+import SenaraiTugasan from "./pages/SenaraiTugasan/SenaraiTugasan";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -49,6 +50,7 @@ function App() {
                     path="DaftarRisiko" 
                     element={<DaftarRisiko onSubmitSuccess={handleRefreshRisiko} />} 
                   />
+                  <Route path="SenaraiTugasan" element={<SenaraiTugasan />} />
                   <Route path="RawatanRisiko" element={<RawatanRisiko />} />
                   <Route path="PemantauanRisiko" element={<PemantauanRisiko />} />
                   <Route path="Pindaan" element={<Pindaan />} />

@@ -1,48 +1,81 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, BookOpen } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Plus,
+  Trash2,
+  BookOpen,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  ListTree,
+  ClipboardPenLine,
+  CalendarRange,
+} from "lucide-react";
 import api from "../../api/api";
-import "./DaftarRisiko.css";
+import Toast from "@/components/ui/toast";
+import PageHeader from "@/components/ui/page-header";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { getAuthUser } from "../../utils/auth";
 import { useSyarikats } from "../../hooks/useSyarikats";
+import { useBahagians } from "../../hooks/useBahagians";
 import { usePanduan } from "../../hooks/usePanduan";
 
-// --- JADUAL RUJUKAN SKOR (DIBUANG) ---
-// (Konstanta KebarangkalianData dan ImpakData dibuang kerana kotak penilaian dibuang)
-// ---------------------------------
-
 function DaftarRisiko() {
-  const [formData, setFormData] = useState({
-    noRujukan: "",
-    tahun: "",
-    separuhTahun: "",
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentHalf = currentMonth <= 6 ? "1" : "2";
+
+  const [formData, setFormData] = useState({
+    tahun: String(currentYear),
+    separuhTahun: currentHalf,
     syarikat: "",
-    kategori: "",
-    bahagian: "",
-    risiko: "",
-    // --- Skor dibuang dari state ---
-    // skorKebarangkalian: "",
-    // skorImpak: "",
-    // skorRisiko: "", 
-    // statusRisiko: "",
-    // tahapRisiko: "" 
-  });
+    kategori: "",
+    bahagian: "",
+    risiko: "",
+  });
 
   const [puncaList, setPuncaList] = useState([""]);
   const [kesanList, setKesanList] = useState([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [duplicates, setDuplicates] = useState([]);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  const debounceRef = useRef(null);
   const { syarikatList } = useSyarikats();
-  const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
+  const { bahagianList, refetch: refetchBahagian } = useBahagians();
+  const { openPanduan, PanduanRenderer } = usePanduan();
+  const [showTambahBahagian, setShowTambahBahagian] = useState(false);
+  const [namaBahagianBaru, setNamaBahagianBaru] = useState("");
+  const [isAddingBahagian, setIsAddingBahagian] = useState(false);
 
-  // Ambil userRole dari JWT token
+  const handleTambahBahagian = async () => {
+    if (!namaBahagianBaru.trim()) return;
+    setIsAddingBahagian(true);
+    try {
+      const res = await api.post("/bahagian", { nama_bahagian: namaBahagianBaru.trim() });
+      await refetchBahagian();
+      setFormData(prev => ({ ...prev, bahagian: res.data.nama_bahagian }));
+      setToast({ variant: "success", title: "Berjaya", message: `Bahagian "${res.data.nama_bahagian}" telah ditambah.` });
+      setShowTambahBahagian(false);
+      setNamaBahagianBaru("");
+    } catch (err) {
+      const msg = err.response?.status === 409
+        ? "Bahagian ini sudah wujud dalam senarai."
+        : err.response?.data?.error || "Gagal menambah bahagian baharu.";
+      setToast({ variant: "error", title: "Ralat", message: msg });
+    } finally {
+      setIsAddingBahagian(false);
+    }
+  };
+
   const authUser = getAuthUser();
   const userRole = authUser?.role || "";
   const syarikatId = authUser?.syarikatId || "";
-
-  // --- Logik Penilaian Dibuang ---
-  // const canEditPenilaian = ["ADMIN", "EXECUTIVE"].includes(userRole);
-  // const riskMatrix = { ... };
-  // const getRiskMatrix = (k, i) => ...;
-  // const getRiskAbbreviation = (label) => ...;
 
   useEffect(() => {
     if (syarikatList.length > 0 && ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)) {
@@ -50,224 +83,367 @@ function DaftarRisiko() {
     }
   }, [syarikatList, userRole, syarikatId]);
 
-  // --- useEffect untuk skor dibuang ---
-  // useEffect(() => {
-  //   const k = parseInt(formData.skorKebarangkalian);
-  //   ...
-  // }, [formData.skorKebarangkalian, formData.skorImpak]);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!formData.risiko || formData.risiko.trim().length < 5) {
+      setDuplicates([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setCheckingDuplicate(true);
+      try {
+        const finalSyarikat = formData.syarikat
+          ? parseInt(formData.syarikat)
+          : ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)
+            ? parseInt(syarikatId)
+            : null;
+        const params = new URLSearchParams({ risiko: formData.risiko.trim() });
+        if (finalSyarikat) params.append("syarikat_id", finalSyarikat);
+        const res = await api.get(`/risiko/check-duplicate?${params.toString()}`);
+        setDuplicates(res.data.duplicates || []);
+      } catch {
+        setDuplicates([]);
+      } finally {
+        setCheckingDuplicate(false);
+      }
+    }, 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [formData.risiko, formData.syarikat, userRole, syarikatId]);
 
-  const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const addPunca = () => setPuncaList([...puncaList, ""]);
-  const addKesan = () => setKesanList([...kesanList, ""]);
-  const updatePunca = (i, val) => { const tmp=[...puncaList]; tmp[i]=val; setPuncaList(tmp); };
-  const updateKesan = (i, val) => { const tmp=[...kesanList]; tmp[i]=val; setKesanList(tmp); };
-  const removePunca = i => { const tmp=[...puncaList]; tmp.splice(i,1); setPuncaList(tmp); };
-  const removeKesan = i => { const tmp=[...kesanList]; tmp.splice(i,1); setKesanList(tmp); };
+  const addPunca = () => setPuncaList([...puncaList, ""]);
+  const addKesan = () => setKesanList([...kesanList, ""]);
+  const updatePunca = (i, val) => { const tmp = [...puncaList]; tmp[i] = val; setPuncaList(tmp); };
+  const updateKesan = (i, val) => { const tmp = [...kesanList]; tmp[i] = val; setKesanList(tmp); };
+  const removePunca = i => { const tmp = [...puncaList]; tmp.splice(i, 1); setPuncaList(tmp); };
+  const removeKesan = i => { const tmp = [...kesanList]; tmp.splice(i, 1); setKesanList(tmp); };
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (!formData.noRujukan || !formData.tahun || !formData.separuhTahun || !formData.syarikat) {
-    return alert("⚠️ Sila lengkapkan semua maklumat dalam Maklumat Risiko.");
-  }
-  if (!formData.kategori || !formData.bahagian || !formData.risiko || puncaList.every(p => p.trim() === "") || kesanList.every(k => k.trim() === "")) {
-    return alert("⚠️ Sila lengkapkan semua maklumat dalam Pengenalpastian Risiko.");
-  }
-
-    // --- KOD LOGIK CUSTOM SKOR DIBUANG ---
-    // if (canEditPenilaian) { ... }
-    // ------------------------------------
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!formData.tahun || !formData.separuhTahun || !formData.syarikat) {
+      return setToast({ variant: "warning", title: "Amaran", message: "Sila lengkapkan semua maklumat dalam Maklumat Risiko." });
+    }
+    if (!formData.kategori || !formData.bahagian || !formData.risiko || puncaList.every(p => p.trim() === "") || kesanList.every(k => k.trim() === "")) {
+      return setToast({ variant: "warning", title: "Amaran", message: "Sila lengkapkan semua maklumat dalam Pengenalpastian Risiko." });
+    }
+    if (duplicates.some(d => d.same_company)) {
+      return setToast({ variant: "error", title: "Tidak dibenarkan", message: "Risiko ini telah didaftarkan oleh syarikat anda. Risiko sama tidak dibenarkan dalam syarikat yang sama." });
+    }
 
     const finalSyarikat = formData.syarikat
       ? parseInt(formData.syarikat)
       : ["STAFF", "KETUA SUBSIDIARI"].includes(userRole)
         ? parseInt(syarikatId)
         : null;
+    if (!finalSyarikat) return setToast({ variant: "error", title: "Ralat", message: "Syarikat tidak sah." });
 
-    if (!finalSyarikat) return alert("⚠️ Syarikat tidak sah.");
+    const tahunInt = formData.tahun !== "" ? parseInt(formData.tahun) : null;
+    if (!tahunInt) return setToast({ variant: "error", title: "Ralat", message: "Sila masukkan Tahun yang sah." });
 
-          const noRujukanTrimmed = formData.noRujukan.trim();
-      const tahunInt = formData.tahun !== "" ? parseInt(formData.tahun) : null;
+    const finalData = {
+      ...formData,
+      tahun: tahunInt,
+      separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
+      syarikat: finalSyarikat,
+      punca: puncaList.filter(p => p.trim() !== ""),
+      kesan: kesanList.filter(k => k.trim() !== ""),
+    };
 
-      if (!noRujukanTrimmed) return alert("⚠️ Sila masukkan No Rujukan.");
-      if (!tahunInt) return alert("⚠️ Sila masukkan Tahun yang sah.");
+    setIsSubmitting(true);
+    try {
+      await api.post("/risiko", finalData);
+      setToast({ variant: "success", title: "Berjaya", message: "Risiko berjaya didaftarkan!" });
+      setFormData({
+        tahun: String(currentYear),
+        separuhTahun: currentHalf,
+        syarikat: (["STAFF", "KETUA SUBSIDIARI"].includes(userRole)) ? syarikatId : "",
+        kategori: "", bahagian: "", risiko: ""
+      });
+      setPuncaList([""]);
+      setKesanList([""]);
+      setDuplicates([]);
+    } catch (err) {
+      console.error("Error:", err.response?.data || err.message);
+      setToast({ variant: "error", title: "Ralat", message: "Gagal mendaftar risiko." });
+    } finally { setIsSubmitting(false); }
+  };
 
-      const finalData = { 
-        ...formData,
-        noRujukan: noRujukanTrimmed,
-        tahun: tahunInt,
-        separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
-        syarikat: finalSyarikat,
-        // --- Skor dibuang dari finalData ---
-        // skorKebarangkalian: formData.skorKebarangkalian !== "" ? parseInt(formData.skorKebarangkalian) : null,
-        // skorImpak: formData.skorImpak !== "" ? parseInt(formData.skorImpak) : null,
-        punca: puncaList.filter(p => p.trim() !== ""),
-        kesan: kesanList.filter(k => k.trim() !== ""),
-        // skorRisiko: getRiskAbbreviation(formData.tahapRisiko) // Dibuang
-    };
+  const renderDynamicList = (list, updateFn, removeFn, addFn, placeholder) => (
+    <div className="space-y-2">
+      {list.map((val, idx) => (
+        <div key={idx} className="flex items-center gap-2">
+          <Input
+            value={val}
+            onChange={e => updateFn(idx, e.target.value)}
+            placeholder={`${placeholder} ${idx + 1}`}
+            className="h-9"
+          />
+          {idx !== 0 && (
+            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeFn(idx)}>
+              <Trash2 size={15} />
+            </Button>
+          )}
+          {idx === list.length - 1 && (
+            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-primary hover:text-primary hover:bg-primary/10" onClick={addFn}>
+              <Plus size={15} />
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
-    // delete finalData.tahapRisiko; // Dibuang
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Daftar Risiko"
+        description="Daftarkan risiko baharu mengikut tahun, syarikat dan kategori."
+        actions={
+          <Button variant="outline" size="sm" onClick={openPanduan} className="gap-1.5">
+            <BookOpen size={14} />
+            Panduan
+          </Button>
+        }
+      />
 
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+          {/* Kolum Utama */}
+          <div className="xl:col-span-2 space-y-6">
+            <Card>
+              <CardHeader className="pb-4 border-b border-border/70">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-primary">
+                    <CalendarRange size={16} />
+                  </span>
+                  Maklumat Asas
+                </CardTitle>
+                <CardDescription>Sesi pendaftaran dan syarikat yang terlibat.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-5 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Tahun</Label>
+                    <Input value={formData.tahun} readOnly className="bg-muted cursor-not-allowed h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Separuh Tahun</Label>
+                    <Select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} disabled className="h-9">
+                      <option value="1">Pertama (Jan-Jun)</option>
+                      <option value="2">Kedua (Jul-Dis)</option>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Syarikat</Label>
+                    <Select
+                      name="syarikat"
+                      value={formData.syarikat}
+                      onChange={handleChange}
+                      disabled={["STAFF", "KETUA SUBSIDIARI"].includes(userRole)}
+                      className="h-9"
+                    >
+                      <option value="">-- Pilih --</option>
+                      {syarikatList.length > 0
+                        ? syarikatList.map(s => <option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)
+                        : <option disabled>Tiada syarikat</option>}
+                    </Select>
+                  </div>
+                </div>
 
-    setIsSubmitting(true);
-    try {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Kategori Risiko</Label>
+                    <Select name="kategori" value={formData.kategori} onChange={handleChange} className="h-9">
+                      <option value="">-- Pilih --</option>
+                      <option>Operasi</option>
+                      <option>Kewangan</option>
+                      <option>Strategik</option>
+                      <option>Pematuhan / Perundangan</option>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label>Bahagian / Unit</Label>
+                      <button
+                        type="button"
+                        onClick={() => setShowTambahBahagian(v => !v)}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-dark transition-colors"
+                      >
+                        <Plus size={12} /> Tambah Bahagian
+                      </button>
+                    </div>
+                    <Select name="bahagian" value={formData.bahagian} onChange={handleChange} className="h-9">
+                      <option value="">-- Pilih --</option>
+                      {bahagianList.length > 0
+                        ? bahagianList.map(b => <option key={b.bahagian_id} value={b.nama_bahagian}>{b.nama_bahagian}</option>)
+                        : <option disabled>Tiada bahagian</option>}
+                    </Select>
+                    {showTambahBahagian && (
+                      <div className="flex items-center gap-2 rounded-lg border border-border bg-accent/60 p-2">
+                        <Input
+                          autoFocus
+                          value={namaBahagianBaru}
+                          onChange={e => setNamaBahagianBaru(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleTambahBahagian())}
+                          placeholder="Nama bahagian/unit baharu"
+                          className="h-8 flex-1 bg-white text-xs"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleTambahBahagian}
+                          disabled={!namaBahagianBaru.trim() || isAddingBahagian}
+                          className="h-8 px-3 text-xs"
+                        >
+                          {isAddingBahagian ? "Menambah..." : "Simpan"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-      // ✅ Semak NoRujukan unik
-try {
-  const encodedNoRujukan = encodeURIComponent(noRujukanTrimmed);
-  const check = await api.get(`/risiko/check-no-rujukan/${encodedNoRujukan}`);
+                <div className="space-y-1.5">
+                  <Label>Risiko</Label>
+                  <Textarea
+                    name="risiko"
+                    value={formData.risiko}
+                    onChange={handleChange}
+                    placeholder="Huraikan risiko dengan jelas..."
+                    className="min-h-[90px] resize-y"
+                  />
+                  {checkingDuplicate && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-0.5">
+                      <Info size={12} /> Memeriksa risiko serupa...
+                    </p>
+                  )}
+                </div>
 
-  if (check.data.exists) {
-    alert("⚠️ No Rujukan ini telah digunakan. Sila masukkan yang lain.");
-    setIsSubmitting(false);
-    return;
-  }
-} catch(err) {
-  console.error("❌ Error semak No Rujukan:", err.response?.data || err.message);
-  alert("⚠️ Gagal semak No Rujukan. Sila cuba lagi.");
-  setIsSubmitting(false);
-  return;
-}
+                {duplicates.length > 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={14} className="text-amber-600" />
+                      <span className="text-xs font-semibold text-amber-800">Risiko serupa telah didaftarkan</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {duplicates.map(d => (
+                        <div key={d.risiko_id} className="flex items-center justify-between bg-white rounded-md border border-amber-200 px-2.5 py-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {d.same_company
+                              ? <AlertTriangle size={12} className="text-red-500 shrink-0" />
+                              : <CheckCircle size={12} className="text-amber-500 shrink-0" />}
+                            <span className="text-[11px] font-semibold text-foreground">{d.no_rujukan}</span>
+                            <span className="text-[11px] text-muted-foreground truncate">{d.nama_syarikat}</span>
+                          </div>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${d.same_company ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                            {d.same_company ? "Tidak dibenarkan" : "Telah didaftarkan"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-      await api.post("/risiko", finalData);
-      alert("✅ Risiko berjaya didaftarkan!");
-      
-      // Reset state, kini tanpa skor
-      setFormData({
-        noRujukan:"", tahun:"", separuhTahun:"", 
-        syarikat: (["STAFF","KETUA SUBSIDIARI"].includes(userRole)) ? syarikatId : "",
-        kategori:"", bahagian:"", risiko:""
-        // --- Skor dibuang ---
-      });
-      setPuncaList([""]);
-      setKesanList([""]);
-      // setRiskColor("#f1f5f9"); // Dibuang
-    } catch (err) {
-      console.error("❌ Error:", err.response?.data || err.message);
-      alert("⚠️ Gagal mendaftar risiko.");
-    } finally { setIsSubmitting(false); }
-  };
+            <Card>
+              <CardHeader className="pb-4 border-b border-border/70">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-primary">
+                    <ListTree size={16} />
+                  </span>
+                  Punca & Kesan
+                </CardTitle>
+                <CardDescription>Senaraikan punca-punca risiko dan kesannya. Klik + untuk tambah medan baharu.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <Label>Punca</Label>
+                    {renderDynamicList(puncaList, updatePunca, removePunca, addPunca, "Punca")}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Kesan</Label>
+                    {renderDynamicList(kesanList, updateKesan, removeKesan, addKesan, "Kesan")}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-  return (
-    <div className="daftar-risiko-container">
-      <h2>Daftar Risiko</h2>
-      <form onSubmit={handleSubmit}>
+            <div className="flex items-center justify-end gap-2 rounded-xl border bg-card px-5 py-3.5 shadow-sm">
+              <p className="mr-auto text-xs text-muted-foreground hidden sm:block">
+                Pastikan semua medan wajib telah dilengkapkan sebelum menghantar.
+              </p>
+              <Button type="submit" disabled={isSubmitting} className="px-6 gap-1.5">
+                <ClipboardPenLine size={15} />
+                {isSubmitting ? "Menghantar..." : "Daftar Risiko"}
+              </Button>
+            </div>
+          </div>
 
-        {/* KOTAK GABUNGAN: Pengenalpastian Risiko & Maklumat Risiko */}
-        <div className="box">
-          <div className="box-header pemantauan-risk-header"> 
-            <span>Pengenalpastian Risiko</span>
-            <button 
-              type="button" 
-              className="pemantauan-panduan-btn" 
-                onClick={openPanduan}
-              >
-                <BookOpen size={16} style={{ marginRight: '6px' }} />
-                Panduan
-              </button>
-          </div>
+          {/* Panel Panduan Ringkas */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <BookOpen size={15} className="text-primary" />
+                  Langkah Pendaftaran
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <ol className="relative border-l border-border ml-2 space-y-5">
+                  {[
+                    ["Sesi & Syarikat", "Tahun dan separuh tahun ditetapkan secara automatik. Pilih syarikat berkenaan."],
+                    ["Huraikan Risiko", "Nyatakan risiko dengan jelas beserta kategori dan bahagian/unit."],
+                    ["Punca & Kesan", "Senaraikan sekurang-kurangnya satu punca dan satu kesan."],
+                    ["Semak & Hantar", "Sistem akan menyemak risiko serupa secara automatik sebelum penyerahan."],
+                  ].map(([t, d], i) => (
+                    <li key={i} className="ml-5">
+                      <span className="absolute -left-[11px] flex h-[22px] w-[22px] items-center justify-center rounded-full bg-accent text-[11px] font-bold text-primary ring-4 ring-background">
+                        {i + 1}
+                      </span>
+                      <p className="text-[13px] font-semibold text-foreground">{t}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{d}</p>
+                    </li>
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
 
-          <div className="combined-info-section" style={{ padding:"16px", display:"grid", gap:"14px" }}>
-                
-            {/* BAHAGIAN MAKLUMAT RISIKO (Pindah ke atas) */}
-            <div className="info-row" style={{ display:"flex", gap:"12px" }}>
-              <label className="label">No Rujukan:</label>
-              <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" placeholder="Contoh: UKMH-001/2025" />
-              <label className="label">Tahun:</label>
-              <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" placeholder="Masukkan Tahun" />
-               <label className="label">Separuh Tahun:</label>
-              <select
-                name="separuhTahun"
-                value={formData.separuhTahun}
-                onChange={handleChange}
-                className="input select-dropdown"
-              >
-                <option value="">-- Pilih --</option>
-                {/* --- DIKEMASKINI --- */}
-                <option value="1">Pertama (Jan-Jun)</option> 
-                <option value="2">Kedua (Jul-Dis)</option>   
-              </select>
-            </div>
-            <div className="info-row" style={{ display:"flex", gap:"12px" }}>
-              <label className="label">Syarikat:</label>
-              <select 
-                name="syarikat" 
-                value={formData.syarikat} 
-                onChange={handleChange} 
-                className="input select-dropdown"
-                disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}
-              >
-                <option value="">-- Pilih --</option>
-                {syarikatList.length > 0
-                  ? syarikatList.map((s)=>(<option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>))
-                  : <option disabled>Tiada syarikat</option>}
-              </select>
-            </div>
-
-                {/* GARIS PEMISAH VISUAL */}
-                <hr className="divider-line" />
-
-            {/* BAHAGIAN PENGENALPASTIAN RISIKO */}
-            <div style={{ display:"flex", gap:"12px", flexWrap:"wrap" }}>
-              <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
-                <label className="label">Kategori Risiko:</label>
-                <select name="kategori" value={formData.kategori} onChange={handleChange} className="input select-dropdown">
-                  <option value="">-- Pilih --</option>
-                  <option>Operasi</option>
-                  <option>Kewangan</option>
-                  <option>Strategik</option>
-                  <option>Pematuhan / Perundangan</option>
-                </select>
-              </div>
-              <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
-                <label className="label">Bahagian/Unit:</label>
-                <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="textarea-bahagian" placeholder="Masukkan bahagian/unit" />
-              </div>
-            </div>
-
-            <label className="label" style={{ marginTop:"12px" }}>Risiko:</label>
-            <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="textarea-risiko" placeholder="Huraikan risiko" />
-
-            {/* Punca */}
-            <div style={{ marginTop:"12px" }}>
-              <label className="label">Punca:</label>
-              {puncaList.map((p, idx) => (
-                <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                  <input value={p} onChange={(e)=>updatePunca(idx,e.target.value)} placeholder={`Punca ${idx+1}`} className="input" />
-                  {idx!==0 && <button type="button" onClick={()=>removePunca(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
-                  {idx===puncaList.length-1 && <button type="button" onClick={addPunca} className="button-circle button-add"><Plus size={16}/></button>}
-                </div>
-              ))}
-            </div>
-
-            {/* Kesan */}
-            <div style={{ marginTop:"12px" }}>
-              <label className="label">Kesan:</label>
-              {kesanList.map((k, idx) => (
-                <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                  <input value={k} onChange={(e)=>updateKesan(idx,e.target.value)} placeholder={`Kesan ${idx+1}`} className="input" />
-                  {idx!==0 && <button type="button" onClick={()=>removeKesan(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
-                  {idx===kesanList.length-1 && <button type="button" onClick={addKesan} className="button-circle button-add"><Plus size={16}/></button>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* --- KOTAK PENILAIAN RISIKO DIBUANG --- */}
-        {/* {canEditPenilaian && ( ... )} */}
-
-        <div style={{ textAlign:"center" }}>
-        <button type="submit" className="submit-button" disabled={isSubmitting}>
-            {isSubmitting ? <span className="spinner"></span> : "Daftar Risiko"}
-          </button>
-        </div>
-      </form>
+            <Card className="bg-accent/60 border-primary/20">
+              <CardContent className="pt-5">
+                <div className="flex items-start gap-2.5">
+                  <Info size={16} className="text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[13px] font-semibold text-foreground">Risiko pendua tidak dibenarkan</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Risiko yang sama dalam syarikat yang sama tidak boleh didaftarkan semula.
+                      Risiko serupa dari syarikat lain akan dipaparkan sebagai rujukan.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={openPanduan}
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      Baca panduan penuh
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </form>
 
       {PanduanRenderer}
 
-    </div>
-  );
+      {toast && (
+        <div className="fixed top-[72px] right-4 z-[60] max-w-sm">
+          <Toast variant={toast.variant} title={toast.title} message={toast.message} onClose={() => setToast(null)} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default DaftarRisiko;

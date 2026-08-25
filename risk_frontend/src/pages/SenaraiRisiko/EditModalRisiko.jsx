@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, X } from "lucide-react";
-import "./EditModalRisiko.css";
+import { Plus, Trash2, X, FilePenLine } from "lucide-react";
 import { riskMatrix, getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
+import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, userSyarikatId, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...risk });
@@ -40,120 +45,170 @@ export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container">
-        <div className="box-header" style={{ justifyContent:"space-between" }}>
-          <span>Kemaskini Risiko</span>
-          <button onClick={onClose} style={{ background:"none", border:"none", color:"#fff", cursor:"pointer" }}><X /></button>
-        </div>
-
-        <form style={{ padding:"16px" }} onSubmit={e=>{ e.preventDefault(); handleSave(); }}>
-          {/* Maklumat Risiko */}
-          <div className="box">
-            <div className="box-header">Maklumat Risiko</div>
-            <div style={{ padding:"10px", display:"grid", gap:"8px", }}>
-              <div style={{ display:"flex", gap:"8px" }}>
-                <label className="label">No Rujukan:</label>
-                <input name="noRujukan" value={formData.noRujukan} onChange={handleChange} className="input" />
-                <label className="label">Tahun:</label>
-                <input name="tahun" value={formData.tahun} onChange={handleChange} className="input" />
-                <label className="label">Separuh Tahun:</label>
-                <select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} className="input select-dropdown">
-                  <option value="">-- Pilih --</option>
-                  <option value="1">Pertama</option>
-                  <option value="2">Kedua</option>
-                </select>
-              </div>
-              <div style={{ display:"flex", gap:"12px" }}>
-                <label className="label">Syarikat:</label>
-                <select name="syarikat" value={formData.syarikat} onChange={handleChange} className="input select-dropdown" disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}>
-                  <option value="">-- Pilih --</option>
-                  {syarikatList.map(s=><option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)}
-                </select>
-              </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="flex max-h-[92vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FilePenLine className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate text-[15px] font-semibold text-foreground">Kemaskini Risiko</h3>
+              <p className="truncate text-xs text-muted-foreground">No. Rujukan: {formData.noRujukan || "-"}</p>
             </div>
           </div>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-          {/* Pengenalpastian Risiko */}
-          <div className="box">
-            <div className="box-header">Pengenalpastian Risiko</div>
-            <div style={{ padding:"16px" }}>
-              <div style={{ display:"flex", gap:"12px", flexWrap:"wrap" }}>
-                <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
-                  <label className="label">Kategori Risiko:</label>
-                  <select name="kategori" value={formData.kategori} onChange={handleChange} className="input select-dropdown">
+        <form onSubmit={e=>{ e.preventDefault(); handleSave(); }} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 space-y-4 overflow-y-auto p-5">
+            {/* Maklumat Risiko */}
+            <div className="rounded-lg border border-border p-4">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Maklumat Risiko</h4>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">No Rujukan:</Label>
+                  <Input name="noRujukan" value={formData.noRujukan} onChange={handleChange} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Tahun:</Label>
+                  <Input name="tahun" value={formData.tahun} onChange={handleChange} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Separuh Tahun:</Label>
+                  <Select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange}>
+                    <option value="">-- Pilih --</option>
+                    <option value="1">Pertama</option>
+                    <option value="2">Kedua</option>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Syarikat:</Label>
+                  <Select name="syarikat" value={formData.syarikat} onChange={handleChange} disabled={["STAFF","KETUA SUBSIDIARI"].includes(userRole)}>
+                    <option value="">-- Pilih --</option>
+                    {syarikatList.map(s=><option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)}
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Pengenalpastian Risiko */}
+            <div className="rounded-lg border border-border p-4">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pengenalpastian Risiko</h4>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Kategori Risiko:</Label>
+                  <Select name="kategori" value={formData.kategori} onChange={handleChange}>
                     <option value="">-- Pilih --</option>
                     <option>Operasi</option>
                     <option>Kewangan</option>
                     <option>Strategik</option>
                     <option>Pematuhan/Perundangan</option>
-                  </select>
+                  </Select>
                 </div>
-                <div style={{ flex:1, minWidth:"200px", display:"flex", flexDirection:"column" }}>
-                  <label className="label">Bahagian/Unit:</label>
-                  <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="textarea-bahagian" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Bahagian/Unit:</Label>
+                  <Textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="h-[70px] resize-none" />
                 </div>
               </div>
-              <label className="label" style={{ marginTop:"12px" }}>Risiko:</label>
-              <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="textarea-risiko" />
 
-              <div style={{ marginTop:"12px" }}>
-                <label className="label">Punca:</label>
-                {puncaList.map((p, idx)=>(
-                  <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                    <input value={p} onChange={e=>updatePunca(idx,e.target.value)} className="input" />
-                    {idx!==0 && <button type="button" onClick={()=>removePunca(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
-                    {idx===puncaList.length-1 && <button type="button" onClick={addPunca} className="button-circle button-add"><Plus size={16}/></button>}
-                  </div>
-                ))}
+              <div className="mt-4 space-y-1.5">
+                <Label className="text-xs font-medium">Risiko:</Label>
+                <Textarea name="risiko" value={formData.risiko} onChange={handleChange} placeholder="Huraian Risiko" />
               </div>
 
-              <div style={{ marginTop:"12px" }}>
-                <label className="label">Kesan:</label>
-                {kesanList.map((k, idx)=>(
-                  <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                    <input value={k} onChange={e=>updateKesan(idx,e.target.value)} className="input" />
-                    {idx!==0 && <button type="button" onClick={()=>removeKesan(idx)} className="button-circle button-remove"><Trash2 size={16}/></button>}
-                    {idx===kesanList.length-1 && <button type="button" onClick={addKesan} className="button-circle button-add"><Plus size={16}/></button>}
-                  </div>
-                ))}
+              <div className="mt-4">
+                <Label className="text-xs font-medium">Punca:</Label>
+                <div className="mt-2 space-y-2">
+                  {puncaList.map((p, idx)=>(
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input value={p} onChange={e=>updatePunca(idx,e.target.value)} placeholder={`Punca ${idx + 1}`} />
+                      {idx!==0 && (
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={()=>removePunca(idx)} aria-label="Buang Punca">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {idx===puncaList.length-1 && (
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10" onClick={addPunca} aria-label="Tambah Punca">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Label className="text-xs font-medium">Kesan:</Label>
+                <div className="mt-2 space-y-2">
+                  {kesanList.map((k, idx)=>(
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input value={k} onChange={e=>updateKesan(idx,e.target.value)} placeholder={`Kesan ${idx + 1}`} />
+                      {idx!==0 && (
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={()=>removeKesan(idx)} aria-label="Buang Kesan">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {idx===kesanList.length-1 && (
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10" onClick={addKesan} aria-label="Tambah Kesan">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {/* Penilaian Risiko (auto update) */}
+            {canEditPenilaian && (
+              <div className="rounded-lg border border-border p-4">
+                <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penilaian Risiko</h4>
+                <div className="rounded-lg border border-border bg-accent/60 p-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Skor Kebarangkalian:</Label>
+                      <Select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange}>
+                        <option value="">-- Pilih --</option>
+                        {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Skor Impak:</Label>
+                      <Select name="skorImpak" value={formData.skorImpak} onChange={handleChange}>
+                        <option value="">-- Pilih --</option>
+                        {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Skor Risiko:</Label>
+                      <Input type="text" readOnly value={getRiskAbbreviation(formData.tahapRisiko)} className="cursor-default text-center font-semibold" style={{ background: riskColor, color: riskColor === "#f1f5f9" ? "#334155" : "#ffffff" }} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Status Risiko:</Label>
+                      <Input type="text" readOnly value={formData.statusRisiko==="Ya"?"Ya (Risiko memerlukan tindakan)":formData.statusRisiko==="Tidak"?"Tidak (Risiko rendah-tiada tindakan)":" "} className="cursor-default bg-muted/50 text-muted-foreground text-xs" />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col items-center border-t border-border pt-4">
+                    <Label className="mb-3 text-xs font-medium">Kedudukan pada Matriks Risiko:</Label>
+                    <RiskMatrixVisual compact kebarangkalian={formData.skorKebarangkalian} impak={formData.skorImpak} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Penilaian Risiko (auto update) */}
-          {canEditPenilaian && (
-            <div className="box">
-              <div className="box-header">Penilaian Risiko</div>
-              <div className="risk-wrapper">
-                <div className="risk-field">
-                  <label className="label">Skor Kebarangkalian:</label>
-                  <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="input select-dropdown">
-                    <option value="">-- Pilih --</option>
-                    {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
-                  </select>
-                </div>
-                <div className="risk-field">
-                  <label className="label">Skor Impak:</label>
-                  <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="input select-dropdown">
-                    <option value="">-- Pilih --</option>
-                    {[1,2,3,4,5].map(v=><option key={v} value={v}>{v}</option>)}
-                  </select>
-                </div>
-                <div className="risk-field">
-                  <label className="label">Skor Risiko:</label>
-                  <input type="text" readOnly value={getRiskAbbreviation(formData.tahapRisiko)} className="input risk-score" style={{ background: riskColor, textAlign:"center" }} />
-                </div>
-                <div className="risk-field">
-                  <label className="label">Status Risiko:</label>
-                  <input type="text" readOnly value={formData.statusRisiko==="Ya"?"Ya (Risiko memerlukan tindakan)":formData.statusRisiko==="Tidak"?"Tidak (Risiko rendah-tiada tindakan)":" "} className="input status-risk" style={{ textAlign:"center", backgroundColor:"#f1f5f9", color:"#004071" }}/>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div style={{ textAlign:"center", marginTop:"16px" }}>
-            <button type="submit" className="submit-button">Simpan Perubahan</button>
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Batal
+            </Button>
+            <Button type="submit">
+              Simpan Perubahan
+            </Button>
           </div>
         </form>
       </div>

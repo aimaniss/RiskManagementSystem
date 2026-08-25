@@ -28,7 +28,7 @@
 /* CONTAINER MODAL (Dari Pemantauan) */
 .panduan-container {
   /* UBAH SUAI: Latar belakang, saiz, bayang & sempadan dari Pemantauan */
-  background: #f4f6f8;
+  background: var(--color-muted);
   border-radius: 10px;
   border: none;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -106,7 +106,7 @@
 .panduan-content {
   /* UBAH SUAI: Latar & padding dari pemantauan-modal-body */
   padding: 18px;
-  background: #fafafa;
+  background: var(--color-muted);
   overflow-y: auto;
   flex-grow: 1;
 }
@@ -117,7 +117,7 @@
   margin: 0 0 15px 0;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: white;
+  background: var(--color-card);
   overflow: hidden;
   padding: 14px 16px;
   /* Buang gaya lama */
@@ -190,13 +190,13 @@
 
 .panduan-table td {
   color: #4b5563;
-  background-color: #fff;
+  background-color: var(--color-card);
   line-height: 1.5;
 }
 
 /* Buang zebra stripes */
 .panduan-table tr:nth-child(even) {
-  background-color: #fff;
+  background-color: var(--color-card);
 }
 /* Hover effect baru */
 .panduan-table tr:hover td {
@@ -275,7 +275,7 @@
   text-align: center !important;
   font-weight: 600;
   /* UBAH SUAI: Guna latar belakang putih biasa */
-  background-color: #ffffff;
+  background-color: var(--color-card);
   color: #1f2937;
   padding: 5px;
   font-size: 0.8rem;
@@ -337,7 +337,7 @@
   padding: 14px 18px; /* Padankan dengan padding header */
   text-align: right;
   border-top: 1px solid #e0e0e0;
-  background-color: #f4f6f8; /* Samakan dengan latar container */
+  background-color: var(--color-muted); /* Samakan dengan latar container */
   flex-shrink: 0;
   z-index: 60;
   border-bottom-left-radius: 10px;

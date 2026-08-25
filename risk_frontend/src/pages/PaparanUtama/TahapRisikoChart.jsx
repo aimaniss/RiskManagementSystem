@@ -1,89 +1,93 @@
-// Fail: TahapRisikoChart.jsx
-
 import React from "react";
 import {
   PieChart,
   Pie,
   Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
-// 1. Tentukan warna BARU - ikut riskMatrix & tambah "Belum Dinilai"
-const COLORS = {
-  "Sangat Tinggi": "#ef4444", // Merah (ST)
-  "Tinggi": "#f97316",        // Oren (T)
-  "Sederhana": "#eab308",      // Kuning/Emas (S)
-  "Rendah": "#22c55e",        // Hijau (R)
-  "Belum Dinilai": "#6b7280"  // Kelabu (N/A)
+export const RISK_COLORS = {
+  "Sangat Tinggi": "#ef4444",
+  "Tinggi": "#f97316",
+  "Sederhana": "#eab308",
+  "Rendah": "#22c55e",
+  "Belum Dinilai": "#94a3b8",
 };
 
-// 2. Fungsi untuk memaparkan label (KINI PAPAR NILAI 'VALUE')
-const RADIAN = Math.PI / 180;
-// Ambil 'value' dari props
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
-  // Letak label di tengah slice
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  // Jika nilai adalah 0, jangan tunjuk label
-  if (value === 0) {
-    return null;
-  }
-  
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={14} // Saiz fon dibesarkan sikit
-      fontWeight="bold"
-    >
-      {value} {/* <-- DIUBAH: Papar nilai (cth: 1, 2) bukan peratus --> */}
-    </text>
-  );
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "8px",
+  fontSize: "12px",
+  color: "var(--color-foreground)",
 };
 
 export default function TahapRisikoChart({ data }) {
-  // 3. Handle jika tiada data
-  if (!data || data.length === 0) {
+  const isDark = useDarkMode();
+  const safeData = Array.isArray(data) ? data : [];
+  const total = safeData.reduce((sum, item) => sum + (item?.value || 0), 0);
+
+  if (safeData.length === 0) {
     return (
-      <div className="chart-no-data">
+      <p className="py-8 text-center text-xs text-muted-foreground">
         Tiada data tahap risiko untuk dipaparkan.
-      </div>
+      </p>
     );
   }
 
   return (
-    // 4. Guna ResponsiveContainer agar saiz carta automatik
-    <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          dataKey="value"    // Ambil 'value' dari { name: "...", value: ... }
-          nameKey="name"      // Ambil 'name' dari { name: "...", value: ... }
-          outerRadius={110}
-          fill="#8884d8"
-          labelLine={false}
-          label={renderCustomizedLabel} // Guna fungsi label baru kita
-        >
-          {data.map((entry, index) => (
-            // 5. Gunakan warna yang kita tetapkan
-            <Cell
-              key={`cell-${index}`}
-              fill={COLORS[entry.name] || "#8884d8"} // Guna warna dari 'COLORS' baru
+    <div>
+      <div className="relative">
+        <ResponsiveContainer width="100%" height={220}>
+          <PieChart>
+            <Pie
+              data={safeData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={90}
+              paddingAngle={2}
+              dataKey="value"
+              nameKey="name"
+              stroke={isDark ? "#27272a" : "#ffffff"}
+            >
+              {safeData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={RISK_COLORS[entry.name] || RISK_COLORS["Belum Dinilai"]}
+                />
+              ))}
+            </Pie>
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-bold tabular-nums text-foreground">
+            {total}
+          </span>
+          <span className="text-xs text-muted-foreground">risiko</span>
+        </div>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        {safeData.map((entry, index) => (
+          <div
+            key={`legend-${index}`}
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+          >
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{
+                backgroundColor:
+                  RISK_COLORS[entry.name] || RISK_COLORS["Belum Dinilai"],
+              }}
             />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+            {entry.name}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -195,6 +195,28 @@ router.get("/", verifyToken, async (req, res) => {
       .filter(([_, value]) => value > 0)
       .map(([name, value]) => ({ name, value }));
 
+    // === 6b. Data tambahan: Trend pendaftaran risiko per tahun ===
+    const tahunCount = {};
+    for (const row of risikoData) {
+      const t = row.tahun ? String(row.tahun) : null;
+      if (t) tahunCount[t] = (tahunCount[t] || 0) + 1;
+    }
+    const trendData = Object.entries(tahunCount)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([tahun, jumlah]) => ({ name: tahun, value: jumlah }));
+
+    // === 6c. Risiko aktif yang perlu perhatian (skor T/ST, belum Tutup) ===
+    const risikoPerhatian = risikoData.filter(r =>
+      ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
+      ["T", "ST"].includes(String(r.skor_risiko_terkini))
+    ).length;
+
+    // === 6d. Belum dinilai (aktif sahaja) ===
+    const belumDinilaiAktif = risikoData.filter(r =>
+      ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
+      (!r.skor_risiko_terkini || r.skor_risiko_terkini === "null")
+    ).length;
+
     // === 7. Top Risks (Untuk Jadual) ===
     // Query ini kini akan memaparkan SEMUA risiko, selari dengan carta
     const topRisksQuery = `
@@ -249,6 +271,40 @@ router.get("/", verifyToken, async (req, res) => {
     }));
 
 
+    // === 7b. Perbandingan risiko antara syarikat (untuk admin, paparan "Semua") ===
+    let risikoSyarikat = null;
+    const isStaffLevel = ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan);
+    if (!isStaffLevel && (!syarikat_id || syarikat_id === "Semua")) {
+      const perSyarikatQuery = `
+        WITH LogTerkini AS (
+          SELECT
+            pm.risiko_id,
+            pm.status_pemantauan,
+            ROW_NUMBER() OVER (
+              PARTITION BY pm.risiko_id
+              ORDER BY pm.tahun_pemantauan DESC,
+                       pm.separuh_tahun_pemantauan DESC,
+                       pm.tarikh_pemantauan DESC NULLS LAST
+            ) AS rn
+          FROM LogPemantauan pm
+        )
+        SELECT
+          s.syarikat_id,
+          s.nama_syarikat,
+          COALESCE(s.singkatan, s.nama_syarikat) AS label,
+          COUNT(DISTINCT r.risiko_id)::int AS jumlah,
+          COUNT(DISTINCT CASE WHEN COALESCE(lt.status_pemantauan, 'Buka') <> 'Tutup' THEN r.risiko_id END)::int AS aktif,
+          COUNT(DISTINCT CASE WHEN COALESCE(lt.status_pemantauan, 'Buka') = 'Tutup' THEN r.risiko_id END)::int AS tutup
+        FROM syarikat s
+        LEFT JOIN risiko r ON r.syarikat_id::integer = s.syarikat_id
+        LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
+        GROUP BY s.syarikat_id, s.nama_syarikat, label
+        ORDER BY jumlah DESC
+      `;
+      const { rows: syarikatRows } = await pool.query(perSyarikatQuery);
+      risikoSyarikat = syarikatRows;
+    }
+
     // === 8. Nama & logo syarikat ===
     let namaSyarikat = "Keseluruhan";
     let logoUrl = null;
@@ -278,6 +334,10 @@ router.get("/", verifyToken, async (req, res) => {
       topRisks: formattedTopRisks,
       namaSyarikat,
       logoUrl,
+      trendData,
+      risikoPerhatian,
+      belumDinilaiAktif,
+      risikoSyarikat,
       debug: {
         totalRisiko: risikoData.length,
         risikoTanpaLog: risikoTanpaLog.length,

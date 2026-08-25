@@ -1,7 +1,8 @@
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
+import { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenggunaIdByPeranan } from "../utils/notifikasi.js";
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ router.post("/", verifyToken, async (req, res) => {
   
   const user = req.user; 
   const {
-    noRujukan, tahun, separuhTahun, syarikatId,
+    tahun, separuhTahun, syarikatId,
     kategori, bahagian, risiko,
     skorKebarangkalian, skorImpak, skorRisiko,
     statusRisiko, punca, kesan
@@ -53,14 +54,39 @@ router.post("/", verifyToken, async (req, res) => {
 
     await client.query('BEGIN');
 
+    const syarikatResult = await client.query(
+      'SELECT singkatan FROM syarikat WHERE syarikat_id = $1',
+      [syarikatId]
+    );
+    if (syarikatResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      client.release();
+      return res.status(400).json({ error: "Syarikat tidak ditemui." });
+    }
+    const singkatan = syarikatResult.rows[0].singkatan;
+    const now = new Date();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const currentYearShort = String(now.getFullYear()).slice(-2);
+    const periodCode = `${currentMonth}${currentYearShort}`;
+
+    const countResult = await client.query(
+      `SELECT COUNT(*)::int AS count FROM risiko 
+       WHERE EXTRACT(MONTH FROM created_at) = $1 
+       AND EXTRACT(YEAR FROM created_at) = $2
+       AND syarikat_id = $3 AND is_deleted = false`,
+      [now.getMonth() + 1, now.getFullYear(), syarikatId]
+    );
+    const nextNumber = countResult.rows[0].count + 1;
+    const noRujukan = `${singkatan}/${periodCode}/${String(nextNumber).padStart(3, '0')}`;
+
     const result = await client.query(
       `INSERT INTO risiko
       (no_rujukan, tahun, separuh_tahun, syarikat_id, kategori, bahagian, risiko, 
-        skor_kebarangkalian, skor_impak, skor_risiko, status_risiko)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        skor_kebarangkalian, skor_impak, skor_risiko, status_risiko, status_kelulusan, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       RETURNING risiko_id`,
       [noRujukan, tahun, separuhTahun, syarikatId, kategori, bahagian, risiko,
-        skorKebarangkalian, skorImpak, skorRisiko, statusRisiko]
+        skorKebarangkalian, skorImpak, skorRisiko, statusRisiko, 'Menunggu Kelulusan', user.pengguna_id]
     );
 
     const risikoId = result.rows[0].risiko_id;
@@ -83,13 +109,6 @@ router.post("/", verifyToken, async (req, res) => {
       }
     }
 
-    await client.query(
-        `INSERT INTO LogPemantauan 
-             (risiko_id, tahun_pemantauan, separuh_tahun_pemantauan, status_pemantauan)
-          VALUES ($1, $2, $3, $4)`,
-        [risikoId, tahun, separuhTahun, 'Buka']
-    );
-
     await client.query('COMMIT');
 
     try {
@@ -103,6 +122,18 @@ router.post("/", verifyToken, async (req, res) => {
       );
     } catch (logErr) {
       console.error("Gagal mencatat log selepas TAMBAH risiko:", logErr);
+    }
+
+    try {
+      const adminExecutiveIds = await dapatkanPenggunaIdByPeranan("Admin", "Executive");
+      const filteredIds = adminExecutiveIds.filter((id) => id !== user.pengguna_id);
+      if (filteredIds.length > 0) {
+        const tajuk = "Risiko Baru Didaftarkan";
+        const mesej = `${user.nama_penuh} telah mendaftarkan risiko baru: ${noRujukan}.`;
+        await hantarNotifikasiBulk(filteredIds, tajuk, mesej, "risiko_baru", risikoId);
+      }
+    } catch (notifErr) {
+      console.error("Gagal menghantar notifikasi risiko baru:", notifErr);
     }
 
     res.status(201).json({ 
@@ -145,6 +176,7 @@ router.get("/", verifyToken, async (req, res) => {
             ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
           ) AS rn
         FROM LogPemantauan pm
+        WHERE pm.is_deleted = false
       ),
       
       ButiranTerkini AS (
@@ -153,7 +185,8 @@ router.get("/", verifyToken, async (req, res) => {
           STRING_AGG(DISTINCT pt.butiran_aktiviti, '; ') AS pemantauan_pelan_tindakan,
           STRING_AGG(DISTINCT kp.butiran_kakitangan, '; ') AS pemantauan_kakitangan
         FROM PelanTindakanPemantauan pt
-        LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id
+        LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id AND kp.is_deleted = false
+        WHERE pt.is_deleted = false
         GROUP BY pt.log_id
       ),
       
@@ -166,8 +199,9 @@ router.get("/", verifyToken, async (req, res) => {
           rr.tempoh_siap AS tempoh_jangkaan_siap_tindakan,
           STRING_AGG(DISTINCT kr.nama_kakitangan, '; ') AS kakitangan_bertanggungjawab
         FROM rawatan_risiko rr
-        LEFT JOIN pelan_tindakan_rawatan ptr ON ptr.rawatan_id = rr.rawatan_id
-        LEFT JOIN kakitangan_rawatan kr ON kr.rawatan_id = rr.rawatan_id
+        LEFT JOIN pelan_tindakan_rawatan ptr ON ptr.rawatan_id = rr.rawatan_id AND ptr.is_deleted = false
+        LEFT JOIN kakitangan_rawatan kr ON kr.rawatan_id = rr.rawatan_id AND kr.is_deleted = false
+        WHERE rr.is_deleted = false
         GROUP BY rr.risiko_id, rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap
       )
 
@@ -179,6 +213,8 @@ router.get("/", verifyToken, async (req, res) => {
         s.nama_syarikat AS syarikat,
         s.singkatan AS singkatan_syarikat,
         r.syarikat_id AS syarikat_id,
+        r.created_at,
+        COALESCE(u.nama_penuh, '—') AS didaftarkan_oleh,
         r.bahagian,
         r.kategori,
         r.risiko,
@@ -211,15 +247,25 @@ router.get("/", verifyToken, async (req, res) => {
 
       FROM risiko r
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
+      LEFT JOIN pengguna u ON u.pengguna_id = r.created_by
       LEFT JOIN RawatanAgregat raw ON raw.risiko_id = r.risiko_id
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
+      WHERE r.is_deleted = false
     `;
 
     const params = [];
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE r.syarikat_id::integer = $1`;
+      query += ` AND r.syarikat_id::integer = $1`;
       params.push(user.syarikat_id);
+    }
+
+    // Senarai tugasan: hanya risiko yang menunggu kelulusan
+    if (req.query.tugasan === "true") {
+      query += ` AND r.status_kelulusan = 'Menunggu Kelulusan'`;
+    } else {
+      // Senarai risiko utama: sorok yang belum diluluskan
+      query += ` AND (r.status_kelulusan IS NULL OR r.status_kelulusan != 'Menunggu Kelulusan')`;
     }
 
     query += " ORDER BY r.tahun DESC, r.risiko_id DESC";
@@ -259,7 +305,7 @@ router.get("/:risiko_id/rawatan", verifyToken, async (req, res) => {
         rr.jenis_kawalan,
         rr.tempoh_siap as tempoh_jangkaan_siap
       FROM rawatan_risiko rr
-      WHERE rr.risiko_id = $1
+      WHERE rr.risiko_id = $1 AND rr.is_deleted = false
       LIMIT 1
     `;
     
@@ -277,7 +323,7 @@ router.get("/:risiko_id/rawatan", verifyToken, async (req, res) => {
     const planQuery = `
       SELECT pelan_tindakan 
       FROM pelan_tindakan_rawatan 
-      WHERE rawatan_id = $1
+      WHERE rawatan_id = $1 AND is_deleted = false
     `;
     const { rows: planRows } = await pool.query(planQuery, [rawatan.rawatan_id]);
     rawatan.plan_tindakan = planRows.map(r => r.pelan_tindakan);
@@ -285,7 +331,7 @@ router.get("/:risiko_id/rawatan", verifyToken, async (req, res) => {
     const kakitanganQuery = `
       SELECT nama_kakitangan 
       FROM kakitangan_rawatan 
-      WHERE rawatan_id = $1
+      WHERE rawatan_id = $1 AND is_deleted = false
     `;
     const { rows: kakitanganRows } = await pool.query(kakitanganQuery, [rawatan.rawatan_id]);
     rawatan.kakitangan_bertanggungjawab = kakitanganRows.map(r => r.nama_kakitangan);
@@ -317,7 +363,7 @@ router.put("/:risiko_id/rawatan", verifyToken, async (req, res) => {
       SELECT rr.rawatan_id, r.no_rujukan 
       FROM rawatan_risiko rr
       JOIN risiko r ON r.risiko_id = rr.risiko_id 
-      WHERE rr.risiko_id = $1
+      WHERE rr.risiko_id = $1 AND rr.is_deleted = false AND r.is_deleted = false
     `;
     const { rows: checkRows } = await client.query(checkQuery, [risiko_id]);
     
@@ -428,7 +474,7 @@ router.put("/:risiko_id/pemantauan/log/:log_id", verifyToken, async (req, res) =
 
     await client.query("BEGIN");
 
-    const checkQuery = `SELECT log_id FROM LogPemantauan WHERE log_id = $1 AND risiko_id = $2`;
+    const checkQuery = `SELECT log_id FROM LogPemantauan WHERE log_id = $1 AND risiko_id = $2 AND is_deleted = false`;
     const checkResult = await client.query(checkQuery, [log_id, risiko_id]);
     
     if (checkResult.rowCount === 0) {
@@ -556,7 +602,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
     await client.query('BEGIN');
 
     const { rows: originalRows } = await client.query(
-      "SELECT no_rujukan FROM risiko WHERE risiko_id = $1",
+      "SELECT no_rujukan FROM risiko WHERE risiko_id = $1 AND is_deleted = false",
       [risikoId]
     );
     if (originalRows.length === 0) {
@@ -642,7 +688,7 @@ router.delete("/:risiko_id", verifyToken, async (req, res) => {
     }
     
     const { rows } = await client.query(
-      `SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, 
+      `SELECT no_rujukan FROM risiko WHERE risiko_id = $1 AND is_deleted = false`, 
       [risikoId]
     );
     
@@ -654,27 +700,27 @@ router.delete("/:risiko_id", verifyToken, async (req, res) => {
 
     await client.query('BEGIN');
 
-    const rawatanIdsRes = await client.query('SELECT rawatan_id FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
+    const rawatanIdsRes = await client.query('SELECT rawatan_id FROM rawatan_risiko WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
     const rawatanIds = rawatanIdsRes.rows.map(r => r.rawatan_id);
 
-    const logIdsRes = await client.query('SELECT log_id FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
+    const logIdsRes = await client.query('SELECT log_id FROM LogPemantauan WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
     const logIds = logIdsRes.rows.map(l => l.log_id);
 
     if (rawatanIds.length > 0) {
-      await client.query('DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
-      await client.query('DELETE FROM kakitangan_rawatan WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+      await client.query('UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+      await client.query('UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
     }
     if (logIds.length > 0) {
-      await client.query('DELETE FROM PelanTindakanPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
-      await client.query('DELETE FROM KakitanganPemantauan WHERE log_id = ANY($1::uuid[])', [logIds]);
+      await client.query('UPDATE PelanTindakanPemantauan SET is_deleted = true WHERE log_id = ANY($1::uuid[])', [logIds]);
+      await client.query('UPDATE KakitanganPemantauan SET is_deleted = true WHERE log_id = ANY($1::uuid[])', [logIds]);
     }
 
-    await client.query('DELETE FROM rawatan_risiko WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM LogPemantauan WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM punca_risiko WHERE risiko_id = $1', [risikoId]);
-    await client.query('DELETE FROM kesan_risiko WHERE risiko_id = $1', [risikoId]);
+    await client.query('UPDATE rawatan_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
+    await client.query('UPDATE LogPemantauan SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
+    await client.query('UPDATE punca_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
+    await client.query('UPDATE kesan_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
 
-    await client.query("DELETE FROM risiko WHERE risiko_id = $1", [risikoId]);
+    await client.query("UPDATE risiko SET is_deleted = true, updated_at = NOW() WHERE risiko_id = $1 AND is_deleted = false", [risikoId]);
 
     await client.query('COMMIT');
 
@@ -703,7 +749,7 @@ router.get("/check-no-rujukan/:noRujukan", verifyToken, async (req, res) => {
     const { noRujukan } = req.params;
 
     const { rows } = await pool.query(
-      `SELECT * FROM risiko WHERE no_rujukan=$1`,
+      `SELECT * FROM risiko WHERE no_rujukan=$1 AND is_deleted = false`,
       [noRujukan]
     );
 
@@ -715,6 +761,164 @@ router.get("/check-no-rujukan/:noRujukan", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Ralat GET /risiko/check-no-rujukan:", err);
     res.status(500).json({ message: err.message });
+  }
+});
+
+// ------------------- GET: Check Duplicate Risk -------------------
+router.get("/check-duplicate", verifyToken, async (req, res) => {
+  try {
+    const { risiko, syarikat_id } = req.query;
+    if (!risiko || risiko.trim().length < 3) {
+      return res.json({ duplicates: [] });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT r.risiko_id, r.risiko, r.no_rujukan, r.syarikat_id,
+              s.nama_syarikat, s.singkatan,
+              r.kategori, r.bahagian, r.tahun, r.separuh_tahun
+       FROM risiko r
+       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
+       WHERE LOWER(TRIM(r.risiko)) = LOWER(TRIM($1))
+       AND r.is_deleted = false`,
+      [risiko.trim()]
+    );
+
+    const duplicates = rows.map(row => ({
+      risiko_id: row.risiko_id,
+      risiko: row.risiko,
+      no_rujukan: row.no_rujukan,
+      syarikat_id: row.syarikat_id,
+      nama_syarikat: row.nama_syarikat,
+      singkatan: row.singkatan,
+      kategori: row.kategori,
+      bahagian: row.bahagian,
+      tahun: row.tahun,
+      separuh_tahun: row.separuh_tahun,
+      same_company: parseInt(syarikat_id) === parseInt(row.syarikat_id),
+    }));
+
+    res.json({ duplicates });
+  } catch (err) {
+    console.error("Ralat GET /risiko/check-duplicate:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ------------------- PUT: Luluskan Risiko (Admin/Executive) -------------------
+router.put("/:risiko_id/approve", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { risiko_id } = req.params;
+    const user = req.user;
+
+    await client.query("BEGIN");
+
+    const { rows } = await client.query(
+      `SELECT * FROM risiko WHERE risiko_id = $1 AND status_kelulusan = 'Menunggu Kelulusan' AND is_deleted = false`,
+      [risiko_id]
+    );
+    if (rows.length === 0) {
+      await client.query("ROLLBACK");
+      client.release();
+      return res.status(404).json({ message: "Risiko tidak dijumpai atau telah diproses." });
+    }
+
+    const risiko = rows[0];
+
+    await client.query(
+      `UPDATE risiko SET status_kelulusan = 'Diluluskan', diluluskan_oleh_id = $1, tarikh_kelulusan = NOW(), updated_at = NOW()
+       WHERE risiko_id = $2`,
+      [user.pengguna_id, risiko_id]
+    );
+
+    await client.query(
+      `INSERT INTO LogPemantauan (risiko_id, tahun_pemantauan, separuh_tahun_pemantauan, status_pemantauan)
+       VALUES ($1, $2, $3, 'Buka')`,
+      [risiko_id, risiko.tahun, risiko.separuh_tahun]
+    );
+
+    await client.query("COMMIT");
+
+    try {
+      await catatAktiviti(
+        user.pengguna_id,
+        "Luluskan Risiko",
+        `Meluluskan risiko: ${risiko.no_rujukan}`,
+        `${user.nama_penuh} telah meluluskan risiko ${risiko.no_rujukan} untuk memasuki aliran penilaian.`
+      );
+    } catch (e) { console.error("Log error:", e); }
+
+    try {
+      if (risiko.created_by && risiko.created_by !== user.pengguna_id) {
+        await hantarNotifikasi(
+          risiko.created_by,
+          "Risiko Diluluskan",
+          `Risiko anda ${risiko.no_rujukan} telah diluluskan oleh ${user.nama_penuh}.`,
+          "risiko_diluluskan",
+          parseInt(risiko_id)
+        );
+      }
+    } catch (e) { console.error("Notif error:", e); }
+
+    res.json({ message: "Risiko berjaya diluluskan." });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Ralat approve risiko:", err);
+    res.status(500).json({ message: "Gagal meluluskan risiko." });
+  } finally {
+    client.release();
+  }
+});
+
+// ------------------- PUT: Tolak Risiko (Admin/Executive) -------------------
+router.put("/:risiko_id/reject", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
+  try {
+    const { risiko_id } = req.params;
+    const { sebab } = req.body;
+    const user = req.user;
+
+    if (!sebab || !sebab.trim()) {
+      return res.status(400).json({ message: "Sila isi sebab penolakan." });
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE risiko SET status_kelulusan = 'Ditolak', sebab_ditolak_risiko = $1, diluluskan_oleh_id = $2, tarikh_kelulusan = NOW(), updated_at = NOW()
+       WHERE risiko_id = $3 AND status_kelulusan = 'Menunggu Kelulusan' AND is_deleted = false
+       RETURNING no_rujukan, created_by`,
+      [sebab.trim(), user.pengguna_id, risiko_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Risiko tidak dijumpai atau telah diproses." });
+    }
+
+    const risiko = rows[0];
+
+    try {
+      await catatAktiviti(
+        user.pengguna_id,
+        "Tolak Risiko",
+        `Menolak risiko: ${risiko.no_rujukan}`,
+        `${user.nama_penuh} telah menolak risiko ${risiko.no_rujukan}. Sebab: ${sebab.trim()}`
+      );
+    } catch (e) { console.error("Log error:", e); }
+
+    try {
+      if (risiko.created_by && risiko.created_by !== user.pengguna_id) {
+        await hantarNotifikasi(
+          risiko.created_by,
+          "Risiko Ditolak",
+          `Risiko anda ${risiko.no_rujukan} telah ditolak oleh ${user.nama_penuh}. Sebab: ${sebab.trim()}`,
+          "risiko_ditolak",
+          parseInt(risiko_id)
+        );
+      }
+    } catch (e) { console.error("Notif error:", e); }
+
+    res.json({ message: "Risiko berjaya ditolak." });
+  } catch (err) {
+    console.error("Ralat tolak risiko:", err);
+    res.status(500).json({ message: "Gagal menolak risiko." });
   }
 });
 

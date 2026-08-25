@@ -1,27 +1,21 @@
 import { useState, useEffect } from "react";
+import { Filter } from "lucide-react";
 
 import api from "../../api/api.js";
+
+import PageHeader from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 import FilterModal from "./FilterModal.jsx";
 import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx";
 import DashboardSyarikat from "./DashboardSyarikat.jsx";
-import "./PaparanUtama.css";
 
 // ================================
-// 🟦 Komponen Header Ringkas
-// ================================
-const MinimalHeader = ({ setShowModal }) => (
-  <div className="PaparanUtama-header">
-    <h1>Paparan Utama</h1>
-    <button onClick={() => setShowModal(true)}>Pilih Tapisan</button>
-  </div>
-);
-
-// ================================
-// 🟦 Pemilih Dashboard (All/Syarikat)
+// Pemilih Dashboard (All/Syarikat)
 // ================================
 const DashboardRenderer = ({ filterValues, data, currentUser }) => {
-  const adminRoles = [1, 2]; 
+  const adminRoles = [1, 2];
   const isAdmin = adminRoles.includes(currentUser?.peranan_id);
 
   if (filterValues.syarikat === "Semua Syarikat" && isAdmin) {
@@ -32,7 +26,7 @@ const DashboardRenderer = ({ filterValues, data, currentUser }) => {
 };
 
 // ================================
-// 🟦 Komponen Utama
+// Komponen Utama
 // ================================
 export default function PaparanUtama() {
   const [filterValues, setFilterValues] = useState(null);
@@ -46,10 +40,10 @@ export default function PaparanUtama() {
 
   const [syarikatOptions, setSyarikatOptions] = useState([]);
   const [syarikatLoading, setSyarikatLoading] = useState(true);
-  
+
   const token = localStorage.getItem("token");
 
-  // ----- DIBETULKAN: Ambil data pengguna menggunakan 'api' -----
+  // ----- Ambil data pengguna -----
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!token) {
@@ -58,11 +52,10 @@ export default function PaparanUtama() {
         return;
       }
       try {
-        // Menggunakan api.get() yang automatik ketuk port 5001 dan bawa Token
         const res = await api.get("/users/me");
         setCurrentUser(res.data);
       } catch (err) {
-        console.error("❌ Ralat ambil pengguna:", err);
+        console.error("Ralat ambil pengguna:", err);
         setError(err.response?.data?.error || "Gagal mendapatkan data pengguna.");
       } finally {
         setIsUserLoading(false);
@@ -71,16 +64,16 @@ export default function PaparanUtama() {
     fetchCurrentUser();
   }, [token]);
 
-  // ----- DIBETULKAN: Ambil senarai syarikat menggunakan 'api' -----
+  // ----- Ambil senarai syarikat -----
   useEffect(() => {
     const fetchSyarikat = async () => {
-      if (!token) return; 
+      if (!token) return;
       try {
         setSyarikatLoading(true);
         const res = await api.get("/syarikat");
         setSyarikatOptions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error("❌ Ralat ambil syarikat:", err);
+        console.error("Ralat ambil syarikat:", err);
         setError(err.response?.data?.error || "Gagal memuatkan senarai syarikat.");
         setSyarikatOptions([]);
       } finally {
@@ -97,7 +90,7 @@ export default function PaparanUtama() {
       return;
     }
 
-    const adminRoles = [1, 2]; 
+    const adminRoles = [1, 2];
     const isAdmin = adminRoles.includes(currentUser.peranan_id);
 
     if (isAdmin) {
@@ -123,24 +116,24 @@ export default function PaparanUtama() {
     }
   }, [currentUser, syarikatOptions, isUserLoading, syarikatLoading]);
 
-  // ----- DIBETULKAN: Ambil data dashboard menggunakan 'api' -----
+  // ----- Ambil data dashboard -----
   useEffect(() => {
     if (!filterValues || !token) {
-      return; 
+      return;
     }
 
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const adminRoles = [1, 2];
         const isAdmin = adminRoles.includes(currentUser?.peranan_id);
-        
+
         let finalSyarikatId = filterValues.syarikatId;
 
         if (!isAdmin && filterValues.syarikatId === "Semua") {
-           finalSyarikatId = currentUser.syarikat_id;
+          finalSyarikatId = currentUser.syarikat_id;
         }
 
         const syarikatQuery =
@@ -160,34 +153,45 @@ export default function PaparanUtama() {
     };
 
     fetchDashboardData();
-  }, [filterValues, token, currentUser]); 
+  }, [filterValues, token, currentUser]);
 
   if (isUserLoading || syarikatLoading || !filterValues) {
     return (
-      <div className="PaparanUtama">
-        <MinimalHeader setShowModal={() => {}} />
-        <div className="dashboard-content">
-          <div>Menetapkan paparan untuk anda...</div>
-        </div>
+      <div className="space-y-4">
+        <PageHeader title="Paparan Utama" />
+        <LoadingSpinner text="Menetapkan paparan untuk anda..." />
       </div>
     );
   }
 
   return (
-    <div className="PaparanUtama">
-      <MinimalHeader setShowModal={setShowModal} />
+    <div className="space-y-4">
+      <PageHeader
+        title="Paparan Utama"
+        description={
+          filterValues ? `Paparan: ${filterValues.syarikatName}` : undefined
+        }
+        actions={
+          <Button onClick={() => setShowModal(true)}>
+            <Filter size={14} />
+            Pilih Tapisan
+          </Button>
+        }
+      />
 
-      <div className="dashboard-content">
-        {isLoading && <div>Memuatkan data dashboard...</div>}
-        {error && <div className="dashboard-error">Ralat: {error}</div>}
-        {!isLoading && !error && dashboardData && (
-          <DashboardRenderer
-            filterValues={filterValues}
-            data={dashboardData}
-            currentUser={currentUser} 
-          />
-        )}
-      </div>
+      {isLoading && <LoadingSpinner text="Memuatkan paparan utama..." />}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+      {!isLoading && !error && dashboardData && (
+        <DashboardRenderer
+          filterValues={filterValues}
+          data={dashboardData}
+          currentUser={currentUser}
+        />
+      )}
 
       {showModal && (
         <FilterModal
@@ -195,7 +199,7 @@ export default function PaparanUtama() {
           setFilterValues={setFilterValues}
           setShowModal={setShowModal}
           syarikatOptions={syarikatOptions}
-          currentUser={currentUser} 
+          currentUser={currentUser}
         />
       )}
     </div>

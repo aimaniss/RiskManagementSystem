@@ -1,89 +1,73 @@
-// Fail: JenisKawalanChart.jsx
-
 import React from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
-  Legend,
+  LabelList,
   ResponsiveContainer,
 } from "recharts";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
-// Warna untuk setiap jenis kawalan
-const COLORS = {
-  "Terima": "#17a2b8",
-  "Kurang": "#ffc107",
-  "Elak": "#dc3545",
-  "Pindah": "#6f42c1",
-  "Tiada Rawatan": "#6c757d",
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "8px",
+  fontSize: "12px",
+  color: "var(--color-foreground)",
 };
-
-// <-- DIUBAH: Fungsi untuk memaparkan label (BILANGAN) ditambah -->
-const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
-  // Tentukan kedudukan label di tengah hirisan donut
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  // Jika nilai adalah 0, jangan tunjuk label
-  if (value === 0) {
-    return null;
-  }
-  
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="white" // Warna teks label
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={14}
-      fontWeight="bold"
-    >
-      {value} {/* Papar nilai (cth: 1, 2) */}
-    </text>
-  );
-};
-// <-- TAMAT BLOK PERUBAHAN -->
-
 
 export default function JenisKawalanChart({ data }) {
-  if (!data || data.length === 0) {
+  const isDark = useDarkMode();
+  const gridColor = isDark ? "#3f3f46" : "#e2e8f0";
+  const tickColor = isDark ? "#a1a1aa" : "#64748b";
+  const barColor = isDark ? "#60a5fa" : "#2563eb";
+
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
     return (
-      <div className="chart-no-data">
+      <p className="py-8 text-center text-xs text-muted-foreground">
         Tiada data jenis kawalan untuk dipaparkan.
-      </div>
+      </p>
     );
   }
 
+  const height = Math.max(200, safeData.length * 36 + 20);
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart
+        data={safeData}
+        layout="vertical"
+        margin={{ top: 4, right: 28, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke={gridColor} />
+        <XAxis type="number" hide />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={110}
+          tick={{ fontSize: 11, fill: tickColor }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          cursor={{ fill: isDark ? "rgba(96, 165, 250, 0.08)" : "rgba(37, 99, 235, 0.05)" }}
+          contentStyle={TOOLTIP_STYLE}
+        />
+        <Bar
           dataKey="value"
-          nameKey="name"
-          innerRadius={60} // Ini yang menjadikannya donut
-          outerRadius={110}
-          fill="#8884d8"
-          paddingAngle={5}
-          labelLine={false} // <-- DIUBAH: Sembunyikan garis label
-          label={renderCustomizedLabel} // <-- DIUBAH: Guna fungsi label baru
+          name="Jumlah"
+          fill={barColor}
+          radius={[0, 6, 6, 0]}
+          barSize={18}
         >
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={COLORS[entry.name] || "#8884d8"}
-            />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
+          <LabelList dataKey="value" position="right" fontSize={11} fill={tickColor} />
+        </Bar>
+      </BarChart>
     </ResponsiveContainer>
   );
 }

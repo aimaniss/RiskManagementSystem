@@ -6,6 +6,7 @@
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
+import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 const router = express.Router();
 
@@ -75,6 +76,7 @@ router.get("/", verifyToken, async (req, res) => {
           ) AS rn
         FROM LogPemantauan pm
         JOIN Risiko r ON pm.risiko_id = r.risiko_id
+        WHERE pm.is_deleted = false
       ),
       ButiranTerkini AS (
         SELECT 
@@ -83,6 +85,7 @@ router.get("/", verifyToken, async (req, res) => {
           ARRAY_AGG(DISTINCT kp.butiran_kakitangan) AS kakitangan_terkini
         FROM PelanTindakanPemantauan pt
         LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id
+        WHERE pt.is_deleted = false AND (kp.is_deleted = false OR kp.log_id IS NULL)
         GROUP BY pt.log_id
       )
       SELECT 
@@ -196,10 +199,10 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
         lp.kekerapan_pemantauan, 
         lp.tarikh_pemantauan,
         lp.tarikh_kemaskini,
-        (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log,
-        (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id) AS kakitangan_log
+        (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id AND pt.is_deleted = false) AS pelan_tindakan_log,
+        (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id AND kp.is_deleted = false) AS kakitangan_log
       FROM LogPemantauan lp
-      WHERE lp.risiko_id = $1
+      WHERE lp.risiko_id = $1 AND lp.is_deleted = false
       ORDER BY lp.tahun_pemantauan DESC, lp.tarikh_pemantauan DESC;
     `;
 
@@ -253,7 +256,7 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     }
 
     // 3. Dapatkan Tarikh Log TERAKHIR
-    const logTerakhirQuery = `SELECT tahun_pemantauan, separuh_tahun_pemantauan FROM LogPemantauan WHERE risiko_id = $1 ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC LIMIT 1`;
+      const logTerakhirQuery = `SELECT tahun_pemantauan, separuh_tahun_pemantauan FROM LogPemantauan WHERE risiko_id = $1 AND is_deleted = false ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC LIMIT 1`;
     const logTerakhirResult = await pool.query(logTerakhirQuery, [risiko_id]);
 
     // 4. SEMAKAN #2: (KEKAL SAMA) - Mesti lebih lewat daripada log terakhir (jika ada)
@@ -318,7 +321,7 @@ router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
     let logQuery = `
       SELECT skor_kebarangkalian_selepas AS k, skor_impak_selepas AS i
       FROM logpemantauan
-      WHERE risiko_id = $1
+      WHERE risiko_id = $1 AND is_deleted = false
     `;
     const params = [risiko_id];
 
@@ -408,10 +411,10 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
         lp.justifikasi_pindaan_pemantauan,
         lp.no_bil_kelulusan, lp.kekerapan_pemantauan, 
         lp.tarikh_pemantauan, lp.tarikh_kemaskini, 
-        (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id) AS pelan_tindakan_log, 
-        (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id) AS kakitangan_log 
+        (SELECT ARRAY_AGG(pt.butiran_aktiviti) FROM PelanTindakanPemantauan pt WHERE pt.log_id = lp.log_id AND pt.is_deleted = false) AS pelan_tindakan_log, 
+        (SELECT ARRAY_AGG(kp.butiran_kakitangan) FROM KakitanganPemantauan kp WHERE kp.log_id = lp.log_id AND kp.is_deleted = false) AS kakitangan_log 
       FROM LogPemantauan lp 
-      WHERE lp.risiko_id = $1 
+      WHERE lp.risiko_id = $1 AND lp.is_deleted = false 
       ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC, lp.tarikh_pemantauan ASC
     `;
     
@@ -521,6 +524,20 @@ router.post("/log", verifyToken, async (req, res) => {
     }
 
     await client.query("COMMIT");
+
+    try {
+      const logRingkasan = `Menambah log pemantauan baru (Risiko ID: ${risiko_id}).`;
+      const logPerincian = `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah menambah log pemantauan baru untuk Risiko ID: ${risiko_id}.`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Tambah Log Pemantauan",
+        logRingkasan,
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas TAMBAH log pemantauan:", logErr);
+    }
+
     res.status(201).json({
       message: "Log Pemantauan berjaya ditambah.",
       data: newLog
@@ -544,7 +561,7 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
   const { log_id } = req.params;
 
   try {
-    const check = await client.query("SELECT log_id FROM LogPemantauan WHERE log_id = $1", [log_id]);
+    const check = await client.query("SELECT log_id FROM LogPemantauan WHERE log_id = $1 AND is_deleted = false", [log_id]);
     if (check.rowCount === 0) {
       return res.status(404).json({ message: "Rekod pemantauan tidak dijumpai." });
     }
@@ -552,15 +569,28 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
     // ⭐️ BARU: Mula transaksi
     await client.query("BEGIN");
 
-    // ⭐️ BARU: 1. Padam 'children' dahulu
-    await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
-    await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
+    // ⭐️ BARU: 1. Padam 'children' dahulu (SOFT DELETE)
+    await client.query("UPDATE PelanTindakanPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
+    await client.query("UPDATE KakitanganPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
     
-    // ⭐️ BARU: 2. Padam 'parent'
-    await client.query("DELETE FROM LogPemantauan WHERE log_id = $1", [log_id]);
+    // ⭐️ BARU: 2. Padam 'parent' (SOFT DELETE)
+    await client.query("UPDATE LogPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
 
     // ⭐️ BARU: Tamat transaksi
     await client.query("COMMIT");
+
+    try {
+      const logRingkasan = `Memadam log pemantauan (Log ID: ${log_id}).`;
+      const logPerincian = `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah memadam log pemantauan untuk Risiko ID: ${req.params.log_id}.`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Padam Log Pemantauan",
+        logRingkasan,
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas PADAM log pemantauan:", logErr);
+    }
 
     res.json({ message: "Log pemantauan berjaya dipadam." });
 
@@ -687,6 +717,19 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
     }
     
     await client.query("COMMIT");
+
+    try {
+      const logRingkasan = `Mengemaskini log pemantauan (Log ID: ${log_id}).`;
+      const logPerincian = `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah mengemaskini log pemantauan untuk Risiko ID: ${risiko_id}.`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Kemaskini Log Pemantauan",
+        logRingkasan,
+        logPerincian
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat log selepas KEMASKINI log pemantauan:", logErr);
+    }
 
     res.json({
       message: "✅ Log berjaya dikemaskini",

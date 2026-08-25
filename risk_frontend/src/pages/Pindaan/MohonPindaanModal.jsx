@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { X, CheckSquare } from "lucide-react";
+import { X, CheckSquare, FilePenLine } from "lucide-react";
 
 // Import CSS KHUSUS for this modal
 import './MohonPindaanModal.css';
 import { riskMatrix, getRiskMatrix } from "../../constants/riskMatrix";
+
+// UI Komponen
+import EmptyState from "@/components/ui/empty-state";
 
 // --- Helper function uses the 5x5 matrix directly ---
 const getRiskDetails = (likelihood, impact) => {
@@ -321,22 +324,26 @@ function MohonPindaanModal({ isOpen, onClose, risks = [], ...props }) {
                                 {risks.length === 0 ? (
                                     <tr>
                                         <td colSpan={columnCount} className="pilih-risiko-td td-message">
-                                            Tiada data risiko tersedia.
+                                            <EmptyState icon={FilePenLine} title="Tiada Data Risiko" description="Tiada data risiko tersedia untuk dipinda." />
                                         </td>
                                     </tr>
                                 ) : baseFilteredRisks.length === 0 ? ( 
                                     <tr>
                                         <td colSpan={columnCount} className="pilih-risiko-td td-message">
-                                            Tiada risiko dijumpai dengan kriteria carian ini.
+                                            <EmptyState icon={FilePenLine} title="Tiada Padanan" description="Tiada risiko dijumpai dengan kriteria carian ini." />
                                         </td>
                                     </tr>
                                 ) : risksToDisplay.length === 0 ? (
                                     <tr>
                                         <td colSpan={columnCount} className="pilih-risiko-td td-message">
-                                            {activeTab === 'pemantauan' 
-                                                ? "Tiada risiko dengan tahap risiko yang sah dijumpai untuk penapis ini."
-                                                : "Tiada padanan dijumpai untuk penapis Tahun & Separuh Tahun ini."
-                                            }
+                                            <EmptyState 
+                                                icon={FilePenLine} 
+                                                title="Tiada Padanan" 
+                                                description={activeTab === 'pemantauan' 
+                                                    ? "Tiada risiko dengan tahap risiko yang sah dijumpai untuk penapis ini."
+                                                    : "Tiada padanan dijumpai untuk penapis Tahun & Separuh Tahun ini."
+                                                } 
+                                            />
                                         </td>
                                     </tr>
                                 ) : (

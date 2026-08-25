@@ -1,214 +1,389 @@
 // Fail: DashboardKeseluruhan.jsx
+// Paparan agregat semua syarikat
 
 import React from "react";
-import "./DashboardKeseluruhan.css";
-// Import ikon
 import {
   File,
   RefreshCw,
   Eye,
   Check,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
-// Import logo
-import ukmhLogo from "../../assets/images/Light Background/UKMH_light.png";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LabelList,
+  ResponsiveContainer,
+} from "recharts";
 
-// 1. IMPORT SEMUA KOMPONEN CARTA
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import EmptyState from "@/components/ui/empty-state";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+
 import TahapRisikoChart from "./TahapRisikoChart";
 import KategoriRisikoChart from "./KategoriRisikoChart";
 import JenisKawalanChart from "./JenisKawalanChart";
+import LogoLight from "../../assets/images/Light Background/UKMH_light.png";
+import LogoDark from "../../assets/images/Dark Background/UKMH_dark.png";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
-// <-- DIUBAH: Logik warna ditambah di sini -->
-// Mapping Teks Penuh ke Warna dari riskMatrix anda
-const riskColors = {
-  'Sangat Tinggi': '#ef4444', // Merah (ST)
-  'Tinggi': '#f97316',        // Oren (T)
-  'Sederhana': '#eab308',      // Kuning/Emas (S)
-  'Rendah': '#22c55e',        // Hijau (R)
+// Warna semantik tahap risiko (pengecualian palet dibenarkan)
+const RISK_COLORS = {
+  "Sangat Tinggi": "#ef4444",
+  "Tinggi": "#f97316",
+  "Sederhana": "#eab308",
+  "Rendah": "#22c55e",
 };
 
-// Fungsi helper untuk cipta lencana (badge)
-const renderSkorBadge = (skorLabel) => {
-  // 'skorLabel' kini ialah "Sangat Tinggi", "Tinggi", "Belum Dinilai", dll.
-
-  // Jika label ialah "Belum Dinilai" (atau null/undefined)
-  if (!skorLabel || skorLabel === "Belum Dinilai") {
-    return (
-      <span style={{ fontStyle: 'italic', color: '#6b7280', fontSize: '0.875rem' }}>
-        Belum Dinilai
-      </span>
-    );
-  }
-  
-  // Dapatkan warna, jika tidak jumpa guna kelabu
-  const color = riskColors[skorLabel] || '#6b7280';
-  
-  // Stail (CSS) untuk lencana
-  const badgeStyle = {
-    display: 'inline-block',
-    padding: '0.25rem 0.6rem',
-    borderRadius: '0.375rem',
-    backgroundColor: color,
-    color: '#ffffff', // Teks putih
-    fontWeight: '600',
-    fontSize: '0.875rem',
-    textAlign: 'center',
-    lineHeight: '1.25rem',
-    whiteSpace: 'nowrap' // Elak teks terpotong
+function useChartColors() {
+  const isDark = useDarkMode();
+  return {
+    grid: isDark ? "#3f3f46" : "#e2e8f0",
+    tick: isDark ? "#a1a1aa" : "#64748b",
+    bar: isDark ? "#60a5fa" : "#2563eb",
+    barTutup: isDark ? "#52525b" : "#cbd5e1",
+    cursorFill: isDark ? "rgba(96, 165, 250, 0.08)" : "rgba(37, 99, 235, 0.05)",
   };
-  
-  // Papar teks penuh dalam lencana
+}
+
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "8px",
+  fontSize: "12px",
+  color: "var(--color-foreground)",
+};
+
+const renderTahapBadge = (label) => {
+  if (!label || label === "Belum Dinilai") {
+    return <span className="text-sm italic text-muted-foreground">Belum Dinilai</span>;
+  }
   return (
-    <span style={badgeStyle}>
-      {skorLabel} 
-    </span>
+    <Badge
+      className="border-transparent text-white"
+      style={{ backgroundColor: RISK_COLORS[label] || "#94a3b8" }}
+    >
+      {label}
+    </Badge>
   );
 };
-// <-- TAMAT BLOK PERUBAHAN -->
 
+// Carta trend pendaftaran risiko mengikut tahun
+function TrendPendaftaranChart({ data, colors }) {
+  const safeData = Array.isArray(data) ? data : [];
 
-export default function DashboardKeseluruhan({
-  data, // Semua data akan datang dari 'props' ini
-}) {
-  // === Data Dummy untuk 5 Kad Skor (gantikan dengan data.skor) ===
-  const skorData = [
-    {
-      label: "Jumlah Risiko Buka",
-      value: data?.skor?.jumlahBuka || 0, // Guna data sebenar
-      icon: File,
-      color: "#dc3545",
-    },
-    {
-      label: "Sedang Dilaksanakan",
-      value: data?.skor?.jumlahLaksana || 0, // Guna data sebenar
-      icon: RefreshCw,
-      color: "#ffc107",
-    },
-    {
-      label: "Jumlah Risiko Pemantauan",
-      value: data?.skor?.jumlahPantau || 0, // Guna data sebenar
-      icon: Eye,
-      color: "#0074c8",
-    },
-    {
-      label: "Jumlah Risiko Selesai",
-      value: data?.skor?.jumlahSelesai || 0, // Guna data sebenar
-      icon: Check,
-      color: "#17a2b8",
-    },
-    {
-      label: "Jumlah Risiko Tutup",
-      value: data?.skor?.jumlahTutup || 0, // Guna data sebenar
-      icon: CheckCircle2,
-      color: "#28a745",
-    },
-  ];
-
-  // Guna data sebenar dari props, 'fallback' ke array kosong
-  const topRisksData = data?.topRisks || [];
+  if (safeData.length < 1) {
+    return (
+      <EmptyState
+        title="Tiada trend untuk dipaparkan"
+        description="Belum ada rekod pendaftaran risiko."
+        className="border-0"
+      />
+    );
+  }
 
   return (
-    <div className="dashboard-keseluruhan-layout">
-      {/* Header (Logo dikekalkan, Tajuk dipermudahkan) */}
-      <div className="dashboard-header">
-        <div className="header-left-image">
-          <div className="image-placeholder">
-            <img src={ukmhLogo} alt="Logo UKMH" />
-          </div>
-          <div className="image-caption">Unit Pematuhan & Pengurusan Risiko</div>
-        </div>
-        <div className="header-right-title">
-          <div className="comparison-title">Dashboard Pengurusan Risiko</div>
-          <div className="current-status-title">Status Semasa</div>
-        </div>
-      </div>
+    <ResponsiveContainer width="100%" height={240}>
+      <BarChart data={safeData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={colors.grid} />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 11, fill: colors.tick }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          allowDecimals={false}
+          tick={{ fontSize: 11, fill: colors.tick }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          cursor={{ fill: colors.cursorFill }}
+          contentStyle={TOOLTIP_STYLE}
+        />
+        <Bar
+          dataKey="value"
+          name="Bilangan risiko"
+          fill={colors.bar}
+          radius={[6, 6, 0, 0]}
+          barSize={28}
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
 
-      {/* --- 1. KAD SKOR (VERSI 5 KAD) --- */}
-      <div className="scorecard-container-5">
-        {skorData.map((item, index) => {
+// Carta perbandingan risiko aktif vs tutup antara syarikat
+function PerbandinganSyarikatChart({ data, colors }) {
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
+    return (
+      <p className="py-8 text-center text-xs text-muted-foreground">
+        Tiada data syarikat untuk dipaparkan.
+      </p>
+    );
+  }
+
+  const height = Math.max(180, safeData.length * 40 + 30);
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart
+        data={safeData}
+        layout="vertical"
+        margin={{ top: 4, right: 24, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke={colors.grid} />
+        <XAxis type="number" hide />
+        <YAxis
+          type="category"
+          dataKey="label"
+          width={100}
+          tick={{ fontSize: 11, fill: colors.tick }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          cursor={{ fill: colors.cursorFill }}
+          contentStyle={TOOLTIP_STYLE}
+        />
+        <Legend
+          iconType="circle"
+          wrapperStyle={{ fontSize: "11px", color: colors.tick }}
+        />
+        <Bar
+          dataKey="aktif"
+          stackId="a"
+          name="Aktif"
+          fill={colors.bar}
+          barSize={18}
+        >
+          <LabelList dataKey="aktif" fontSize={11} fill={colors.tick} />
+        </Bar>
+        <Bar
+          dataKey="tutup"
+          stackId="a"
+          name="Tutup"
+          fill={colors.barTutup}
+          radius={[0, 6, 6, 0]}
+          barSize={18}
+        >
+          <LabelList dataKey="tutup" fontSize={11} fill={colors.tick} />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export default function DashboardKeseluruhan({ data }) {
+  const isDark = useDarkMode();
+  const chartColors = useChartColors();
+  const skorCards = [
+    { label: "Jumlah Risiko Buka", value: data?.skor?.jumlahBuka || 0, icon: File },
+    { label: "Sedang Dilaksanakan", value: data?.skor?.jumlahLaksana || 0, icon: RefreshCw },
+    { label: "Jumlah Risiko Pemantauan", value: data?.skor?.jumlahPantau || 0, icon: Eye },
+    { label: "Jumlah Risiko Selesai", value: data?.skor?.jumlahSelesai || 0, icon: Check },
+    { label: "Jumlah Risiko Tutup", value: data?.skor?.jumlahTutup || 0, icon: CheckCircle2 },
+  ];
+
+  const risikoPerhatian = data?.risikoPerhatian || 0;
+  const belumDinilaiAktif = data?.belumDinilaiAktif || 0;
+  const adaPerhatian = risikoPerhatian > 0 || belumDinilaiAktif > 0;
+
+  const topRisksData = data?.topRisks || [];
+  const risikoSyarikatData = data?.risikoSyarikat;
+
+  return (
+    <div className="space-y-4">
+      {/* --- Header berlogo: UKM Holdings (mewakili semua subsidiari) --- */}
+      <Card className="rounded-xl">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="flex h-14 w-32 shrink-0 items-center justify-center rounded-lg border bg-muted px-2">
+            <img src={isDark ? LogoDark : LogoLight} alt="UKM Holdings" className="max-h-full w-auto object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-foreground">UKM Holdings</h2>
+            <p className="text-xs text-muted-foreground">
+              Paparan agregat — semua syarikat subsidiari
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* --- Baris 1: Kad statistik --- */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+        {skorCards.map((item, index) => {
           const IconComponent = item.icon;
           return (
-            <div key={index} className="scorecard-box">
-              <div className="scorecard-icon">
-                <IconComponent style={{ color: item.color }} />
+            <Card key={index} className="rounded-xl p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold leading-tight tabular-nums">
+                    {item.value}
+                  </div>
+                  <div className="mt-1 truncate text-xs text-muted-foreground">
+                    {item.label}
+                  </div>
+                </div>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <IconComponent size={16} className="text-primary" />
+                </div>
               </div>
-              <div className="scorecard-content">
-                <div className="scorecard-value">{item.value}</div>
-                <div className="scorecard-label">{item.label}</div>
-              </div>
-            </div>
+            </Card>
           );
         })}
       </div>
 
-      {/* --- 2. GRID CARTA (KINI 3 CARTA) --- */}
-      <div className="charts-grid-container">
-        {/* Carta 1: Tahap Risiko */}
-        <div className="section-box">
-          <h4 className="section-title-normal">Tahap Risiko</h4>
-          <div className="chart-placeholder-wrapper">
+      {/* --- Baris 1b: Jalur perhatian --- */}
+      {adaPerhatian && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-accent px-4 py-3 text-sm">
+          <AlertTriangle size={16} className="shrink-0 text-primary" />
+          <span className="text-foreground">
+            <b>{risikoPerhatian}</b> risiko aktif berstatus Tinggi/Sangat Tinggi
+            memerlukan perhatian
+            {belumDinilaiAktif > 0 && (
+              <>
+                <span className="mx-2 text-primary">&bull;</span>
+                {belumDinilaiAktif} risiko aktif belum dinilai
+              </>
+            )}
+          </span>
+        </div>
+      )}
+
+      {/* --- Baris 2: Grid carta --- */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-[15px] font-semibold">Tahap Risiko</CardTitle>
+            <CardDescription>Agihan risiko mengikut tahap</CardDescription>
+          </CardHeader>
+          <CardContent>
             <TahapRisikoChart data={data?.tahapRisikoData} />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Carta 2: Kategori Risiko */}
-        <div className="section-box">
-          <h4 className="section-title-normal">Kategori Risiko</h4>
-          <div className="chart-placeholder-wrapper">
+        <Card className="rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-[15px] font-semibold">Kategori Risiko</CardTitle>
+            <CardDescription>Sebaran mengikut kategori risiko</CardDescription>
+          </CardHeader>
+          <CardContent>
             <KategoriRisikoChart data={data?.kategoriRisikoData} />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Carta 3: Jenis Kawalan */}
-        <div className="section-box">
-          <h4 className="section-title-normal">Jenis Kawalan</h4>
-          <div className="chart-placeholder-wrapper">
+        <Card className="rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-[15px] font-semibold">Jenis Kawalan</CardTitle>
+            <CardDescription>Rawatan risiko mengikut jenis kawalan</CardDescription>
+          </CardHeader>
+          <CardContent>
             <JenisKawalanChart data={data?.jenisKawalanData} />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* --- 3. JADUAL RISIKO TERATAS --- */}
-      <div className="table-container">
-        <div className="section-box">
-          <h4 className="section-title-normal">
-            6 Risiko Teratas
-          </h4>
-          <div className="table-wrapper">
-            <table className="top-risks-table">
-              <thead>
-                <tr>
-                  <th>No Rujukan</th>
-                  <th>Nama Risiko</th>
-                  <th>Kategori</th>
-                  <th>Bahagian/Unit</th>
-                  <th>Tahap Risiko Terkini</th>
-                </tr>
-              </thead>
-              <tbody>
+      {/* --- Baris 2b: Trend + Perbandingan Syarikat --- */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="rounded-xl lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-[15px] font-semibold">
+              Trend Pendaftaran Risiko
+            </CardTitle>
+            <CardDescription>Bilangan risiko didaftarkan mengikut tahun</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TrendPendaftaranChart data={data?.trendData} colors={chartColors} />
+          </CardContent>
+        </Card>
+
+        {Array.isArray(risikoSyarikatData) && (
+          <Card className="rounded-xl">
+            <CardHeader>
+              <CardTitle className="text-[15px] font-semibold">
+                Perbandingan Syarikat
+              </CardTitle>
+              <CardDescription>Risiko aktif dan tutup setiap syarikat</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PerbandinganSyarikatChart data={risikoSyarikatData} colors={chartColors} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* --- Baris 3: Jadual risiko teratas --- */}
+      <Card className="rounded-xl">
+        <CardHeader>
+          <CardTitle className="text-[15px] font-semibold">Risiko Teratas</CardTitle>
+          <CardDescription>Enam risiko mengikut tahap kepentingan</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto pb-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>No Rujukan</TableHead>
+                  <TableHead>Nama Risiko</TableHead>
+                  <TableHead>Kategori</TableHead>
+                  <TableHead>Bahagian/Unit</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Tahap Terkini</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {topRisksData.length > 0 ? (
                   topRisksData.map((risk, index) => (
-                    <tr key={index}>
-                      <td>{risk.noRujukan}</td>
-                      <td>{risk.nama}</td>
-                      <td>{risk.kategori}</td>
-                      <td>{risk.bahagian}</td>
-                      {/* <-- DIUBAH: Guna fungsi 'renderSkorBadge' --> */}
-                      <td>
-                        {renderSkorBadge(risk.skor_risiko_terkini)}
-                      </td>
-                    </tr>
+                    <TableRow key={index}>
+                      <TableCell className="whitespace-nowrap font-medium">
+                        {risk.noRujukan || "-"}
+                      </TableCell>
+                      <TableCell className="max-w-[220px] truncate" title={risk.nama}>
+                        {risk.nama || "-"}
+                      </TableCell>
+                      <TableCell>{risk.kategori || "-"}</TableCell>
+                      <TableCell>{risk.bahagian || "-"}</TableCell>
+                      <TableCell>
+                        {risk.status_pemantauan === "Tutup" ? (
+                          <Badge variant="success">{risk.status_pemantauan}</Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {risk.status_pemantauan || "-"}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>{renderTahapBadge(risk.skor_risiko_terkini)}</TableCell>
+                    </TableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan="5">Tiada risiko teratas ditemui.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={6} className="p-4">
+                      <EmptyState title="Tiada risiko" className="border-0" />
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

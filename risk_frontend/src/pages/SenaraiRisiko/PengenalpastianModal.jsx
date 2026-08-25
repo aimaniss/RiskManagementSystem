@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { X, Save } from "lucide-react";
+import { X, Save, FilePenLine, Plus, Trash2, Loader2 } from "lucide-react";
 import api from "../../api/api";
-import "./PengenalpastianModal.css";
 import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
-
-// ✅ NOTA: Fail ini telah diperbetulkan - Kategori kini menggunakan dropdown select
+import Toast from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
     if (!isOpen) return null;
@@ -23,6 +26,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
 
     const [syarikatList, setSyarikatList] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
     
     const authUser = getAuthUser();
     const userRole = authUser?.role || "";
@@ -61,8 +65,8 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
     const handleSubmit = async e => {
         e.preventDefault();
         
-        if (!canEditPengenalpastian) return alert("⚠️ Anda tidak mempunyai kebenaran untuk mengemaskini maklumat risiko.");
-        if (!initialData.risiko_id) return alert("⚠️ ID Risiko tidak sah untuk dikemaskini.");
+        if (!canEditPengenalpastian) return setToast({ variant: "warning", title: "Tidak Dibenarkan", message: "Anda tidak mempunyai kebenaran untuk mengemaskini maklumat risiko." });
+        if (!initialData.risiko_id) return setToast({ variant: "error", title: "Ralat", message: "ID Risiko tidak sah untuk dikemaskini." });
 
         const finalData = { 
             noRujukan: formData.noRujukan,
@@ -85,132 +89,180 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
         setIsSubmitting(true);
         try {
             await api.put(`/risiko/${initialData.risiko_id}`, finalData); 
-            alert("✅ Pengenalpastian Risiko berjaya dikemaskini!");
-            onClose(true);
+            setToast({ variant: "success", title: "Berjaya", message: "Pengenalpastian Risiko berjaya dikemaskini!" });
+            setTimeout(() => onClose(true), 1500);
         } catch (err) {
             console.error("❌ Error kemaskini pengenalpastian:", err.response?.data || err.message);
-            alert("⚠️ Gagal mengemaskini pengenalpastian risiko.");
+            setToast({ variant: "error", title: "Gagal Mengemaskini", message: "Gagal mengemaskini pengenalpastian risiko." });
         } finally { setIsSubmitting(false); }
     };
 
     const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat)?.nama_syarikat || "Memuat...";
+    const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
 
     return (
-        <div className="penilaian-modal-overlay">
-            <div className="penilaian-modal-container">
-                <div className="penilaian-box-header-main">
-                    <span>Kemaskini Pengenalpastian Risiko: {formData.noRujukan}</span>
-                    <button type="button" onClick={() => onClose(false)} className="penilaian-close-btn"><X size={20}/></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="flex max-h-[92vh] w-full max-w-xl flex-col rounded-xl bg-white shadow-xl">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <FilePenLine className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                            <h3 className="truncate text-[15px] font-semibold text-foreground">Kemaskini Pengenalpastian Risiko</h3>
+                            <p className="truncate text-xs text-muted-foreground">No. Rujukan: {formData.noRujukan || "-"}</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onClose(false)}>
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
 
-                <div className="penilaian-modal-content">
-                    <form onSubmit={handleSubmit}>
-                        <div className="penilaian-box">
-                            <div className="penilaian-box-header">Maklumat Asas Risiko</div>
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Maklumat Asas Risiko</h4>
 
-                            <div className="penilaian-info-section">
-                                <div className="penilaian-info-row">
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">No Rujukan:</label>
-                                        <input readOnly value={formData.noRujukan} className="penilaian-input" />
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Tahun:</label>
-                                        <input readOnly value={formData.tahun} className="penilaian-input" />
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Separuh Tahun:</label>
-                                        <input readOnly value={formData.separuhTahun == 1 ? "Pertama" : formData.separuhTahun == 2 ? "Kedua" : ""} className="penilaian-input" />
-                                    </div>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">No Rujukan:</Label>
+                                    <Input readOnly value={formData.noRujukan} className={readOnlyFieldCls} />
                                 </div>
-                                <div className="penilaian-info-row" style={{ marginTop: '0px' }}>
-                                    <div className="penilaian-input-group full-width">
-                                        <label className="penilaian-label">Syarikat:</label>
-                                        <input readOnly value={syarikatName} className="penilaian-input" />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Tahun:</Label>
+                                    <Input readOnly value={formData.tahun} className={readOnlyFieldCls} />
                                 </div>
-
-                                <hr className="penilaian-divider-line" />
-
-                                {/* ✅ PEMBETULAN: Tukar input kepada select dropdown untuk Kategori */}
-                                <div className="penilaian-field-group">
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Kategori Risiko:</label>
-                                        <select 
-                                            name="kategori" 
-                                            value={formData.kategori} 
-                                            onChange={handleChange} 
-                                            className="penilaian-input penilaian-select-dropdown" 
-                                            disabled={!canEditPengenalpastian}
-                                        >
-                                            <option value="">-- Pilih --</option>
-                                            <option>Operasi</option>
-                                            <option>Kewangan</option>
-                                            <option>Strategik</option>
-                                            <option>Pematuhan / Perundangan</option>
-                                        </select>
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Bahagian/Unit:</label>
-                                        <textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="penilaian-textarea" style={{ height: '70px' }} disabled={!canEditPengenalpastian} />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Separuh Tahun:</Label>
+                                    <Input readOnly value={formData.separuhTahun == 1 ? "Pertama" : formData.separuhTahun == 2 ? "Kedua" : ""} className={readOnlyFieldCls} />
                                 </div>
-
-                                <label className="penilaian-label" style={{ marginTop:"12px" }}>Risiko:</label>
-                                <textarea name="risiko" value={formData.risiko} onChange={handleChange} className="penilaian-textarea" placeholder="Huraian Risiko" disabled={!canEditPengenalpastian} />
-
-                                {/* Punca */}
-                                <div style={{ marginTop:"12px" }}>
-                                    <label className="penilaian-label">Punca:</label>
-                                    {formData.punca.map((p, idx) => (
-                                        <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px", gap: '8px' }}>
-                                            <input 
-                                                value={p} 
-                                                onChange={(e) => handleListChange('punca', idx, e.target.value)}
-                                                className="penilaian-input" 
-                                                disabled={!canEditPengenalpastian} 
-                                            />
-                                            {canEditPengenalpastian && (
-                                                <button type="button" onClick={() => handleRemoveListItem('punca', idx)} className="penilaian-close-btn" style={{ background: '#ef4444', color: 'white' }}>X</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {canEditPengenalpastian && (
-                                        <button type="button" onClick={() => handleAddListItem('punca')} className="penilaian-submit-button" style={{ background: '#10b981', marginTop: '5px', padding: '8px 12px' }}>+ Tambah Punca</button>
-                                    )}
-                                </div>
-
-                                {/* Kesan */}
-                                <div style={{ marginTop:"12px" }}>
-                                    <label className="penilaian-label">Kesan:</label>
-                                    {formData.kesan.map((k, idx) => (
-                                        <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px", gap: '8px' }}>
-                                            <input 
-                                                value={k} 
-                                                onChange={(e) => handleListChange('kesan', idx, e.target.value)}
-                                                className="penilaian-input" 
-                                                disabled={!canEditPengenalpastian} 
-                                            />
-                                            {canEditPengenalpastian && (
-                                                <button type="button" onClick={() => handleRemoveListItem('kesan', idx)} className="penilaian-close-btn" style={{ background: '#ef4444', color: 'white' }}>X</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {canEditPengenalpastian && (
-                                        <button type="button" onClick={() => handleAddListItem('kesan')} className="penilaian-submit-button" style={{ background: '#10b981', marginTop: '5px', padding: '8px 12px' }}>+ Tambah Kesan</button>
-                                    )}
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Syarikat:</Label>
+                                    <Input readOnly value={syarikatName} className={readOnlyFieldCls} />
                                 </div>
                             </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kategori Risiko:</Label>
+                                    <Select 
+                                        name="kategori" 
+                                        value={formData.kategori} 
+                                        onChange={handleChange} 
+                                        disabled={!canEditPengenalpastian}
+                                    >
+                                        <option value="">-- Pilih --</option>
+                                        <option>Operasi</option>
+                                        <option>Kewangan</option>
+                                        <option>Strategik</option>
+                                        <option>Pematuhan / Perundangan</option>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Bahagian/Unit:</Label>
+                                    <Textarea name="bahagian" value={formData.bahagian} onChange={handleChange} className="h-[70px] resize-none" disabled={!canEditPengenalpastian} />
+                                </div>
+                            </div>
+
+                            <div className="mt-4 space-y-1.5">
+                                <Label className="text-xs font-medium">Risiko:</Label>
+                                <Textarea name="risiko" value={formData.risiko} onChange={handleChange} placeholder="Huraian Risiko" disabled={!canEditPengenalpastian} />
+                            </div>
                         </div>
-                        
-                        <div className="penilaian-button-group">
-                            <button type="submit" className="penilaian-submit-button" disabled={isSubmitting || !canEditPengenalpastian}>
-                                {isSubmitting ? <span className="penilaian-spinner"></span> : (<><Save size={16} style={{ marginRight: '8px' }}/>Simpan Pengenalpastian</>)}
-                            </button>
+
+                        <div className="rounded-lg border border-border p-4">
+                            <Label className="text-xs font-medium">Punca:</Label>
+                            <div className="mt-2 space-y-2">
+                                {formData.punca.map((p, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                        <Input 
+                                            value={p} 
+                                            onChange={(e) => handleListChange('punca', idx, e.target.value)}
+                                            placeholder={`Punca ${idx + 1}`}
+                                            disabled={!canEditPengenalpastian} 
+                                        />
+                                        {canEditPengenalpastian && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                                                onClick={() => handleRemoveListItem('punca', idx)}
+                                                aria-label="Buang Punca"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {canEditPengenalpastian && (
+                                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => handleAddListItem('punca')}>
+                                    <Plus className="h-4 w-4" />
+                                    Tambah Punca
+                                </Button>
+                            )}
                         </div>
-                    </form>
-                </div>
+
+                        <div className="rounded-lg border border-border p-4">
+                            <Label className="text-xs font-medium">Kesan:</Label>
+                            <div className="mt-2 space-y-2">
+                                {formData.kesan.map((k, idx) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                        <Input 
+                                            value={k} 
+                                            onChange={(e) => handleListChange('kesan', idx, e.target.value)}
+                                            placeholder={`Kesan ${idx + 1}`}
+                                            disabled={!canEditPengenalpastian} 
+                                        />
+                                        {canEditPengenalpastian && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                                                onClick={() => handleRemoveListItem('kesan', idx)}
+                                                aria-label="Buang Kesan"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {canEditPengenalpastian && (
+                                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => handleAddListItem('kesan')}>
+                                    <Plus className="h-4 w-4" />
+                                    Tambah Kesan
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+                        <Button type="button" variant="outline" onClick={() => onClose(false)} disabled={isSubmitting}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting || !canEditPengenalpastian}>
+                            {isSubmitting ? (
+                                <><Loader2 className="h-4 w-4 animate-spin" />Menyimpan...</>
+                            ) : (
+                                <><Save className="h-4 w-4" />Simpan Pengenalpastian</>
+                            )}
+                        </Button>
+                    </div>
+                </form>
             </div>
+
+            {toast && (
+                <Toast
+                    variant={toast.variant}
+                    title={toast.title}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                    autoClose={4000}
+                />
+            )}
         </div>
     );
 }

@@ -57,7 +57,7 @@
   border-bottom: 1px solid var(--border-color); /* Hanya border bawah */
   vertical-align: middle;
   color: var(--color-grey);
-  background-color: #fff;
+  background-color: var(--color-card);
   line-height: 1.5;
 
   /* Buang border sisa */

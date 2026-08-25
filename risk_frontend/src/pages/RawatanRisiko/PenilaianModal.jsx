@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, Save } from "lucide-react";
+import { X, BookOpen, Save, ClipboardList, Loader2 } from "lucide-react";
 import api from "../../api/api";
-import "./PenilaianModal.css";
+import Toast from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
 import { riskMatrix, getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
 import { useSyarikats } from "../../hooks/useSyarikats";
@@ -31,6 +36,7 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const { syarikatList } = useSyarikats();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan(); 
 
     const authUser = getAuthUser();
@@ -87,13 +93,13 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
     const handleSubmit = async e => {
         e.preventDefault();
         
-        if (!canEditPenilaian) return alert("⚠️ Anda tidak mempunyai kebenaran untuk mengemaskini penilaian risiko.");
-        if (!initialData.risiko_id) return alert("⚠️ ID Risiko tidak sah untuk dikemaskini.");
+        if (!canEditPenilaian) return setToast({ variant: "error", title: "Akses Ditolak", message: "Anda tidak mempunyai kebenaran untuk mengemaskini penilaian risiko." });
+        if (!initialData.risiko_id) return setToast({ variant: "error", title: "Ralat", message: "ID Risiko tidak sah untuk dikemaskini." });
 
         const k = formData.skorKebarangkalian;
         const i = formData.skorImpak;
         if ((k && !i) || (!k && i)) {
-            return alert("⚠️ Anda mesti mengisi KEDUA-DUA Skor Kebarangkalian dan Skor Impak, atau TIDAK MENGISI KEDUA-DUANYA.");
+            return setToast({ variant: "warning", title: "Amaran", message: "Anda mesti mengisi KEDUA-DUA Skor Kebarangkalian dan Skor Impak, atau TIDAK MENGISI KEDUA-DUANYA." });
         }
 
         const finalData = { 
@@ -108,106 +114,104 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
         try {
             await api.put(`/rawatan/penilaian/${initialData.risiko_id}`, finalData); 
             
-            alert("✅ Penilaian Risiko berjaya dikemaskini! Status pemantauan dikemaskini kepada: Sedang Dilaksanakan");
+            setToast({ variant: "success", title: "Berjaya", message: "Penilaian Risiko berjaya dikemaskini! Status pemantauan dikemaskini kepada: Sedang Dilaksanakan" });
             onClose(true);
         } catch (err) {
             console.error("❌ Error kemaskini penilaian:", err.response?.data || err.message);
-            alert("⚠️ Gagal mengemaskini penilaian risiko.");
+            setToast({ variant: "error", title: "Ralat", message: "Gagal mengemaskini penilaian risiko." });
         } finally { setIsSubmitting(false); }
     };
 
     const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat_id)?.nama_syarikat || "Memuat...";
+    const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
 
     return (
-        <div className="penilaian-modal-overlay">
-            <div className="penilaian-modal-container">
-                <div className="penilaian-box-header-main">
-                    <span>Penilaian Risiko: {formData.noRujukan}</span>
-                    <button type="button" onClick={() => onClose(false)} className="penilaian-close-btn"><X size={20}/></button>
+        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
+            <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-xl animate-in slide-in-from-bottom-4 duration-200">
+                <div className="flex shrink-0 items-center justify-between border-b px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <ClipboardList className="h-4 w-4" />
+                        </span>
+                        <div>
+                            <h3 className="text-[15px] font-semibold text-foreground">Penilaian Risiko: {formData.noRujukan}</h3>
+                            <p className="text-xs text-muted-foreground">Semak maklumat dan lengkapkan penilaian</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => onClose(false)}>
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
 
-                <div className="penilaian-modal-content">
-                    <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex-1 space-y-4 overflow-y-auto p-5">
 
-                        <div className="penilaian-box">
-                            <div className="penilaian-box-header penilaian-risk-header"> 
-                                <span>Pengenalpastian Risiko (Maklumat Dipaparkan)</span>
-                                <button 
-                                    type="button" 
-                                    className="penilaian-panduan-btn" 
-                                    onClick={openPanduan}
-                                >
-                                    <BookOpen size={16} style={{ marginRight: '6px' }} />
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-4 flex items-center justify-between gap-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pengenalpastian Risiko <span className="normal-case tracking-normal">(maklumat dipaparkan)</span></h4>
+                                <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={openPanduan}>
+                                    <BookOpen className="h-3.5 w-3.5" />
                                     Panduan
-                                </button>
+                                </Button>
                             </div>
 
-                            <div className="penilaian-info-section">
-                                    
-                                <div className="penilaian-info-row">
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">No Rujukan:</label>
-                                        <input readOnly value={formData.noRujukan} className="penilaian-input" />
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Tahun:</label>
-                                        <input readOnly value={formData.tahun} className="penilaian-input" />
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Separuh Tahun:</label>
-                                        <input readOnly value={formData.separuhTahun == 1 ? "Pertama" : formData.separuhTahun == 2 ? "Kedua" : ""} className="penilaian-input" />
-                                    </div>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">No Rujukan:</Label>
+                                    <Input readOnly value={formData.noRujukan} className={readOnlyFieldCls} />
                                 </div>
-                                <div className="penilaian-info-row" style={{ marginTop: '0px' }}>
-                                    <div className="penilaian-input-group full-width">
-                                        <label className="penilaian-label">Syarikat:</label>
-                                        <input readOnly value={syarikatName} className="penilaian-input" />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Tahun:</Label>
+                                    <Input readOnly value={formData.tahun} className={readOnlyFieldCls} />
                                 </div>
-
-                                <hr className="penilaian-divider-line" />
-
-                                <div className="penilaian-field-group">
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Kategori Risiko:</label>
-                                        <input readOnly value={formData.kategori} className="penilaian-input" />
-                                    </div>
-                                    <div className="penilaian-input-group">
-                                        <label className="penilaian-label">Bahagian/Unit:</label>
-                                        <textarea readOnly value={formData.bahagian} className="penilaian-textarea" style={{ height: '70px' }} />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Separuh Tahun:</Label>
+                                    <Input readOnly value={formData.separuhTahun == 1 ? "Pertama" : formData.separuhTahun == 2 ? "Kedua" : ""} className={readOnlyFieldCls} />
                                 </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Syarikat:</Label>
+                                    <Input readOnly value={syarikatName} className={readOnlyFieldCls} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kategori Risiko:</Label>
+                                    <Input readOnly value={formData.kategori} className={readOnlyFieldCls} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Bahagian/Unit:</Label>
+                                    <Textarea readOnly value={formData.bahagian} className={`h-[70px] resize-none ${readOnlyFieldCls}`} />
+                                </div>
+                            </div>
 
-                                <label className="penilaian-label" style={{ marginTop:"12px" }}>Risiko:</label>
-                                <textarea readOnly value={formData.risiko} className="penilaian-textarea" placeholder="Huraian Risiko" />
+                            <div className="mt-4 space-y-1.5">
+                                <Label className="text-xs font-medium">Risiko:</Label>
+                                <Textarea readOnly value={formData.risiko} placeholder="Huraian Risiko" className={`min-h-[70px] ${readOnlyFieldCls}`} />
+                            </div>
 
-                                <div style={{ marginTop:"12px" }}>
-                                    <label className="penilaian-label">Punca:</label>
+                            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Punca:</Label>
                                     {puncaList.filter(p => p && p.trim() !== "").map((p, idx) => (
-                                        <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                                            <input readOnly value={`${idx + 1}. ${p}`} className="penilaian-input" />
-                                        </div>
+                                        <Input key={idx} readOnly value={`${idx + 1}. ${p}`} className={`mb-2 ${readOnlyFieldCls}`} />
                                     ))}
                                 </div>
-
-                                <div style={{ marginTop:"12px" }}>
-                                    <label className="penilaian-label">Kesan:</label>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kesan:</Label>
                                     {kesanList.filter(k => k && k.trim() !== "").map((k, idx) => (
-                                        <div key={idx} style={{ display:"flex", alignItems:"center", marginBottom:"6px" }}>
-                                            <input readOnly value={`${idx + 1}. ${k}`} className="penilaian-input" />
-                                        </div>
+                                        <Input key={idx} readOnly value={`${idx + 1}. ${k}`} className={`mb-2 ${readOnlyFieldCls}`} />
                                     ))}
                                 </div>
                             </div>
                         </div>
 
                         {canEditPenilaian && (
-                            <div className="penilaian-box">
-                                <div className="penilaian-box-header">Penilaian Risiko</div>
-                                <div className="penilaian-risk-wrapper">
-                                    <div className="penilaian-risk-field">
-                                        <label className="penilaian-label">Skor Kebarangkalian:</label>
-                                        <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="penilaian-input penilaian-select-dropdown">
+                            <div className="rounded-lg border border-border p-4">
+                                <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penilaian Risiko</h4>
+
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Skor Kebarangkalian:</Label>
+                                        <select name="skorKebarangkalian" value={formData.skorKebarangkalian} onChange={handleChange} className="flex h-9 w-full appearance-none rounded-lg border border-input bg-transparent px-3 py-1 pr-8 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                                             <option value="">-- Pilih --</option>
                                             {Object.entries(KebarangkalianData).map(([value, label])=> (
                                                 <option key={value} value={value}>
@@ -217,9 +221,9 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                         </select>
                                     </div>
 
-                                    <div className="penilaian-risk-field">
-                                        <label className="penilaian-label">Skor Impak:</label>
-                                        <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="penilaian-input penilaian-select-dropdown">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Skor Impak:</Label>
+                                        <select name="skorImpak" value={formData.skorImpak} onChange={handleChange} className="flex h-9 w-full appearance-none rounded-lg border border-input bg-transparent px-3 py-1 pr-8 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                                             <option value="">-- Pilih --</option>
                                             {Object.entries(ImpakData).map(([value, label])=> (
                                                 <option key={value} value={value}>
@@ -229,20 +233,20 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                         </select>
                                     </div>
 
-                                    <div className="penilaian-risk-field">
-                                        <label className="penilaian-label">Tahap Risiko:</label>
-                                        <input 
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Tahap Risiko:</Label>
+                                        <Input 
                                             type="text" 
                                             value={formData.skorRisiko}
                                             readOnly 
-                                            className="penilaian-input penilaian-risk-score" 
-                                            style={{ background: riskColor, textAlign:"center" }} 
+                                            className="cursor-default text-center font-semibold"
+                                            style={{ background: riskColor, textAlign:"center", color: riskColor === "#f1f5f9" ? '#475569' : '#ffffff' }} 
                                         />
                                     </div>
 
-                                    <div className="penilaian-risk-field">
-                                        <label className="penilaian-label">Status Risiko:</label>
-                                        <input
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Status Risiko:</Label>
+                                        <Input
                                             type="text"
                                             readOnly
                                             value={
@@ -252,26 +256,31 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
                                                         ? "Tidak (Risiko rendah-tiada tindakan)"
                                                         : ""
                                             }
-                                            // INI PERUBAHAN UTAMA: Hanya guna class CSS, buang inline style yg bertindih.
-                                            className="penilaian-input penilaian-status-risk"
+                                            className={`${readOnlyFieldCls} text-xs`}
                                         />
                                     </div>
                                 </div>
                             </div>
                         )}
-                        
-                        <div className="penilaian-button-group">
-                            <button type="submit" className="penilaian-submit-button" disabled={isSubmitting || !canEditPenilaian}>
-                                {isSubmitting ? <span className="penilaian-spinner"></span> : (<><Save size={16} style={{ marginRight: '8px' }}/>Simpan Penilaian</>)}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div className="flex shrink-0 justify-end gap-2 border-t bg-white px-5 py-3">
+                        <Button type="submit" disabled={isSubmitting || !canEditPenilaian}>
+                            {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" />Menyimpan...</>) : (<><Save className="h-4 w-4" />Simpan Penilaian</>)}
+                        </Button>
+                    </div>
+                </form>
 
                 {PanduanRenderer}
 
             </div>
         </div>
+        {toast && (
+            <div className="fixed top-[64px] right-4 z-[60] max-w-sm">
+                <Toast variant={toast.variant} title={toast.title} message={toast.message} onClose={() => setToast(null)} />
+            </div>
+        )}
+        </>
     );
 }
 

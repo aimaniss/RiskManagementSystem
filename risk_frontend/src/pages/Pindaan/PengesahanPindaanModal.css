@@ -13,7 +13,7 @@
 }
 
 .pengesahan-modal-dialog {
-  background: #ffffff;
+  background: var(--color-card);
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   width: 95%;
@@ -83,7 +83,7 @@
   justify-content: flex-end;
   gap: 12px;
   border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  background: var(--color-muted);
 }
 
 /* Guna semula kelas 'btn' dari CSS utama anda */
@@ -109,7 +109,7 @@
 }
 
 .comparison-table th {
-  background-color: #f9fafb;
+  background-color: var(--color-muted);
   font-weight: 600;
   color: #4b5563;
 }

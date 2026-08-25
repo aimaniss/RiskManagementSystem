@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./sidebar.jsx";
 import Navbar from "./navbar.jsx";
 
+const SIDEBAR_WIDTH = 220;
+const NAVBAR_HEIGHT = 56;
+
 export default function AppLayout({ children }) {
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Apply/remove class pada body bila modal buka/tutup
   useEffect(() => {
     if (modalOpen) {
       document.body.classList.add("modal-open");
@@ -14,19 +16,23 @@ export default function AppLayout({ children }) {
     }
   }, [modalOpen]);
 
-  // Pass function toggle ke children
   const handleModalToggle = (isOpen) => setModalOpen(isOpen);
 
   return (
-    <div className="app-wrapper" style={{ display: "flex" }}>
+    <div className="min-h-screen bg-background">
       <Sidebar />
-      <div style={{ marginLeft: "210px", flex: 1 }}>
+      <div style={{ marginLeft: `${SIDEBAR_WIDTH}px` }}>
         <Navbar />
-        <div style={{ padding: "60px 20px 20px 20px" }}>
-          {React.Children.map(children, (child) =>
-            React.cloneElement(child, { setModalOpen: handleModalToggle })
-          )}
-        </div>
+        <main
+          style={{ paddingTop: `${NAVBAR_HEIGHT + 20}px` }}
+          className="px-6 pb-10"
+        >
+          <div className="mx-auto w-full max-w-[1440px]">
+            {React.Children.map(children, (child) =>
+              React.cloneElement(child, { setModalOpen: handleModalToggle })
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );

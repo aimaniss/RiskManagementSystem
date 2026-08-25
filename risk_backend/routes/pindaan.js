@@ -6,6 +6,8 @@
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
+import { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenggunaIdByPeranan } from "../utils/notifikasi.js";
+import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 const router = express.Router();
 
@@ -306,6 +308,48 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
     ]);
 
     await client.query("COMMIT");
+
+    const { rows: countRows } = await pool.query(
+      `SELECT COUNT(*) as cnt FROM permohonan_pindaan WHERE EXTRACT(YEAR FROM created_at) = $1 AND is_deleted = false`,
+      [new Date().getFullYear()]
+    );
+    const seqNum = parseInt(countRows[0].cnt) + 1;
+    const noRujukanPindaan = `PIN-${String(seqNum).padStart(3, '0')}/${new Date().getFullYear()}`;
+    await pool.query(
+      `UPDATE permohonan_pindaan SET no_rujukan_pindaan = $1 WHERE pindaan_id = $2`,
+      [noRujukanPindaan, newPermohonan.rows[0].pindaan_id]
+    );
+
+    newPermohonan.rows[0].no_rujukan_pindaan = noRujukanPindaan;
+
+    try {
+      if (nama_peranan !== "Admin") {
+        const adminIds = await dapatkanPenggunaIdByPeranan("Admin");
+        if (adminIds.length > 0) {
+          const { rows: risikoRow } = await pool.query(`SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [risk_id]);
+          const noRujukan = risikoRow[0]?.no_rujukan || `ID ${risk_id}`;
+          const tajuk = "Permohonan Pindaan Baru";
+          const mesej = `${req.user.nama_penuh} telah memohon pindaan untuk risiko ${noRujukan}.`;
+          await hantarNotifikasiBulk(adminIds, tajuk, mesej, "pindaan_baru", newPermohonan.rows[0].pindaan_id);
+        }
+      }
+    } catch (notifErr) {
+      console.error("Gagal menghantar notifikasi pindaan baru:", notifErr);
+    }
+
+    try {
+      const { rows: risikoRow2 } = await pool.query(`SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [risk_id]);
+      const noRujukanRisiko = risikoRow2[0]?.no_rujukan || `ID ${risk_id}`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Hantar Permohonan Pindaan",
+        `${req.user.nama_penuh} menghantar permohonan pindaan untuk risiko ${noRujukanRisiko}`,
+        `Pemohon: ${req.user.nama_penuh} (${req.user.staff_id})\nRisiko: ${noRujukanRisiko}\nNo Rujukan Pindaan: ${noRujukanPindaan}\nStatus: ${status_permohonan}`
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat aktiviti pindaan baru:", logErr);
+    }
+
     res.status(201).json({
       message: "Permohonan pindaan berjaya dihantar.",
       data: newPermohonan.rows[0],
@@ -334,7 +378,8 @@ router.get("/stats", verifyToken, authorizeRoles("Admin"), async (req, res) => {
                 COUNT(*) FILTER (WHERE status_permohonan = 'Diluluskan') AS diluluskan,
                 COUNT(*) FILTER (WHERE status_permohonan = 'Ditolak') AS ditolak
             FROM
-                permohonan_pindaan;
+                permohonan_pindaan
+            WHERE is_deleted = false;
         `;
         
         const { rows } = await pool.query(query);
@@ -389,6 +434,7 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
         r.separuh_tahun AS separuh_tahun_daftar,
         u.nama_penuh AS nama_pemohon,
         s.nama_syarikat,
+        s.singkatan AS singkatan_syarikat,
         lt.tahun_pemantauan,
         lt.separuh_tahun_pemantauan
       FROM permohonan_pindaan p
@@ -396,7 +442,7 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
       JOIN pengguna u ON p.pengguna_id_pemohon = u.pengguna_id -- Pastikan pengguna_id_pemohon adalah INTEGER
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN LogTerkini lt ON p.risiko_id = lt.risiko_id AND lt.rn = 1
-      WHERE 1=1
+      WHERE 1=1 AND p.is_deleted = false
     `;
 
     const params = [];
@@ -412,6 +458,11 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
     if (user.nama_peranan === "Admin" && syarikat_id && syarikat_id !== "Semua") {
       query += ` AND CAST(r.syarikat_id AS INTEGER) = $${paramIndex++}`;
       params.push(syarikat_id);
+    }
+
+    // Filter untuk senarai tugasan: hanya pindaan yang menunggu kelulusan
+    if (req.query.tugasan === "true") {
+      query += ` AND p.status_permohonan = 'Menunggu Kelulusan'`;
     }
 
     query += ` ORDER BY p.created_at DESC;`;
@@ -530,6 +581,36 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
     const updatedPermohonan = await client.query(updatePermohonanQuery, [adminIntegerId, pindaan_id]); // Guna ID INTEGER Admin
 
     await client.query("COMMIT");
+
+    try {
+      const { rows: risikoRow } = await pool.query(`SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [risiko_id]);
+      const noRujukan = risikoRow[0]?.no_rujukan || `ID ${risiko_id}`;
+      const tajuk = "Pindaan Diluluskan";
+      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah diluluskan oleh Admin.`;
+      await hantarNotifikasi(pengguna_id_pemohon, tajuk, mesej, "pindaan_diluluskan", parseInt(pindaan_id));
+    } catch (notifErr) {
+      console.error("Gagal menghantar notifikasi kelulusan:", notifErr);
+    }
+
+    try {
+      const { rows: pindaanInfo } = await pool.query(
+        `SELECT no_rujukan_pindaan FROM permohonan_pindaan WHERE pindaan_id = $1`, [pindaan_id]
+      );
+      const { rows: risikoInfo } = await pool.query(
+        `SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [risiko_id]
+      );
+      const noRujukanPindaan = pindaanInfo[0]?.no_rujukan_pindaan || `ID ${pindaan_id}`;
+      const noRujukanRisiko = risikoInfo[0]?.no_rujukan || `ID ${risiko_id}`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Luluskan Pindaan",
+        `${req.user.nama_penuh} meluluskan pindaan ${noRujukanPindaan} untuk risiko ${noRujukanRisiko}`,
+        `Admin: ${req.user.nama_penuh} (${req.user.staff_id})\nNo Rujukan Pindaan: ${noRujukanPindaan}\nRisiko: ${noRujukanRisiko}\nStatus: Diluluskan`
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat aktiviti kelulusan pindaan:", logErr);
+    }
+
     res.json({ message: "Permohonan berjaya diluluskan.", data: updatedPermohonan.rows[0] });
 
   } catch (err) {
@@ -567,6 +648,37 @@ router.put("/:pindaan_id/reject", verifyToken, authorizeRoles("Admin"), async (r
     if (rows.length === 0) {
       return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
     }
+
+    try {
+      const permohonan = rows[0];
+      const { rows: risikoRow } = await pool.query(`SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [permohonan.risiko_id]);
+      const noRujukan = risikoRow[0]?.no_rujukan || `ID ${permohonan.risiko_id}`;
+      const tajuk = "Pindaan Ditolak";
+      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah ditolak.${komen_pelulus ? ` Sebab: ${komen_pelulus}` : ""}`;
+      await hantarNotifikasi(permohonan.pengguna_id_pemohon, tajuk, mesej, "pindaan_ditolak", parseInt(pindaan_id));
+    } catch (notifErr) {
+      console.error("Gagal menghantar notifikasi penolakan:", notifErr);
+    }
+
+    try {
+      const { rows: pindaanInfo } = await pool.query(
+        `SELECT no_rujukan_pindaan, risiko_id FROM permohonan_pindaan WHERE pindaan_id = $1`, [pindaan_id]
+      );
+      const { rows: risikoInfo } = await pool.query(
+        `SELECT no_rujukan FROM risiko WHERE risiko_id = $1`, [pindaanInfo[0].risiko_id]
+      );
+      const noRujukanPindaan = pindaanInfo[0]?.no_rujukan_pindaan || `ID ${pindaan_id}`;
+      const noRujukanRisiko = risikoInfo[0]?.no_rujukan || `ID ${pindaanInfo[0].risiko_id}`;
+      await catatAktiviti(
+        req.user.pengguna_id,
+        "Tolak Pindaan",
+        `${req.user.nama_penuh} menolak pindaan ${noRujukanPindaan} untuk risiko ${noRujukanRisiko}`,
+        `Admin: ${req.user.nama_penuh} (${req.user.staff_id})\nNo Rujukan Pindaan: ${noRujukanPindaan}\nRisiko: ${noRujukanRisiko}\nStatus: Ditolak${komen_pelulus ? `\nSebab Penolakan: ${komen_pelulus}` : ""}`
+      );
+    } catch (logErr) {
+      console.error("Gagal mencatat aktiviti penolakan pindaan:", logErr);
+    }
+
     res.json({ message: "Permohonan telah ditolak.", data: rows[0] });
   } catch (err) {
     console.error("❌ Ralat PUT /pindaan/:pindaan_id/reject:", err);

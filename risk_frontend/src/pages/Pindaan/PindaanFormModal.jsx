@@ -6,6 +6,9 @@ import './PindaanFormModal.css';
 import PengesahanPindaanModal from './PengesahanPindaanModal';
 import { riskMatrix, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
 
+// UI Komponen
+import Toast from "@/components/ui/toast";
+
 // --- (MULA) DESKRIPSI SKOR MENGIKUT JADUAL YANG DIBERIKAN (JADUAL 2 & 3) ---
 const likelihoodDescriptions = KebarangkalianData;
 const impactDescriptions = ImpakData;
@@ -194,6 +197,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [dataToConfirm, setDataToConfirm] = useState(null);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         if (risk && isOpen) {
@@ -267,7 +271,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         const { before, after } = findChanges(originalData, currentData);
 
         if (Object.keys(before).length === 0) {
-            alert("ℹ️ Tiada perubahan dikesan pada skor.");
+            setToast({ variant: "info", title: "Tiada Perubahan", message: "Tiada perubahan dikesan pada skor." });
             return;
         }
 
@@ -279,11 +283,11 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
 
         // Validasi Justifikasi hanya jika blok skor yang berkaitan DIPAPARKAN
         if (hasInitialAssessmentScore && hasPenilaianChanges && !justifikasiPenilaian.trim()) {
-            alert("Sila isi justifikasi untuk Pindaan Penilaian.");
+            setToast({ variant: "warning", title: "Justifikasi Diperlukan", message: "Sila isi justifikasi untuk Pindaan Penilaian." });
             return;
         }
         if (hasMonitoringData && hasKeberkesananChanges && !justifikasiKeberkesanan.trim()) {
-            alert("Sila isi justifikasi untuk Pindaan Keberkesanan.");
+            setToast({ variant: "warning", title: "Justifikasi Diperlukan", message: "Sila isi justifikasi untuk Pindaan Keberkesanan." });
             return;
         }
 
@@ -417,6 +421,17 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
                 perubahan={dataToConfirm?.perubahan}
                 isSubmitting={isSubmitting}
             />
+
+            {toast && (
+                <div className="fixed top-[64px] right-4 z-50 max-w-sm">
+                    <Toast
+                        variant={toast.variant}
+                        title={toast.title}
+                        message={toast.message}
+                        onClose={() => setToast(null)}
+                    />
+                </div>
+            )}
         </>
     );
 }

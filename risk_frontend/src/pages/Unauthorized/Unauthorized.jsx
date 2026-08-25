@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldOff, LogIn } from "lucide-react";
 import "./Unauthorized.css";
-import ukmhLogo from "../../assets/images/Light Background/UKMH_light.png";
+import ukmhLogoLight from "../../assets/images/Light Background/UKMH_light.png";
+import ukmhLogoDark from "../../assets/images/Dark Background/UKMH_dark.png";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
 export default function Unauthorized() {
   const navigate = useNavigate();
+  const isDark = useDarkMode();
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function Unauthorized() {
       <div className="unauth-overlay" />
 
       <div className="unauth-card">
-        <img src={ukmhLogo} alt="Logo UKM Holdings" className="unauth-logo" />
+        <img src={isDark ? ukmhLogoDark : ukmhLogoLight} alt="Logo UKM Holdings" className="unauth-logo" />
 
         <div className="unauth-icon-wrapper">
           <ShieldOff size={48} strokeWidth={1.5} />

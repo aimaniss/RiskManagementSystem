@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import jwt from "jsonwebtoken";
+import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 export const login = async (req, res) => {
   const { staff_id, katalaluan } = req.body;
@@ -35,6 +36,13 @@ console.log("===============================");
       process.env.JWT_SECRET,
       { expiresIn: "5d" }
     );
+
+    await catatAktiviti({
+      pengguna_id: user.pengguna_id,
+      aktiviti: "Log Masuk",
+      ringkasan: `${user.nama_penuh} telah log masuk ke sistem.`,
+      perincian: `${user.nama_penuh} (ID Staf: ${user.staff_id}, Peranan: ${user.nama_peranan}) telah berjaya log masuk pada ${new Date().toLocaleString('ms-MY')}.`,
+    });
 
     res.json({ token, user: { nama: user.nama_penuh, peranan: user.nama_peranan } });
   } catch (err) {

@@ -4,6 +4,9 @@ import ComparisonView from './ComparisonView';
 // Import CSS KHUSUS for this modal
 import './PindaanDetailsModal.css'; // Make sure this CSS is loaded
 
+// UI Komponen
+import Toast from "@/components/ui/toast";
+
 // StatusBadge Component
 const StatusBadge = ({ status }) => {
     let badgeClass = "badge-default";
@@ -33,6 +36,7 @@ const StatusBadge = ({ status }) => {
 
 function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction }) {
     const [adminComment, setAdminComment] = useState("");
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         setAdminComment("");
@@ -63,6 +67,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
     const showAdminActions = userRole === "Admin" && statusPermohonan === "Menunggu Kelulusan";
 
     return (
+        <>
         <div className="modal-overlay">
             <div className="modal-dialog modal-details">
                 <div className="modal-header">
@@ -177,7 +182,7 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                         <div className="admin-actions">
                             <button
                                 onClick={() => {
-                                    if(!adminComment.trim()){ alert("Sila isi komen untuk menolak."); return; }
+                                    if(!adminComment.trim()){ setToast({ variant: "warning", title: "Komen Diperlukan", message: "Sila isi komen untuk menolak." }); return; }
                                     onAction(pindaanId, 'menolak', adminComment);
                                 }}
                                 className="btn btn-danger">
@@ -193,6 +198,18 @@ function PindaanDetailsModal({ isOpen, amendment, userRole, onClose, onAction })
                 </div>
             </div>
         </div>
+
+        {toast && (
+            <div className="fixed top-[64px] right-4 z-50 max-w-sm">
+                <Toast
+                    variant={toast.variant}
+                    title={toast.title}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                />
+            </div>
+        )}
+        </>
     );
 }
 

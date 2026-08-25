@@ -1,739 +1,603 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, Loader2, Trash2, PlusCircle, Pencil } from "lucide-react";
-import "./EditPemantauan.css";
+import { X, BookOpen, Trash2, PlusCircle, Pencil, Activity, ClipboardList } from "lucide-react";
+import ConfirmModal from "@/components/ui/confirm-modal";
+import Toast from "@/components/ui/toast";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import EmptyState from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
 import api from "../../api/api";
 import TambahLogModal from "./TambahLogModal";
 import ListDisplay from "../../components/ListDisplay";
-import { getAuthUser } from "../../utils/auth";
-import { riskMatrix, getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
+import { getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
 import { formatSeparuhTahun } from "../../utils/formatters";
 import { usePanduan } from "../../hooks/usePanduan";
+import { jwtDecode } from "jwt-decode";
 
-// KOMPONEN UTAMA EDIT PEMANTAUAN
+const LOG_TABLE_HEADERS = [
+  "Tahun",
+  "Separuh Tahun",
+  "Pelan Tindakan",
+  "Kekerapan Pemantauan",
+  "Kakitangan Bertanggungjawab",
+  "Skor Kebarangkalian",
+  "Skor Impak",
+  "Tahap Risiko",
+  "Keberkesanan",
+  "Status Pemantauan",
+  "Kelulusan",
+  "Catatan",
+  "Pindaan Keberkesanan",
+];
+
+const getKeberkesananBadgeClass = (value) => {
+  const v = (value || "").toLowerCase();
+  if (v.startsWith("ya")) return "bg-success/10 text-success";
+  if (v.includes("kurang")) return "bg-warning/10 text-warning";
+  if (v.includes("tidak")) return "bg-destructive/10 text-destructive";
+  return "bg-muted text-muted-foreground";
+};
 
 export default function EditPemantauan({ isOpen, risk, onClose }) {
   const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
   const [isTambahLogModalOpen, setIsTambahLogModalOpen] = useState(false);
-  const [logData, setLogData] = useState([]);
-  const [isLoadingLog, setIsLoadingLog] = useState(false);
-  const [logToEdit, setLogToEdit] = useState(null);
+  const [logData, setLogData] = useState([]);
+  const [isLoadingLog, setIsLoadingLog] = useState(false);
+  const [logToEdit, setLogToEdit] = useState(null);
 
-  // ⭐️ 1. STATE BAHARU UNTUK KAWAL MOD
-  const [modalMode, setModalMode] = useState("tambah"); // 'tambah', 'edit', atau 'papar'
+  const [modalMode, setModalMode] = useState("tambah");
 
-  const [data, setData] = useState({
-    risiko_id: null,
-    planTindakan: [],
-    kakitanganBertanggungjawab: [],
-    jenisKawalan: "",
-    tempohSiap: "",
-    punca: [],
-    kesan: [],
-    skor_kebarangkalian: null,
-    skor_impak: null,
-    tahap_risiko: "",
-    no_rujukan: "",
-    tahun: "",
-    separuh_tahun: null,
-      nama_syarikat: "",
-    kategori: "",
-    bahagian: "",
-    risiko: "",
-    status_risiko: "",
-    status_risiko_desc: "",
-    justifikasi_pindaan_penilaian: "",
-  });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmFn, setConfirmFn] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const [riskColor, setRiskColor] = useState("#f1f5f9");
+  const [data, setData] = useState({
+    risiko_id: null,
+    planTindakan: [],
+    kakitanganBertanggungjawab: [],
+    jenisKawalan: "",
+    tempohSiap: "",
+    punca: [],
+    kesan: [],
+    skor_kebarangkalian: null,
+    skor_impak: null,
+    tahap_risiko: "",
+    no_rujukan: "",
+    tahun: "",
+    separuh_tahun: null,
+    nama_syarikat: "",
+    kategori: "",
+    bahagian: "",
+    risiko: "",
+    status_risiko: "",
+    status_risiko_desc: "",
+    justifikasi_pindaan_penilaian: "",
+  });
 
-  // --- Logik untuk dapatkan peranan (role) pengguna ---
-  let userRole = null;
-  try {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const user = jwtDecode(token);
-      userRole = user?.nama_peranan;
-    }
-  } catch (err) {
-    console.error("Invalid token:", err);
-  }
-  
-  // Tentukan siapa yang boleh nampak lajur Tindakan
-  const canViewTindakanColumn =
-    userRole === "Admin" || userRole === "Executive" || userRole === "Staff";
+  const [riskColor, setRiskColor] = useState("#f1f5f9");
 
-  const fetchLog = async (risikoId) => {
-    if (!risikoId) return;
-    setIsLoadingLog(true);
-    try {
-      const response = await api.get(`/pemantauan-risiko/${risikoId}/sejarah`);
-      const logArray = response.data || [];
-      // Susun log: yang terbaru (tarikh paling tinggi) di atas (index 0)
+  let userRole = null;
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const user = jwtDecode(token);
+      userRole = user?.nama_peranan;
+    }
+  } catch (err) {
+    console.error("Invalid token:", err);
+  }
+
+  const canViewTindakanColumn =
+    userRole === "Admin" || userRole === "Executive" || userRole === "Staff";
+
+  const fetchLog = async (risikoId) => {
+    if (!risikoId) return;
+    setIsLoadingLog(true);
+    try {
+      const response = await api.get(`/pemantauan-risiko/${risikoId}/sejarah`);
+      const logArray = response.data || [];
       const sortedLog = logArray.sort((a, b) => {
-        if (b.tahun_pemantauan !== a.tahun_pemantauan) {
-          return b.tahun_pemantauan - a.tahun_pemantauan;
-        }
-        // Jika tahun sama, susun ikut separuh tahun
-        if (b.separuh_tahun_pemantauan !== a.separuh_tahun_pemantauan) {
-          return b.separuh_tahun_pemantauan - a.separuh_tahun_pemantauan;
+        if (b.tahun_pemantauan !== a.tahun_pemantauan) {
+          return b.tahun_pemantauan - a.tahun_pemantauan;
         }
-        // Jika separuh tahun pun sama, susun ikut tarikh kemaskini/pemantauan
+        if (b.separuh_tahun_pemantauan !== a.separuh_tahun_pemantauan) {
+          return b.separuh_tahun_pemantauan - a.separuh_tahun_pemantauan;
+        }
         return new Date(b.tarikh_kemaskini || b.tarikh_pemantauan) - new Date(a.tarikh_kemaskini || a.tarikh_pemantauan);
-      });
-      setLogData(sortedLog);
-    } catch (err) {
-      console.error("❌ Gagal fetch log pemantauan:", err);
-      setLogData([]);
-    } finally {
-      setIsLoadingLog(false);
-    }
-  };
+      });
+      setLogData(sortedLog);
+    } catch (err) {
+      console.error("❌ Gagal fetch log pemantauan:", err);
+      setLogData([]);
+    } finally {
+      setIsLoadingLog(false);
+    }
+  };
 
-  useEffect(() => {
-    if (!isOpen || !risk?.id) return;
+  useEffect(() => {
+    if (!isOpen || !risk?.id) return;
 
-    const risikoId = risk.id;
-    fetchLog(risikoId);
+    const risikoId = risk.id;
+    fetchLog(risikoId);
 
-    const getRiskArray = (key1, key2) => {
-      const arr = risk[key1] || risk[key2] || [];
-      return Array.isArray(arr) ? arr : [];
-    };
+    const getRiskArray = (key1, key2) => {
+      const arr = risk[key1] || risk[key2] || [];
+      return Array.isArray(arr) ? arr : [];
+    };
 
-    const initialData = {
-      risiko_id: risikoId,
-      no_rujukan: risk.no_rujukan || "-",
-      tahun: risk.tahun_asal || risk.tahun || "-",
-      separuh_tahun: risk.separuh_tahun_asal || risk.separuh_tahun,
+    const initialData = {
+      risiko_id: risikoId,
+      no_rujukan: risk.no_rujukan || "-",
+      tahun: risk.tahun_asal || risk.tahun || "-",
+      separuh_tahun: risk.separuh_tahun_asal || risk.separuh_tahun,
       nama_syarikat: risk.nama_syarikat || "-",
-      kategori: risk.kategori || "-",
-      bahagian: risk.bahagian || risk.bahagian_unit || "-",
-      risiko: risk.risiko || "-",
-      punca: getRiskArray("punca_risiko_data", "punca"),
-      kesan: getRiskArray("kesan_risiko_data", "kesan"),
-      skor_kebarangkalian:
-        risk.skor_kebarangkalian_sebelum || risk.skor_kebarangkalian,
-      skor_impak: risk.skor_impak_sebelum || risk.skor_impak,
-      jenisKawalan: risk.jenis_kawalan || "-",
-      tempohSiap: risk.tempoh_jangkaan_siap || "-",
-      planTindakan: getRiskArray(
-        "plan_tindakan",
-        "rawatan_plan_tindakan"
-      ),
-      kakitanganBertanggungjawab: getRiskArray(
-        "kakitangan_bertanggungjawab",
-        "rawatan_kakitangan_bertanggungjawab"
-      ),
-      status_risiko: "",
-      status_risiko_desc: "",
-      justifikasi_pindaan_penilaian:
-        risk.justifikasi_pindaan_penilaian || "-",
-    };
+      kategori: risk.kategori || "-",
+      bahagian: risk.bahagian || risk.bahagian_unit || "-",
+      risiko: risk.risiko || "-",
+      punca: getRiskArray("punca_risiko_data", "punca"),
+      kesan: getRiskArray("kesan_risiko_data", "kesan"),
+      skor_kebarangkalian:
+        risk.skor_kebarangkalian_sebelum || risk.skor_kebarangkalian,
+      skor_impak: risk.skor_impak_sebelum || risk.skor_impak,
+      jenisKawalan: risk.jenis_kawalan || "-",
+      tempohSiap: risk.tempoh_jangkaan_siap || "-",
+      planTindakan: getRiskArray(
+        "plan_tindakan",
+        "rawatan_plan_tindakan"
+      ),
+      kakitanganBertanggungjawab: getRiskArray(
+        "kakitangan_bertanggungjawab",
+        "rawatan_kakitangan_bertanggungjawab"
+      ),
+      status_risiko: "",
+      status_risiko_desc: "",
+      justifikasi_pindaan_penilaian:
+        risk.justifikasi_pindaan_penilaian || "-",
+    };
 
-    setData(initialData);
-  }, [isOpen, risk]);
+    setData(initialData);
+  }, [isOpen, risk]);
 
-  useEffect(() => {
-    const kAwal = parseInt(data.skor_kebarangkalian);
-    const iAwal = parseInt(data.skor_impak);
-    let tahapRisiko = "-";
-    let warnaRisiko = "#f1f5f9";
-    let status = "-";
-    let statusDesc = "-";
+  useEffect(() => {
+    const kAwal = parseInt(data.skor_kebarangkalian);
+    const iAwal = parseInt(data.skor_impak);
+    let tahapRisiko = "-";
+    let warnaRisiko = "#f1f5f9";
+    let status = "-";
+    let statusDesc = "-";
 
-    if (kAwal >= 1 && kAwal <= 5 && iAwal >= 1 && iAwal <= 5) {
-      const { label, color } = getRiskMatrix(kAwal, iAwal);
-      tahapRisiko = label;
-      warnaRisiko = color;
+    if (kAwal >= 1 && kAwal <= 5 && iAwal >= 1 && iAwal <= 5) {
+      const { label, color } = getRiskMatrix(kAwal, iAwal);
+      tahapRisiko = label;
+      warnaRisiko = color;
 
-      if (label === "R") {
-        status = "TIDAK";
-        statusDesc =
-          " Risiko tidak memerlukan tindakan segera.";
-      } else {
-        status = "YA";
-        statusDesc = "Risiko memerlukan tindakan segera ";
-      }
-    }
+      if (label === "R") {
+        status = "TIDAK";
+        statusDesc =
+          " Risiko tidak memerlukan tindakan segera.";
+      } else {
+        status = "YA";
+        statusDesc = "Risiko memerlukan tindakan segera ";
+      }
+    }
 
-    setRiskColor(warnaRisiko);
-    setData((prev) => ({
-      ...prev,
-      tahap_risiko: tahapRisiko,
-      status_risiko: status,
-      status_risiko_desc: statusDesc,
-    }));
-  }, [data.skor_kebarangkalian, data.skor_impak]);
+    setRiskColor(warnaRisiko);
+    setData((prev) => ({
+      ...prev,
+      tahap_risiko: tahapRisiko,
+      status_risiko: status,
+      status_risiko_desc: statusDesc,
+    }));
+  }, [data.skor_kebarangkalian, data.skor_impak]);
 
-  const handleDeleteLog = async (logId) => {
-    if (
-      !window.confirm(
-        "Adakah anda pasti mahu memadam rekod log pemantauan ini? Tindakan ini tidak boleh diundur."
-      )
-    ) {
-      return;
-    }
-    setIsLoadingLog(true);
-    try {
-      await api.delete(`/pemantauan-risiko/log/${logId}`);
-      await fetchLog(data.risiko_id);
-      alert("✅ Rekod log berjaya dipadam!");
-    } catch (err) {
-      console.error("❌ Gagal memadam log:", err);
-      alert(
-        `Gagal memadam log. ${
-          err.response?.data?.message || "Sila cuba lagi."
-        }`
-      );
-    } finally {
-      setIsLoadingLog(false);
-    }
-  };
+  const handleDeleteLog = (logId) => {
+    setConfirmFn(() => async () => {
+      setShowConfirm(false);
+      setIsLoadingLog(true);
+      try {
+        await api.delete(`/pemantauan-risiko/log/${logId}`);
+        await fetchLog(data.risiko_id);
+        setToast({ variant: "success", title: "Berjaya", message: "Rekod log berjaya dipadam!" });
+      } catch (err) {
+        console.error("❌ Gagal memadam log:", err);
+        setToast({ variant: "error", title: "Gagal", message: `Gagal memadam log. ${err.response?.data?.message || "Sila cuba lagi."}` });
+      } finally {
+        setIsLoadingLog(false);
+      }
+    });
+    setShowConfirm(true);
+  };
 
-  // ⭐️ 2. KEMASKINI FUNGSI INI
-  const handleEditLog = (logItem) => {
-    setLogToEdit(logItem);
-    setModalMode("edit"); // Set mode ke 'edit'
-    setIsTambahLogModalOpen(true);
-  };
+  const handleEditLog = (logItem) => {
+    setLogToEdit(logItem);
+    setModalMode("edit");
+    setIsTambahLogModalOpen(true);
+  };
 
-  // ⭐️ 3. FUNGSI BAHARU UNTUK 'VIEW'
-  const handleViewLog = (logItem) => {
-    setLogToEdit(logItem);
-    setModalMode("papar"); // Set mode ke 'papar'
-    setIsTambahLogModalOpen(true);
-  };
+  const handleViewLog = (logItem) => {
+    setLogToEdit(logItem);
+    setModalMode("papar");
+    setIsTambahLogModalOpen(true);
+  };
 
-  // ⭐️ 4. KEMASKINI FUNGSI INI
-  const handleLogSaved = () => {
-    setIsTambahLogModalOpen(false);
-    setLogToEdit(null);
-    setModalMode("tambah"); // Reset mode
-    fetchLog(data.risiko_id);
-  };
+  const handleLogSaved = () => {
+    setIsTambahLogModalOpen(false);
+    setLogToEdit(null);
+    setModalMode("tambah");
+    fetchLog(data.risiko_id);
+  };
 
-  // ⭐️ 5. KEMASKINI FUNGSI INI
-  const handleCloseLogModal = () => {
-    setIsTambahLogModalOpen(false);
-    setLogToEdit(null);
-    setModalMode("tambah"); // Reset mode
-  };
+  const handleCloseLogModal = () => {
+    setIsTambahLogModalOpen(false);
+    setLogToEdit(null);
+    setModalMode("tambah");
+  };
 
-  if (!isOpen) return null;
+  if (!isOpen) return null;
 
-  return (
-    <div className="pemantauan-modal-overlay">
-      <div
-        className="pemantauan-modal-container"
-        style={{ maxWidth: "1200px", width: "95%" }}
-      >
-        <div className="pemantauan-box-header-main">
-          <span>Maklumat Pemantauan</span>
-          <button
-            className="pemantauan-close-btn"
-            onClick={onClose}
-            aria-label="Tutup Borang"
-          >
-            <X size={16} />
-          </button>
-        </div>
+  const renderInfoField = (label, value) => (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 truncate text-sm font-medium text-foreground">{value}</dd>
+    </div>
+  );
 
-        <div className="pemantauan-modal-body">
-          {/* 1. Pengenalpastian Risiko (Gabungan) */}
-          <div className="pemantauan-box">
-            <div className="pemantauan-box-header pemantauan-risk-header">
-              <span>Pengenalpastian Risiko</span>
-              <button
-                type="button"
-                className="pemantauan-panduan-btn"
-                onClick={openPanduan}
-              >
-                <BookOpen size={16} style={{ marginRight: "6px" }} />
-                Panduan
-              </button>
-            </div>
+  const renderListBlock = (label, listData) => (
+    <div className="min-w-0">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="mt-1">
+        <ListDisplay data={listData} />
+      </div>
+    </div>
+  );
 
-            {/* Maklumat Asal Risiko */}
-            <div
-              className="pemantauan-flex-row"
-              style={{ marginBottom: "20px" }}
-            >
-              <div className="pemantauan-flex-item">
-                <span className="pemantauan-label-inline">No Rujukan:</span>
-                <span className="pemantauan-data-inline">
-                  {data.no_rujukan || "-"}
-                </span>
-              </div>
-              <div className="pemantauan-flex-item">
-                <span className="pemantauan-label-inline">
-                  Tahun Didaftarkan:
-                </span>
-                <span className="pemantauan-data-inline">
-                  {data.tahun || "-"}
-                </span>
-            	 </div>
-          	 <div className="pemantauan-flex-item">
-          	 	 <span className="pemantauan-label-inline">
-          	 	 	 Separuh Tahun Didaftarkan:
-          	 	 </span>
-          	 	 <span className="pemantauan-data-inline">
-          	 	 	 {formatSeparuhTahun(data.separuh_tahun)}
-          	 	 </span>
-          	 </div>
-          	 <div className="pemantauan-flex-item">
-          	 	 <span className="pemantauan-label-inline">Syarikat:</span>
-          	 	 <span className="pemantauan-data-inline">
-           {data.nama_syarikat || "-"}
-          	 	 </span>
-          	 </div>
-          </div>
+  const renderSectionHeading = (title, action = null) => (
+    <div className="flex items-center gap-3">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+      <span className="h-px grow bg-border" />
+      {action}
+    </div>
+  );
 
-          {/* Maklumat Pengenalpastian */}
-          <div
-          	 className="pemantauan-flex-row"
-          	 style={{
-          	 	 marginBottom: "20px",
-          	 	 borderTop: "1px solid #e5e7eb",
-          	 	 paddingTop: "20px",
-          	 }}
-          >
-          	 <div
-          	 	 className="pemantauan-flex-item"
-          	 	 style={{ flex: "2 1 300px" }}
-          	 >
-          	 	 <span className="pemantauan-label-inline">Risiko:</span>
-          	 	 <span className="pemantauan-data-inline">
-          	 	 	 {data.risiko || "-"}
-          	 	 </span>
-          	 </div>
-          	 <div className="pemantauan-flex-item">
-          	 	 <span className="pemantauan-label-inline">
-          	 	 	 Kategori Risiko:
-          	 	 </span>
-          	 	 <span className="pemantauan-data-inline">
-          	 	 	 {data.kategori || "-"}
-          	 	 </span>
-          	 </div>
-          	 <div className="pemantauan-flex-item">
-          	 	 <span className="pemantauan-label-inline">Bahagian/Unit:</span>
-          	 	 <span className="pemantauan-data-inline">
-          	 	 	 {data.bahagian || "-"}
-          	 	 </span>
-          	 </div>
-          </div>
-          <div className="pemantauan-flex-row pemantauan-list-section">
-          	 <div
-          	 	 className="pemantauan-flex-item"
-          	 	 style={{ flex: "2 1 300px" }}
-          	 >
-          	 	 <span className="pemantauan-label-inline">Punca Risiko:</span>
-          	 	 <ListDisplay data={data.punca} />
-          	 </div>
-          	 <div className="pemantauan-flex-item">
-          	 	 <span className="pemantauan-label-inline">Kesan Risiko:</span>
-          	 	 <ListDisplay data={data.kesan} />
-      	 	 </div>
-          	 <div className="pemantauan-flex-item"></div>
-          </div>
-        </div>
+  return (
+    <>
+      <style>{`@keyframes prmFadeIn{from{opacity:0}to{opacity:1}}`}</style>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-[prmFadeIn_.18s_ease-out]">
+        <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-xl animate-[prmFadeIn_.22s_ease-out]">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ClipboardList size={16} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-[15px] font-semibold leading-tight text-foreground">Maklumat Pemantauan</h2>
+                <p className="truncate text-xs text-muted-foreground">
+                  {data.no_rujukan}{data.tahun ? ` · ${data.tahun}` : ""}
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Tutup Borang" className="h-8 w-8 shrink-0 rounded-lg">
+              <X />
+            </Button>
+          </div>
 
-        {/* 2. Penilaian Risiko Awal (Kekal Sama) */}
-        <div className="pemantauan-box">
-        	 <div className="pemantauan-box-header">Penilaian Risiko </div>
-        	 <div className="pemantauan-flex-row pemantauan-score-row">
-        	 	 <div className="pemantauan-score-card">
-        	 	 	 <span className="pemantauan-score-label">
-        	 	 	 	 Skor Kebarangkalian
-        	 	 	 </span>
-        	 	 	 <span className="pemantauan-score-data">
-        	 	 	 	 {data.skor_kebarangkalian || "-"}
-        	 	 	 </span>
-        	 	 </div>
-        	 	 <div className="pemantauan-score-card">
-        	 	 	 <span className="pemantauan-score-label">Skor Impak</span>
-        	 	 	 <span className="pemantauan-score-data">
-        	 	 	 	 {data.skor_impak || "-"}
-        	 	 	 </span>
-        	 	 </div>
-        	 	 <div className="pemantauan-score-card">
-        	 	 	 <span className="pemantauan-score-label">Tahap Risiko</span>
-        	 	 	 <span
-        	 	 	 	 className="pemantauan-score-data pemantauan-risk-score-text"
-        	 	 	 	 style={{
-        	 	 	 	 	 backgroundColor: riskColor,
-        	 	 	 	 	 color: riskColor === "#f1f5f9" ? "#475569" : "#ffffff",
-        	 	 	 	 }}
-        	 	 	 	 data-level={data.tahap_risiko}
-        	 	 	 >
-        	 	 	 	 {data.tahap_risiko || "-"}
-        	 	 	 </span>
-        	 	 </div>
-        	 </div>
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
 
-        	 <div
-        	 	 className="pemantauan-flex-row"
-        	 	 style={{ marginTop: "15px" }}
-        	 >
-        	 	 <div
-        	 	 	 className="pemantauan-flex-item"
-        	 	 	 style={{
-        	 	 	 	 display: "flex",
-        	 	 	 	 flexDirection: "column",
-        	 	 	 	 flex: "1 1 100%",
-        	 	 	 }}
-        	 	 >
-        	 	 	 <span
-        	 	 	 	 className="pemantauan-label-inline"
-        	 	 	 	 style={{ fontWeight: "bold", marginBottom: "5px" }}
-        	 	 	 >
-        	 	 	 	 Status Risiko:
-        	 	 	 </span>
-        	 	 	 <div style={{ display: "flex", alignItems: "center" }}>
-        	 	 	 	 <span
-        	 	 	 	 	 style={{
-        	 	 	 	 	 	 fontWeight: "bold",
-        	 	 	 	 	 	 color:
-        	 	 	 	 	 	 	 data.status_risiko === "YA"
-        	 	 	 	 	 	 	 	 ? "#ef4444"
-        	 	 	 	 	 	 	 	 : data.status_risiko === "TIDAK"
-        	 	 	 	 	 	 	 	 ? "#10b981"
-        	 	 	 	 	 	 	 	 : "#475569",
-        	 	 	 	 	 	 minWidth: "70px",
-        	 	 	 	 	 	 textAlign: "center",
-        	 	 	 	 	 	 marginRight: "15px",
-        	 	 	 	 	 	 padding: "4px 8px",
-        	 	 	 	 	 	 borderRadius: "4px",
-        	 	 	 	 	 	 backgroundColor:
-        	 	 	 	 	 	 	 data.status_risiko === "YA"
-        	 	 	 	 	 	 	 	 ? "#f8717130"
-      	 	 	 	 	 	 	 	 : data.status_risiko === "TIDAK"
-        	 	 	 	 	 	 	 	 ? "#10b98130"
-        	 	 	 	   	 	 	 : "#e2e8f0",
-        	 	 	 	 	 	 }}
-        	 	 	 	 >
-        	 	 	 	 	 {data.status_risiko || "-"}
-        	 	 	 	 </span>
-        	 	 	 	 <span style={{ color: "#475569", fontSize: "0.9rem" }}>
-        	 	 	 	 	 {data.status_risiko_desc || "Skor risiko tiada."}
-        	 	 	 	 </span>
-        	 	 	 </div>
-        	 	 </div>
-        	 </div>
+            <section className="space-y-3">
+              {renderSectionHeading(
+                "Pengenalpastian Risiko",
+                <button
+                  type="button"
+                  onClick={openPanduan}
+                  className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <BookOpen size={14} />
+                  Panduan
+                </button>
+              )}
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                {renderInfoField("No Rujukan", data.no_rujukan || "-")}
+                {renderInfoField("Tahun Didaftarkan", data.tahun || "-")}
+                {renderInfoField("Separuh Tahun Didaftarkan", formatSeparuhTahun(data.separuh_tahun))}
+                {renderInfoField("Syarikat", data.nama_syarikat || "-")}
+              </dl>
 
-        	 {/* Bahagian Pindaan Penilaian */}
-        	 <div
-        	 	 className="pemantauan-flex-row"
-        	 	 style={{
-        	 	 	 marginTop: "15px",
-        	 	 	 borderTop: "1px solid #e2e8f0",
-        	 	 	 paddingTop: "15px",
-        	 	 }}
-        	 >
-        	 	 <div
-        	 	 	 className="pemantauan-flex-item"
-        	 	 	 style={{
-        	 	 	 	 display: "flex",
-        	 	 	 	 flexDirection: "column",
-        	 	 	 	 flex: "1 1 100%",
-        	 	 	 }}
-        	 	 >
-        	 	 	 <span
-        	 	 	 	 className="pemantauan-label-inline"
-        	 	 	 	 style={{ fontWeight: "bold", marginBottom: "5px" }}
-        	 	 	 >
-        	 	 	 	 Pindaan Penilaian:
-        	 	 	 </span>
-        	 	 	 <span
-        	 	 	 	 style={{
-        	 	 	 	 	 color: "#475569",
-        	 	 	 	 	 fontSize: "0.9rem",
-        	 	 	 	 	 whiteSpace: "pre-wrap",
-        	 	 	 	 }}
-        	 	 	 >
-        	 	 	 	 {data.justifikasi_pindaan_penilaian || "-"}
-        	 	 	 </span>
-        	 	 </div>
-        	 </div>
-        </div>
+              <div className="grid grid-cols-1 gap-4 border-t border-border pt-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="min-w-0 sm:col-span-1 lg:col-span-1">
+                  <span className="text-xs font-medium text-muted-foreground">Kategori Risiko</span>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">{data.kategori || "-"}</p>
+                </div>
+                <div className="min-w-0 sm:col-span-1 lg:col-span-1">
+                  <span className="text-xs font-medium text-muted-foreground">Bahagian/Unit</span>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">{data.bahagian || "-"}</p>
+                </div>
+                <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+                  <span className="text-xs font-medium text-muted-foreground">Risiko</span>
+                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">{data.risiko || "-"}</p>
+                </div>
+              </div>
 
-        {/* 3. Rawatan Risiko (Kekal Sama) */}
-        <div className="pemantauan-box">
-        	 <div className="pemantauan-box-header pemantauan-monitoring-header">
-        	 	 Rawatan Risiko
-        	 </div>
-        	 <div
-        	 	 className="pemantauan-flex-row"
-        	 	 style={{ padding: "18px 16px" }}
-        	 >
-        	 	 <div className="pemantauan-flex-item">
-        	 	 	 <div className="pemantauan-data-line-block">
-        	 	 	 	 <span className="pemantauan-label-mon">Jenis Kawalan:</span>
-        	 	 	 	 <span className="pemantauan-data-mon">
-        	 	 	 	 	 {data.jenisKawalan || "Tiada Data Rawatan"}
-        	 	 	 	 </span>
-        	 	 	 </div>
-        	 	 	 <div className="pemantauan-data-line-block">
-        	 	 	 	 <span className="pemantauan-label-mon">Pelan Tindakan:</span>
-        	 	 	 	 <ListDisplay data={data.planTindakan} />
-        	 	 	 </div>
-        	 	 </div>
-        	 	 <div className="pemantauan-flex-item">
-        	 	 	 <div className="pemantauan-data-line-block">
-        	 	 	 	 <span className="pemantauan-label-mon">
-        	 	 	 	 	 Tempoh Jangkaan Siap Tindakan:
-        	 	 	 	 </span>
-        	 	 	 	 <span className="pemantauan-data-mon">
-        	 	 	 	 	 {data.tempohSiap || "-"}
-        	 	 	 	 </span>
-        	 	 	 </div>
-        	 	 	 <div className="pemantauan-data-line-block">
-        	 	 	 	 <span className="pemantauan-label-mon">
-        	 	 	 	 	 Kakitangan Bertanggungjawab:
-        	 	 	 	 </span>
-        	 	 	 	 <ListDisplay data={data.kakitanganBertanggungjawab} />
-        	 	 	 </div>
-        	 	 </div>
-        	 </div>
-        </div>
+              <div className="grid grid-cols-1 gap-4 border-t border-border pt-3 sm:grid-cols-2">
+                {renderListBlock("Punca Risiko", data.punca)}
+                {renderListBlock("Kesan Risiko", data.kesan)}
+              </div>
+            </section>
 
-        {/* 4. PAPARAN LOG SEJARAH PEMANTAUAN (DIKEMASKINI) */}
-        <div className="pemantauan-box">
-        	 <div className="pemantauan-box-header pemantauan-log-header">
-        	 	 <span> Pemantauan Risiko</span>
-        	 	 
-        	 	 {/* Butang 'Tambah Log' (Hanya Admin & Executive) */}
-        	 	 {(userRole === "Admin" || userRole === "Executive") && (
-        	 	 	 <button
-        	 	 	 	 type="button"
-        	 	 	 	 className="pemantauan-add-log-btn"
-        	 	 	 	 onClick={() => {
-        	 	 	 	 	 setLogToEdit(null);
-        	 	 	 	 	 setModalMode("tambah"); // Set mode ke 'tambah'
-        	 	 	 	 	 setIsTambahLogModalOpen(true);
-        	 	 	 	 }}
-        	 	 	 >
-        	 	 	 	 <PlusCircle size={16} style={{ marginRight: "6px" }} />
-        	 	 	 	 Tambah Pemantauan
-        	 	 	 </button>
-        	 	 )}
-        	 </div>
-        	 <div style={{ padding: "4px" }}>
-        	 	 {isLoadingLog ? (
-        	 	 	 <div style={{ textAlign: "center", padding: "50px" }}>
-        	 	 	 	 <Loader2 size={32} className="spin" />
-        	 	 	 	 <p>Memuatkan  Pemantauan...</p>
-        	 	 	 </div>
-        	 	 ) : (
-        	 	 	 <div style={{ overflowX: "auto" }}>
-        	 	 	 	 <table className="log-pemantauan-table">
-        	 	 	 	 	 <thead>
-        	 	 	 	 	 	 <tr>
-        	 	 	 	 	 	 	 <th>Tahun</th>
-        	 	 	 	 	 	 	 <th>Separuh Tahun</th>
-        	 	 	 	 	 	 	 <th>Pelan Tindakan</th>
-        	 	 	 	 	 	 	 <th>Kekerapan Pemantauan</th>
-        	 	 	 	 	 	 	 <th>Kakitangan Bertanggungjawab</th>
-        	 	 	 	 	 	 	 <th>Skor Kebarangkalian</th>
-        	 	 	 	 	 	 	 <th>Skor Impak</th>
-        	 	 	 	 	 	 	 <th>Tahap Risiko</th>
-        	 	 	 	 	 	 	 <th>Keberkesanan</th>
-        	 	 	 	 	 	 	 <th>Status Pemantauan</th>
-        	 	 	 	 	 	 	 <th>Kelulusan </th>
-        	 	 	 	 	 	 	 <th>Catatan</th>
-        	 	 	 	 	 	 	 <th>Pindaan Keberkesanan</th>
-        	 	 	 	 	 	 	 {canViewTindakanColumn && <th>Tindakan</th>}
-        	 	 	 	 	 	 </tr>
-        	 	 	 	 	 </thead>
-        	 	 	 	 	 <tbody>
-        	 	 	 	 	 	 {logData.length > 0 ? (
-        	 	 	 	 	 	 	 logData.map((log, index) => {
-        	 	 	 	 	 	 	 	 const k_selepas = log.skor_kebarangkalian_selepas;
-        	 	 	 	 	 	 	 	 const i_selepas = log.skor_impak_selepas;
-        	 	 	 	 	 	 	 	 const tahap_risiko =
-        	 	 	 	 	 	 	 	 	 log.skor_risiko_pemantauan ||
-        	 	 	 	 	 	 	 	 	 getRiskLevel(k_selepas, i_selepas);
-        	 	 	 	 	 	 	 	 const { color } = getRiskMatrix(k_selepas, i_selepas);
-        	 	 	 	 	 	 	 	 const sem_tahun_text = formatSeparuhTahun(
-        	 	 	 	 	 	 	 	 	 log.separuh_tahun_pemantauan
-        	 	 	 	 	 	 	 	 );
-        	 	 	 	 	 	 	 	 const pelanTindakanLog = Array.isArray(
-        	 	 	 	 	 	 	 	 	 log.pelan_tindakan_log
-        	 	 	 	 	 	 	 	 )
-        	 	 	 	 	 	 	 	 	 ? log.pelan_tindakan_log
-        	 	 	 	 	 	 	 	 	 : [];
-        	 	 	 	 	 	 	 	 const kakitanganLog = Array.isArray(
-        	 	 	 	 	 	 	 	 	 log.kakitangan_log
-        	 	 	 	 	 	 	 	 )
-        	 	 	 	 	 	 	 	 	 ? log.kakitangan_log
-        	 	 	 	 	 	 	 	 	 : [];
-                                        
-                                    // ⭐️ BARU: Tentukan logik kebenaran (RBAC)
-                                    const isLatestLog = index === 0;
-                                    const isAdmin = userRole === 'Admin';
-                                    const isExecutive = userRole === 'Executive';
-                                    const isStaff = userRole === 'Staff';
+            <section className="space-y-3">
+              {renderSectionHeading("Penilaian Risiko")}
+              <div className="rounded-lg border border-border bg-accent/60 p-3">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <dl className="grid flex-1 grid-cols-3 gap-3">
+                    <div className="rounded-lg bg-white/70 p-3 text-center ring-1 ring-border">
+                      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Skor Kebarangkalian</dt>
+                      <dd className="mt-1 text-xl font-bold text-foreground">{data.skor_kebarangkalian || "-"}</dd>
+                    </div>
+                    <div className="rounded-lg bg-white/70 p-3 text-center ring-1 ring-border">
+                      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Skor Impak</dt>
+                      <dd className="mt-1 text-xl font-bold text-foreground">{data.skor_impak || "-"}</dd>
+                    </div>
+                    <div className="rounded-lg bg-white/70 p-3 text-center ring-1 ring-border">
+                      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tahap Risiko</dt>
+                      <dd className="mt-1">
+                        <span
+                          className={`inline-flex h-7 min-w-[56px] items-center justify-center rounded-md px-2.5 text-xs font-bold uppercase ${
+                            riskColor === "#f1f5f9" ? "text-slate-500" : "text-white"
+                          }`}
+                          style={{ backgroundColor: riskColor }}
+                        >
+                          {data.tahap_risiko || "-"}
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+                  <RiskMatrixVisual
+                    compact
+                    kebarangkalian={data.skor_kebarangkalian}
+                    impak={data.skor_impak}
+                    className="shrink-0 self-center"
+                  />
+                </div>
+              </div>
 
-                                    // Admin (boleh edit semua)
-                                    // Exec & Staff (hanya boleh edit log terkini)
-                                    const showEditButton = isAdmin || (isLatestLog && (isExecutive || isStaff));
-                                    
-                                    // Admin (boleh padam semua)
-                                    // Exec (hanya boleh padam log terkini)
-                                    // Staff (tidak boleh padam)
-                                    const showDeleteButton = isAdmin || (isLatestLog && isExecutive);
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-xs font-medium text-muted-foreground">Status Risiko:</span>
+                <span
+                  className={`inline-flex h-6 items-center justify-center rounded-md px-2.5 text-xs font-bold ${
+                    data.status_risiko === "YA"
+                      ? "bg-destructive/10 text-destructive"
+                      : data.status_risiko === "TIDAK"
+                        ? "bg-success/10 text-success"
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {data.status_risiko || "-"}
+                </span>
+                <span className="text-sm text-muted-foreground">{data.status_risiko_desc || "Skor risiko tiada."}</span>
+              </div>
 
-        	 	 	 	 	 	 	 	 return (
-        	 	 	 	 	 	 	 	 	 <tr 
-                                            key={log.log_id || index}
-                                            className="log-row-clickable"
-                                            onClick={() => handleViewLog(log)}
-                                        >
-        	 	 	 	 	 	 	 	 	 	 <td data-label="TAHUN">
-        	 	 	 	 	 	 	 	 	 	 	 {log.tahun_pemantauan || "-"}
-        	 	 	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="SEPARUH TAHUN">
-        	 	 	 	 	 	 	 	 	 	 	 {sem_tahun_text}
-        	 	 	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="PELAN TINDAKAN">
-        	 	 	 	 	 	 	 	 	 	 	 <ListDisplay data={pelanTindakanLog} />
-        	 	 	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="KEKERAPAN AUDIT">
-        	 	 	 	 	 	 	 	 	 	 	 {log.kekerapan_pemantauan || "-"}
-        	 	 	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="BERTANGGUNGJAWAB">
-        	 	 	 	 	 	 	 	 	 	 	 <ListDisplay data={kakitanganLog} />
-        	 	 	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="K'KALIAN">{k_selepas || "-"}</td>
-        	 	 	 	 	 	 	 	 	 	 <td data-label="IMPAK SKOR">{i_selepas || "-"}</td>
-        	 	 	 	 	 	 	 	 	 	 <td
-        	 	 	 	 	 	 	 	 	 	 	 data-label="TAHAP RISIKO"
-        	 	 	 	 	 	 	 	 	 	 	 style={{
-        	 	 	 	 	 	 	 	 	 	 	 	 backgroundColor: color,
-        	 	 	 	 	 	 	 	 	 	 	 	 color:
-        	 	 	 	 	 	 	 	 	 	 	 	 	 color === "#f1f5f9" ? "#475569" : "white",
-        	 	 	 	 	 	 	 	 	 		 	 	 fontWeight: "bold",
-        	 	 	 	 	 	 	 	 	 		 	 }}
-        	 	 	 	 	 	 	 	 	 		 >
-        	 	 	 	 	 	 	 	 	 		 	 {tahap_risiko || "-"}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 <td data-label="KEBERKESANAN">
-        	 	 	 	 	 	 	 	 	 		 	 <span
-        	 	 	 	 	 	 	 	 	 		 	 	 className={`pemantauan-keberkesanan-tag ${
-        	 	 	 	 	 	 	 	 	 		 	 	 	 log.keberkesanan?.toLowerCase() || "tiada"
-        	 	 	 	 	 	 	 	 	 		 	 	 }`}
-        	 	 	 	 	 	 	 	 	 		 	 >
-        	 	 	 	 	 	 	 	 	 		 	 	 {log.keberkesanan || "-"}
-        	 	 	 	 	 	 	 	 	 		 	 </span>
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 <td data-label="STATUS">
-        	 	 	 	 	 	 	 	 	 		 	 {log.status_pemantauan || "-"}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 <td data-label="KELULUSAN">
-        	 	 	 	 	 	 	 	 	 		 	 {log.no_bil_kelulusan || "-"}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 <td
-        	 	 	 	 	 	 	 	 	 		 	 data-label="CATATAN"
-        	 	 	 	 	 	 	 	 	 		 	 style={{
-        	 	 	   	 	 	 		 	 	 maxWidth: "200px",
-        	 	 	 	 	 	 	 	 	 		 	 	 whiteSpace: "normal",
-        	 	 	 	 	 	 	 	 	 		 	 }}
-        	 	 	 	 	 	 	 	 	 		 >
-        	 	 	 	 	 	 	 	 	 		 	 {log.catatan || "-"}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 <td
-        	 	 	 	 	 	 	 	 	 		 	 data-label="PINDAAN KEBERKESANAN"
-        	 	 	 	 	 	 	 	 	 		 	 style={{
-        	 	 	 	 	 	 	 	 	 		 	 	 maxWidth: "200px",
-        	 	 	 	 	 	 	 	 	 		 	 	 whiteSpace: "normal",
-        	 	 	 	 	 	 	 	 	 		 	 }}
-        	 	 	 	 	 	 	 	 	 		 >
-        	 	 	 	 	 	 	 	 	 		 	 {log.justifikasi_pindaan_pemantauan || "-"}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 		 
-        	 	 	 	 	 	 	 	 	 		 {canViewTindakanColumn && (
-        	 	 	 	 	 	 	 	 	 		 	 <td
-        	 	 	 	 	 	 	 	 	 		 	 	 data-label="TINDAKAN"
-        	 	 	 	 	 	 	 	 	 		 	 	 style={{ whiteSpace: "nowrap" }}
-        	 	 	 	 	 	 	 	 	 		 	 >
-        	 	 	 	 	 	 	 	 	 		 	 	 {showEditButton && (
-        	 	 	 	 	 	 	 	 	 		 	 	 	 <button
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 type="button"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 onClick={(e) => {
-                                                        e.stopPropagation(); // Elak <tr> daripada diklik
-                                                        handleEditLog(log);
-                                                    }}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 className="pemantauan-button-circle rawatan-button-edit"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 style={{
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 backgroundColor: "#eab308",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 color: "white",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 border: "none",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 marginRight: "5px",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 }}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 aria-label="Edit Log"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 disabled={isLoadingLog}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 >
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 <Pencil size={16} />
-        	 	 	 	 	 	 	 	 	 		 	 	 	 </button>
-        	 	 	 	 	 	 	 	 	 		 	 	 )}
+              <div className="border-t border-border pt-3">
+                <span className="text-xs font-medium text-muted-foreground">Pindaan Penilaian</span>
+                <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+                  {data.justifikasi_pindaan_penilaian || "-"}
+                </p>
+              </div>
+            </section>
 
-        	 	 	 	 	 	 	 	 	 		 	 	 {showDeleteButton && (
-        	 	 	 	 	 	 	 	 	 		 	 	 	 <button
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 type="button"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 onClick={(e) => {
-                                                        e.stopPropagation(); // Elak <tr> daripada diklik
-                                                        handleDeleteLog(log.log_id);
-                                                    }}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 className="pemantauan-button-circle rawatan-button-remove"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 style={{
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 backgroundColor: "#ef4444",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 color: "white",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 	 border: "none",
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 }}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 aria-label="Padam Log"
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 disabled={isLoadingLog}
-        	 	 	 	 	 	 	 	 	 		 	 	 	 >
-        	 	 	 	 	 	 	 	 	 		 	 	 	 	 <Trash2 size={16} />
-        	 	 	 	 	 	 	 	 	 		 	 	 	 </button>
-        	 	 	 	 	 	 	 	 	 		 	 	 )}
-        	 	 	 	 	 	 	 	 	 		 </td>
-        	 	 	 	 	 	 	 	 	 	 )}
-        	 	 	 	 	 	 	 	 	 </tr>
-        	 	 	 	 	 	 	 	 );
-        	 	 	 	 	 	 	 })
-        	 	 	 	 	 	 ) : (
-        	 	 	 	 	 	 	 <tr>
-        	 	 	 	 	 	 	 	 <td
-        	 	 	 	 	 	 	 	 	 colSpan={canViewTindakanColumn ? 14 : 13} 
-        	 	 	 	 	 	 	 	 	 style={{ textAlign: "center", color: "#64748b" }}
-        	 	 	 	 	 	 	 	 >
-        	 	 	 	 	 	 	 	 	 Tiada rekod pemantauan yang direkodkan lagi.
-        	 	 	 	 	 	 	 	 </td>
-        	 	 	 	 	 	 	 </tr>
-        	 	 	 	 	 	 )}
-        	 	 	 	 	 </tbody>
-        	 	 	 	 </table>
-        	 	 	 </div>
-        	 	 	 )}
-        	 	 </div>
-        	 </div>
-        </div>
+            <section className="space-y-3">
+              {renderSectionHeading("Rawatan Risiko")}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground">Jenis Kawalan</span>
+                    <p className="mt-0.5 text-sm font-medium text-foreground">{data.jenisKawalan || "Tiada Data Rawatan"}</p>
+                  </div>
+                  {renderListBlock("Pelan Tindakan", data.planTindakan)}
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground">Tempoh Jangkaan Siap Tindakan</span>
+                    <p className="mt-0.5 text-sm font-medium text-foreground">{data.tempohSiap || "-"}</p>
+                  </div>
+                  {renderListBlock("Kakitangan Bertanggungjawab", data.kakitanganBertanggungjawab)}
+                </div>
+              </div>
+            </section>
 
-        {/* Modal Panduan */}
+            <section className="space-y-3">
+              {renderSectionHeading(
+                "Sejarah Pemantauan",
+                (userRole === "Admin" || userRole === "Executive") && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    onClick={() => {
+                      setLogToEdit(null);
+                      setModalMode("tambah");
+                      setIsTambahLogModalOpen(true);
+                    }}
+                  >
+                    <PlusCircle />
+                    Tambah Pemantauan
+                  </Button>
+                )
+              )}
+
+              {isLoadingLog ? (
+                <LoadingSpinner text="Memuatkan Pemantauan..." size="md" />
+              ) : logData.length === 0 ? (
+                <EmptyState icon={Activity} title="Tiada rekod pemantauan" description="Tiada rekod pemantauan yang direkodkan lagi." />
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        {LOG_TABLE_HEADERS.map((header) => (
+                          <th key={header} className="whitespace-nowrap border-b border-border px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {header}
+                          </th>
+                        ))}
+                        {canViewTindakanColumn && (
+                          <th className="whitespace-nowrap border-b border-border px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Tindakan
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logData.map((log, index) => {
+                        const k_selepas = log.skor_kebarangkalian_selepas;
+                        const i_selepas = log.skor_impak_selepas;
+                        const tahap_risiko =
+                          log.skor_risiko_pemantauan ||
+                          getRiskLevel(k_selepas, i_selepas);
+                        const { color } = getRiskMatrix(k_selepas, i_selepas);
+                        const sem_tahun_text = formatSeparuhTahun(
+                          log.separuh_tahun_pemantauan
+                        );
+                        const pelanTindakanLog = Array.isArray(
+                          log.pelan_tindakan_log
+                        )
+                          ? log.pelan_tindakan_log
+                          : [];
+                        const kakitanganLog = Array.isArray(
+                          log.kakitangan_log
+                        )
+                          ? log.kakitangan_log
+                          : [];
+
+                        const isLatestLog = index === 0;
+                        const isAdmin = userRole === 'Admin';
+                        const isExecutive = userRole === 'Executive';
+                        const isStaff = userRole === 'Staff';
+
+                        const showEditButton = isAdmin || (isLatestLog && (isExecutive || isStaff));
+                        const showDeleteButton = isAdmin || (isLatestLog && isExecutive);
+
+                        return (
+                          <tr
+                            key={log.log_id || index}
+                            className="cursor-pointer transition-colors last:border-b-0 hover:bg-accent/50"
+                            onClick={() => handleViewLog(log)}
+                          >
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.tahun_pemantauan || "-"}</td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{sem_tahun_text}</td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">
+                              <ListDisplay data={pelanTindakanLog} />
+                            </td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.kekerapan_pemantauan || "-"}</td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">
+                              <ListDisplay data={kakitanganLog} />
+                            </td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{k_selepas || "-"}</td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{i_selepas || "-"}</td>
+                            <td className="border-b border-border px-3 py-2.5 text-center align-middle">
+                              <span
+                                className={`inline-flex h-6 min-w-[40px] items-center justify-center rounded-md px-2 text-xs font-bold ${
+                                  color === "#f1f5f9" ? "text-slate-500" : "text-white"
+                                }`}
+                                style={{ backgroundColor: color }}
+                              >
+                                {tahap_risiko || "-"}
+                              </span>
+                            </td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">
+                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getKeberkesananBadgeClass(log.keberkesanan)}`}>
+                                {log.keberkesanan || "-"}
+                              </span>
+                            </td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.status_pemantauan || "-"}</td>
+                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.no_bil_kelulusan || "-"}</td>
+                            <td className="max-w-[200px] whitespace-normal border-b border-border px-3 py-2.5 align-middle">{log.catatan || "-"}</td>
+                            <td className="max-w-[200px] whitespace-normal border-b border-border px-3 py-2.5 align-middle">{log.justifikasi_pindaan_pemantauan || "-"}</td>
+
+                            {canViewTindakanColumn && (
+                              <td className="border-b border-border px-3 py-2.5 text-center align-middle">
+                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                  {showEditButton && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      aria-label="Edit Log"
+                                      disabled={isLoadingLog}
+                                      className="h-8 w-8 rounded-lg text-primary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditLog(log);
+                                      }}
+                                    >
+                                      <Pencil />
+                                    </Button>
+                                  )}
+
+                                  {showDeleteButton && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      aria-label="Padam Log"
+                                      disabled={isLoadingLog}
+                                      className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteLog(log.log_id);
+                                      }}
+                                    >
+                                      <Trash2 />
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Tutup
+            </Button>
+          </div>
+        </div>
+
         {PanduanRenderer}
 
-        {/* ⭐️ 9. KEMASKINI PROP 'mode' DAN 'userRole' */}
-        {isTambahLogModalOpen && (
-        	 <TambahLogModal
-        	 	 isOpen={isTambahLogModalOpen}
-        	 	 onClose={handleCloseLogModal}
-        	 	 risikoId={data.risiko_id}
-        	 	 onSaveSuccess={handleLogSaved}
-        	 	 logDataToEdit={logToEdit}
-         mode={modalMode} 
-         userRole={userRole} 
-        	 />
-        )}
-      </div>
-    </div>
-  );
+        {isTambahLogModalOpen && (
+          <TambahLogModal
+            isOpen={isTambahLogModalOpen}
+            onClose={handleCloseLogModal}
+            risikoId={data.risiko_id}
+            onSaveSuccess={handleLogSaved}
+            logDataToEdit={logToEdit}
+            mode={modalMode}
+            userRole={userRole}
+          />
+        )}
+
+        <ConfirmModal
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          icon="warning"
+          variant="warning"
+          title="Padam Rekod Log"
+          description="Adakah anda pasti mahu memadam rekod log pemantauan ini? Tindakan ini tidak boleh diundur."
+          confirmText="Ya"
+          onConfirm={() => confirmFn?.()}
+        />
+
+        {toast && (
+          <div className="fixed top-[64px] right-4 z-[60] max-w-sm">
+            <Toast variant={toast.variant} title={toast.title} message={toast.message} onClose={() => setToast(null)} />
+          </div>
+        )}
+      </div>
+    </>
+  );
 }

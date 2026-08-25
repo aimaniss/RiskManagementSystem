@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Plus, Trash2, Save, Loader2, BookOpen } from "lucide-react";
+import { X, Plus, Trash2, Save, Loader2, BookOpen, Eye, Pencil, ClipboardPlus } from "lucide-react";
+import Toast from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
 import api from "../../api/api";
-import "./TambahLogModal.css";
 
-import { riskMatrix, getRiskMatrix, getColorByTahapRisikoLabel, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING } from "../../constants/riskMatrix";
+import { getRiskMatrix, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
 
-// ================================================================
-// Deskripsi untuk Skor
-// ================================================================
 const SKOR_KEBARANGKALIAN_DESC = [
     { value: 1, label: "1 - Hampir Tiada Kemungkinan" },
     { value: 2, label: "2 - Kemungkinan Rendah" },
@@ -24,8 +27,6 @@ const SKOR_IMPAK_DESC = [
     { value: 4, label: "4 - Besar" },
     { value: 5, label: "5 - Sangat Besar" },
 ];
-// ================================================================
-
 
 export default function TambahLogModal({
     isOpen,
@@ -35,48 +36,39 @@ export default function TambahLogModal({
     onSaveSuccess,
     logDataToEdit = null,
     mode = "tambah", // 'tambah', 'edit', atau 'papar'
-    userRole = null,  // ⭐️ BARU: Terima peranan pengguna
+    userRole = null,
 }) {
-    // ================================================================
-    
-    // Tentukan mod
     const isEditMode = mode === 'edit';
     const isViewMode = mode === 'papar';
 
-    // ⭐️ BARU: Logik Kebenaran (Role Based Access)
     const isExecutive = userRole === 'Executive';
     const isStaff = userRole === 'Staff';
 
-    // Kemaskini Tajuk Modal
     const modalTitle = isEditMode
         ? "Kemaskini Pemantauan"
         : isViewMode
             ? "Papar  Pemantauan"
             : "Tambah Pemantauan Baharu";
-    // ================================================================
 
     const [isLoading, setIsLoading] = useState(false);
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
 
-
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
-    const [risikoInfo, setRisikoInfo] = useState(null); // Dikekalkan untuk logik
+    const [risikoInfo, setRisikoInfo] = useState(null);
     const [validationMessage, setValidationMessage] = useState("");
 
-
-    const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data"); // Dikekalkan untuk logik
-
+    const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data");
 
     const getInitialFormData = useCallback(() => ({
         log_id: null,
         risiko_id: risikoId || null,
         tahun_pemantauan: new Date().getFullYear(),
         separuh_tahun_pemantauan: 1,
-        skor_kebarangkalian_selepas: "", 
-        skor_impak_selepas: "", 
-        keberkesanan: "", 
-        status_pemantauan: "", 
+        skor_kebarangkalian_selepas: "",
+        skor_impak_selepas: "",
+        keberkesanan: "",
+        status_pemantauan: "",
         catatan: "",
         no_bil_kelulusan: "",
         kekerapan_pemantauan: "",
@@ -86,19 +78,15 @@ export default function TambahLogModal({
 
     const [formData, setFormData] = useState(getInitialFormData);
 
-    // Mulakan dengan "Tiada Data"
     const [tahapRisikoSelepas, setTahapRisikoSelepas] = useState({ label: "Tiada Data", color: "#f1f5f9" });
 
-    // Fungsi untuk mendapatkan label yang dipaparkan di UI
+    const [toast, setToast] = useState(null);
+
     const getKeberkesananLabel = (value) => KEBERKESANAN_MAPPING[value] || value;
 
-
-    // ================================================================
-    // Logic Update Tahap Risiko Selepas & Auto-Keberkesanan (Kekal Sama)
-    // ================================================================
     useEffect(() => {
-        const k = formData.skor_kebarangkalian_selepas; 
-        const i = formData.skor_impak_selepas; 
+        const k = formData.skor_kebarangkalian_selepas;
+        const i = formData.skor_impak_selepas;
 
         if (k && i) {
             const kInt = parseInt(k, 10);
@@ -122,15 +110,11 @@ export default function TambahLogModal({
             }
         } else {
             setTahapRisikoSelepas({ label: "Tiada Data", color: "#f1f5f9" });
-            setFormData((prev) => ({ ...prev, keberkesanan: "" })); 
+            setFormData((prev) => ({ ...prev, keberkesanan: "" }));
         }
 
     }, [formData.skor_kebarangkalian_selepas, formData.skor_impak_selepas, tahapRisikoRujukan]);
 
-
-    // ================================================================
-    // useEffect untuk Pra-Isi Data Edit / Reset Data Tambah (Kekal Sama)
-    // ================================================================
     useEffect(() => {
         if (!isOpen) return;
 
@@ -141,8 +125,7 @@ export default function TambahLogModal({
             return formatted;
         };
 
-
-        if (logDataToEdit) { // Ini terpakai untuk mode 'edit' dan 'papar'
+        if (logDataToEdit) {
             const k = logDataToEdit.skor_kebarangkalian_selepas || "";
             const i = logDataToEdit.skor_impak_selepas || "";
             const logId = logDataToEdit.log_id || logDataToEdit.id;
@@ -152,10 +135,10 @@ export default function TambahLogModal({
                 risiko_id: logDataToEdit.risiko_id || risikoId,
                 tahun_pemantauan: logDataToEdit.tahun_pemantauan || '',
                 separuh_tahun_pemantauan: logDataToEdit.separuh_tahun_pemantauan || 1,
-                skor_kebarangkalian_selepas: k, 
-                skor_impak_selepas: i, 
-                keberkesanan: logDataToEdit.keberkesanan || "", 
-                status_pemantauan: logDataToEdit.status_pemantauan || "Selesai", 
+                skor_kebarangkalian_selepas: k,
+                skor_impak_selepas: i,
+                keberkesanan: logDataToEdit.keberkesanan || "",
+                status_pemantauan: logDataToEdit.status_pemantauan || "Selesai",
                 catatan: logDataToEdit.catatan || "",
                 no_bil_kelulusan: logDataToEdit.no_bil_kelulusan || "",
                 kekerapan_pemantauan: logDataToEdit.kekerapan_pemantauan || "",
@@ -172,17 +155,12 @@ export default function TambahLogModal({
             setValidationMessage("");
 
         } else {
-            // Mod TAMBAH
-            setFormData(getInitialFormData()); 
+            setFormData(getInitialFormData());
             setTahapRisikoSelepas({ label: "Tiada Data", color: "#f1f5f9" });
             setValidationMessage("");
         }
     }, [isOpen, logDataToEdit, getInitialFormData]);
 
-
-    // ================================================================
-    // Fetch Info Risiko & Tahap Rujukan (DIKEKALKAN UNTUK LOGIK)
-    // ================================================================
     useEffect(() => {
         if (!isOpen || !risikoId || !formData.tahun_pemantauan) return;
 
@@ -207,7 +185,7 @@ export default function TambahLogModal({
 
                 setRisikoTeks(info.nama_risiko || info.risiko || info.nama || "");
                 setRisikoNoRujukan(info.no_rujukan || info.noRujukan || "-");
-                setRisikoInfo(info); 
+                setRisikoInfo(info);
 
                 let tahapRujukan;
                 if (rujukanInfo && rujukanInfo.tahap_risiko_rujukan && rujukanInfo.tahap_risiko_rujukan !== "Tiada Data") {
@@ -218,7 +196,7 @@ export default function TambahLogModal({
                     tahapRujukan = getRiskMatrix(kAsal, iAsal).label;
                 }
 
-                setTahapRisikoRujukan(tahapRujukan); 
+                setTahapRisikoRujukan(tahapRujukan);
 
             } catch (err) {
                 console.error("❌ Gagal fetch info risiko:", err);
@@ -228,10 +206,6 @@ export default function TambahLogModal({
         return () => { mounted = false; };
     }, [isOpen, risikoId, formData.tahun_pemantauan, formData.separuh_tahun_pemantauan, logDataToEdit]);
 
-
-    // ================================================================
-    // Semak Duplikasi (Hanya untuk Mod TAMBAH) (Kekal Sama)
-    // ================================================================
     useEffect(() => {
         if (isEditMode || isViewMode) {
             setValidationMessage("");
@@ -274,14 +248,10 @@ export default function TambahLogModal({
         formData.tahun_pemantauan,
         formData.separuh_tahun_pemantauan,
         risikoId,
-        isEditMode, 
+        isEditMode,
         isViewMode,
     ]);
 
-
-    // ================================================================
-    //  Handlers (Kekal Sama)
-    // ================================================================
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -308,14 +278,10 @@ export default function TambahLogModal({
         setFormData((prev) => ({ ...prev, [listName]: list.length ? list : [{ [key]: "" }] }));
     };
 
-
-    // ================================================================
-    // handleSubmit (Kekal Sama)
-    // ================================================================
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if (isViewMode) return; 
+
+        if (isViewMode) return;
 
         setIsLoading(true);
 
@@ -327,9 +293,6 @@ export default function TambahLogModal({
         const pelanLog = formData.pelan_tindakan_list.map(item => item.butiran_aktiviti).filter(Boolean);
         const kakitanganLog = formData.kakitangan_list.map(item => item.butiran_kakitangan).filter(Boolean);
 
-        // ======================================================
-        // 1. SEMAKAN MEDAN WAJIB (SENTIASA)
-        // ======================================================
         const alwaysRequired = {
             'Tahun Pemantauan': formData.tahun_pemantauan,
             'Separuh Tahun Pemantauan': formData.separuh_tahun_pemantauan,
@@ -342,32 +305,25 @@ export default function TambahLogModal({
         });
 
         if (missingFields.length > 0) {
-            alert(`Sila lengkapkan maklumat wajib berikut: ${missingFields.join(", ")}.`);
+            setToast({ variant: "warning", title: "Medan Wajib", message: `Sila lengkapkan maklumat wajib berikut: ${missingFields.join(", ")}.` });
             setIsLoading(false);
             return;
         }
 
-        // ======================================================
-        // 2. SEMAKAN MEDAN BERSYARAT (SKOR)
-        // ======================================================
-        const k = formData.skor_kebarangkalian_selepas; 
-        const i = formData.skor_impak_selepas; 
+        const k = formData.skor_kebarangkalian_selepas;
+        const i = formData.skor_impak_selepas;
 
         if ((k && !i) || (!k && i)) {
-            alert("Sila lengkapkan kedua-dua Skor Kebarangkalian dan Skor Impak, atau biarkan kedua-duanya kosong.");
+            setToast({ variant: "warning", title: "Skor Tidak Lengkap", message: "Sila lengkapkan kedua-dua Skor Kebarangkalian dan Skor Impak, atau biarkan kedua-duanya kosong." });
             setIsLoading(false);
             return;
         }
 
-        // ======================================================
-        // 3. SEMAKAN PERIODE SAH (VALIDATION)
-        // ======================================================
         if (!isEdit && validationMessage.includes("❌")) {
-            alert(`Sila betulkan ralat pada tahun atau separuh tahun: ${validationMessage.replace("❌ ", "")}`);
+            setToast({ variant: "error", title: "Ralat Pengesahan", message: `Sila betulkan ralat pada tahun atau separuh tahun: ${validationMessage.replace("❌ ", "")}` });
             setIsLoading(false);
             return;
         }
-        // ------------------------------------------------------------------
 
         try {
 
@@ -377,7 +333,7 @@ export default function TambahLogModal({
                 kakitangan_log: kakitanganLog,
                 skor_kebarangkalian_selepas: formData.skor_kebarangkalian_selepas === "" ? null : formData.skor_kebarangkalian_selepas,
                 skor_impak_selepas: formData.skor_impak_selepas === "" ? null : formData.skor_impak_selepas,
-                keberkesanan: formData.keberkesanan === "" ? null : formData.keberkesanan, 
+                keberkesanan: formData.keberkesanan === "" ? null : formData.keberkesanan,
             };
 
             if (!isEdit) {
@@ -388,7 +344,7 @@ export default function TambahLogModal({
             const savedLog = res.data?.data ?? res.data;
 
             const actionText = isEdit ? "dikemaskini" : "ditambah";
-            alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya ${actionText}!`);
+            setToast({ variant: "success", title: "Berjaya", message: `Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya ${actionText}!` });
 
             const notify = onSaveSuccess || onLogAdded;
             if (typeof notify === "function") {
@@ -398,7 +354,7 @@ export default function TambahLogModal({
             onClose?.();
         } catch (err) {
             console.error(`❌ Ralat ${isEdit ? "mengedit" : "menambah"} log:`, err);
-            alert(`Gagal ${isEdit ? "mengedit" : "menambah"} log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}`);
+            setToast({ variant: "error", title: "Gagal", message: `Gagal ${isEdit ? "mengedit" : "menambah"} log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}` });
         } finally {
             setIsLoading(false);
         }
@@ -406,271 +362,303 @@ export default function TambahLogModal({
 
     if (!isOpen) return null;
 
+    const periodLocked = isEditMode || isViewMode;
+    const staffLocked = isViewMode || (isEditMode && isStaff);
+    const skorLocked = isViewMode || (isEditMode && (isExecutive || isStaff));
+
+    const renderSectionHeading = (title) => (
+        <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+            <span className="h-px grow bg-border" />
+        </div>
+    );
+
+    const renderListEditor = (listName, itemKey, placeholderPrefix) => (
+        <div className="space-y-2">
+            {formData[listName].map((item, index) => (
+                <div className="flex items-start gap-2" key={index}>
+                    <Input
+                        type="text"
+                        value={item[itemKey]}
+                        onChange={(e) => handleListChange(listName, index, itemKey, e.target.value)}
+                        placeholder={staffLocked ? "" : `${placeholderPrefix} ${index + 1}`}
+                        readOnly={staffLocked}
+                        className={staffLocked ? "bg-muted text-muted-foreground" : ""}
+                    />
+                    {!staffLocked && formData[listName].length > 1 && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Buang"
+                            onClick={() => handleRemoveListItem(listName, index)}
+                            className="h-8 w-8 shrink-0 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        >
+                            <Trash2 />
+                        </Button>
+                    )}
+                    {!staffLocked && index === formData[listName].length - 1 && (
+                        <Button
+                            type="button"
+                            size="icon"
+                            aria-label="Tambah"
+                            onClick={() => handleAddListItem(listName)}
+                            className="h-8 w-8 shrink-0 rounded-lg"
+                        >
+                            <Plus />
+                        </Button>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
 
     return (
-        <div className="tambahlog-modal-overlay">
-            <div className="tambahlog-modal">
-                <form onSubmit={handleSubmit}>
-                    <div className="tambahlog-header">
-                        <span>{modalTitle}</span>
-                        <button type="button" className="tambahlog-close-btn" onClick={onClose}>
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    <div className="tambahlog-body">
-                        
-                        {/*Maklumat Pemantauan*/}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header tambahlog-header-with-btn">
-                                <span>Maklumat Pemantauan</span>
-                                <button type="button" className="tambahlog-panduan-btn" onClick={openPanduan}>
-                                    <BookOpen size={16} style={{ marginRight: '6px' }} />
+        <>
+            <style>{`@keyframes prmFadeIn{from{opacity:0}to{opacity:1}}`}</style>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-[prmFadeIn_.18s_ease-out]">
+                <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl animate-[prmFadeIn_.22s_ease-out]">
+                    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                            <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                    {isViewMode ? <Eye size={16} /> : isEditMode ? <Pencil size={16} /> : <ClipboardPlus size={16} />}
+                                </div>
+                                <div className="min-w-0">
+                                    <h2 className="truncate text-[15px] font-semibold leading-tight text-foreground">{modalTitle}</h2>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                        {risikoNoRujukan}{risikoTeks ? ` · ${risikoTeks}` : ""}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-1">
+                                <Button type="button" variant="ghost" size="sm" onClick={openPanduan} className="gap-1.5 text-muted-foreground">
+                                    <BookOpen />
                                     Panduan
-                                </button>
-                            </div>
-                            
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Tahun Pemantauan:*</label>
-                                    <input
-                                        type="number"
-                                        name="tahun_pemantauan"
-                                        value={formData.tahun_pemantauan}
-                                        onChange={handleChange}
-                                        required
-                                        readOnly={isEditMode || isViewMode} // ⭐️ DIKEMASKINI (Sentiasa readOnly jika 'edit' atau 'view')
-                                        style={(isEditMode || isViewMode) ? { backgroundColor: '#f3f4f6' } : {}}
-                                    />
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Separuh Tahun Pemantauan:*</label>
-                                    <select
-                                        name="separuh_tahun_pemantauan"
-                                        value={formData.separuh_tahun_pemantauan}
-                                        onChange={handleChange}
-                                        disabled={isEditMode || isViewMode} // ⭐️ DIKEMASKINI (Sentiasa disabled jika 'edit' atau 'view')
-                                        style={(isEditMode || isViewMode) ? { backgroundColor: '#f3f4f6' } : {}}
-                                    >
-                                        <option value={1}>Pertama</option>
-                                        <option value={2}>Kedua</option>
-                                    </select>
-                                </div>
-                                <div className="tambahlog-item">
-                                    <label>Kelulusan:</label>
-                                    <input 
-                                        type="text" 
-                                        name="no_bil_kelulusan" 
-                                        value={formData.no_bil_kelulusan} 
-                                        onChange={handleChange} 
-                                        readOnly={isViewMode || (isEditMode && isStaff)} // ⭐️ DIKEMASKINI (Staff tak boleh edit)
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Hanya papar dalam mod 'tambah' */}
-                            {validationMessage && !isEditMode && !isViewMode && (
-                                <p
-                                    style={{
-                                        marginTop: "8px",
-                                        fontSize: "0.9rem",
-                                        color: validationMessage.includes("✅") ? "#16a34a" : (validationMessage.includes("❌") || validationMessage.includes("⚠️") ? "#dc2626" : "#eab308"),
-                                    }}
-                                >
-                                    {validationMessage}
-                                </p>
-                            )}
-
-                            {/* Pelan Tindakan Pemantauan */}
-                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan:</div>
-                            {formData.pelan_tindakan_list.map((item, index) => {
-                                const listName = "pelan_tindakan_list";
-                                const key = "butiran_aktiviti";
-                                return (
-                                    <div className="tambahlog-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={isViewMode || (isEditMode && isStaff) ? "" : `Butiran Pelan Tindakan ${index + 1}`} 
-                                            readOnly={isViewMode || (isEditMode && isStaff)} // ⭐️ DIKEMASKINI (Staff tak boleh edit)
-                                        />
-                                        {/* ⭐️ DIKEMASKINI (Sembunyi butang jika 'view' atau 'Staff' dalam mode edit) */}
-                                        {(!isViewMode && !(isEditMode && isStaff)) && formData[listName].length > 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                        {(!isViewMode && !(isEditMode && isStaff)) && index === formData[listName].length - 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* Kakitangan Bertanggungjawab */}
-                            <div className="tambahlog-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab:</div>
-                            {formData.kakitangan_list.map((item, index) => {
-                                const listName = "kakitangan_list";
-                                const key = "butiran_kakitangan";
-                                return (
-                                    <div className="tambahlog-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={isViewMode || (isEditMode && isStaff) ? "" : `Kakitangan Bertanggungjawab ${index + 1}`} 
-                                            readOnly={isViewMode || (isEditMode && isStaff)} // ⭐️ DIKEMASKINI (Staff tak boleh edit)
-                                        />
-                                        {/* ⭐️ DIKEMASKINI (Sembunyi butang jika 'view' atau 'Staff' dalam mode edit) */}
-                                        {(!isViewMode && !(isEditMode && isStaff)) && formData[listName].length > 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
-                                        {(!isViewMode && !(isEditMode && isStaff)) && index === formData[listName].length - 1 && (
-                                            <button type="button" className="tambahlog-btn-circle tambahlog-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* Kekerapan Pemantauan */}
-                            <div className="tambahlog-row" style={{ marginTop: '10px' }}>
-                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Kekerapan:</label>
-                                    <input 
-                                        type="text" 
-                                        name="kekerapan_pemantauan" 
-                                        value={formData.kekerapan_pemantauan} 
-                                        onChange={handleChange} 
-                                        placeholder={isViewMode || (isEditMode && isStaff) ? "" : "Contoh: 3 Bulan / Tahunan"} 
-                                        readOnly={isViewMode || (isEditMode && isStaff)} // ⭐️ DIKEMASKINI (Staff tak boleh edit)
-                                    />
-                                </div>
+                                </Button>
+                                <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Tutup Borang" className="h-8 w-8 rounded-lg">
+                                    <X />
+                                </Button>
                             </div>
                         </div>
 
-                        {/*Penilaian dan Keberkesanan Tindakan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Keberkesanan Tindakan</div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Skor Kebarangkalian:</label>
-                                    <select 
-                                        name="skor_kebarangkalian_selepas" 
-                                        value={formData.skor_kebarangkalian_selepas} 
-                                        onChange={handleChange} 
-                                        disabled={isViewMode || (isEditMode && (isExecutive || isStaff))} // ⭐️ DIKEMASKINI (Exec & Staff tak boleh edit)
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        {SKOR_KEBARANGKALIAN_DESC.map((item) => (
-                                            <option key={item.value} value={item.value}>
-                                                {item.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+
+                            <section className="space-y-3">
+                                {renderSectionHeading("Maklumat Pemantauan")}
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Tahun Pemantauan <span className="text-destructive">*</span></Label>
+                                        <Input
+                                            type="number"
+                                            name="tahun_pemantauan"
+                                            value={formData.tahun_pemantauan}
+                                            onChange={handleChange}
+                                            required
+                                            readOnly={periodLocked}
+                                            className={periodLocked ? "bg-muted text-muted-foreground" : ""}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Separuh Tahun <span className="text-destructive">*</span></Label>
+                                        <Select
+                                            name="separuh_tahun_pemantauan"
+                                            value={formData.separuh_tahun_pemantauan}
+                                            onChange={handleChange}
+                                            disabled={periodLocked}
+                                            className={periodLocked ? "bg-muted text-muted-foreground" : ""}
+                                        >
+                                            <option value={1}>Pertama</option>
+                                            <option value={2}>Kedua</option>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Kelulusan</Label>
+                                        <Input
+                                            type="text"
+                                            name="no_bil_kelulusan"
+                                            value={formData.no_bil_kelulusan}
+                                            onChange={handleChange}
+                                            readOnly={staffLocked}
+                                            className={staffLocked ? "bg-muted text-muted-foreground" : ""}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="tambahlog-item">
-                                    <label>Skor Impak:</label>
-                                    <select 
-                                        name="skor_impak_selepas" 
-                                        value={formData.skor_impak_selepas} 
-                                        onChange={handleChange} 
-                                        disabled={isViewMode || (isEditMode && (isExecutive || isStaff))} // ⭐️ DIKEMASKINI (Exec & Staff tak boleh edit)
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        {SKOR_IMPAK_DESC.map((item) => (
-                                            <option key={item.value} value={item.value}>
-                                                {item.label}
-                                            </option>
-                                        ))}
-                                    </select>
+
+                                {validationMessage && !isEditMode && !isViewMode && (
+                                    <p className={`text-[13px] font-medium ${
+                                        validationMessage.includes("✅")
+                                            ? "text-success"
+                                            : validationMessage.includes("❌") || validationMessage.includes("⚠️")
+                                                ? "text-destructive"
+                                                : "text-warning"
+                                    }`}>
+                                        {validationMessage}
+                                    </p>
+                                )}
+
+                                <div className="space-y-2 pt-1">
+                                    <Label className="text-xs font-medium">Pelan Tindakan Pemantauan</Label>
+                                    {renderListEditor("pelan_tindakan_list", "butiran_aktiviti", "Butiran Pelan Tindakan")}
                                 </div>
-                                <div className="tambahlog-item">
-                                    <span className="tambahlog-score-label">Tahap Risiko :</span>
-                                    <span className="tambahlog-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
+
+                                <div className="space-y-2 pt-1">
+                                    <Label className="text-xs font-medium">Kakitangan Bertanggungjawab</Label>
+                                    {renderListEditor("kakitangan_list", "butiran_kakitangan", "Kakitangan Bertanggungjawab")}
                                 </div>
-                            </div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item">
-                                    <label>Keberkesanan:</label>
-                                    <input
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kekerapan</Label>
+                                    <Input
                                         type="text"
-                                        name="keberkesanan"
-                                        value={
-                                            (formData.skor_kebarangkalian_selepas && formData.skor_impak_selepas)
-                                                ? `${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`
-                                                : "-"
-                                        }
-                                        readOnly
-                                        disabled
-                                        style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
+                                        name="kekerapan_pemantauan"
+                                        value={formData.kekerapan_pemantauan}
+                                        onChange={handleChange}
+                                        placeholder={staffLocked ? "" : "Contoh: 3 Bulan / Tahunan"}
+                                        readOnly={staffLocked}
+                                        className={staffLocked ? "bg-muted text-muted-foreground" : ""}
                                     />
                                 </div>
-                            </div>
-                        </div>
+                            </section>
 
-                        {/*Status Pemantauan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Status Pemantauan</div>
-                            <div className="tambahlog-row">
-                                <div className="tambahlog-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Status Pemantauan Semasa:*</label>
-                                    <select 
-                                        name="status_pemantauan" 
-                                        value={formData.status_pemantauan} 
-                                        onChange={handleChange} 
-                                        required 
-                                        disabled={isViewMode} // ⭐️ DIKEMASKINI (Staff & Exec BOLEH edit)
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        <option>Buka</option>
-                                        <option>Sedang Dilaksanakan</option>
-                                        <option>Pemantauan</option>
-                                        <option>Selesai</option>
-                                        <option>Tutup</option>
-                                    </select>
+                            <section className="space-y-3">
+                                {renderSectionHeading("Penilaian & Keberkesanan")}
+                                <div className="rounded-lg border border-border bg-accent/60 p-3">
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-medium">Skor Kebarangkalian</Label>
+                                                <Select
+                                                    name="skor_kebarangkalian_selepas"
+                                                    value={formData.skor_kebarangkalian_selepas}
+                                                    onChange={handleChange}
+                                                    disabled={skorLocked}
+                                                    className={skorLocked ? "bg-muted text-muted-foreground" : ""}
+                                                >
+                                                    <option value="">- Sila Pilih -</option>
+                                                    {SKOR_KEBARANGKALIAN_DESC.map((item) => (
+                                                        <option key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-medium">Skor Impak</Label>
+                                                <Select
+                                                    name="skor_impak_selepas"
+                                                    value={formData.skor_impak_selepas}
+                                                    onChange={handleChange}
+                                                    disabled={skorLocked}
+                                                    className={skorLocked ? "bg-muted text-muted-foreground" : ""}
+                                                >
+                                                    <option value="">- Sila Pilih -</option>
+                                                    {SKOR_IMPAK_DESC.map((item) => (
+                                                        <option key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1.5 sm:col-span-2">
+                                                <Label className="text-xs font-medium">Tahap Risiko Semasa</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className={`inline-flex h-7 min-w-[72px] items-center justify-center rounded-md border border-black/5 px-3 text-xs font-bold uppercase tracking-wide ${
+                                                            tahapRisikoSelepas.color === "#f1f5f9" ? "text-slate-500" : "text-white"
+                                                        }`}
+                                                        style={{ backgroundColor: tahapRisikoSelepas.color }}
+                                                    >
+                                                        {tahapRisikoSelepas.label}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 sm:col-span-2">
+                                                <Label className="text-xs font-medium">Keberkesanan (Automatik)</Label>
+                                                <Input
+                                                    type="text"
+                                                    name="keberkesanan"
+                                                    value={
+                                                        (formData.skor_kebarangkalian_selepas && formData.skor_impak_selepas)
+                                                            ? `${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`
+                                                            : "-"
+                                                    }
+                                                    readOnly
+                                                    disabled
+                                                    className="cursor-default bg-muted text-muted-foreground"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex shrink-0 flex-col items-center gap-2 lg:w-[200px]">
+                                            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Matriks Risiko</span>
+                                            <RiskMatrixVisual
+                                                compact
+                                                kebarangkalian={formData.skor_kebarangkalian_selepas}
+                                                impak={formData.skor_impak_selepas}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
+
+                            <section className="space-y-3">
+                                {renderSectionHeading("Status & Catatan")}
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Status Pemantauan Semasa <span className="text-destructive">*</span></Label>
+                                        <Select
+                                            name="status_pemantauan"
+                                            value={formData.status_pemantauan}
+                                            onChange={handleChange}
+                                            required
+                                            disabled={isViewMode}
+                                            className={isViewMode ? "bg-muted text-muted-foreground" : ""}
+                                        >
+                                            <option value="">- Sila Pilih -</option>
+                                            <option>Buka</option>
+                                            <option>Sedang Dilaksanakan</option>
+                                            <option>Pemantauan</option>
+                                            <option>Selesai</option>
+                                            <option>Tutup</option>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Catatan</Label>
+                                        <Textarea
+                                            name="catatan"
+                                            value={formData.catatan}
+                                            onChange={handleChange}
+                                            rows={5}
+                                            readOnly={isViewMode}
+                                            className={`min-h-[100px] resize-y ${isViewMode ? "bg-muted text-muted-foreground" : ""}`}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
                         </div>
 
-                        {/*Catatan */}
-                        <div className="tambahlog-box">
-                            <div className="tambahlog-box-header">Catatan Pemantauan</div>
-                            <label>Catatan:</label>
-                            <textarea 
-                                name="catatan" 
-                                value={formData.catatan} 
-                                onChange={handleChange} 
-                                rows="5" 
-                                readOnly={isViewMode} // ⭐️ DIKEMASKINI (Staff & Exec BOLEH edit)
-                            />
+                        <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+                            <Button type="button" variant="outline" onClick={onClose}>
+                                {isViewMode ? "Tutup" : "Batal"}
+                            </Button>
+                            {!isViewMode && (
+                                <Button type="submit" disabled={isLoading}>
+                                    {isLoading ? <Loader2 className="animate-spin" /> : <Save />}
+                                    {isLoading ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Simpan Log")}
+                                </Button>
+                            )}
                         </div>
-                    </div>
+                    </form>
 
-                    {/* Footer dikemaskini untuk 'view mode' */}
-                    <div className="tambahlog-footer tambahlog-footer-centered">
-                        <button type="button" className="tambahlog-btn-cancel" onClick={onClose}>
-                            {isViewMode ? "Tutup" : "Batal"}
-                        </button>
-                        
-                        {!isViewMode && (
-                            <button type="submit" className="tambahlog-btn-submit" disabled={isLoading}>
-                                {isLoading ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
-                                {isLoading ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Simpan Log")}
-                            </button>
-                        )}
-                    </div>
-                </form>
-
-
-                {PanduanRenderer}
+                    {PanduanRenderer}
+                </div>
             </div>
-        </div>
+
+            {toast && (
+                <div className="fixed top-[64px] right-4 z-[60] max-w-sm">
+                    <Toast variant={toast.variant} title={toast.title} message={toast.message} onClose={() => setToast(null)} />
+                </div>
+            )}
+        </>
     );
 }

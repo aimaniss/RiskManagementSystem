@@ -1,5 +1,3 @@
-// Fail: KategoriRisikoChart.jsx
-
 import React from "react";
 import {
   BarChart,
@@ -8,58 +6,66 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  LabelList,
   ResponsiveContainer,
-  Cell,
-  LabelList, // <-- 1. IMPORT LabelList
 } from "recharts";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
-// Warna untuk setiap kategori
-const COLORS = {
-  "Strategik": "#0074c8",
-  "Operasi": "#ffc107",
-  "Pematuhan / Perundangan": "#dc3545",
-  "Kewangan": "#28a745",
-  "Lain-lain / Tiada": "#6b7280", // <-- 2. TAMBAH WARNA 'FALLBACK'
+const TOOLTIP_STYLE = {
+  backgroundColor: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "8px",
+  fontSize: "12px",
+  color: "var(--color-foreground)",
 };
 
 export default function KategoriRisikoChart({ data }) {
-  if (!data || data.length === 0) {
+  const isDark = useDarkMode();
+  const gridColor = isDark ? "#3f3f46" : "#e2e8f0";
+  const tickColor = isDark ? "#a1a1aa" : "#64748b";
+  const barColor = isDark ? "#60a5fa" : "#2563eb";
+
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
     return (
-      <div className="chart-no-data">
+      <p className="py-8 text-center text-xs text-muted-foreground">
         Tiada data kategori risiko untuk dipaparkan.
-      </div>
+      </p>
     );
   }
 
+  const height = Math.max(200, safeData.length * 36 + 20);
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      {/* 3. Laraskan margin kiri untuk label Y-axis yang panjang */}
-      <BarChart 
-        data={data} 
-        layout="vertical" 
-        margin={{ top: 5, right: 30, left: 100, bottom: 5 }} // 'left' ditambah
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart
+        data={safeData}
+        layout="vertical"
+        margin={{ top: 4, right: 28, left: 0, bottom: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" />
-        {/* Paksa X-axis tunjuk nombor bulat sahaja */}
-        <XAxis type="number" allowDecimals={false} /> 
-        {/* 4. Buang 'width' tetap, biarkan 'margin' yang kawal */}
-        <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} /> 
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" name="Jumlah" fill="#8884d8">
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={COLORS[entry.name] || COLORS["Lain-lain / Tiada"]} // Guna warna 'fallback'
-            />
-          ))}
-          {/* 5. TAMBAH LABEL PADA SETIAP BAR */}
-          <LabelList 
-            dataKey="value" 
-            position="right" // Letak nombor di sebelah kanan bar
-            style={{ fill: "#333", fontSize: 12 }} // Warna nombor
-          />
+        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke={gridColor} />
+        <XAxis type="number" hide />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={110}
+          tick={{ fontSize: 11, fill: tickColor }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          cursor={{ fill: isDark ? "rgba(96, 165, 250, 0.08)" : "rgba(37, 99, 235, 0.05)" }}
+          contentStyle={TOOLTIP_STYLE}
+        />
+        <Bar
+          dataKey="value"
+          name="Jumlah"
+          fill={barColor}
+          radius={[0, 6, 6, 0]}
+          barSize={18}
+        >
+          <LabelList dataKey="value" position="right" fontSize={11} fill={tickColor} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

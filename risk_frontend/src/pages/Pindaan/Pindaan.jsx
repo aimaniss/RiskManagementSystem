@@ -1,15 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../api/api";
-import { FilePenLine, ShieldAlert, ShieldCheck, Archive } from "lucide-react";
+import { FilePenLine, ShieldAlert, ShieldCheck, Archive, Eye } from "lucide-react";
 
 // Komponen modular
-import StatusBadge from "./StatusBadge";
 import MohonPindaanModal from "./MohonPindaanModal";
 import PindaanFormModal from "./PindaanFormModal";
 import PindaanDetailsModal from "./PindaanDetailsModal";
 
-// Gaya CSS (Pastikan anda ada fail ini!)
-import "./PindaanRisiko.css";
+// UI Komponen
+import Toast from "@/components/ui/toast";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import AlertBanner from "@/components/ui/alert-banner";
+import EmptyState from "@/components/ui/empty-state";
+import PageHeader from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+
 import { getAuthUser } from "../../utils/auth";
 import { riskMatrix } from "../../constants/riskMatrix";
 
@@ -24,6 +33,7 @@ function PindaanRisiko() {
   const [loadingAmendments, setLoadingAmendments] = useState(true);
   const [amendmentsError, setAmendmentsError] = useState(null);
   const [syarikatList, setSyarikatList] = useState([]);
+  const [toast, setToast] = useState(null);
   
   
   const [filterStatus, setFilterStatus] = useState("Menunggu Kelulusan"); 
@@ -116,7 +126,7 @@ function PindaanRisiko() {
       setAllRisks(risksWithDetails || []);
     } catch (err) {
       console.error("Gagal memuatkan senarai risiko:", err);
-      alert("⚠️ Gagal memuatkan senarai risiko.");
+      setToast({ variant: "error", title: "Gagal Memuatkan", message: "Gagal memuatkan senarai risiko." });
     } finally {
       setLoadingRisks(false);
     }
@@ -155,7 +165,7 @@ function PindaanRisiko() {
   // --- Handlers ---
   const handlePindaanSubmitted = async (justifikasi, perubahanDicadang) => {
     const risikoId = selectedRiskForPindaan.risiko_id || selectedRiskForPindaan.id;
-    if (!risikoId) return alert("⚠️ ID Risiko tidak sah.");
+    if (!risikoId) { setToast({ variant: "error", title: "ID Tidak Sah", message: "ID Risiko tidak sah." }); return; }
     const payload = {
       justifikasi,
       perubahan: perubahanDicadang,
@@ -163,11 +173,13 @@ function PindaanRisiko() {
     try {
       // API endpoint ialah /api/pindaan/:risk_id
       await api.post(`/pindaan/${risikoId}`, payload); 
-      alert(
-        `Permohonan Pindaan ${
+      setToast({
+        variant: "success",
+        title: "Berjaya",
+        message: `Permohonan Pindaan ${
           currentUserRole === "Admin" ? "dicipta dan diluluskan secara automatik" : "berjaya dihantar"
         }!`
-      );
+      });
       setIsPindaanModalOpen(false);
       setSelectedRiskForPindaan(null);
       // Muat semula data (hanya jika Executive/Admin)
@@ -179,11 +191,11 @@ function PindaanRisiko() {
       }
     } catch (err) {
       console.error("Gagal hantar permohonan:", err.response?.data || err);
-      alert(
-        `⚠️ Gagal hantar permohonan: ${
-          err.response?.data?.message || "Sila cuba lagi."
-        }`
-      );
+      setToast({
+        variant: "error",
+        title: "Gagal Menghantar",
+        message: err.response?.data?.message || "Sila cuba lagi."
+      });
     }
   };
 
@@ -201,7 +213,7 @@ function PindaanRisiko() {
     
     try {
       await api.put(endpoint, payload);
-      alert(`Permohonan #${pindaanId} berjaya ${action}.`);
+      setToast({ variant: "success", title: "Berjaya", message: `Permohonan #${pindaanId} berjaya ${action}.` });
       setIsDetailsModalOpen(false);
       // Muat semula data
       fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
@@ -210,11 +222,11 @@ function PindaanRisiko() {
       }
     } catch (err) {
       console.error(`Gagal ${action} permohonan:`, err.response?.data || err);
-      alert(
-        `⚠️ Gagal ${action} permohonan: ${
-          err.response?.data?.message || "Sila cuba lagi."
-        }`
-      );
+      setToast({
+        variant: "error",
+        title: `Gagal ${action}`,
+        message: err.response?.data?.message || "Sila cuba lagi."
+      });
     }
   };
 
@@ -249,16 +261,35 @@ function PindaanRisiko() {
   const canApplyForAmendment = ["Admin", "Executive", "Ketua Subsidiari", "Staff"].includes(currentUserRole);
 
   if (currentUserRole === null)
-    return <div className="pindaan-container">⏳ Memeriksa kebenaran akses...</div>;
+    return <LoadingSpinner text="Memeriksa kebenaran akses..." />;
     
   if (!canApplyForAmendment)
-    return <div className="pindaan-container">🚫 Anda tidak dibenarkan mengakses halaman ini.</div>;
+    return (
+      <div>
+        <PageHeader title="Pindaan" description="Permohonan pindaan rekod risiko" />
+        <AlertBanner variant="warning" title="Akses Ditolak" description="Anda tidak dibenarkan mengakses halaman ini." />
+      </div>
+    );
 
   return (
-    <div className="pindaan-container pindaan-risiko-wrapper">
-      <h1 className="pindaan-header">Pindaan</h1>
+    <div>
+      <PageHeader
+        title="Pindaan"
+        description="Permohonan pindaan rekod risiko"
+        actions={
+          <Button
+            onClick={() => {
+              fetchAllRisks(); 
+              setIsSelectRiskModalOpen(true);
+            }}
+            disabled={loadingRisks}
+          >
+            <FilePenLine />
+            {loadingRisks ? "Memuatkan Risiko..." : "Mohon Pindaan"}
+          </Button>
+        }
+      />
 
-      
       {currentUserRole === 'Admin' && (
         <StatsCardSection stats={amendmentStats} loading={loadingStats} />
       )}
@@ -279,33 +310,11 @@ function PindaanRisiko() {
           error={amendmentsError}
           amendments={amendments}
           handleViewDetails={handleViewDetails}
-          // Props Butang
-          onMohonPindaanClick={() => {
-            fetchAllRisks(); 
-            setIsSelectRiskModalOpen(true);
-          }}
-          isMohonPindaanLoading={loadingRisks}
         />
       ) : (
         // Paparan untuk Staff/Ketua Subsidiari yang hanya boleh Mohon Pindaan
-        <div className="pindaan-box">
-            <div className="pindaan-box-header" style={{justifyContent: 'flex-end'}}>
-                <button
-                    onClick={() => {
-                        fetchAllRisks(); 
-                        setIsSelectRiskModalOpen(true);
-                    }}
-                    className="btn btn-primary"
-                    disabled={loadingRisks}
-                >
-                    {loadingRisks ? "Memuatkan Risiko..." : (
-                        <>
-                            <FilePenLine size={18} /> Mohon Pindaan
-                        </>
-                    )}
-                </button>
-            </div>
-            <p className="table-message">Anda hanya dibenarkan memohon pindaan, bukan melihat atau meluluskan senarai permohonan.</p>
+        <div className="rounded-xl border bg-muted/40 p-4">
+          <p className="text-sm text-muted-foreground">Anda hanya dibenarkan memohon pindaan, bukan melihat atau meluluskan senarai permohonan. Gunakan butang "Mohon Pindaan" di atas untuk memulakan permohonan.</p>
         </div>
       )}
 
@@ -340,6 +349,17 @@ function PindaanRisiko() {
           onAction={handleApprovalAction} 
         />
       )}
+
+      {toast && (
+        <div className="fixed top-[64px] right-4 z-50 max-w-sm">
+          <Toast
+            variant={toast.variant}
+            title={toast.title}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -350,44 +370,46 @@ function StatsCardSection({ stats, loading }) {
     {
       title: "Menunggu Kelulusan",
       value: stats.menunggu,
-      icon: <ShieldAlert size={24} className="stats-icon stats-icon-menunggu" />,
-      colorClass: "stats-card-menunggu",
+      icon: ShieldAlert,
+      chipClass: "bg-warning/10 text-warning",
     },
     {
       title: "Diluluskan",
       value: stats.diluluskan,
-      icon: <ShieldCheck size={24} className="stats-icon stats-icon-diluluskan" />,
-      colorClass: "stats-card-diluluskan",
+      icon: ShieldCheck,
+      chipClass: "bg-success/10 text-success",
     },
     {
       title: "Ditolak / Arkib",
       value: stats.ditolak,
-      icon: <Archive size={24} className="stats-icon stats-icon-ditolak" />,
-      colorClass: "stats-card-ditolak",
+      icon: Archive,
+      chipClass: "bg-destructive/10 text-destructive",
     },
   ];
 
   return (
-    <div className="stats-card-container">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
       {cardData.map((card) => (
-        <div key={card.title} className={`stats-card ${card.colorClass}`}>
-          <div className="stats-card-icon-bg">
-            {card.icon}
-          </div>
-          <div className="stats-card-content">
-            <span className="stats-card-title">{card.title}</span>
-            <span className="stats-card-value">
-              {loading ? "..." : card.value}
-            </span>
-          </div>
-        </div>
+        <Card key={card.title} className="rounded-xl">
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.chipClass}`}>
+              <card.icon size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground truncate">{card.title}</p>
+              <p className="text-xl font-bold tracking-tight mt-0.5">
+                {loading ? "..." : card.value}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
 }
 
 
-// --- Komponen Senarai Pindaan (LOGIK EXECUTIVE DIUBAH) ---
+// --- Komponen Senarai Pindaan ---
 function AmendmentsListSection({
   userRole,
   currentUserId,
@@ -402,9 +424,6 @@ function AmendmentsListSection({
   error,
   amendments,
   handleViewDetails,
-  // Props Butang
-  onMohonPindaanClick,
-  isMohonPindaanLoading,
 }) {
   
   const displayAmendments = useMemo(() => {
@@ -414,48 +433,47 @@ function AmendmentsListSection({
   // 8 lajur untuk Admin (dengan Pemohon), 7 lajur untuk Executive (tanpa Pemohon)
   const columnCount = userRole === "Admin" ? 8 : 7; 
 
-  return (
-    <div className="pindaan-box">
-      <div className="pindaan-box-header">
-        <h2 className="pindaan-subheader">
-          {userRole === "Executive"
-            ? "Senarai Semua Permohonan Pindaan" // Tajuk baru
-            : "Senarai Permohonan Untuk Kelulusan"}
-        </h2>
-        <button
-          onClick={onMohonPindaanClick}
-          className="btn btn-primary"
-          disabled={isMohonPindaanLoading}
-        >
-          {isMohonPindaanLoading ? "Memuatkan Risiko..." : (
-            <>
-              <FilePenLine size={18} /> Mohon Pindaan
-            </>
-          )}
-        </button>
-      </div>
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case "Diluluskan":
+        return "success";
+      case "Ditolak":
+        return "destructive";
+      case "Menunggu Kelulusan":
+        return "warning";
+      default:
+        return "outline";
+    }
+  };
 
-      {/* Bekas Penapis (Kekal sama) */}
-      <div className="filters-wrapper">
-        
-        {/* ▼▼▼ PERUBAHAN 3: Tukar 'value' agar sepadan dengan DB ▼▼▼ */}
-        <select
+  return (
+    <div>
+      <h2 className="text-base font-semibold text-foreground mb-3">
+        {userRole === "Executive"
+          ? "Senarai Semua Permohonan Pindaan"
+          : "Senarai Permohonan Untuk Kelulusan"}
+      </h2>
+
+      {/* Bekas Penapis */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="form-select"
+          className="h-9 w-[190px]"
+          aria-label="Tapis mengikut status"
         >
-          {/* Nilai 'value' KINI selaras dengan PANGKALAN DATA */}
           <option value="Menunggu Kelulusan">Menunggu Kelulusan</option>
           <option value="Diluluskan">Diluluskan</option>
           <option value="Ditolak">Ditolak</option>
           <option value="Semua">Semua Status</option>
-        </select>
+        </Select>
         
         {userRole === "Admin" && (
-          <select
+          <Select
             value={filterSyarikat}
             onChange={(e) => setFilterSyarikat(e.target.value)}
-            className="form-select"
+            className="h-9 w-[210px]"
+            aria-label="Tapis mengikut syarikat"
           >
             <option value="Semua">Semua Syarikat</option>
             {syarikatList.map((subs) => (
@@ -463,71 +481,77 @@ function AmendmentsListSection({
                 {subs.nama_syarikat}
               </option>
             ))}
-          </select>
+          </Select>
         )}
       </div>
 
-      <table className="pindaan-table">
-        <thead>
-          <tr>
-            <th>Bil.</th>
-            <th>No Rujukan</th>
-            <th>Risiko</th> 
-            <th>Syarikat</th> 
-            {userRole === "Admin" && <th>Pemohon</th>}
-            <th>Tarikh Mohon</th>
-            <th>Status</th>
-            <th>Tindakan</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={columnCount} className="table-message">
-                ⏳ Memuatkan data...
-              </td>
-            </tr>
-          ) : error ? (
-            <tr>
-              <td colSpan={columnCount} className="table-message table-message-error">
-                ⚠️ {error}
-              </td>
-            </tr>
-          ) : displayAmendments.length === 0 ? (
-            <tr>
-              <td colSpan={columnCount} className="table-message">
-                🚫 Tiada data.
-              </td>
-            </tr>
-          ) : (
-            displayAmendments.map((amend, index) => (
-              <tr key={amend.pindaan_id}>
-                <td>{index + 1}</td>
-                <td>{amend.no_rujukan || "N/A"}</td>
-                <td>{amend.risiko || "N/A"}</td> 
-                <td>{amend.nama_syarikat || "N/A"}</td> 
-                {userRole === "Admin" && (
-                  <td>{amend.nama_pemohon || "N/A"}</td>
-                )}
-                <td>
-                  {new Date(amend.created_at).toLocaleDateString("ms-MY")}
-                </td>
-                <td>
-                  <StatusBadge status={amend.status_permohonan} />
-                </td>
-                <td>
-                  <button
-                    onClick={() => handleViewDetails(amend)}
-                    className="btn btn-sm btn-info"
-                  >
-                    Lihat
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Bil.</TableHead>
+              <TableHead>No Rujukan</TableHead>
+              <TableHead>Risiko</TableHead> 
+              <TableHead>Syarikat</TableHead> 
+              {userRole === "Admin" && <TableHead>Pemohon</TableHead>}
+              <TableHead>Tarikh Mohon</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Tindakan</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={columnCount} className="h-32">
+                  <LoadingSpinner text="Memuatkan data..." size="sm" />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={columnCount} className="h-32">
+                  <AlertBanner variant="error" title="Ralat" description={error} />
+                </TableCell>
+              </TableRow>
+            ) : displayAmendments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columnCount} className="h-32">
+                  <EmptyState icon={FilePenLine} title="Tiada Data" description="Tiada permohonan pindaan ditemui." />
+                </TableCell>
+              </TableRow>
+            ) : (
+              displayAmendments.map((amend, index) => (
+                <TableRow key={amend.pindaan_id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell className="font-mono text-xs font-medium whitespace-nowrap">{amend.no_rujukan || "N/A"}</TableCell>
+                  <TableCell className="max-w-[280px] truncate" title={amend.risiko}>{amend.risiko || "N/A"}</TableCell> 
+                  <TableCell>{amend.nama_syarikat || "N/A"}</TableCell> 
+                  {userRole === "Admin" && (
+                    <TableCell>{amend.nama_pemohon || "N/A"}</TableCell>
+                  )}
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {new Date(amend.created_at).toLocaleDateString("ms-MY")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(amend.status_permohonan)}>
+                      {amend.status_permohonan}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      onClick={() => handleViewDetails(amend)}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                    >
+                      <Eye size={13} /> Lihat
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

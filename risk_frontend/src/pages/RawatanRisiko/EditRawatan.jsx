@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { X, Trash2, Plus, BookOpen, Save } from "lucide-react"; 
-import "./EditRawatan.css";
+import { X, Trash2, Plus, BookOpen, Save, Loader2 } from "lucide-react"; 
 import api from "../../api/api"; 
+import Toast from "@/components/ui/toast";
 import ListDisplay from "../../components/ListDisplay";
 import { riskMatrix, getRiskMatrix, getRiskAbbreviation, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 export default function EditRawatan({ isOpen, risk, onClose, onSave }) { 
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
@@ -25,6 +30,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
     });
     const [riskColor, setRiskColor] = useState("#f1f5f9");
     const [saving, setSaving] = useState(false);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         if (!isOpen) return; 
@@ -109,7 +115,7 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
             !formData.jenisKawalan || 
             !formData.tempohSiap
         ) {
-            alert("Sila masukkan sekurang-kurangnya satu **Plan Tindakan** dan **Kakitangan Bertanggungjawab**, pilih **Jenis Kawalan**, dan isikan **Tempoh Jangkaan Siap**.");
+            setToast({ variant: "warning", title: "Amaran", message: "Sila masukkan sekurang-kurangnya satu Plan Tindakan dan Kakitangan Bertanggungjawab, pilih Jenis Kawalan, dan isikan Tempoh Jangkaan Siap." });
             return;
         }
 
@@ -151,10 +157,10 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
             const statusMsg = isUpdate 
                 ? "dikemaskini" 
                 : "ditambah! Status pemantauan dikemaskini kepada: Pemantauan";
-            alert(`Rawatan risiko berjaya ${statusMsg}!`);
+            setToast({ variant: "success", title: "Berjaya", message: `Rawatan risiko berjaya ${statusMsg}!` });
         } catch (err) {
             console.error("❌ Gagal menyimpan rawatan:", err.response?.data?.message || err.message);
-            alert(`Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}`);
+            setToast({ variant: "error", title: "Ralat", message: `Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}` });
         } finally {
             setSaving(false);
         }
@@ -163,13 +169,22 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
     if (!isOpen) return null;
 
     return (
-        <div className="rawatan-modal-overlay">
-            <div className="rawatan-modal-container">
-                <div className="rawatan-box-header-main">
-                    <span>{formData.rawatan_id ? "Kemaskini Rawatan Risiko" : "Tambah Rawatan Risiko Baru"}</span>
-                    <button className="rawatan-close-btn" onClick={onClose} aria-label="Tutup Borang">
-                        <X size={16} />
-                    </button>
+        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
+            <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl animate-in slide-in-from-bottom-4 duration-200">
+                <div className="flex shrink-0 items-center justify-between border-b px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Plus className="h-4 w-4" />
+                        </span>
+                        <div>
+                            <h3 className="text-[15px] font-semibold text-foreground">{formData.rawatan_id ? "Kemaskini Rawatan Risiko" : "Tambah Rawatan Risiko Baru"}</h3>
+                            <p className="text-xs text-muted-foreground">No Rujukan: {formData.no_rujukan || "-"}</p>
+                        </div>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label="Tutup Borang">
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
 
                 <form
@@ -177,260 +192,263 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                         e.preventDefault();
                         handleSave();
                     }}
+                    className="flex min-h-0 flex-1 flex-col"
                 >
-                    <div className="rawatan-box">
-                        <div className="rawatan-box-header rawatan-risk-header">
-                            <span>Maklumat Risiko</span>
-                            <button 
-                                type="button" 
-                                className="rawatan-panduan-btn" 
-                                onClick={openPanduan}
-                            >
-                                <BookOpen size={16} style={{ marginRight: '6px' }} />
-                                Panduan 
-                            </button>
-                        </div>
-                        <div className="rawatan-flex-row">
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">No Rujukan:</span>
-                                <span className="rawatan-data-inline">{formData.no_rujukan || "-"}</span>
-                            </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Tahun:</span>
-                                <span className="rawatan-data-inline">{formData.tahun || "-"}</span>
-                            </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Separuh Tahun:</span>
-                                <span className="rawatan-data-inline">
-                                    {formData.separuh_tahun === 1 ? "Pertama" : formData.separuh_tahun === 2 ? "Kedua" : "-"}
-                                </span>
-                            </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Syarikat:</span>
-                                <span className="rawatan-data-inline">{formData.nama_syarikat || "-"}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="rawatan-box">
-                        <div className="rawatan-box-header">Pengenalpastian Risiko</div>
-                        <div className="rawatan-flex-row">
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Kategori Risiko:</span>
-                                <span className="rawatan-data-inline">{formData.kategori || "-"}</span>
-                            </div>
-                            <div className="rawatan-flex-item">
-                                <span className="rawatan-label-inline">Bahagian/Unit:</span>
-                                <span className="rawatan-data-inline">{formData.bahagian || "-"}</span>
-                            </div>
-                            <div className="rawatan-flex-item" style={{ flex: "1 1 100%" }}>
-                                <span className="rawatan-label-inline">Risiko:</span>
-                                <span className="rawatan-data-inline">{formData.risiko || "-"}</span>
-                            </div>
-                        </div>
+                    <div className="flex-1 space-y-4 overflow-y-auto p-5">
 
-                        <div className="rawatan-flex-row rawatan-list-section">
-                            <div className="rawatan-flex-item" style={{ flex: "1 1 45%" }}>
-                                <span className="rawatan-label-inline">Punca Risiko:</span>
-                                <ListDisplay data={formData.punca} />
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-4 flex items-center justify-between gap-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Maklumat Risiko</h4>
+                                <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={openPanduan}>
+                                    <BookOpen className="h-3.5 w-3.5" />
+                                    Panduan
+                                </Button>
                             </div>
-                            <div className="rawatan-flex-item" style={{ flex: "1 1 45%" }}>
-                                <span className="rawatan-label-inline">Kesan Risiko:</span>
-                                <ListDisplay data={formData.kesan} />
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">No Rujukan:</Label>
+                                    <p className="flex h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">{formData.no_rujukan || "-"}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Tahun:</Label>
+                                    <p className="flex h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">{formData.tahun || "-"}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Separuh Tahun:</Label>
+                                    <p className="flex h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                                        {formData.separuh_tahun === 1 ? "Pertama" : formData.separuh_tahun === 2 ? "Kedua" : "-"}
+                                    </p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Syarikat:</Label>
+                                    <p className="flex h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">{formData.nama_syarikat || "-"}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div className="rawatan-box">
-                        <div className="rawatan-box-header">Penilaian Risiko</div>
                         
-                        <div className="rawatan-flex-row rawatan-score-row">
-                            
-                            <div className="rawatan-score-card">
-                                <span className="rawatan-score-label">Skor Kebarangkalian</span>
-                                <span className="rawatan-score-data">{formData.skor_kebarangkalian || "-"}</span>
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pengenalpastian Risiko</h4>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kategori Risiko:</Label>
+                                    <p className="flex min-h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">{formData.kategori || "-"}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Bahagian/Unit:</Label>
+                                    <p className="flex min-h-9 items-center rounded-lg border border-input bg-muted/50 px-3 text-sm text-muted-foreground">{formData.bahagian || "-"}</p>
+                                </div>
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <Label className="text-xs font-medium">Risiko:</Label>
+                                    <p className="flex min-h-9 items-start rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground leading-relaxed">{formData.risiko || "-"}</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Punca Risiko:</Label>
+                                    <div className="rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm"><ListDisplay data={formData.punca} /></div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kesan Risiko:</Label>
+                                    <div className="rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm"><ListDisplay data={formData.kesan} /></div>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penilaian Risiko</h4>
                             
-                            <div className="rawatan-score-card">
-                                <span className="rawatan-score-label">Skor Impak</span>
-                                <span className="rawatan-score-data">{formData.skor_impak || "-"}</span>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                                    <span className="block text-xs font-medium text-muted-foreground">Skor Kebarangkalian</span>
+                                    <span className="mt-0.5 block text-lg font-semibold text-foreground">{formData.skor_kebarangkalian || "-"}</span>
+                                </div>
+                                
+                                <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                                    <span className="block text-xs font-medium text-muted-foreground">Skor Impak</span>
+                                    <span className="mt-0.5 block text-lg font-semibold text-foreground">{formData.skor_impak || "-"}</span>
+                                </div>
+                                
+                                <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                                    <span className="block text-xs font-medium text-muted-foreground">Tahap Risiko</span>
+                                    <span className="mt-1 inline-flex rounded-md px-2 py-1 text-sm font-semibold"
+                                        style={{ backgroundColor: riskColor, color: riskColor === "#f1f5f9" ? '#475569' : '#ffffff' }}
+                                        data-level={formData.tahap_risiko}
+                                    >
+                                        {formData.tahap_risiko || "-"}
+                                    </span>
+                                </div>
                             </div>
-                            
-                            <div className="rawatan-score-card">
-                                <span className="rawatan-score-label">Tahap Risiko</span>
-                                <span className="rawatan-score-data rawatan-risk-score-text" 
-                                    style={{ backgroundColor: riskColor, color: riskColor === "#f1f5f9" ? '#475569' : '#ffffff' }}
-                                    data-level={formData.tahap_risiko}
-                                >
-                                    {formData.tahap_risiko || "-"}
-                                </span>
+
+                            <div className="mt-4 space-y-1.5"> 
+                                <Label className="text-xs font-medium">Status Risiko:</Label> 
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Badge variant={formData.status_risiko === "YA" ? "warning" : "secondary"} data-status={formData.status_risiko}>
+                                        {formData.status_risiko || "-"} 
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground"> 
+                                        ({formData.status_risiko_desc || "Tiada data skor"})
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="rawatan-flex-row rawatan-status-row">
-                            <div className="rawatan-flex-item"> 
-                                <span className="rawatan-label-inline">Status Risiko:</span> 
-                                <span className="rawatan-risk-status-tag-v2" data-status={formData.status_risiko}>
-                                    {formData.status_risiko || "-"} 
-                                </span>
-                                <span className="rawatan-data-inline" style={{ fontWeight: '500', color: '#475569' }}> 
-                                    ({formData.status_risiko_desc || "Tiada data skor"})
-                                </span>
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rawatan Risiko</h4>
+
+                            <div className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium">Pelan Tindakan: <span className="text-destructive">*</span></Label>
+                                    {formData.planTindakan.map((p, idx) => (
+                                        <div key={`plan-${idx}`} className="flex items-center gap-2">
+                                            <Input
+                                                value={p}
+                                                onChange={(e) => {
+                                                    const newList = [...formData.planTindakan];
+                                                    newList[idx] = e.target.value;
+                                                    setFormData((prev) => ({ ...prev, planTindakan: newList }));
+                                                }}
+                                                placeholder={`Langkah Tindakan ${idx + 1}`}
+                                                className="rounded-lg"
+                                                required={idx === 0} 
+                                            />
+                                            {formData.planTindakan.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            planTindakan: prev.planTindakan.filter((_, i) => i !== idx),
+                                                        }))
+                                                    }
+                                                    className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                                    aria-label="Buang Plan Tindakan"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {idx === formData.planTindakan.length - 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            planTindakan: [...prev.planTindakan, ""],
+                                                        }))
+                                                    }
+                                                    className="h-9 w-9 shrink-0 border-primary/40 text-primary hover:bg-primary/5 hover:text-primary"
+                                                    aria-label="Tambah Plan Tindakan"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium">Jenis Kawalan: <span className="text-destructive">*</span></Label>
+                                    <Select
+                                        value={formData.jenisKawalan || ""}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, jenisKawalan: e.target.value }))}
+                                        className="rounded-lg"
+                                        required
+                                    >
+                                        <option value="">-- Pilih Strategi Kawalan --</option>
+                                        <option value="Terima">Terima – Menerima risiko</option>
+                                        <option value="Kurang">Kurang – Mengurangkan kebarangkalian dan impak risiko</option>
+                                        <option value="Pindah">Pindah – Pindahkan risiko</option>
+                                        <option value="Elak">Elak – Berhenti menjalankan aktiviti / program atau mengubah objektif aktiviti yang boleh menyebabkan risiko</option>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium">Tempoh Jangkaan Siap Tindakan: <span className="text-destructive">*</span></Label>
+                                    <Input
+                                        type="text" 
+                                        value={formData.tempohSiap || ""}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
+                                        placeholder="Cth: 2 bulan"
+                                        className="rounded-lg"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium">Kakitangan Bertanggungjawab: <span className="text-destructive">*</span></Label> 
+                                    {formData.kakitanganBertanggungjawab.map((s, idx) => (
+                                        <div key={`kakitangan-${idx}`} className="flex items-center gap-2">
+                                            <Input
+                                                value={s}
+                                                onChange={(e) => {
+                                                    const newList = [...formData.kakitanganBertanggungjawab];
+                                                    newList[idx] = e.target.value;
+                                                    setFormData((prev) => ({ ...prev, kakitanganBertanggungjawab: newList }));
+                                                }}
+                                                placeholder={`Nama kakitangan / jawatan ${idx + 1}`}
+                                                className="rounded-lg"
+                                                required={idx === 0} 
+                                            />
+                                            {formData.kakitanganBertanggungjawab.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            kakitanganBertanggungjawab: prev.kakitanganBertanggungjawab.filter((_, i) => i !== idx),
+                                                        }))
+                                                    }
+                                                    className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                                    aria-label="Buang Kakitangan"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {idx === formData.kakitanganBertanggungjawab.length - 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            kakitanganBertanggungjawab: [...prev.kakitanganBertanggungjawab, ""],
+                                                        }))
+                                                    }
+                                                    className="h-9 w-9 shrink-0 border-primary/40 text-primary hover:bg-primary/5 hover:text-primary"
+                                                    aria-label="Tambah Kakitangan"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-
                     </div>
 
-                    <div className="rawatan-box">
-                        <div className="rawatan-box-header">Rawatan Risiko</div>
-                        <div style={{ padding: "10px 18px 18px 18px" }}> 
-                            
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="rawatan-label rawatan-label-required">Pelan Tindakan:</label>
-                                {formData.planTindakan.map((p, idx) => (
-                                    <div key={`plan-${idx}`} className="rawatan-dynamic-row">
-                                        <input
-                                            value={p}
-                                            onChange={(e) => {
-                                                const newList = [...formData.planTindakan];
-                                                newList[idx] = e.target.value;
-                                                setFormData((prev) => ({ ...prev, planTindakan: newList }));
-                                            }}
-                                            placeholder={`Langkah Tindakan ${idx + 1}`}
-                                            className="rawatan-input"
-                                            required={idx === 0} 
-                                        />
-                                        {formData.planTindakan.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        planTindakan: prev.planTindakan.filter((_, i) => i !== idx),
-                                                    }))
-                                                }
-                                                className="rawatan-button-circle rawatan-button-remove"
-                                                aria-label="Buang Plan Tindakan"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                        {idx === formData.planTindakan.length - 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        planTindakan: [...prev.planTindakan, ""],
-                                                    }))
-                                                }
-                                                className="rawatan-button-circle rawatan-button-add rawatan-button-add-blue" 
-                                                aria-label="Tambah Plan Tindakan"
-                                            >
-                                                <Plus size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="rawatan-label rawatan-label-required">Jenis Kawalan:</label>
-                                <select
-                                    value={formData.jenisKawalan || ""}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, jenisKawalan: e.target.value }))}
-                                    className="rawatan-select"
-                                    required
-                                >
-                                    <option value="">-- Pilih Strategi Kawalan --</option>
-                                    <option value="Terima">Terima – Menerima risiko</option>
-                                    <option value="Kurang">Kurang – Mengurangkan kebarangkalian dan impak risiko</option>
-                                    <option value="Pindah">Pindah – Pindahkan risiko</option>
-                                    <option value="Elak">Elak – Berhenti menjalankan aktiviti / program atau mengubah objektif aktiviti yang boleh menyebabkan risiko</option>
-                                </select>
-                            </div>
-
-                            <div style={{ marginBottom: "16px" }}>
-                                <label className="rawatan-label rawatan-label-required">Tempoh Jangkaan Siap Tindakan:</label>
-                                <input
-                                    type="text" 
-                                    value={formData.tempohSiap || ""}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, tempohSiap: e.target.value }))}
-                                    className="rawatan-input"
-                                    placeholder="Cth: 2 bulan"
-                                    required
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: "20px" }}>
-                                <label className="rawatan-label rawatan-label-required">Kakitangan Bertanggungjawab:</label> 
-                                {formData.kakitanganBertanggungjawab.map((s, idx) => (
-                                    <div key={`kakitangan-${idx}`} className="rawatan-dynamic-row">
-                                        <input
-                                            value={s}
-                                            onChange={(e) => {
-                                                const newList = [...formData.kakitanganBertanggungjawab];
-                                                newList[idx] = e.target.value;
-                                                setFormData((prev) => ({ ...prev, kakitanganBertanggungjawab: newList }));
-                                            }}
-                                            placeholder={`Nama kakitangan / jawatan ${idx + 1}`}
-                                            className="rawatan-input"
-                                            required={idx === 0} 
-                                        />
-                                        {formData.kakitanganBertanggungjawab.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        kakitanganBertanggungjawab: prev.kakitanganBertanggungjawab.filter((_, i) => i !== idx),
-                                                    }))
-                                                }
-                                                className="rawatan-button-circle rawatan-button-remove"
-                                                aria-label="Buang Kakitangan"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                        {idx === formData.kakitanganBertanggungjawab.length - 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        kakitanganBertanggungjawab: [...prev.kakitanganBertanggungjawab, ""],
-                                                    }))
-                                                }
-                                                className="rawatan-button-circle rawatan-button-add rawatan-button-add-blue" 
-                                                aria-label="Tambah Kakitangan"
-                                            >
-                                                <Plus size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="rawatan-save-btn-wrapper">
-                                <button
-                                    type="submit"
-                                    className="rawatan-save-btn-dark-blue" 
-                                    disabled={saving}
-                                >
-                                    {saving ? "Menyimpan..." : (
-                                        <>
-                                            <Save size={18} style={{ marginRight: '8px' }} />
-                                            Simpan Kemaskini
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+                    <div className="flex shrink-0 justify-end gap-2 border-t bg-white px-5 py-3">
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={saving}>
+                            {saving ? (<><Loader2 className="h-4 w-4 animate-spin" />Menyimpan...</>) : (<><Save className="h-4 w-4" />Simpan Kemaskini</>)}
+                        </Button>
                     </div>
                 </form>
                 
                 {PanduanRenderer}
             </div>
         </div>
+        {toast && (
+            <div className="fixed top-[64px] right-4 z-[60] max-w-sm">
+                <Toast variant={toast.variant} title={toast.title} message={toast.message} onClose={() => setToast(null)} />
+            </div>
+        )}
+        </>
     );
 }

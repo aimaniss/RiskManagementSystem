@@ -1,7 +1,17 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { UserCircle, Edit, Trash2 } from "lucide-react";
-import "./UrusPengguna.css";
+import api from "../../api/api";
+import { UserCircle, Pencil, Trash2, Users, Search, UserPlus } from "lucide-react";
+import PageHeader from "@/components/ui/page-header";
+import Toast from "@/components/ui/toast";
+import EmptyState from "@/components/ui/empty-state";
+import ConfirmModal from "@/components/ui/confirm-modal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import {
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+} from "@/components/ui/table";
 
 function UrusPengguna() {
   const [roles, setRoles] = useState([]);
@@ -31,6 +41,9 @@ function UrusPengguna() {
   const [subsidiaryLocked, setSubsidiaryLocked] = useState(false);
   const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
 
+  const [toast, setToast] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -41,9 +54,7 @@ function UrusPengguna() {
 
   const fetchRoles = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/roles", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/roles");
       setRoles(res.data);
     } catch (err) {
       console.error(err);
@@ -52,9 +63,7 @@ function UrusPengguna() {
 
   const fetchSubsidiaries = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/syarikat", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/syarikat");
       setSubsidiaries(res.data);
     } catch (err) {
       console.error(err);
@@ -63,9 +72,7 @@ function UrusPengguna() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.error(err);
@@ -181,52 +188,46 @@ function UrusPengguna() {
 
       let res;
       if (selectedUser) {
-        res = await axios.put(
-          `http://localhost:5001/api/users/${selectedUser.pengguna_id}`,
+        res = await api.put(
+          `/users/${selectedUser.pengguna_id}`,
           data,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
         setUsers(
           users.map((u) => (u.pengguna_id === selectedUser.pengguna_id ? res.data : u))
         );
       } else {
-        res = await axios.post("http://localhost:5001/api/users", data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+        res = await api.post("/users", data, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
         setUsers([...users, res.data]);
       }
 
       closeModal();
-      alert("Pengguna berjaya disimpan ✅");
+      setToast({ variant: "success", title: "Pengguna berjaya disimpan." });
     } catch (err) {
       console.error(err);
-      alert("Gagal menyimpan pengguna ❌");
+      setToast({ variant: "error", title: "Gagal menyimpan pengguna." });
     }
   };
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5001/api/users/${selectedUser.pengguna_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/users/${selectedUser.pengguna_id}`);
       setUsers(users.filter((u) => u.pengguna_id !== selectedUser.pengguna_id));
       closeModal();
-      alert("Pengguna berjaya dipadam ✅");
+      setToast({ variant: "success", title: "Pengguna berjaya dipadam." });
     } catch (err) {
       console.error(err);
-      alert("Gagal memadam pengguna ❌");
+      setToast({ variant: "error", title: "Gagal memadam pengguna." });
     }
   };
 
-  // --- MAP PERANAN ---
+  // ConfirmModal: open delete confirmation
+  const openDeleteConfirm = (user) => {
+    setSelectedUser(user);
+    setDeleteModalOpen(true);
+  };
   const roleNameMap = {
     "Ketua Subsidiari": "Head Subsidiary",
   };
@@ -236,22 +237,33 @@ function UrusPengguna() {
   };
 
   return (
-    <div className="urus-container">
-      <h1>Urus Pengguna</h1>
+    <div>
+      <PageHeader
+        title="Urus Pengguna"
+        description="Kemaskini maklumat pengguna dan peranan"
+        actions={
+          <Button onClick={() => openModal("edit", null)}>
+            <UserPlus size={16} /> Tambah Pengguna
+          </Button>
+        }
+      />
 
-      {/* Filter bar */}
-      <div className="filter-add">
-        <input
-          placeholder="Carian Nama Penuh atau Staff ID"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input"
-        />
+      {/* Bar penapis */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative w-full sm:w-64">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Carian Nama Penuh atau Staff ID"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
-        <select
+        <Select
           value={filterRoleId}
           onChange={(e) => handleFilterRoleChange(e.target.value)}
-          className="role-select"
+          className="h-9 w-[170px]"
         >
           <option value="">Pilih Peranan</option>
           {roles.map((r) => (
@@ -259,12 +271,12 @@ function UrusPengguna() {
               {getDisplayRoleName(r.nama_peranan)}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={filterSubsidiaryId}
           onChange={(e) => setFilterSubsidiaryId(e.target.value)}
-          className="role-select"
+          className="h-9 w-[170px]"
           disabled={filterSubsidiaryLocked}
         >
           <option value="">Pilih Syarikat</option>
@@ -273,34 +285,34 @@ function UrusPengguna() {
               {s.nama_syarikat}
             </option>
           ))}
-        </select>
-
-        <button className="add-btn" onClick={() => openModal("edit", null)}>
-          + Tambah Pengguna
-        </button>
+        </Select>
       </div>
 
-      {/* Table */}
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Bil</th>
-              <th>Nama Penuh</th>
-              <th>Peranan</th>
-              <th>Syarikat</th>
-              <th>Staff ID</th>
-              <th>Kata Laluan</th>
-              <th className="action-header">Tindakan</th>
-            </tr>
-          </thead>
-          <tbody>
+      {/* Jadual */}
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Bil</TableHead>
+              <TableHead>Nama Penuh</TableHead>
+              <TableHead>Peranan</TableHead>
+              <TableHead>Syarikat</TableHead>
+              <TableHead>Staff ID</TableHead>
+              <TableHead>Kata Laluan</TableHead>
+              <TableHead className="w-[110px] text-center">Tindakan</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="no-data">
-                  🚫 Tiada pengguna dijumpai
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={7} className="h-32">
+                  <EmptyState
+                    icon={Users}
+                    title="Tiada pengguna dijumpai"
+                    description="Tiada pengguna sepadan dengan carian anda."
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               filteredUsers.map((u, i) => {
                 const subsidiary = subsidiaries.find(
@@ -310,167 +322,185 @@ function UrusPengguna() {
                   ? `data:image/png;base64,${u.profile_pic}`
                   : null;
                 return (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
-                    {/* DIPERBAIKI: Menggunakan wrapper div di dalam td, bukannya meletakkan flexbox pada td secara terus */}
-                    <td>
-                      <div className="nama-penuh-wrapper">
+                  <TableRow key={i}>
+                    <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
                         {profileSrc ? (
-                          <img src={profileSrc} alt="profile" className="profile-pic" />
+                          <img src={profileSrc} alt="profile" className="h-9 w-9 shrink-0 rounded-full border object-cover" />
                         ) : (
-                          <UserCircle className="profile-icon" />
+                          <UserCircle className="h-9 w-9 shrink-0 text-muted-foreground" />
                         )}
-                        <span>{u.nama_penuh}</span>
+                        <span className="font-medium text-foreground">{u.nama_penuh}</span>
                       </div>
-                    </td>
-                    <td>{getDisplayRoleName(u.nama_peranan)}</td>
-                    <td>{subsidiary ? subsidiary.nama_syarikat : "-"}</td>
-                    <td>{u.staff_id}</td>
-                    <td>{u.katalaluan || "-"}</td>
-                    {/* DIPERBAIKI: Struktur butang tindakan yang mantap */}
-                    <td className="action-cell">
-                      <div className="action-icons">
-                        <button 
-                          type="button" 
-                          className="btn-action-icon edit-btn-style" 
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{getDisplayRoleName(u.nama_peranan)}</Badge>
+                    </TableCell>
+                    <TableCell>{subsidiary ? subsidiary.nama_syarikat : "-"}</TableCell>
+                    <TableCell>{u.staff_id}</TableCell>
+                    <TableCell>{u.katalaluan || "-"}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="inline-flex items-center justify-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:text-primary"
                           onClick={() => openModal("edit", u)}
                           title="Edit Pengguna"
                         >
-                          <Edit size={16} />
-                        </button>
-                        <button 
-                          type="button" 
-                          className="btn-action-icon delete-btn-style" 
-                          onClick={() => openModal("delete", u)}
+                          <Pencil size={16} />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => openDeleteConfirm(u)}
                           title="Padam Pengguna"
                         >
                           <Trash2 size={16} />
-                        </button>
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Modal */}
       {modalOpen && (
-        <div className="filter-modal-backdrop">
-          <div className="filter-modal">
-            {modalType === "delete" ? (
-              <>
-                <h2>Pengesahan Padam</h2>
-                <p>
-                  Adakah anda pasti mahu memadam{" "}
-                  <strong>{selectedUser?.nama_penuh}</strong>?
-                </p>
-                <div className="filter-buttons">
-                  <button onClick={closeModal}>Batal</button>
-                  <button onClick={handleDelete}>Padam</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2>{selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}</h2>
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-[380px] max-w-[90%] flex-col gap-4 overflow-y-auto rounded-xl border bg-card p-6 shadow-lg">
+            <h2 className="text-base font-semibold text-foreground">
+              {selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}
+            </h2>
 
-                {/* Profile Upload */}
-                <div className="profile-upload">
-                  <div className="profile-wrapper">
-                    {preview || (formData.profile_pic && !removeProfileFlag) ? (
-                      <img
-                        src={
-                          preview
-                            ? preview
-                            : formData.profile_pic instanceof File
-                            ? URL.createObjectURL(formData.profile_pic)
-                            : `data:image/png;base64,${formData.profile_pic}`
-                        }
-                        alt="preview"
-                        className="profile-preview"
-                      />
-                    ) : (
-                      <UserCircle className="profile-placeholder" />
-                    )}
-
-                    {(preview || (formData.profile_pic && !removeProfileFlag)) && (
-                      <Trash2
-                        className="remove-profile-icon"
-                        onClick={() => {
-                          setFormData({ ...formData, profile_pic: null });
-                          setPreview("");
-                          setRemoveProfileFlag(true);
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="profile-input"
+            {/* Muat Naik Gambar Profil */}
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="relative inline-block">
+                {preview || (formData.profile_pic && !removeProfileFlag) ? (
+                  <img
+                    src={
+                      preview
+                        ? preview
+                        : formData.profile_pic instanceof File
+                        ? URL.createObjectURL(formData.profile_pic)
+                        : `data:image/png;base64,${formData.profile_pic}`
+                    }
+                    alt="preview"
+                    className="h-28 w-28 rounded-full border-[3px] border-primary object-cover"
                   />
-                </div>
+                ) : (
+                  <UserCircle className="h-28 w-28 text-muted-foreground" />
+                )}
 
-                <input
-                  placeholder="Staff ID"
-                  value={formData.staff_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, staff_id: e.target.value })
-                  }
-                />
-                <input
-                  placeholder="Nama Penuh"
-                  value={formData.nama_penuh}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama_penuh: e.target.value })
-                  }
-                />
-                <input
-                  placeholder="Kata Laluan"
-                  value={formData.katalaluan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, katalaluan: e.target.value })
-                  }
-                />
+                {(preview || (formData.profile_pic && !removeProfileFlag)) && (
+                  <button
+                    type="button"
+                    title="Buang Gambar Profil"
+                    className="absolute -right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-card p-0.5 text-destructive shadow-sm transition-transform hover:scale-110"
+                    onClick={() => {
+                      setFormData({ ...formData, profile_pic: null });
+                      setPreview("");
+                      setRemoveProfileFlag(true);
+                    }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
 
-                <select
-                  value={formData.peranan_id}
-                  onChange={(e) => handleRoleChange(e.target.value)}
-                >
-                  <option value="">Pilih Peranan</option>
-                  {roles.map((r) => (
-                    <option key={r.peranan_id} value={r.peranan_id}>
-                      {getDisplayRoleName(r.nama_peranan)}
-                    </option>
-                  ))}
-                </select>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground"
+              />
+            </div>
 
-                <select
-                  value={formData.syarikat_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, syarikat_id: e.target.value })
-                  }
-                  disabled={subsidiaryLocked}
-                >
-                  <option value="">Pilih Syarikat</option>
-                  {subsidiaries.map((s) => (
-                    <option key={s.syarikat_id} value={s.syarikat_id}>
-                      {s.nama_syarikat}
-                    </option>
-                  ))}
-                </select>
+            <Input
+              placeholder="Staff ID"
+              value={formData.staff_id}
+              onChange={(e) =>
+                setFormData({ ...formData, staff_id: e.target.value })
+              }
+            />
+            <Input
+              placeholder="Nama Penuh"
+              value={formData.nama_penuh}
+              onChange={(e) =>
+                setFormData({ ...formData, nama_penuh: e.target.value })
+              }
+            />
+            <Input
+              placeholder="Kata Laluan"
+              value={formData.katalaluan}
+              onChange={(e) =>
+                setFormData({ ...formData, katalaluan: e.target.value })
+              }
+            />
 
-                <div className="filter-buttons">
-                  <button onClick={closeModal}>Batal</button>
-                  <button onClick={handleSave}>Simpan</button>
-                </div>
-              </>
-            )}
+            <Select
+              value={formData.peranan_id}
+              onChange={(e) => handleRoleChange(e.target.value)}
+            >
+              <option value="">Pilih Peranan</option>
+              {roles.map((r) => (
+                <option key={r.peranan_id} value={r.peranan_id}>
+                  {getDisplayRoleName(r.nama_peranan)}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              value={formData.syarikat_id}
+              onChange={(e) =>
+                setFormData({ ...formData, syarikat_id: e.target.value })
+              }
+              disabled={subsidiaryLocked}
+            >
+              <option value="">Pilih Syarikat</option>
+              {subsidiaries.map((s) => (
+                <option key={s.syarikat_id} value={s.syarikat_id}>
+                  {s.nama_syarikat}
+                </option>
+              ))}
+            </Select>
+
+            <div className="mt-2 flex justify-end gap-2">
+              <Button variant="outline" onClick={closeModal}>Batal</Button>
+              <Button onClick={handleSave}>Simpan</Button>
+            </div>
           </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title="Pengesahan Padam"
+        description={`Adakah anda pasti mahu memadam ${selectedUser?.nama_penuh}?`}
+        confirmText="Padam"
+        cancelText="Batal"
+        variant="destructive"
+        icon="destructive"
+        onConfirm={handleDelete}
+        onCancel={closeModal}
+      />
+
+      {toast && (
+        <div className="fixed top-[64px] right-4 z-50 w-[320px]">
+          <Toast
+            variant={toast.variant}
+            title={toast.title}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
         </div>
       )}
     </div>

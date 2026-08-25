@@ -29,6 +29,12 @@ export const getAuthUser = () => {
 
   try {
     const decoded = jwtDecode(token);
+
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      localStorage.removeItem("token");
+      return null;
+    }
+
     const perananId = decoded.peranan_id;
     return {
       userId: decoded.id || decoded.pengguna_id || null,
@@ -42,6 +48,7 @@ export const getAuthUser = () => {
     };
   } catch (err) {
     console.error("Invalid token:", err);
+    localStorage.removeItem("token");
     return null;
   }
 };

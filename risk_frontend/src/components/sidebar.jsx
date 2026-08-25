@@ -1,25 +1,35 @@
 // src/components/Sidebar.jsx
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   ListChecks,
+  ClipboardList,
   FilePlus2,
   Stethoscope,
   Activity,
   FileEdit,
   BarChart3,
   Users,
-  ClipboardList,
   LogOut,
 } from "lucide-react";
-import "./Sidebar.css";
-import LogoImage from "../assets/images/Light Background/UKMH_light.png"; // Logo UKM Holdings
+import "./sidebar.css";
+import LogoLight from "../assets/images/Light Background/UKMH_light.png";
+import LogoDark from "../assets/images/Dark Background/UKMH_dark.png";
 import { getAuthUser } from "../utils/auth";
 
 function Sidebar() {
   const location = useLocation();
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
-  // Get token and decode
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   const authUser = getAuthUser();
   const role = authUser?.roleTitle || null;
 
@@ -29,7 +39,7 @@ function Sidebar() {
     <div className="sidebar">
       {/* Header */}
       <div className="sidebar-header">
-        <img src={LogoImage} alt="Logo" className="sidebar-logo" />
+        <img src={isDark ? LogoDark : LogoLight} alt="Logo" className="sidebar-logo" />
         <h2>Risk Management System</h2>
       </div>
 
@@ -60,6 +70,23 @@ function Sidebar() {
               </>
             </Link>
           </li>
+
+          {/* Senarai Tugasan: Admin & Executive only */}
+          {(role === "Admin" || role === "Executive") && (
+            <li>
+              <Link
+                to="/SenaraiTugasan"
+                className={`sidebar-link ${
+                  location.pathname === "/SenaraiTugasan" ? "active" : ""
+                }`}
+              >
+                <>
+                  <ClipboardList className="sidebar-icon" />
+                  Senarai Tugasan
+                </>
+              </Link>
+            </li>
+          )}
 
           {/* Daftar Risiko: Tiada Viewer */}
           {(role === "Admin" ||

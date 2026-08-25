@@ -8,7 +8,7 @@
   padding: 20px;
   margin: 0 auto;
   color: #000;
-  background-color: #fff;
+  background-color: var(--color-card);
   font-size: 9px;
   line-height: 1.5;
   box-sizing: border-box;
@@ -59,7 +59,7 @@
   background-color: #e0e0e0;
 }
 .report-main-table .value {
-  background-color: #fff;
+  background-color: var(--color-card);
 }
 
 /* ============================================ */
@@ -151,7 +151,7 @@
   padding: 5px 4px;
   box-sizing: border-box;
   word-wrap: break-word;
-  background-color: #fff;
+  background-color: var(--color-card);
 }
 .nested-effectiveness-table .sub-header td {
   font-weight: bold;
@@ -188,7 +188,7 @@
 }
 
 .preview-modal-container {
-  background-color: white;
+  background-color: var(--color-card);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   width: 100%;

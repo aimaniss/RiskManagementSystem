@@ -22,17 +22,17 @@ SELECT
     ARRAY(
         SELECT pelan_tindakan 
         FROM pelan_tindakan_rawatan 
-        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id
+        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id AND pelan_tindakan_rawatan.is_deleted = false
     ) AS plan_tindakan,
     ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
     ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
     ARRAY(
         SELECT nama_kakitangan 
         FROM kakitangan_rawatan 
-        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id
+        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id AND kakitangan_rawatan.is_deleted = false
     ) AS kakitangan_bertanggungjawab
 FROM risiko r
-LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
+LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id AND rr.is_deleted = false
 LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)`;
 
         const params = [];
@@ -70,17 +70,17 @@ SELECT
     ARRAY(
         SELECT pelan_tindakan 
         FROM pelan_tindakan_rawatan 
-        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id
+        WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id AND pelan_tindakan_rawatan.is_deleted = false
     ) AS plan_tindakan,
     ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
     ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
     ARRAY(
         SELECT nama_kakitangan 
         FROM kakitangan_rawatan 
-        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id
+        WHERE kakitangan_rawatan.rawatan_id = rr.rawatan_id AND kakitangan_rawatan.is_deleted = false
     ) AS kakitangan_bertanggungjawab
 FROM risiko r
-LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
+LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id AND rr.is_deleted = false
 LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
 LEFT JOIN LogPemantauan lp 
     ON lp.risiko_id = r.risiko_id 
@@ -312,7 +312,7 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
         await client.query("BEGIN");
 
         const { rows: riskRows } = await client.query(
-            "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1",
+            "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1 AND rr.is_deleted = false",
             [rawatan_id]
         );
         if (riskRows.length === 0) {
@@ -322,8 +322,8 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
         }
         const noRujukanUntukLog = riskRows[0].no_rujukan;
 
-        await client.query(`DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
-        await client.query(`DELETE FROM kakitangan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
+        await client.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+        await client.query(`UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
 
         if (Array.isArray(plan_tindakan)) {
             for (const pelan of plan_tindakan) {
@@ -354,7 +354,7 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
              SET jenis_kawalan = $1,
                  tempoh_siap = $2,
                  updated_at = CURRENT_TIMESTAMP
-             WHERE rawatan_id = $3
+             WHERE rawatan_id = $3 AND is_deleted = false
              RETURNING rawatan_id`,
             [jenis_kawalan, tempoh_jangkaan_siap || null, rawatan_id]
         );
@@ -397,7 +397,7 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
         const { rawatan_id } = req.params;
 
         const { rows: riskRows } = await pool.query(
-            "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1",
+            "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1 AND rr.is_deleted = false",
             [rawatan_id]
         );
 
@@ -406,11 +406,9 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
         }
         const noRujukanUntukLog = riskRows[0].no_rujukan;
 
-        const result = await pool.query(`DELETE FROM rawatan_risiko WHERE rawatan_id = $1`, [rawatan_id]);
-        
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
-        }
+        await pool.query(`UPDATE rawatan_risiko SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+        await pool.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+        await pool.query(`UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
 
         try {
             const logRingkasan = `Memadam rawatan untuk risiko: ${noRujukanUntukLog}.`;
@@ -453,12 +451,12 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
                 rr.rawatan_id,
                 rr.jenis_kawalan,
                 rr.tempoh_siap AS tempoh_jangkaan_siap,
-                ARRAY(SELECT pelan_tindakan FROM pelan_tindakan_rawatan WHERE rawatan_id = rr.rawatan_id) AS plan_tindakan,
-                ARRAY(SELECT nama_kakitangan FROM kakitangan_rawatan WHERE rawatan_id = rr.rawatan_id) AS kakitangan_bertanggungjawab,
+                ARRAY(SELECT pelan_tindakan FROM pelan_tindakan_rawatan WHERE rawatan_id = rr.rawatan_id AND is_deleted = false) AS plan_tindakan,
+                ARRAY(SELECT nama_kakitangan FROM kakitangan_rawatan WHERE rawatan_id = rr.rawatan_id AND is_deleted = false) AS kakitangan_bertanggungjawab,
                 ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id = r.risiko_id) AS punca,
                 ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id) AS kesan
             FROM risiko r
-            LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id
+            LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id AND rr.is_deleted = false
             LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
             WHERE r.risiko_id = $1
         `, [risiko_id]);

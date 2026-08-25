@@ -1,50 +1,229 @@
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../api/api";
-import { Eye, Loader2, ChevronRight, ChevronDown, Filter } from "lucide-react";
+import { Eye, Loader2, ChevronDown, ChevronRight, Filter, Activity, Search } from "lucide-react";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import EmptyState from "@/components/ui/empty-state";
+import PageHeader from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+} from "@/components/ui/sheet";
 import EditPemantauan from "./EditPemantauan";
-import "./PemantauanRisiko.css";
-import { riskMatrix, getRiskMatrix, getRiskAbbreviation, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
-import { formatSeparuhTahun } from "../../utils/formatters";
+import { riskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
+import RiskLevelProgress from "@/components/ui/risk-level-progress";
 
 // =======================================================
 // UTILITIES
 // =======================================================
 const getRiskData = (k, i) => {
-    if (!k || !i) {
-        return { label: "Tiada Data", color: "#9ca3af" };
-    }
+    if (!k || !i) return { label: "Tiada Data", color: "#94a3b8" };
     const kk = Math.min(Math.max(parseInt(k), 1), 5);
     const ii = Math.min(Math.max(parseInt(i), 1), 5);
-    return riskMatrix[kk]?.[ii] || { label: "-", color: "#9ca3af" };
+    return riskMatrix[kk]?.[ii] || { label: "-", color: "#94a3b8" };
 };
 const getSeparuhTahunLabel = (separuh) => separuh === 1 ? "Pertama" : separuh === 2 ? "Kedua" : "";
 
-const STATUS_COLORS = {
-    "Buka": "#3b82f6",
-    "Sedang Dilaksanakan": "#eab308",
-    "Pemantauan": "#a855f7",
-    "Selesai": "#22c55e",
-    "Tutup": "#6b7280",
-    "Tertunggak": "#ef4444",
-};
 const RISK_LEVEL_COLORS = {
     "Rendah": "#22c55e",
     "Sederhana": "#eab308",
     "Tinggi": "#f97316",
     "Sangat Tinggi": "#ef4444",
-    "Tiada Data": "#9ca3af",
+    "Tiada Data": "#94a3b8",
+};
+const riskBadgeColor = (label) => RISK_LEVEL_COLORS[label] || "#94a3b8";
+
+const STATUS_BADGE_VARIANTS = {
+    "Buka": "outline",
+    "Sedang Dilaksanakan": "default",
+    "Pemantauan": "warning",
+    "Selesai": "success",
+    "Tutup": "secondary",
+    "Tertunggak": "destructive",
+};
+const statusBadgeVariant = (status) => STATUS_BADGE_VARIANTS[status] || "secondary";
+
+const KEBERKESANAN_STYLES = {
+    berkesan: "bg-emerald-500/10 text-emerald-600",
+    kurangberkesan: "bg-amber-500/10 text-amber-600",
+    tidakberkesan: "bg-red-500/10 text-red-600",
 };
 
+// =======================================================
+// Komponen Bar Ringkasan
+// =======================================================
+function StatBar({ label, value, icon: Icon, color }) {
+    return (
+        <Card className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Icon size={18} style={{ color: color || "var(--color-primary)" }} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+                <p className="text-lg font-bold text-foreground">{value}</p>
+            </div>
+        </Card>
+    );
+}
 
 // =======================================================
-// Komponen Modal Penapis Tarikh
+// Komponen Bar Ringkasan Kecil
 // =======================================================
-const DateFilterModal = ({ isOpen, onClose, allData, currentType, currentTahun, currentSeparuh, onApplyFilter }) => {
-    const [filterType, setFilterType] = useState(currentType || 'pengenalpastian');
+function MiniStat({ label, value, color }) {
+    return (
+        <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground truncate">{label}</span>
+            {color ? (
+                <Badge className="shrink-0 border-transparent text-white text-[10px] px-1.5 py-0" style={{ backgroundColor: color }}>
+                    {value}
+                </Badge>
+            ) : (
+                <span className="text-xs font-medium text-foreground shrink-0">{value}</span>
+            )}
+        </div>
+    );
+}
+
+// =======================================================
+// Komponen Bar Kad Risiko
+// =======================================================
+function RiskCard({ item, onEdit }) {
+    const [expanded, setExpanded] = useState(false);
+    const d = item;
+
+    const { label: skorDaftarLabel } = getRiskData(
+        parseInt(d.skor_kebarangkalian_sebelum) || 0,
+        parseInt(d.skor_impak_sebelum) || 0
+    );
+
+    const currentRiskLevel = d.tahap_risiko === "Tiada Data" || !d.tahap_risiko
+        ? skorDaftarLabel
+        : d.tahap_risiko;
+
+    const pelanTindakanList = Array.isArray(d.pelan_tindakan_pemantauan)
+        ? d.pelan_tindakan_pemantauan.filter(Boolean)
+        : [];
+
+    return (
+        <Card className="overflow-hidden transition-all hover:shadow-md">
+            {/* Header row — always visible */}
+            <div
+                className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                onClick={() => setExpanded(!expanded)}
+            >
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center pt-0.5">
+                    {expanded ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-mono text-muted-foreground">{d.no_rujukan}</span>
+                        <span className="text-[10px] text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">{d.tahun_asal || d.tahun || "-"} {getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}</span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-foreground line-clamp-1">{d.risiko}</p>
+                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                        <Badge variant={statusBadgeVariant(d.status_pemantauan_terkini)} className="text-[10px] px-1.5 py-0">
+                            {d.status_pemantauan_terkini || "-"}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">{d.nama_syarikat || "-"}</span>
+                        {d.kategori_risiko && (
+                            <span className="rounded bg-muted px-1.5 py-0 text-[10px] text-muted-foreground">{d.kategori_risiko}</span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                    <RiskLevelProgress
+                        sebelumLabel={skorDaftarLabel}
+                        selepasLabel={currentRiskLevel}
+                        className="w-48"
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={(e) => { e.stopPropagation(); onEdit(d); }}
+                        title="Lihat/Kemaskini Pemantauan"
+                    >
+                        <Eye size={14} />
+                    </Button>
+                </div>
+            </div>
+
+            {/* Expanded detail */}
+            {expanded && (
+                <div className="border-t border-border bg-muted/20 px-4 py-3 space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        {/* Pengenalpastian */}
+                        <div className="space-y-1.5">
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pengenalpastian</p>
+                            <div className="space-y-1 text-sm">
+                                <p><span className="text-muted-foreground">Syarikat: </span><span className="text-foreground">{d.nama_syarikat || "-"}</span></p>
+                                <p><span className="text-muted-foreground">Kategori: </span><span className="text-foreground">{d.kategori_risiko || "-"}</span></p>
+                                <p><span className="text-muted-foreground">Tahun Asal: </span><span className="text-foreground">{d.tahun_asal || d.tahun || "-"} ({getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)})</span></p>
+                            </div>
+                        </div>
+
+                            {/* Pemantauan */}
+                            <div className="space-y-1.5">
+                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pemantauan</p>
+                                <div className="space-y-1 text-sm">
+                                    {d.tahun_pemantauan && (
+                                        <p><span className="text-muted-foreground">Sesi: </span><span className="text-foreground">{d.tahun_pemantauan} ({getSeparuhTahunLabel(d.separuh_tahun_pemantauan)})</span></p>
+                                    )}
+                                    {d.catatan && (
+                                        <p><span className="text-muted-foreground">Catatan: </span><span className="text-foreground">{d.catatan}</span></p>
+                                    )}
+                                </div>
+                                <RiskLevelProgress
+                                    sebelumLabel={skorDaftarLabel}
+                                    selepasLabel={currentRiskLevel}
+                                    className="mt-2"
+                                />
+                        </div>
+
+                        {/* Pelan Tindakan */}
+                        <div className="space-y-1.5">
+                            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pelan Tindakan</p>
+                            {pelanTindakanList.length > 0 ? (
+                                <ol className="list-inside list-decimal space-y-0.5 text-sm text-foreground">
+                                    {pelanTindakanList.map((plan, idx) => (
+                                        <li key={idx}>{plan}</li>
+                                    ))}
+                                </ol>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Tiada pelan tindakan</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </Card>
+    );
+}
+
+// =======================================================
+// Komponen Modal Penapis Tarikh (Dialog)
+// =======================================================
+const DateFilterModal = ({ isOpen, onClose, allData, currentTahun, currentSeparuh, onApplyFilter }) => {
     const [tahun, setTahun] = useState(currentTahun || "");
     const [separuh, setSeparuh] = useState(currentSeparuh || "");
-
-    if (!isOpen) return null;
 
     const uniqueTahun = [...new Set(allData
         .map(d => d.tahun_asal || d.tahun)
@@ -53,160 +232,231 @@ const DateFilterModal = ({ isOpen, onClose, allData, currentType, currentTahun, 
     )].sort((a, b) => parseInt(b) - parseInt(a));
 
     const handleApply = () => {
-        onApplyFilter(filterType, tahun, separuh);
+        onApplyFilter(tahun, separuh);
     };
 
     const handleReset = () => {
-        setFilterType('pengenalpastian');
         setTahun("");
         setSeparuh("");
-        onApplyFilter('pengenalpastian', "", "");
+        onApplyFilter("", "");
     };
 
     return (
-        <div className="pemantauan-modal-overlay">
-            <div className="pemantauan-modal-container pemantauan-date-filter-modal">
-                <div className="pemantauan-modal-header">
-                    <h2>Tapis Tahun & Separuh Tahun</h2>
-                </div>
-                <div className="pemantauan-modal-body pemantauan-filter-body">
-                    
-                    <p className="pemantauan-filter-label-group">Pilih Tahun & Separuh Tahun Asal:</p>
-                    <div className="pemantauan-select-group">
-                        <select className="senaraipemantauan-filter-select" value={tahun} onChange={e=>setTahun(e.target.value)}>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Tapis Tahun &amp; Separuh Tahun</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                        <Label>Tahun Asal</Label>
+                        <Select value={tahun} onChange={e => setTahun(e.target.value)}>
                             <option value="">-- Semua Tahun --</option>
-                            {uniqueTahun.map(t=>(
+                            {uniqueTahun.map(t => (
                                 <option key={t} value={t}>{t}</option>
                             ))}
-                        </select>
-                        <select className="senaraipemantauan-filter-select" value={separuh} onChange={e=>setSeparuh(e.target.value)}>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Separuh Tahun</Label>
+                        <Select value={separuh} onChange={e => setSeparuh(e.target.value)}>
                             <option value="">-- Semua Separuh Tahun --</option>
                             <option value="1">Pertama</option>
                             <option value="2">Kedua</option>
-                        </select>
+                        </Select>
                     </div>
-
                 </div>
-                <div className="pemantauan-modal-footer">
-                    <button onClick={handleReset} className="pemantauan-btn-secondary">Set Semula</button>
-                    <div style={{flexGrow: 1}}></div>
-                    <button onClick={onClose} className="pemantauan-btn-tertiary">Batal</button>
-                    <button onClick={handleApply} className="pemantauan-btn-primary">Tapis Data</button>
-                </div>
-            </div>
-        </div>
+                <DialogFooter>
+                    <Button variant="secondary" size="sm" onClick={handleReset}>Set Semula</Button>
+                    <Button variant="ghost" size="sm" onClick={onClose}>Batal</Button>
+                    <Button size="sm" onClick={handleApply}>Tapis Data</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 };
 
+// =======================================================
+// Komponen Detail Pemantauan (Sheet)
+// =======================================================
+function PemantauanDetailSheet({ isOpen, onClose, data }) {
+    if (!data) return null;
 
+    const { label: skorDaftarLabel } = getRiskData(
+        parseInt(data.skor_kebarangkalian_sebelum) || 0,
+        parseInt(data.skor_impak_sebelum) || 0
+    );
+    const { label: tahapRisikoTerkini, color: riskColorTerkini } = getRiskData(
+        parseInt(data.skor_kebarangkalian_terkini) || 0,
+        parseInt(data.skor_impak_terkini) || 0
+    );
+
+    return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <SheetContent className="sm:max-w-lg overflow-y-auto">
+                <SheetHeader>
+                    <SheetTitle className="pr-8">{data.no_rujukan || "Detail Pemantauan"}</SheetTitle>
+                    <SheetDescription className="line-clamp-1">{data.risiko}</SheetDescription>
+                </SheetHeader>
+
+                <div className="mt-6 space-y-6">
+                    {/* Risk badges */}
+                    <div className="flex items-center gap-3">
+                        <div className="text-center">
+                            <p className="text-[10px] text-muted-foreground mb-1">Sebelum</p>
+                            <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskBadgeColor(skorDaftarLabel) }}>
+                                {skorDaftarLabel} ({data.skor_kebarangkalian_sebelum || "-"} × {data.skor_impak_sebelum || "-"})
+                            </Badge>
+                        </div>
+                        <ChevronRight size={14} className="text-muted-foreground mt-3" />
+                        <div className="text-center">
+                            <p className="text-[10px] text-muted-foreground mb-1">Terkini</p>
+                            <Badge className="border-transparent text-white px-2 py-1" style={{ backgroundColor: riskColorTerkini }}>
+                                {tahapRisikoTerkini} ({data.skor_kebarangkalian_terkini || "-"} × {data.skor_impak_terkini || "-"})
+                            </Badge>
+                        </div>
+                        <div className="mt-3">
+                            <Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)}>
+                                {data.status_pemantauan_terkini || "-"}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    {/* Info sections */}
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-2">
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pengenalpastian</h4>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div><span className="text-muted-foreground">Syarikat: </span><span className="text-foreground">{data.nama_syarikat || "-"}</span></div>
+                                <div><span className="text-muted-foreground">Kategori: </span><span className="text-foreground">{data.kategori_risiko || "-"}</span></div>
+                                <div><span className="text-muted-foreground">Tahun Asal: </span><span className="text-foreground">{data.tahun_asal || data.tahun || "-"} ({getSeparuhTahunLabel(data.separuh_tahun_asal || data.separuh_tahun)})</span></div>
+                                <div><span className="text-muted-foreground">Status: </span><Badge variant={statusBadgeVariant(data.status_pemantauan_terkini)} className="text-[10px]">{data.status_pemantauan_terkini || "-"}</Badge></div>
+                            </div>
+                        </div>
+
+                        {data.tahun_pemantauan && (
+                            <div className="rounded-lg border border-border p-4 space-y-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pemantauan</h4>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span className="text-muted-foreground">Tahun Sesi: </span><span className="text-foreground">{data.tahun_pemantauan}</span></div>
+                                    <div><span className="text-muted-foreground">Separuh Tahun: </span><span className="text-foreground">{getSeparuhTahunLabel(data.separuh_tahun_pemantauan)}</span></div>
+                                </div>
+                                {data.catatan && (
+                                    <div className="text-sm"><span className="text-muted-foreground">Catatan: </span><span className="text-foreground">{data.catatan}</span></div>
+                                )}
+                            </div>
+                        )}
+
+                        {Array.isArray(data.pelan_tindakan_pemantauan) && data.pelan_tindakan_pemantauan.filter(Boolean).length > 0 && (
+                            <div className="rounded-lg border border-border p-4 space-y-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Pelan Tindakan</h4>
+                                <ol className="list-inside list-decimal space-y-1 text-sm text-foreground">
+                                    {data.pelan_tindakan_pemantauan.filter(Boolean).map((plan, idx) => (
+                                        <li key={idx}>{plan}</li>
+                                    ))}
+                                </ol>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
+}
+
+// =======================================================
+// Komponen Utama
+// =======================================================
 function PemantauanRisiko() {
     const [data, setData] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [syarikatFilter, setSyarikatFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    const [kategoriFilter, setKategoriFilter] = useState(""); 
-    
-    // STATE: Untuk filter Tahap Risiko Terkini (menggunakan logik fallback)
+    const [kategoriFilter, setKategoriFilter] = useState("");
     const [riskLevelFilter, setRiskLevelFilter] = useState("");
-    
     const [loading, setLoading] = useState(true);
     const [syarikatList, setSyarikatList] = useState([]);
-    const [kategoriList, setKategoriList] = useState([]); 
-    
+    const [kategoriList, setKategoriList] = useState([]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRiskForEdit, setSelectedRiskForEdit] = useState(null);
-    const [loadingModal, setLoadingModal] = useState(false);
-
-    const [expandedRowId, setExpandedRowId] = useState(null);
 
     const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
     const [selectedFilterTahun, setSelectedFilterTahun] = useState("");
     const [selectedFilterSeparuh, setSelectedFilterSeparuh] = useState("");
-    
-    // Logik fetchData 
+
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const res = await api.get("/pemantauan-risiko");
             const rawData = res.data;
-            
+
             const uniqueKategori = [...new Set(rawData.map(d => d.kategori_risiko).filter(k => k))].sort();
             setKategoriList(uniqueKategori);
 
             const processedData = rawData.map(d => {
-                const {label: skorDaftarLabel, color: skorDaftarColor} = getRiskData(
+                const { label: skorDaftarLabel, color: skorDaftarColor } = getRiskData(
                     parseInt(d.skor_kebarangkalian_sebelum) || 0,
                     parseInt(d.skor_impak_sebelum) || 0
                 );
-                
-                const {label: tahapRisikoTerkini, color: riskColorTerkini} = getRiskData(
+                const { label: tahapRisikoTerkini, color: riskColorTerkini } = getRiskData(
                     parseInt(d.skor_kebarangkalian_terkini) || 0,
                     parseInt(d.skor_impak_terkini) || 0
                 );
-                
+
                 return {
                     ...d,
                     id: d.id,
                     risiko_id: d.id,
                     tahun_asal: d.tahun,
                     separuh_tahun_asal: d.separuh_tahun,
-                    
                     skor_kebarangkalian_sebelum: d.skor_kebarangkalian_sebelum,
                     skor_impak_sebelum: d.skor_impak_sebelum,
                     tahap_risiko_daftar: skorDaftarLabel,
                     risk_color_daftar: skorDaftarColor,
-                    
                     tahun_pemantauan: d.tahun_pemantauan,
                     separuh_tahun_pemantauan: d.separuh_tahun_pemantauan,
-                    
                     pelan_tindakan_pemantauan: Array.isArray(d.pelan_tindakan_terkini)
-                        ? d.pelan_tindakan_terkini.filter(p => p) 
-                        : [], 
-                        
+                        ? d.pelan_tindakan_terkini.filter(p => p)
+                        : [],
                     status_pemantauan_terkini: d.status_pemantauan_terkini || "",
                     catatan: d.catatan,
                     skor_kebarangkalian_terkini: d.skor_kebarangkalian_terkini,
                     skor_impak_terkini: d.skor_impak_terkini,
-                    tahap_risiko: tahapRisikoTerkini, 
+                    tahap_risiko: tahapRisikoTerkini,
                     risk_color: riskColorTerkini,
                 };
             });
 
             setData(processedData);
-        } catch(err){
+        } catch (err) {
             console.error("❌ Ralat memuat data pemantauan risiko:", err);
+        } finally {
+            setLoading(false);
         }
-        finally { setLoading(false); }
     }, []);
 
-    // Logik handleApplyDateFilter
-    const handleApplyDateFilter = (type, tahun, separuh) => {
+    const handleApplyDateFilter = (tahun, separuh) => {
         setSelectedFilterTahun(tahun);
         setSelectedFilterSeparuh(separuh);
         setIsDateFilterModalOpen(false);
-    }
-    
-    // Logik fetchSyarikatList
+    };
+
     const fetchSyarikatList = useCallback(async () => {
         try {
-          const res = await api.get("/syarikat");
-          if (Array.isArray(res.data)) {
-            setSyarikatList(res.data);
-          } else {
-            console.warn("⚠️ Format respons syarikat tidak dijangka:", res.data);
-          }
+            const res = await api.get("/syarikat");
+            if (Array.isArray(res.data)) {
+                setSyarikatList(res.data);
+            }
         } catch (err) {
-          console.error("❌ Ralat memuat senarai syarikat:", err);
+            console.error("❌ Ralat memuat senarai syarikat:", err);
         }
     }, []);
 
-    // Logik handleCloseModal
     const handleCloseModal = () => { setIsModalOpen(false); setSelectedRiskForEdit(null); fetchData(); };
-    
-    // Logik handleEdit
+
     const handleEdit = async (risikoSenarai) => {
         try {
-            setLoadingModal(true);
             const res = await api.get(`/rawatan/${risikoSenarai.risiko_id}`);
             const fullRiskData = res.data;
 
@@ -223,64 +473,49 @@ function PemantauanRisiko() {
             setIsModalOpen(true);
         } catch (err) {
             console.error(`Ralat memuat data risiko lengkap ${risikoSenarai.risiko_id}:`, err);
-        } finally {
-            setLoadingModal(false);
         }
     };
 
-    // Logik handleRefreshData
     const handleRefreshData = useCallback(() => { fetchData(); }, [fetchData]);
-    
-    // Logik useEffect
-    useEffect(()=>{
+
+    useEffect(() => {
         fetchSyarikatList();
         fetchData();
     }, [fetchData, fetchSyarikatList]);
 
-
-    // Logik filteredData
-    const filteredData = data.filter(d=>{
+    const filteredData = data.filter(d => {
         const searchLower = searchTerm.toLowerCase();
         const matchSearch = !searchTerm ||
             (d.no_rujukan && d.no_rujukan.toLowerCase().includes(searchLower)) ||
             (d.risiko && d.risiko.toLowerCase().includes(searchLower)) ||
             (d.nama_syarikat && d.nama_syarikat.toLowerCase().includes(searchLower));
 
-        const matchSyarikat = !syarikatFilter || d.nama_syarikat===syarikatFilter;
-        
-        // Logik Penapisan Tarikh (Data Asal sahaja)
+        const matchSyarikat = !syarikatFilter || d.nama_syarikat === syarikatFilter;
+
         const isFilteringByDate = selectedFilterTahun || selectedFilterSeparuh;
         let matchTahunSeparuh = true;
-
         if (isFilteringByDate) {
             const filterTahun = d.tahun_asal || d.tahun;
             const filterSeparuh = d.separuh_tahun_asal || d.separuh_tahun;
-
             const tahunMatch = !selectedFilterTahun || String(filterTahun) === selectedFilterTahun;
             const separuhMatch = !selectedFilterSeparuh || String(filterSeparuh) === selectedFilterSeparuh;
-
             matchTahunSeparuh = tahunMatch && separuhMatch;
         }
 
-        // Logik Penapisan Kategori
         const matchKategori = !kategoriFilter || d.kategori_risiko === kategoriFilter;
+        const matchStatus = !statusFilter || d.status_pemantauan_terkini === statusFilter;
 
-        const matchStatus = !statusFilter || d.status_pemantauan_terkini===statusFilter;
-
-        // Logik Penapisan Tahap Risiko Terkini
         const currentRiskLevel = d.tahap_risiko === "Tiada Data" || !d.tahap_risiko
-            ? d.tahap_risiko_daftar // Fallback ke Skor Asal
+            ? d.tahap_risiko_daftar
             : d.tahap_risiko;
         const matchRiskLevel = !riskLevelFilter || currentRiskLevel === riskLevelFilter;
-        
-        // Gabungkan semua penapis
-        return matchSearch && matchSyarikat && matchTahunSeparuh && matchKategori && matchStatus && matchRiskLevel; 
+
+        return matchSearch && matchSyarikat && matchTahunSeparuh && matchKategori && matchStatus && matchRiskLevel;
     });
 
-    // Logik Kad Ringkasan
     const totalRisiko = filteredData.length;
     const statusCounts = filteredData.reduce((acc, d) => {
-        const status = d.status_pemantauan_terkini || ""; 
+        const status = d.status_pemantauan_terkini || "";
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
@@ -289,14 +524,11 @@ function PemantauanRisiko() {
         return order.indexOf(keyA) - order.indexOf(keyB);
     });
 
-    // Mengira Skor Risiko Terkini (dengan fallback)
     const riskLevelCounts = filteredData.reduce((acc, d) => {
         const currentRiskLevel = d.tahap_risiko === "Tiada Data" || !d.tahap_risiko
-            ? d.tahap_risiko_daftar // Fallback ke Skor Asal
+            ? d.tahap_risiko_daftar
             : d.tahap_risiko;
-            
-        const level = currentRiskLevel || "Tiada Data"; 
-        
+        const level = currentRiskLevel || "Tiada Data";
         acc[level] = (acc[level] || 0) + 1;
         return acc;
     }, {});
@@ -305,305 +537,177 @@ function PemantauanRisiko() {
         return order.indexOf(keyA) - order.indexOf(keyB);
     });
 
-    const COL_SPAN = 10; // 7 (asal) + 1 (BIL) + 2 (Tahun Asal & Tahun Pemantauan) = 10
+    const renderBarRows = (entries, colorFn, isPrimaryBar) => (
+        entries.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Tiada data untuk dipaparkan.</p>
+        ) : (
+            entries.map(([key, count]) => {
+                const percentage = totalRisiko > 0 ? (count / totalRisiko) * 100 : 0;
+                return (
+                    <div key={key} className="flex items-center gap-3">
+                        <span className="w-28 shrink-0 truncate text-xs text-muted-foreground" title={key}>{key}</span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div
+                                className={`h-full rounded-full ${isPrimaryBar ? "bg-primary" : ""}`}
+                                style={isPrimaryBar ? { width: `${percentage}%` } : { width: `${percentage}%`, backgroundColor: colorFn(key) }}
+                                title={`${count} (${percentage.toFixed(0)}%)`}
+                            />
+                        </div>
+                        <span className="w-6 shrink-0 text-right text-xs font-medium text-foreground">{count}</span>
+                    </div>
+                );
+            })
+        )
+    );
 
-    // handleToggleRow
-    const handleToggleRow = (id) => {
-        setExpandedRowId(prevId => (prevId === id ? null : id));
-    };
-
-    // Teks Butang Penapis Tarikh
     const dateFilterButtonText = selectedFilterTahun || selectedFilterSeparuh
         ? `Asal: ${selectedFilterTahun || 'Semua Tahun'} (${getSeparuhTahunLabel(parseInt(selectedFilterSeparuh)) || 'Semua Separuh'})`
         : "Tahun & Separuh Tahun";
+    const isDateFilterActive = Boolean(selectedFilterTahun || selectedFilterSeparuh);
 
+    const activeFilterCount = [syarikatFilter, kategoriFilter, riskLevelFilter, statusFilter, isDateFilterActive ? "1" : ""].filter(Boolean).length;
 
     return (
-        <div className="senaraipemantauan-container">
-            <h1>Pemantauan Risiko</h1>
+        <div className="space-y-6">
+            <PageHeader
+                title="Pemantauan Risiko"
+                description="Pantau status dan tahap risiko terkini bagi risiko yang telah dirawat."
+            />
 
-            {/* Kad Ringkasan */}
-            <div className="senaraipemantauan-cards-container">
-                <div className="senaraipemantauan-info-card">
-                    <h3>Jumlah Risiko </h3>
-                    <p>{totalRisiko}</p>
-                </div>
-                <div className="senaraipemantauan-info-card">
-                    <h3>Pecahan Status Pemantauan</h3>
-                    <div className="senaraipemantauan-barchart-container">
-                        {sortedStatusEntries.map(([status, count]) => {
-                            const percentage = totalRisiko > 0 ? (count / totalRisiko) * 100 : 0;
-                            return (
-                                <div key={status} className="senaraipemantauan-barchart-row">
-                                    <span className="senaraipemantauan-barchart-label" title={status}>{status}</span>
-                                    <div className="senaraipemantauan-barchart-bar-bg">
-                                        <div 
-                                            className="senaraipemantauan-barchart-bar" 
-                                            style={{ 
-                                                width: `${percentage}%`, 
-                                                backgroundColor: STATUS_COLORS[status] || '#9ca3af' 
-                                            }}
-                                            title={`${count} (${percentage.toFixed(0)}%)`}
-                                        ></div>
-                                    </div>
-                                    <span className="senaraipemantauan-barchart-count">{count}</span>
-                                </div>
-                            );
-                        })}
+            {/* Ringkasan */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatBar label="Jumlah Risiko" value={totalRisiko} icon={Activity} />
+                <StatBar label="Tertunggak" value={statusCounts["Tertunggak"] || 0} icon={Activity} color="#ef4444" />
+                <StatBar label="Dalam Pemantauan" value={(statusCounts["Pemantauan"] || 0) + (statusCounts["Sedang Dilaksanakan"] || 0)} icon={Activity} color="#eab308" />
+                <StatBar label="Selesai / Tutup" value={(statusCounts["Selesai"] || 0) + (statusCounts["Tutup"] || 0)} icon={Activity} color="#22c55e" />
+            </div>
+
+            {/* Pecahan */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Card className="p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-foreground">Pecahan Status Pemantauan</h3>
+                    <div className="space-y-2">
+                        {renderBarRows(sortedStatusEntries, null, true)}
                     </div>
-                </div>
-                <div className="senaraipemantauan-info-card">
-                    <h3>Pecahan Skor Risiko </h3>
-                    <div className="senaraipemantauan-barchart-container">
-                        {sortedRiskLevelEntries.map(([level, count]) => {
-                            const percentage = totalRisiko > 0 ? (count / totalRisiko) * 100 : 0;
-                            return (
-                                <div key={level} className="senaraipemantauan-barchart-row">
-                                    <span className="senaraipemantauan-barchart-label" title={level}>{level}</span>
-                                    <div className="senaraipemantauan-barchart-bar-bg">
-                                        <div 
-                                            className="senaraipemantauan-barchart-bar" 
-                                            style={{ 
-                                                width: `${percentage}%`, 
-                                                backgroundColor: RISK_LEVEL_COLORS[level] || '#9ca3af' 
-                                            }}
-                                            title={`${count} (${percentage.toFixed(0)}%)`}
-                                        ></div>
-                                    </div>
-                                    <span className="senaraipemantauan-barchart-count">{count}</span>
-                                </div>
-                            );
-                        })}
+                </Card>
+                <Card className="p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-foreground">Pecahan Skor Risiko</h3>
+                    <div className="space-y-2">
+                        {renderBarRows(sortedRiskLevelEntries, riskBadgeColor, false)}
                     </div>
+                </Card>
+            </div>
+
+            {/* Penapis */}
+            <Card>
+                <div className="flex flex-wrap items-center gap-3 p-4">
+                    <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Cari No Rujukan / Risiko / Syarikat..."
+                            className="pl-8"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <Select className="w-full sm:w-44" value={syarikatFilter} onChange={e => setSyarikatFilter(e.target.value)}>
+                        <option value="">-- Semua Syarikat --</option>
+                        {syarikatList.map(s => (
+                            <option key={s.syarikat_id} value={s.nama_syarikat}>{s.nama_syarikat}</option>
+                        ))}
+                    </Select>
+
+                    <Button
+                        variant={isDateFilterActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setIsDateFilterModalOpen(true)}
+                        className="gap-1.5"
+                    >
+                        <Filter size={14} />
+                        {dateFilterButtonText}
+                    </Button>
+
+                    <Select className="w-full sm:w-48" value={kategoriFilter} onChange={e => setKategoriFilter(e.target.value)}>
+                        <option value="">-- Semua Kategori Risiko --</option>
+                        {kategoriList.map(kategori => (
+                            <option key={kategori} value={kategori}>{kategori}</option>
+                        ))}
+                    </Select>
+
+                    <Select className="w-full sm:w-44" value={riskLevelFilter} onChange={e => setRiskLevelFilter(e.target.value)}>
+                        <option value="">-- Semua Tahap Risiko --</option>
+                        <option value="Sangat Tinggi">Sangat Tinggi</option>
+                        <option value="Tinggi">Tinggi</option>
+                        <option value="Sederhana">Sederhana</option>
+                        <option value="Rendah">Rendah</option>
+                        <option value="Tiada Data">Tiada Data</option>
+                    </Select>
+
+                    <Select className="w-full sm:w-44" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                        <option value="">-- Semua Status --</option>
+                        <option value="Buka">Buka</option>
+                        <option value="Sedang Dilaksanakan">Sedang Dilaksanakan</option>
+                        <option value="Pemantauan">Pemantauan</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Tutup">Tutup</option>
+                    </Select>
+
+                    {activeFilterCount > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setSyarikatFilter("");
+                                setKategoriFilter("");
+                                setRiskLevelFilter("");
+                                setStatusFilter("");
+                                setSelectedFilterTahun("");
+                                setSelectedFilterSeparuh("");
+                                setSearchTerm("");
+                            }}
+                            className="text-destructive hover:text-destructive"
+                        >
+                            Set Semula ({activeFilterCount})
+                        </Button>
+                    )}
                 </div>
+            </Card>
+
+            {/* Senarai Risiko — Card-based */}
+            <div className="space-y-3">
+                {loading ? (
+                    <Card className="flex items-center justify-center py-16">
+                        <LoadingSpinner text="Memuatkan data pemantauan..." size="sm" />
+                    </Card>
+                ) : filteredData.length > 0 ? (
+                    filteredData.map((d, i) => (
+                        <RiskCard key={d.id} item={d} index={i} onEdit={handleEdit} />
+                    ))
+                ) : (
+                    <Card className="flex items-center justify-center py-16">
+                        <EmptyState icon={Activity} title="Tiada data dijumpai" description="Tiada rekod pemantauan yang sepadan dengan penapis anda." />
+                    </Card>
+                )}
             </div>
 
-            {/* Filter Container */}
-            <div className="senaraipemantauan-filter-container">
-                <input
-                    type="text"
-                    placeholder="Cari No Rujukan / Risiko / Syarikat..."
-                    className="senaraipemantauan-filter-search"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                />
-                
-                {/* Filter Syarikat */}
-                <select className="senaraipemantauan-filter-select" value={syarikatFilter} onChange={e=>setSyarikatFilter(e.target.value)}>
-                    <option value="">-- Semua Syarikat --</option>
-                    {syarikatList.map(s=>(
-                        <option key={s.syarikat_id} value={s.nama_syarikat}>{s.nama_syarikat}</option>
-                    ))}
-                </select>
-                
-                {/* Butang Modal Filter Tarikh */}
-                <button 
-                    className={`senaraipemantauan-filter-btn ${selectedFilterTahun || selectedFilterSeparuh ? 'active' : ''}`}
-                    onClick={() => setIsDateFilterModalOpen(true)}
-                    title="Tapis mengikut Tahun dan Separuh Tahun Asal"
-                >
-                    <Filter size={14} />
-                    {dateFilterButtonText}
-                </button>
-                
-                {/* Filter Kategori Risiko */}
-                <select className="senaraipemantauan-filter-select" value={kategoriFilter} onChange={e=>setKategoriFilter(e.target.value)}>
-                    <option value="">-- Semua Kategori Risiko --</option>
-                    {kategoriList.map(kategori => (
-                        <option key={kategori} value={kategori}>{kategori}</option>
-                    ))}
-                </select>
-                
-                {/* Filter Tahap Risiko Terkini */}
-                <select className="senaraipemantauan-filter-select" value={riskLevelFilter} onChange={e=>setRiskLevelFilter(e.target.value)}>
-                    <option value="">-- Semua Tahap Risiko --</option>
-                    <option value="Sangat Tinggi">Sangat Tinggi</option>
-                    <option value="Tinggi">Tinggi</option>
-                    <option value="Sederhana">Sederhana</option>
-                    <option value="Rendah">Rendah</option>
-                    <option value="Tiada Data">Tiada Data</option>
-                </select>
-
-                {/* Filter Status */}
-                <select className="senaraipemantauan-filter-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
-                    <option value="">-- Semua Status --</option>
-                    <option value="Buka">Buka</option>
-                    <option value="Sedang Dilaksanakan">Sedang Dilaksanakan</option>
-                    <option value="Pemantauan">Pemantauan</option>
-                    <option value="Selesai">Selesai</option>
-                    <option value="Tutup">Tutup</option>
-                </select>
-            </div>
-
-            {/* Table Wrapper */}
-            <div className="senaraipemantauan-table-wrapper">
-                <table className="senaraipemantauan-table">
-                    
-                    {/* THEAD - Tambah Tahun & Separuh Asal + Tahun & Separuh Pemantauan */}
-                    <thead>
-                        <tr>
-                            <th className="senaraipemantauan-th-expand"></th>
-                            <th className="senaraipemantauan-th-bil">BIL</th>
-                            <th>Tahun & Separuh Daftar</th>
-                            <th>No Rujukan</th>
-                            <th>Risiko</th>
-                            <th>Tahun & Separuh Pemantauan</th>
-                            <th>Tahap Risiko Sebelum</th>
-                            <th>Status Pemantauan</th>
-                            <th>Tahap Risiko Selepas</th>
-                            <th className="senaraipemantauan-th-tindakan">Tindakan</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {loading ? (
-                            <tr><td colSpan={COL_SPAN} className="senaraipemantauan-loading"><Loader2 size={20} className="senaraipemantauan-spin" /> Memuatkan...</td></tr>
-                        ) : filteredData.length > 0 ? (
-                            filteredData.map((d, i) => {
-                                const isExpanded = expandedRowId === d.id; 
-                                return (
-                                <Fragment key={d.id}>
-                                    {/* BARIS UTAMA - Ditambah kolum Tahun Asal & Tahun Pemantauan */}
-                                    <tr className={isExpanded ? "senaraipemantauan-row-expanded" : ""}>
-                                        <td className="senaraipemantauan-td-expand">
-                                            <button 
-                                                onClick={() => handleToggleRow(d.id)} 
-                                                className="senaraipemantauan-expand-btn"
-                                                title={isExpanded ? "Tutup maklumat" : "Lihat maklumat"}
-                                            >
-                                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                            </button>
-                                        </td>
-                                        <td className="senaraipemantauan-center">{i + 1}</td>
-                                        <td className="senaraipemantauan-center senaraipemantauan-tahun-cell">
-                                            <div className="senaraipemantauan-tahun-display">
-                                                <div className="senaraipemantauan-tahun-year">{d.tahun_asal || d.tahun || "-"}</div>
-                                                <div className="senaraipemantauan-tahun-separuh">
-                                                    {getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun) || "-"}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>{d.no_rujukan}</td>
-                                        <td>{d.risiko}</td>
-                                        <td className="senaraipemantauan-center senaraipemantauan-tahun-cell">
-                                            <div className="senaraipemantauan-tahun-display">
-                                                <div className="senaraipemantauan-tahun-year">{d.tahun_pemantauan || "-"}</div>
-                                                <div className="senaraipemantauan-tahun-separuh">
-                                                    {d.tahun_pemantauan ? getSeparuhTahunLabel(d.separuh_tahun_pemantauan) : "-"}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="senaraipemantauan-center">
-                                            <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color_daftar}}>
-                                                {getRiskAbbreviation(d.tahap_risiko_daftar)}
-                                            </div>
-                                        </td>
-                                        <td>{d.status_pemantauan_terkini || ""}</td>
-                                        <td className="senaraipemantauan-center">
-                                            <div className="senaraipemantauan-risk-box" style={{backgroundColor:d.risk_color}}>
-                                                {getRiskAbbreviation(d.tahap_risiko)}
-                                            </div>
-                                        </td>
-                                        <td className="senaraipemantauan-center">
-                                            <button
-                                                className="senaraipemantauan-icon-edit-btn"
-                                                onClick={() => handleEdit(d)}
-                                                title="Lihat/Kemaskini Pemantauan"
-                                                disabled={loadingModal}
-                                            >
-                                                {loadingModal ? <Loader2 size={18} className="senaraipemantauan-spin" /> : <Eye size={18} />}
-                                            </button>
-                                        </td>
-                                    </tr>
-
-                                    {/* BARIS EXPANDED */}
-                                    {isExpanded && (
-                                        <tr className="senaraipemantauan-detail-row">
-                                            <td colSpan={COL_SPAN}>
-                                                <div className="senaraipemantauan-detail-content">
-                                                    
-                                                    {/* Kumpulan Data Pendaftaran */}
-                                                    <div className="senaraipemantauan-detail-group">
-                                                        <h4>Maklumat Pengenalpastian Risiko</h4>
-                                                        
-                                                        <p>
-                                                            <strong>Syarikat:</strong> 
-                                                            {d.nama_syarikat || "-"}
-                                                        </p>
-                                                        
-                                                        <p>
-                                                            <strong>Tahun & Separuh:</strong> 
-                                                            {d.tahun_asal || d.tahun || ""} ({getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)})
-                                                        </p>
-                                                        <p>
-                                                            <strong>Kategori Risiko:</strong> 
-                                                            {d.kategori_risiko || "-"}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    {/* Kumpulan Data Pemantauan */}
-                                                    {(d.tahun_pemantauan || d.catatan) && (
-                                                        <div className="senaraipemantauan-detail-group">
-                                                            <h4>Maklumat Pemantauan Risiko</h4>
-                                                            {d.tahun_pemantauan && (
-                                                                <p>
-                                                                    <strong>Tahun & Separuh:</strong> 
-                                                                    {d.tahun_pemantauan ? `${d.tahun_pemantauan} (${getSeparuhTahunLabel(d.separuh_tahun_pemantauan)})` : '-'}
-                                                                </p>
-                                                            )}
-                                                            {d.catatan && (
-                                                                <p>
-                                                                    <strong>Catatan:</strong> 
-                                                                    {d.catatan || "-"}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {/* Kumpulan Pelan Tindakan */}
-                                                    {d.pelan_tindakan_pemantauan && d.pelan_tindakan_pemantauan.length > 0 && (
-                                                        <div className="senaraipemantauan-detail-group senaraipemantauan-detail-group-wide">
-                                                            <h4>Pelan Tindakan Pemantauan</h4>
-                                                            <ol>
-                                                                {d.pelan_tindakan_pemantauan.map((plan, index) => (
-                                                                    <li key={index}>{plan}</li>
-                                                                ))}
-                                                            </ol>
-                                                        </div>
-                                                    )}
-
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                    
-                                </Fragment>
-                                )
-                            })
-                        ) : (
-                            <tr><td colSpan={COL_SPAN} className="senaraipemantauan-no-data">Tiada data dijumpai</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-            
             {/* Modal Edit Pemantauan */}
             {isModalOpen && selectedRiskForEdit && (
-                <EditPemantauan 
-                   isOpen={isModalOpen}
-                    risk={selectedRiskForEdit} 
-                    onClose={handleCloseModal} 
+                <EditPemantauan
+                    isOpen={isModalOpen}
+                    risk={selectedRiskForEdit}
+                    onClose={handleCloseModal}
                     onSave={handleRefreshData}
                 />
             )}
-            
+
             {/* Modal Filter Tarikh */}
             {isDateFilterModalOpen && (
                 <DateFilterModal
                     isOpen={isDateFilterModalOpen}
                     onClose={() => setIsDateFilterModalOpen(false)}
                     allData={data}
-                    currentType={'pengenalpastian'}
                     currentTahun={selectedFilterTahun}
                     currentSeparuh={selectedFilterSeparuh}
                     onApplyFilter={handleApplyDateFilter}

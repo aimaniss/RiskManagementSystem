@@ -1,11 +1,18 @@
 // KemaskiniPemantauan.jsx - COMPLETE FULL CODE
 
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Save, Loader2, BookOpen, Plus } from "lucide-react"; 
+import { X, Save, Loader2, BookOpen, Plus, Trash2, Eye } from "lucide-react"; 
 import api from "../../api/api";
-import "./KemaskiniPemantauan.css"; 
 import { riskMatrix, getRiskMatrix, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING, SKOR_KEBARANGKALIAN_DESC, SKOR_IMPAK_DESC } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
+import Toast from "@/components/ui/toast";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function KemaskiniPemantauanModal({
     isOpen,
@@ -26,6 +33,7 @@ export default function KemaskiniPemantauanModal({
     const [isLoading, setIsLoading] = useState(false);
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan();
     const [isLoadingData, setIsLoadingData] = useState(false);
+    const [toast, setToast] = useState(null);
 
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
@@ -231,7 +239,7 @@ export default function KemaskiniPemantauanModal({
         });
 
         if (missingFields.length > 0) {
-            alert(`Sila lengkapkan maklumat wajib berikut: ${missingFields.join(", ")}.`);
+            setToast({ variant: "warning", title: "Medan Tidak Lengkap", message: `Sila lengkapkan maklumat wajib berikut: ${missingFields.join(", ")}.` });
             setIsLoading(false);
             return;
         }
@@ -240,7 +248,7 @@ export default function KemaskiniPemantauanModal({
         const i = formData.skor_impak_selepas; 
 
         if ((k && !i) || (!k && i)) {
-            alert("Sila lengkapkan kedua-dua Skor Kebarangkalian dan Skor Impak, atau biarkan kedua-duanya kosong.");
+            setToast({ variant: "warning", title: "Medan Tidak Lengkap", message: "Sila lengkapkan kedua-dua Skor Kebarangkalian dan Skor Impak, atau biarkan kedua-duanya kosong." });
             setIsLoading(false);
             return;
         }
@@ -267,7 +275,7 @@ export default function KemaskiniPemantauanModal({
             const res = await api.put(url, payload);
             const savedLog = res.data?.data ?? res.data;
 
-            alert(`✅ Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya dikemaskini!`);
+            setToast({ variant: "success", title: "Berjaya", message: `Log Pemantauan untuk Risiko ${risikoTeks || risikoNoRujukan} berjaya dikemaskini!` });
 
             if (typeof onSaveSuccess === "function") {
                 try { onSaveSuccess(savedLog); } catch (err) { console.warn("callback error:", err); }
@@ -276,7 +284,7 @@ export default function KemaskiniPemantauanModal({
             onClose?.();
         } catch (err) {
             console.error(`❌ Ralat mengemaskini log:`, err);
-            alert(`⚠️ Gagal mengemaskini log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}`);
+            setToast({ variant: "error", title: "Gagal Mengemaskini", message: `Gagal mengemaskini log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}` });
         } finally {
             setIsLoading(false);
         }
@@ -286,16 +294,30 @@ export default function KemaskiniPemantauanModal({
 
     if (isLoadingData) {
         return (
-            <div className="kemaskinipemantauan-modal-overlay">
-                <div className="kemaskinipemantauan-modal">
-                    <div className="kemaskinipemantauan-header">
-                        <span>Memuat data...</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="flex max-h-[92vh] w-full max-w-sm flex-col rounded-xl bg-white shadow-xl">
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Eye className="h-4 w-4" />
+                            </span>
+                            <h3 className="truncate text-[15px] font-semibold text-foreground">Memuat data...</h3>
+                        </div>
                     </div>
-                    <div style={{ padding: '40px', textAlign: 'center' }}>
-                        <Loader2 size={32} className="spin" />
-                        <p style={{ marginTop: '16px' }}>Sila tunggu...</p>
+                    <div className="p-10">
+                        <LoadingSpinner text="Sila tunggu..." size="md" />
                     </div>
                 </div>
+
+                {toast && (
+                    <Toast
+                        variant={toast.variant}
+                        title={toast.title}
+                        message={toast.message}
+                        onClose={() => setToast(null)}
+                        autoClose={4000}
+                    />
+                )}
             </div>
         );
     }
@@ -303,246 +325,285 @@ export default function KemaskiniPemantauanModal({
    // PART 2 - Return Statement untuk KemaskiniPemantauan.jsx
 // Copy code ni SELEPAS code Part 1
 
+    const subtitleText = [
+        risikoNoRujukan !== "-" ? `No. Rujukan: ${risikoNoRujukan}` : null,
+        risikoTeks,
+    ].filter(Boolean).join(" • ") || "Log pemantauan risiko";
+
+    const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
+
     return (
-        <div className="kemaskinipemantauan-modal-overlay">
-            <div className="kemaskinipemantauan-modal">
-                <form onSubmit={handleSubmit}>
-                    <div className="kemaskinipemantauan-header">
-                        <span>{modalTitle}</span>
-                        <button type="button" className="kemaskinipemantauan-close-btn" onClick={onClose}>
-                            <X size={16} />
-                        </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="flex max-h-[92vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-xl">
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3.5">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Eye className="h-4 w-4" />
+                            </span>
+                            <div className="min-w-0">
+                                <h3 className="truncate text-[15px] font-semibold text-foreground">{modalTitle}</h3>
+                                <p className="truncate text-xs text-muted-foreground">{subtitleText}</p>
+                            </div>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose}>
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
 
-                    <div className="kemaskinipemantauan-body">
+                    <div className="flex-1 space-y-4 overflow-y-auto p-5">
                         
-                        <div className="kemaskinipemantauan-box">
-                            <div className="kemaskinipemantauan-box-header kemaskinipemantauan-header-with-btn">
-                                <span>Maklumat Pemantauan</span>
-                                <button type="button" className="kemaskinipemantauan-panduan-btn" onClick={openPanduan}>
-                                    <BookOpen size={16} style={{ marginRight: '6px' }} />
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-4 flex items-center justify-between gap-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Maklumat Pemantauan</h4>
+                                <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={openPanduan}>
+                                    <BookOpen className="h-3.5 w-3.5" />
                                     Panduan
-                                </button>
+                                </Button>
                             </div>
                             
-                            <div className="kemaskinipemantauan-row">
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Tahun Pemantauan:*</label>
-                                    <input
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Tahun Pemantauan:*</Label>
+                                    <Input
                                         type="number"
                                         name="tahun_pemantauan"
                                         value={formData.tahun_pemantauan}
                                         onChange={handleChange}
                                         required
                                         readOnly
-                                        style={{ backgroundColor: '#f3f4f6' }}
+                                        className={readOnlyFieldCls}
                                     />
                                 </div>
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Separuh Tahun Pemantauan:*</label>
-                                    <select
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Separuh Tahun Pemantauan:*</Label>
+                                    <Select
                                         name="separuh_tahun_pemantauan"
                                         value={formData.separuh_tahun_pemantauan}
                                         onChange={handleChange}
                                         disabled
-                                        style={{ backgroundColor: '#f3f4f6' }}
                                     >
                                         <option value={1}>Pertama</option>
                                         <option value={2}>Kedua</option>
-                                    </select>
+                                    </Select>
                                 </div>
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Kelulusan:</label>
-                                    <input 
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kelulusan:</Label>
+                                    <Input 
                                         type="text" 
                                         name="no_bil_kelulusan" 
                                         value={formData.no_bil_kelulusan} 
                                         onChange={handleChange} 
                                         readOnly={isViewMode || isStaff} 
+                                        className={isViewMode || isStaff ? readOnlyFieldCls : ""}
                                     />
                                 </div>
                             </div>
 
-                            <div className="kemaskinipemantauan-box-subheader" style={{ marginTop: '15px' }}>Pelan Tindakan Pemantauan:</div>
-                            {formData.pelan_tindakan_list.map((item, index) => {
-                                const listName = "pelan_tindakan_list";
-                                const key = "butiran_aktiviti";
-                                const isLocked = isViewMode || isStaff;
-                                return (
-                                    <div className="kemaskinipemantauan-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={isLocked ? "" : `Butiran Pelan Tindakan ${index + 1}`} 
-                                            readOnly={isLocked}
-                                        />
-                                        {(!isLocked) && formData[listName].length > 1 && (
-                                            <button type="button" className="kemaskinipemantauan-btn-circle kemaskinipemantauan-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                        {(!isLocked) && index === formData[listName].length - 1 && (
-                                            <button type="button" className="kemaskinipemantauan-btn-circle kemaskinipemantauan-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                            <Label className="mt-5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pelan Tindakan Pemantauan:</Label>
+                            <div className="mt-2 space-y-2">
+                                {formData.pelan_tindakan_list.map((item, index) => {
+                                    const listName = "pelan_tindakan_list";
+                                    const key = "butiran_aktiviti";
+                                    const isLocked = isViewMode || isStaff;
+                                    return (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <Input
+                                                type="text"
+                                                value={item[key]}
+                                                onChange={(e) => handleListChange(listName, index, key, e.target.value)}
+                                                placeholder={isLocked ? "" : `Butiran Pelan Tindakan ${index + 1}`} 
+                                                readOnly={isLocked}
+                                                className={isLocked ? readOnlyFieldCls : ""}
+                                            />
+                                            {(!isLocked) && formData[listName].length > 1 && (
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveListItem(listName, index)} aria-label="Buang Pelan Tindakan">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {(!isLocked) && index === formData[listName].length - 1 && (
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10" onClick={() => handleAddListItem(listName)} aria-label="Tambah Pelan Tindakan">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
 
-                            <div className="kemaskinipemantauan-box-subheader" style={{ marginTop: '15px' }}>Kakitangan Bertanggungjawab:</div>
-                            {formData.kakitangan_list.map((item, index) => {
-                                const listName = "kakitangan_list";
-                                const key = "butiran_kakitangan";
-                                const isLocked = isViewMode || isStaff;
-                                return (
-                                    <div className="kemaskinipemantauan-input-row" key={index}>
-                                        <input
-                                            type="text"
-                                            value={item[key]}
-                                            onChange={(e) => handleListChange(listName, index, key, e.target.value)}
-                                            placeholder={isLocked ? "" : `Kakitangan Bertanggungjawab ${index + 1}`} 
-                                            readOnly={isLocked}
-                                        />
-                                        {(!isLocked) && formData[listName].length > 1 && (
-                                            <button type="button" className="kemaskinipemantauan-btn-circle kemaskinipemantauan-btn-remove" onClick={() => handleRemoveListItem(listName, index)}>
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                        {(!isLocked) && index === formData[listName].length - 1 && (
-                                            <button type="button" className="kemaskinipemantauan-btn-circle kemaskinipemantauan-btn-add" onClick={() => handleAddListItem(listName)}>
-                                                <Plus size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                            <Label className="mt-5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kakitangan Bertanggungjawab:</Label>
+                            <div className="mt-2 space-y-2">
+                                {formData.kakitangan_list.map((item, index) => {
+                                    const listName = "kakitangan_list";
+                                    const key = "butiran_kakitangan";
+                                    const isLocked = isViewMode || isStaff;
+                                    return (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <Input
+                                                type="text"
+                                                value={item[key]}
+                                                onChange={(e) => handleListChange(listName, index, key, e.target.value)}
+                                                placeholder={isLocked ? "" : `Kakitangan Bertanggungjawab ${index + 1}`} 
+                                                readOnly={isLocked}
+                                                className={isLocked ? readOnlyFieldCls : ""}
+                                            />
+                                            {(!isLocked) && formData[listName].length > 1 && (
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveListItem(listName, index)} aria-label="Buang Kakitangan">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {(!isLocked) && index === formData[listName].length - 1 && (
+                                                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10" onClick={() => handleAddListItem(listName)} aria-label="Tambah Kakitangan">
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
 
-                            <div className="kemaskinipemantauan-row" style={{ marginTop: '10px' }}>
-                                <div className="kemaskinipemantauan-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Kekerapan:</label>
-                                    <input 
+                            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Kekerapan:</Label>
+                                    <Input 
                                         type="text" 
                                         name="kekerapan_pemantauan" 
                                         value={formData.kekerapan_pemantauan} 
                                         onChange={handleChange} 
                                         placeholder={isViewMode || isStaff ? "" : "Contoh: 3 Bulan / Tahunan"} 
                                         readOnly={isViewMode || isStaff} 
+                                        className={isViewMode || isStaff ? readOnlyFieldCls : ""}
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="kemaskinipemantauan-box">
-                            <div className="kemaskinipemantauan-box-header">Penilaian dan Keberkesanan Tindakan</div>
-                            <div className="kemaskinipemantauan-row">
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Skor Kebarangkalian:</label>
-                                    <select 
-                                        name="skor_kebarangkalian_selepas" 
-                                        value={formData.skor_kebarangkalian_selepas} 
-                                        onChange={handleChange} 
-                                        disabled={isViewMode || isExecutive || isStaff}
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        {SKOR_KEBARANGKALIAN_DESC.map((item) => (
-                                            <option key={item.value} value={item.value}>{item.label}</option>
-                                        ))}
-                                    </select>
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penilaian dan Keberkesanan Tindakan</h4>
+                            <div className="rounded-lg border border-border bg-accent/60 p-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Skor Kebarangkalian:</Label>
+                                        <Select 
+                                            name="skor_kebarangkalian_selepas" 
+                                            value={formData.skor_kebarangkalian_selepas} 
+                                            onChange={handleChange} 
+                                            disabled={isViewMode || isExecutive || isStaff}
+                                        >
+                                            <option value="">- Sila Pilih -</option>
+                                            {SKOR_KEBARANGKALIAN_DESC.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Skor Impak:</Label>
+                                        <Select 
+                                            name="skor_impak_selepas" 
+                                            value={formData.skor_impak_selepas} 
+                                            onChange={handleChange} 
+                                            disabled={isViewMode || isExecutive || isStaff}
+                                        >
+                                            <option value="">- Sila Pilih -</option>
+                                            {SKOR_IMPAK_DESC.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Skor Risiko:</Label>
+                                        <span
+                                            className="inline-flex h-9 w-full items-center justify-center rounded-md border border-input px-3 text-sm font-semibold"
+                                            style={{ backgroundColor: tahapRisikoSelepas.color, color: tahapRisikoSelepas.textColor || "#334155" }}
+                                        >
+                                            {tahapRisikoSelepas.label}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium">Keberkesanan:</Label>
+                                        <Input
+                                            type="text"
+                                            name="keberkesanan"
+                                            value={
+                                                (formData.skor_kebarangkalian_selepas && formData.skor_impak_selepas)
+                                                    ? `${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`
+                                                    : "-"
+                                            }
+                                            readOnly
+                                            disabled
+                                            className={`${readOnlyFieldCls} cursor-default`}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Skor Impak:</label>
-                                    <select 
-                                        name="skor_impak_selepas" 
-                                        value={formData.skor_impak_selepas} 
-                                        onChange={handleChange} 
-                                        disabled={isViewMode || isExecutive || isStaff}
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        {SKOR_IMPAK_DESC.map((item) => (
-                                            <option key={item.value} value={item.value}>{item.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="kemaskinipemantauan-item">
-                                    <span className="kemaskinipemantauan-score-label">Skor Risiko :</span>
-                                    <span className="kemaskinipemantauan-risk-badge" style={{ backgroundColor: tahapRisikoSelepas.color }}>{tahapRisikoSelepas.label}</span>
-                                </div>
-                            </div>
-                            <div className="kemaskinipemantauan-row">
-                                <div className="kemaskinipemantauan-item">
-                                    <label>Keberkesanan:</label>
-                                    <input
-                                        type="text"
-                                        name="keberkesanan"
-                                        value={
-                                            (formData.skor_kebarangkalian_selepas && formData.skor_impak_selepas)
-                                                ? `${formData.keberkesanan} (${getKeberkesananLabel(formData.keberkesanan)})`
-                                                : "-"
-                                        }
-                                        readOnly
-                                        disabled
-                                        style={{ cursor: 'default', backgroundColor: '#f3f4f6' }}
-                                    />
+
+                                <div className="mt-4 flex flex-col items-center border-t border-border pt-4">
+                                    <Label className="mb-3 text-xs font-medium">Kedudukan pada Matriks Risiko:</Label>
+                                    <RiskMatrixVisual compact kebarangkalian={formData.skor_kebarangkalian_selepas} impak={formData.skor_impak_selepas} />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="kemaskinipemantauan-box">
-                            <div className="kemaskinipemantauan-box-header">Status Pemantauan</div>
-                            <div className="kemaskinipemantauan-row">
-                                <div className="kemaskinipemantauan-item" style={{ flex: '1 1 100%' }}>
-                                    <label>Status Pemantauan Semasa:*</label>
-                                    <select 
-                                        name="status_pemantauan" 
-                                        value={formData.status_pemantauan} 
-                                        onChange={handleChange} 
-                                        required 
-                                        disabled={isViewMode}
-                                    >
-                                        <option value="">- Sila Pilih -</option>
-                                        <option>Buka</option>
-                                        <option>Sedang Dilaksanakan</option>
-                                        <option>Pemantauan</option>
-                                        <option>Selesai</option>
-                                        <option>Tutup</option>
-                                    </select>
-                                </div>
+                        <div className="rounded-lg border border-border p-4">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Pemantauan</h4>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium">Status Pemantauan Semasa:*</Label>
+                                <Select 
+                                    name="status_pemantauan" 
+                                    value={formData.status_pemantauan} 
+                                    onChange={handleChange} 
+                                    required 
+                                    disabled={isViewMode}
+                                >
+                                    <option value="">- Sila Pilih -</option>
+                                    <option>Buka</option>
+                                    <option>Sedang Dilaksanakan</option>
+                                    <option>Pemantauan</option>
+                                    <option>Selesai</option>
+                                    <option>Tutup</option>
+                                </Select>
                             </div>
                         </div>
 
-                        <div className="kemaskinipemantauan-box">
-                            <div className="kemaskinipemantauan-box-header">Catatan</div>
-                            <label>Sila masukkan catatan :</label>
-                            <textarea 
+                        <div className="rounded-lg border border-border p-4">
+                            <Label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Catatan — sila masukkan catatan:</Label>
+                            <Textarea 
                                 name="catatan" 
                                 value={formData.catatan} 
                                 onChange={handleChange} 
-                                rows="5" 
+                                rows={5} 
                                 readOnly={isViewMode} 
+                                className={isViewMode ? readOnlyFieldCls : ""}
                             />
                         </div>
                     </div>
 
-                    <div className="kemaskinipemantauan-footer kemaskinipemantauan-footer-centered">
-                        <button type="button" className="kemaskinipemantauan-btn-cancel" onClick={onClose}>
+                    <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-5 py-3">
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
                             {isViewMode ? "Tutup" : "Batal"}
-                        </button>
+                        </Button>
                         
-                        <button 
+                        <Button 
                             type="submit" 
-                            className="kemaskinipemantauan-btn-submit" 
                             disabled={isLoading || isViewMode}
                         >
-                            {isLoading ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                        </button>
+                        </Button>
                     </div>
                 </form>
 
                 {PanduanRenderer}
             </div>
+
+            {toast && (
+                <Toast
+                    variant={toast.variant}
+                    title={toast.title}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                    autoClose={4000}
+                />
+            )}
         </div>
     );
 }
