@@ -581,7 +581,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           <Button variant="outline" onClick={onClose}>Tutup</Button>
           {pdfPreviewUrl && (
             <Button onClick={() => window.open(pdfPreviewUrl, '_blank')}>
-              Buka Tab Baharu
+              Buka di Tab Baharu
             </Button>
           )}
         </div>

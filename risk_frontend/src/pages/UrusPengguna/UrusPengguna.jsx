@@ -204,10 +204,10 @@ function UrusPengguna() {
       }
 
       closeModal();
-      setToast({ variant: "success", title: "Pengguna berjaya disimpan." });
+      setToast({ variant: "success", title: "Maklumat pengguna berjaya disimpan." });
     } catch (err) {
       console.error(err);
-      setToast({ variant: "error", title: "Gagal menyimpan pengguna." });
+      setToast({ variant: "error", title: "Gagal menyimpan maklumat pengguna." });
     }
   };
 
@@ -216,10 +216,10 @@ function UrusPengguna() {
       await api.delete(`/users/${selectedUser.pengguna_id}`);
       setUsers(users.filter((u) => u.pengguna_id !== selectedUser.pengguna_id));
       closeModal();
-      setToast({ variant: "success", title: "Pengguna berjaya dipadam." });
+      setToast({ variant: "success", title: "Maklumat pengguna berjaya dipadam." });
     } catch (err) {
       console.error(err);
-      setToast({ variant: "error", title: "Gagal memadam pengguna." });
+      setToast({ variant: "error", title: "Gagal memadam maklumat pengguna." });
     }
   };
 
@@ -239,7 +239,7 @@ function UrusPengguna() {
   return (
     <div>
       <PageHeader
-        title="Urus Pengguna"
+        title="Pengurusan Pengguna"
         description="Kemaskini maklumat pengguna dan peranan"
         actions={
           <Button onClick={() => openModal("edit", null)}>
