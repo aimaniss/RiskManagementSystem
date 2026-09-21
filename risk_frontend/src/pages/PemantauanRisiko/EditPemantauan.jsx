@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, Trash2, PlusCircle, Pencil, Activity, ClipboardList } from "lucide-react";
+import { X, BookOpen, Trash2, PlusCircle, Pencil, Activity, ClipboardList, CalendarDays, ChevronRight, TrendingUp } from "lucide-react";
 import ConfirmModal from "@/components/ui/confirm-modal";
 import Toast from "@/components/ui/toast";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -9,26 +9,32 @@ import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
 import api from "../../api/api";
 import TambahLogModal from "./TambahLogModal";
 import ListDisplay from "../../components/ListDisplay";
-import { getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
+import { getRiskMatrix, getRiskAbbreviation, getRiskColor } from "../../constants/riskMatrix";
 import { formatSeparuhTahun } from "../../utils/formatters";
 import { usePanduan } from "../../hooks/usePanduan";
 import { jwtDecode } from "jwt-decode";
 
-const LOG_TABLE_HEADERS = [
-  "Tahun",
-  "Separuh Tahun",
-  "Pelan Tindakan",
-  "Kekerapan Pemantauan",
-  "Kakitangan Bertanggungjawab",
-  "Skor Kebarangkalian",
-  "Skor Impak",
-  "Tahap Risiko",
-  "Keberkesanan",
-  "Status Pemantauan",
-  "Kelulusan",
-  "Catatan",
-  "Pindaan Keberkesanan",
-];
+const STATUS_STYLES = {
+  "Buka": "bg-muted text-muted-foreground",
+  "Sedang Dilaksanakan": "bg-primary/10 text-primary",
+  "Pemantauan": "bg-warning/10 text-warning",
+  "Selesai": "bg-success/10 text-success",
+  "Tutup": "bg-secondary text-secondary-foreground",
+  "Tertunggak": "bg-destructive/10 text-destructive",
+};
+const statusBadgeClass = (status) => `inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_STYLES[status] || "bg-muted text-muted-foreground"}`;
+
+const resolveTahapRisiko = (log) => {
+  const k = log?.skor_kebarangkalian_selepas;
+  const i = log?.skor_impak_selepas;
+  if (k && i) {
+    const m = getRiskMatrix(k, i);
+    return { label: m.label, short: m.shortLabel, color: m.color, textColor: m.textColor };
+  }
+  const raw = log?.skor_risiko_pemantauan;
+  const short = ["R", "S", "T", "ST"].includes(raw) ? raw : getRiskAbbreviation(raw) || "-";
+  return { label: raw || "Tiada Data", short, color: getRiskColor(raw), textColor: "#ffffff" };
+};
 
 const getKeberkesananBadgeClass = (value) => {
   const v = (value || "").toLowerCase();
@@ -86,9 +92,6 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
   } catch (err) {
     console.error("Invalid token:", err);
   }
-
-  const canViewTindakanColumn =
-    userRole === "Admin" || userRole === "Executive" || userRole === "Staff";
 
   const fetchLog = async (risikoId) => {
     if (!risikoId) return;
@@ -428,133 +431,193 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
               ) : logData.length === 0 ? (
                 <EmptyState icon={Activity} title="Tiada rekod pemantauan" description="Tiada rekod pemantauan yang direkodkan lagi." />
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                  <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        {LOG_TABLE_HEADERS.map((header) => (
-                          <th key={header} className="whitespace-nowrap border-b border-border px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            {header}
-                          </th>
-                        ))}
-                        {canViewTindakanColumn && (
-                          <th className="whitespace-nowrap border-b border-border px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Tindakan
-                          </th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logData.map((log, index) => {
-                        const k_selepas = log.skor_kebarangkalian_selepas;
-                        const i_selepas = log.skor_impak_selepas;
-                        const tahap_risiko =
-                          log.skor_risiko_pemantauan ||
-                          getRiskLevel(k_selepas, i_selepas);
-                        const { color } = getRiskMatrix(k_selepas, i_selepas);
-                        const sem_tahun_text = formatSeparuhTahun(
-                          log.separuh_tahun_pemantauan
-                        );
-                        const pelanTindakanLog = Array.isArray(
-                          log.pelan_tindakan_log
-                        )
-                          ? log.pelan_tindakan_log
-                          : [];
-                        const kakitanganLog = Array.isArray(
-                          log.kakitangan_log
-                        )
-                          ? log.kakitangan_log
-                          : [];
+                <div className="space-y-4">
+                  {/* Trend strip */}
+                  {logData.length > 1 && (
+                    <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp size={14} className="text-muted-foreground" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Trend Tahap Risiko Semasa ke Semasa</span>
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        {[...logData].reverse().map((log, idx) => {
+                          const info = resolveTahapRisiko(log);
+                          return (
+                            <div key={log.log_id || idx} className="flex flex-wrap items-center gap-1.5">
+                              {idx > 0 && <ChevronRight size={14} className="text-muted-foreground/60" />}
+                              <div className="flex flex-col items-center gap-1 rounded-lg border border-border bg-white px-2.5 py-1.5">
+                                <span
+                                  className={`inline-flex h-5 min-w-[24px] items-center justify-center rounded px-1 text-[10px] font-bold ${
+                                    info.textColor === "#ffffff" ? "text-white" : "text-slate-800"
+                                  }`}
+                                  style={{ backgroundColor: info.color }}
+                                >
+                                  {info.short}
+                                </span>
+                                <span className="text-[9px] font-medium text-muted-foreground">
+                                  {log.tahun_pemantauan || "-"} {formatSeparuhTahun(log.separuh_tahun_pemantauan)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                        const isLatestLog = index === 0;
-                        const isAdmin = userRole === 'Admin';
-                        const isExecutive = userRole === 'Executive';
-                        const isStaff = userRole === 'Staff';
+                  {/* Timeline kad */}
+                  <ol className="relative space-y-4 border-l-2 border-border pl-5">
+                    {logData.map((log, index) => {
+                      const info = resolveTahapRisiko(log);
+                      const isLatest = index === 0;
+                      const isAdmin = userRole === 'Admin';
+                      const isExecutive = userRole === 'Executive';
+                      const isStaff = userRole === 'Staff';
 
-                        const showEditButton = isAdmin || (isLatestLog && (isExecutive || isStaff));
-                        const showDeleteButton = isAdmin || (isLatestLog && isExecutive);
+                      const showEditButton = isAdmin || (isLatest && (isExecutive || isStaff));
+                      const showDeleteButton = isAdmin || (isLatest && isExecutive);
 
-                        return (
-                          <tr
-                            key={log.log_id || index}
-                            className="cursor-pointer transition-colors last:border-b-0 hover:bg-accent/50"
+                      const pelanTindakanLog = Array.isArray(log.pelan_tindakan_log) ? log.pelan_tindakan_log : [];
+                      const kakitanganLog = Array.isArray(log.kakitangan_log) ? log.kakitangan_log : [];
+
+                      return (
+                        <li key={log.log_id || index} className="relative">
+                          <span
+                            className="absolute -left-[26px] top-4 h-3 w-3 rounded-full border-2 border-background"
+                            style={{ backgroundColor: info.color }}
+                          />
+                          <div
+                            className={`cursor-pointer rounded-xl border p-4 shadow-sm transition-shadow hover:shadow-md ${
+                              isLatest ? "border-primary/40 bg-card ring-1 ring-primary/20" : "border-border bg-card"
+                            }`}
                             onClick={() => handleViewLog(log)}
                           >
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.tahun_pemantauan || "-"}</td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{sem_tahun_text}</td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">
-                              <ListDisplay data={pelanTindakanLog} />
-                            </td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.kekerapan_pemantauan || "-"}</td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">
-                              <ListDisplay data={kakitanganLog} />
-                            </td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{k_selepas || "-"}</td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{i_selepas || "-"}</td>
-                            <td className="border-b border-border px-3 py-2.5 text-center align-middle">
-                              <span
-                                className={`inline-flex h-6 min-w-[40px] items-center justify-center rounded-md px-2 text-xs font-bold ${
-                                  color === "#f1f5f9" ? "text-slate-500" : "text-white"
-                                }`}
-                                style={{ backgroundColor: color }}
-                              >
-                                {tahap_risiko || "-"}
-                              </span>
-                            </td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">
-                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getKeberkesananBadgeClass(log.keberkesanan)}`}>
-                                {log.keberkesanan || "-"}
-                              </span>
-                            </td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.status_pemantauan || "-"}</td>
-                            <td className="border-b border-border px-3 py-2.5 align-middle">{log.no_bil_kelulusan || "-"}</td>
-                            <td className="max-w-[200px] whitespace-normal border-b border-border px-3 py-2.5 align-middle">{log.catatan || "-"}</td>
-                            <td className="max-w-[200px] whitespace-normal border-b border-border px-3 py-2.5 align-middle">{log.justifikasi_pindaan_pemantauan || "-"}</td>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                                  <CalendarDays size={14} className="text-muted-foreground" />
+                                  {log.tahun_pemantauan || "-"} ({formatSeparuhTahun(log.separuh_tahun_pemantauan)})
+                                </span>
+                                {isLatest && (
+                                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                    Terkini
+                                  </span>
+                                )}
+                                <span className={statusBadgeClass(log.status_pemantauan)}>
+                                  {log.status_pemantauan || "-"}
+                                </span>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                {showEditButton && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    aria-label="Kemas Kini Log"
+                                    className="h-8 gap-1 text-primary"
+                                    onClick={(e) => { e.stopPropagation(); handleEditLog(log); }}
+                                  >
+                                    <Pencil size={13} />
+                                    Kemas Kini
+                                  </Button>
+                                )}
+                                {showDeleteButton && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Padam Log"
+                                    className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.log_id); }}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
 
-                            {canViewTindakanColumn && (
-                              <td className="border-b border-border px-3 py-2.5 text-center align-middle">
-                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                  {showEditButton && (
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      aria-label="Edit Log"
-                                      disabled={isLoadingLog}
-                                      className="h-8 w-8 rounded-lg text-primary"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditLog(log);
-                                      }}
-                                    >
-                                      <Pencil />
-                                    </Button>
-                                  )}
+                            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-4">
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">Skor Kebarangkalian</span>
+                                <p className="mt-0.5 text-sm font-semibold text-foreground">{log.skor_kebarangkalian_selepas || "-"}</p>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">Skor Impak</span>
+                                <p className="mt-0.5 text-sm font-semibold text-foreground">{log.skor_impak_selepas || "-"}</p>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">Tahap Risiko</span>
+                                <p className="mt-0.5">
+                                  <span
+                                    className={`inline-flex h-6 min-w-[40px] items-center justify-center rounded-md px-2 text-xs font-bold ${
+                                      info.textColor === "#ffffff" ? "text-white" : "text-slate-800"
+                                    }`}
+                                    style={{ backgroundColor: info.color }}
+                                  >
+                                    {info.label || "-"}
+                                  </span>
+                                </p>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">Keberkesanan</span>
+                                <p className="mt-0.5">
+                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getKeberkesananBadgeClass(log.keberkesanan)}`}>
+                                    {log.keberkesanan || "-"}
+                                  </span>
+                                </p>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">Kekerapan</span>
+                                <p className="mt-0.5 truncate text-sm font-medium text-foreground">{log.kekerapan_pemantauan || "-"}</p>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-medium text-muted-foreground">No. Kelulusan</span>
+                                <p className="mt-0.5 truncate text-sm font-medium text-foreground">{log.no_bil_kelulusan || "-"}</p>
+                              </div>
+                            </div>
 
-                                  {showDeleteButton && (
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      aria-label="Padam Log"
-                                      disabled={isLoadingLog}
-                                      className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteLog(log.log_id);
-                                      }}
-                                    >
-                                      <Trash2 />
-                                    </Button>
-                                  )}
-                                </div>
-                              </td>
+                            {(pelanTindakanLog.length > 0 || kakitanganLog.length > 0) && (
+                              <div className="mt-3 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-2">
+                                {pelanTindakanLog.length > 0 && (
+                                  <div className="min-w-0">
+                                    <span className="text-xs font-medium text-muted-foreground">Pelan Tindakan</span>
+                                    <div className="mt-1">
+                                      <ListDisplay data={pelanTindakanLog} />
+                                    </div>
+                                  </div>
+                                )}
+                                {kakitanganLog.length > 0 && (
+                                  <div className="min-w-0">
+                                    <span className="text-xs font-medium text-muted-foreground">Kakitangan Bertanggungjawab</span>
+                                    <div className="mt-1">
+                                      <ListDisplay data={kakitanganLog} />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+
+                            {(log.catatan || log.justifikasi_pindaan_pemantauan) && (
+                              <div className="mt-3 space-y-2 border-t border-border pt-3">
+                                {log.catatan && (
+                                  <p className="text-sm leading-relaxed text-foreground">
+                                    <span className="text-xs font-medium text-muted-foreground">Catatan: </span>
+                                    {log.catatan}
+                                  </p>
+                                )}
+                                {log.justifikasi_pindaan_pemantauan && (
+                                  <p className="text-sm leading-relaxed text-muted-foreground">
+                                    <span className="text-xs font-medium text-muted-foreground">Pindaan Keberkesanan: </span>
+                                    {log.justifikasi_pindaan_pemantauan}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
                 </div>
               )}
             </section>

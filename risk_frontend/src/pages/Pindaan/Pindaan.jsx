@@ -522,7 +522,7 @@ function AmendmentsListSection({
               displayAmendments.map((amend, index) => (
                 <TableRow key={amend.pindaan_id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell className="font-mono text-xs font-medium whitespace-nowrap">{amend.no_rujukan || "N/A"}</TableCell>
+                  <TableCell className="font-mono text-sm font-semibold whitespace-nowrap">{amend.no_rujukan || "N/A"}</TableCell>
                   <TableCell className="max-w-[280px] truncate" title={amend.risiko}>{amend.risiko || "N/A"}</TableCell> 
                   <TableCell>{amend.nama_syarikat || "N/A"}</TableCell> 
                   {userRole === "Admin" && (

@@ -121,7 +121,7 @@
 
 .login-right-sub {
   font-size: 12.5px;
-  color: #6b7280;
+  color: #334155;
   margin: 0 0 1.5rem;
 }
 
@@ -184,7 +184,7 @@
 }
 
 .login-toggle-pw:hover {
-  color: #6b7280;
+  color: #334155;
 }
 
 /* === ROW (remember / forgot) === */

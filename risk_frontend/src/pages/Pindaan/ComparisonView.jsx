@@ -62,7 +62,7 @@ function ComparisonView({
     });
 
     if (changedKeys.length === 0) {
-        return <p style={{ color: '#64748b' }}>Tiada perubahan data direkodkan.</p>;
+        return <p style={{ color: '#334155' }}>Tiada perubahan data direkodkan.</p>;
     }
 
     // Fungsi untuk format Separuh Tahun

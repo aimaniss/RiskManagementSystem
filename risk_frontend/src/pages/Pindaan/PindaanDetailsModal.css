@@ -38,7 +38,7 @@
   --color-grey-light-bg: #f8fafc;
   --color-grey-medium-bg: #e5e7eb;
   --color-grey-dark-bg: #f1f5f9;
-  --color-grey-text-label: #64748b;
+  --color-grey-text-label: #334155;
   --color-grey-text-header: #0f172a;
   --color-text-dark: #1e293b;
 
@@ -99,7 +99,7 @@
 .modal-close-x {
   background: none !important;
   border: none !important;
-  color: #64748b !important; /* Warna kelabu gelap ikon */
+  color: #334155 !important; /* Warna kelabu gelap ikon */
   cursor: pointer !important;
   padding: 6px !important;
   border-radius: 50% !important;
@@ -194,7 +194,7 @@ h4.section-title:first-of-type {
   font-weight: 600 !important;
   display: block !important;
   margin-bottom: 8px !important;
-  color: #475569 !important;
+  color: #334155 !important;
   font-size: 0.88rem !important;
 }
 .highlight-box {
@@ -386,13 +386,13 @@ h4.section-title:first-of-type {
 .comparison-th-tahun,
 .comparison-td-tahun {
   width: 20% !important;
-  color: #475569 !important;
+  color: #334155 !important;
   font-weight: 600 !important;
 }
 .comparison-th-before,
 .comparison-td-before {
   width: 22.5% !important;
-  color: #64748b !important;
+  color: #334155 !important;
 }
 .comparison-th-after,
 .comparison-td-after {

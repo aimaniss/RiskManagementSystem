@@ -9,7 +9,7 @@ export default function PageHeader({ title, description, actions, className }) {
       )}
     >
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
           {title}
         </h1>
         {description && (

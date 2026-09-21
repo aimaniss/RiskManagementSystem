@@ -232,7 +232,7 @@ function PenilaianDanRawatan() {
                 
                 {activeTab === 'penilaian' ? (
                     <>
-                        <TableCell className="whitespace-nowrap font-medium text-foreground">{d.no_rujukan}</TableCell>
+                        <TableCell className="whitespace-nowrap font-semibold text-foreground">{d.no_rujukan}</TableCell>
                         <TableCell className="whitespace-nowrap">
                             <div className="text-sm font-medium text-foreground">{d.tahun}</div>
                             <div className="text-xs text-muted-foreground">{formatSeparuhTahun(d.separuh_tahun)}</div>
@@ -251,7 +251,7 @@ function PenilaianDanRawatan() {
                     </>
                 ) : (
                     <>
-                        <TableCell className="whitespace-nowrap font-medium text-foreground">{d.no_rujukan}</TableCell>
+                        <TableCell className="whitespace-nowrap font-semibold text-foreground">{d.no_rujukan}</TableCell>
                         <TableCell className="whitespace-nowrap">
                             <div className="text-sm font-medium text-foreground">{d.tahun}</div>
                             <div className="text-xs text-muted-foreground">{formatSeparuhTahun(d.separuh_tahun)}</div>

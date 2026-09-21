@@ -332,7 +332,7 @@ function DaftarRisiko() {
                             {d.same_company
                               ? <AlertTriangle size={12} className="text-red-500 shrink-0" />
                               : <CheckCircle size={12} className="text-amber-500 shrink-0" />}
-                            <span className="text-[11px] font-semibold text-foreground">{d.no_rujukan}</span>
+                            <span className="text-sm font-semibold text-foreground">{d.no_rujukan}</span>
                             <span className="text-[11px] text-muted-foreground truncate">{d.nama_syarikat}</span>
                           </div>
                           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${d.same_company ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>

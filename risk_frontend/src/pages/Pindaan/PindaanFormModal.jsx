@@ -388,7 +388,7 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
 
                         {/* --- Papar mesej jika tiada blok skor langsung --- */}
                         {!hasInitialAssessmentScore && !hasMonitoringData && (
-                            <div className="pemantauan-box" style={{ padding: '14px 16px', marginBottom: '16px', textAlign: 'center', color: '#6b7280' }}>
+                            <div className="pemantauan-box" style={{ padding: '14px 16px', marginBottom: '16px', textAlign: 'center', color: '#334155' }}>
                                 Tiada data skor penilaian atau pemantauan tersedia untuk risiko ini.
                             </div>
                         )}

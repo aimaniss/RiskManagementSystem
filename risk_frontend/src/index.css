@@ -5,7 +5,7 @@
   /* === RISK MANAGEMENT SYSTEM - UNIFIED DESIGN TOKENS === */
   /* Guna token ini di mana-mana. JANGAN hardcode warna hex dalam CSS page. */
 
-  --color-background: #f8fafc;
+  --color-background: #ffffff;
   --color-foreground: #0f172a;
 
   --color-card: #ffffff;
@@ -23,7 +23,7 @@
   --color-secondary-foreground: #0f172a;
 
   --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
+  --color-muted-foreground: #1e293b;
 
   --color-accent: #eff6ff;
   --color-accent-foreground: #1d4ed8;
@@ -52,6 +52,11 @@
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
 
+  /* Shadow — lebih jelas sedikit supaya kad/bucu menyerlah atas background putih */
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.12), 0 4px 6px -4px rgb(15 23 42 / 0.1);
+
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
@@ -71,7 +76,7 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
   }
 

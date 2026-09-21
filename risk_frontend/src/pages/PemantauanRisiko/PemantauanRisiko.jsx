@@ -65,41 +65,6 @@ const KEBERKESANAN_STYLES = {
 };
 
 // =======================================================
-// Komponen Bar Ringkasan
-// =======================================================
-function StatBar({ label, value, icon: Icon, color }) {
-    return (
-        <Card className="flex items-center gap-3 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Icon size={18} style={{ color: color || "var(--color-primary)" }} />
-            </div>
-            <div className="min-w-0">
-                <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-                <p className="text-lg font-bold text-foreground">{value}</p>
-            </div>
-        </Card>
-    );
-}
-
-// =======================================================
-// Komponen Bar Ringkasan Kecil
-// =======================================================
-function MiniStat({ label, value, color }) {
-    return (
-        <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground truncate">{label}</span>
-            {color ? (
-                <Badge className="shrink-0 border-transparent text-white text-[10px] px-1.5 py-0" style={{ backgroundColor: color }}>
-                    {value}
-                </Badge>
-            ) : (
-                <span className="text-xs font-medium text-foreground shrink-0">{value}</span>
-            )}
-        </div>
-    );
-}
-
-// =======================================================
 // Komponen Bar Kad Risiko
 // =======================================================
 function RiskCard({ item, onEdit }) {
@@ -123,7 +88,7 @@ function RiskCard({ item, onEdit }) {
         <Card className="overflow-hidden transition-all hover:shadow-md">
             {/* Header row — always visible */}
             <div
-                className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                className="flex cursor-pointer flex-wrap items-center gap-4 px-4 py-3 hover:bg-muted/30 transition-colors"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center pt-0.5">
@@ -132,32 +97,38 @@ function RiskCard({ item, onEdit }) {
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono text-muted-foreground">{d.no_rujukan}</span>
-                        <span className="text-[10px] text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">{d.tahun_asal || d.tahun || "-"} {getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}</span>
+                        <span className="text-sm font-mono font-semibold text-foreground">{d.no_rujukan}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-sm text-muted-foreground">{d.tahun_asal || d.tahun || "-"} {getSeparuhTahunLabel(d.separuh_tahun_asal || d.separuh_tahun)}</span>
                     </div>
                     <p className="mt-1 text-sm font-medium text-foreground line-clamp-1">{d.risiko}</p>
                     <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                        <Badge variant={statusBadgeVariant(d.status_pemantauan_terkini)} className="text-[10px] px-1.5 py-0">
-                            {d.status_pemantauan_terkini || "-"}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground">{d.nama_syarikat || "-"}</span>
+                        <span className="text-xs text-muted-foreground">{d.nama_syarikat || "-"}</span>
                         {d.kategori_risiko && (
                             <span className="rounded bg-muted px-1.5 py-0 text-[10px] text-muted-foreground">{d.kategori_risiko}</span>
                         )}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                {/* Status — di tengah, sebelum indicator */}
+                <Badge
+                    variant={statusBadgeVariant(d.status_pemantauan_terkini)}
+                    className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold"
+                >
+                    {d.status_pemantauan_terkini || "-"}
+                </Badge>
+
+                {/* Indicator Sebelum → Selepas + butang — di hujung kanan */}
+                <div className="flex shrink-0 items-center gap-3">
                     <RiskLevelProgress
                         sebelumLabel={skorDaftarLabel}
                         selepasLabel={currentRiskLevel}
-                        className="w-48"
+                        className="w-56"
                     />
                     <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 shrink-0"
+                        className="h-8 w-8"
                         onClick={(e) => { e.stopPropagation(); onEdit(d); }}
                         title="Lihat/Kemaskini Pemantauan"
                     >
@@ -543,46 +514,6 @@ function PemantauanRisiko() {
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
-    const sortedStatusEntries = Object.entries(statusCounts).sort(([keyA], [keyB]) => {
-        const order = ["Tertunggak", "Buka", "Sedang Dilaksanakan", "Pemantauan", "Selesai", "Tutup"];
-        return order.indexOf(keyA) - order.indexOf(keyB);
-    });
-
-    const riskLevelCounts = filteredData.reduce((acc, d) => {
-        const currentRiskLevel = d.tahap_risiko === "Tiada Data" || !d.tahap_risiko
-            ? d.tahap_risiko_daftar
-            : d.tahap_risiko;
-        const level = currentRiskLevel || "Tiada Data";
-        acc[level] = (acc[level] || 0) + 1;
-        return acc;
-    }, {});
-    const sortedRiskLevelEntries = Object.entries(riskLevelCounts).sort(([keyA], [keyB]) => {
-        const order = ["Sangat Tinggi", "Tinggi", "Sederhana", "Rendah", "Tiada Data"];
-        return order.indexOf(keyA) - order.indexOf(keyB);
-    });
-
-    const renderBarRows = (entries, colorFn, isPrimaryBar) => (
-        entries.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Tiada data untuk dipaparkan.</p>
-        ) : (
-            entries.map(([key, count]) => {
-                const percentage = totalRisiko > 0 ? (count / totalRisiko) * 100 : 0;
-                return (
-                    <div key={key} className="flex items-center gap-3">
-                        <span className="w-28 shrink-0 truncate text-xs text-muted-foreground" title={key}>{key}</span>
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                            <div
-                                className={`h-full rounded-full ${isPrimaryBar ? "bg-primary" : ""}`}
-                                style={isPrimaryBar ? { width: `${percentage}%` } : { width: `${percentage}%`, backgroundColor: colorFn(key) }}
-                                title={`${count} (${percentage.toFixed(0)}%)`}
-                            />
-                        </div>
-                        <span className="w-6 shrink-0 text-right text-xs font-medium text-foreground">{count}</span>
-                    </div>
-                );
-            })
-        )
-    );
 
     const dateFilterButtonText = selectedFilterTahun || selectedFilterSeparuh
         ? `Asal: ${selectedFilterTahun || 'Semua Tahun'} (${getSeparuhTahunLabel(parseInt(selectedFilterSeparuh)) || 'Semua Separuh'})`
@@ -598,28 +529,12 @@ function PemantauanRisiko() {
                 description="Pantau status dan tahap risiko terkini bagi risiko yang telah dirawat."
             />
 
-            {/* Ringkasan */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatBar label="Jumlah Risiko" value={totalRisiko} icon={Activity} />
-                <StatBar label="Tertunggak" value={statusCounts["Tertunggak"] || 0} icon={Activity} color="#ef4444" />
-                <StatBar label="Dalam Pemantauan" value={(statusCounts["Pemantauan"] || 0) + (statusCounts["Sedang Dilaksanakan"] || 0)} icon={Activity} color="#eab308" />
-                <StatBar label="Selesai / Tutup" value={(statusCounts["Selesai"] || 0) + (statusCounts["Tutup"] || 0)} icon={Activity} color="#22c55e" />
-            </div>
-
-            {/* Pecahan */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <Card className="p-5 space-y-3">
-                    <h3 className="text-sm font-semibold text-foreground">Pecahan Status Pemantauan</h3>
-                    <div className="space-y-2">
-                        {renderBarRows(sortedStatusEntries, null, true)}
-                    </div>
-                </Card>
-                <Card className="p-5 space-y-3">
-                    <h3 className="text-sm font-semibold text-foreground">Pecahan Skor Risiko</h3>
-                    <div className="space-y-2">
-                        {renderBarRows(sortedRiskLevelEntries, riskBadgeColor, false)}
-                    </div>
-                </Card>
+            {/* Ringkasan ringkas — satu baris nipis */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+                <span className="text-muted-foreground">Jumlah Risiko: <span className="font-bold text-foreground">{totalRisiko}</span></span>
+                <span className="text-muted-foreground">Tertunggak: <span className="font-bold text-red-600">{statusCounts["Tertunggak"] || 0}</span></span>
+                <span className="text-muted-foreground">Dalam Pemantauan: <span className="font-bold text-amber-600">{(statusCounts["Pemantauan"] || 0) + (statusCounts["Sedang Dilaksanakan"] || 0)}</span></span>
+                <span className="text-muted-foreground">Selesai / Tutup: <span className="font-bold text-emerald-600">{(statusCounts["Selesai"] || 0) + (statusCounts["Tutup"] || 0)}</span></span>
             </div>
 
             {/* Penapis */}

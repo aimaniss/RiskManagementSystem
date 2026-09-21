@@ -316,7 +316,7 @@ export default function DashboardKeseluruhan({ data }) {
                     {/* Info */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono text-muted-foreground">{risk.noRujukan || "-"}</span>
+                        <span className="text-xs font-mono font-medium text-foreground">{risk.noRujukan || "-"}</span>
                       </div>
                       <p className="text-sm font-medium text-foreground truncate">{risk.nama || "-"}</p>
                       <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">

@@ -298,7 +298,7 @@ function SenaraiRisiko({ refreshTrigger }) {
               ) : (
                 sortedRisks.map((risk) => (
                   <TableRow key={risk.id} onClick={() => handleViewRisk(risk)} className="cursor-pointer">
-                    <TableCell className="font-mono text-xs">{risk.no_rujukan || "-"}</TableCell>
+                    <TableCell className="font-mono text-sm font-semibold whitespace-nowrap">{risk.no_rujukan || "-"}</TableCell>
                     <TableCell className="max-w-[200px] truncate" title={risk.risiko}>{risk.risiko || "-"}</TableCell>
                     <TableCell>{risk.singkatan_syarikat || risk.syarikat || "-"}</TableCell>
                     <TableCell>{risk.kategori || "-"}</TableCell>

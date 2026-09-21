@@ -239,7 +239,7 @@ export default function LaporanRisiko() {
                     return (
                       <TableRow key={r.id}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell className="font-mono text-xs font-medium whitespace-nowrap">{r.no_rujukan}</TableCell>
+                        <TableCell className="font-mono text-sm font-semibold whitespace-nowrap">{r.no_rujukan}</TableCell>
                         <TableCell>{r.risiko}</TableCell> 
                         <TableCell className="whitespace-nowrap">
                           <span>{r.tahun}</span>

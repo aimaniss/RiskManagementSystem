@@ -34,7 +34,7 @@ const ListDisplay = ({ data, isLogContext = false }) => {
   }
 
   if (cleanedData.length === 0) {
-    return <span style={{ color: "#64748b" }}>-</span>;
+    return <span style={{ color: "#334155" }}>-</span>;
   }
 
   if (cleanedData.length === 1) {

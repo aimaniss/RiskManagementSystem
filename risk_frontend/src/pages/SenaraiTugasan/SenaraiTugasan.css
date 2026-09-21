@@ -21,7 +21,7 @@
 
 .st-wrapper .st-subtitle {
   font-size: 13px;
-  color: #64748b;
+  color: #334155;
   margin: 0 0 20px 0;
 }
 
@@ -35,7 +35,7 @@
 
 .st-wrapper .st-stat {
   font-size: 0.78rem;
-  color: #64748b;
+  color: #334155;
 }
 
 .st-wrapper .st-stat strong {
@@ -211,7 +211,7 @@
 
 .st-wrapper .st-date {
   white-space: nowrap;
-  color: #64748b;
+  color: #334155;
   font-size: 0.78rem;
 }
 
