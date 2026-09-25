@@ -5,9 +5,11 @@ import { getUserRole } from "../../utils/auth";
 import { jwtDecode } from "jwt-decode";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FiShield } from "react-icons/fi";
+import { useTemaCerah } from "../../hooks/useTemaCerah";
 import "./Login.css";
 
 export default function Login() {
+  useTemaCerah();
   const [staffId, setStaffId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

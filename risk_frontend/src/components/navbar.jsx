@@ -50,10 +50,8 @@ function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  });
+  // Lalai cerah; tidak mengikut tetapan mod gelap peranti
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
   const dropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);

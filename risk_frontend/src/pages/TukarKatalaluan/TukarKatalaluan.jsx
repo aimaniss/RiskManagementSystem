@@ -5,6 +5,7 @@ import { FiShield, FiCheck, FiX } from "react-icons/fi";
 import api from "../../api/api";
 import { getAuthUser } from "../../utils/auth";
 import { SYARAT_KATALALUAN, katalaluanMematuhiPolisi } from "../../constants/katalaluan";
+import { useTemaCerah } from "../../hooks/useTemaCerah";
 import "../Login/Login.css";
 
 function MedanKatalaluan({ label, value, onChange, autoComplete, placeholder }) {
@@ -36,6 +37,7 @@ function MedanKatalaluan({ label, value, onChange, autoComplete, placeholder }) 
 }
 
 export default function TukarKatalaluan() {
+  useTemaCerah();
   const navigate = useNavigate();
   const user = getAuthUser();
   const [semasa, setSemasa] = useState("");
