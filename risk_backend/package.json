@@ -15,7 +15,8 @@
     "format": "prettier --write \"**/*.js\"",
     "format:check": "prettier --check \"**/*.js\"",
     "purge": "node scripts/purge.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cipta-pentadbir": "node scripts/cipta-pentadbir.js"
   },
   "keywords": [],
   "author": "",

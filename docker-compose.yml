@@ -1,0 +1,54 @@
+# Deploy RMS: PostgreSQL + backend (Express) + frontend (nginx).
+#   cp .env.docker.example .env   # isi DB_PASS & JWT_SECRET
+#   docker compose up -d --build
+# Aplikasi: http://localhost:${APP_PORT:-8080}
+name: rms
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:?Tetapkan DB_PASS dalam .env}
+      POSTGRES_DB: ${DB_NAME:-UKMH_RMS}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-UKMH_RMS}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./risk_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:?Tetapkan DB_PASS dalam .env}
+      DB_NAME: ${DB_NAME:-UKMH_RMS}
+      PORT: "5001"
+      JWT_SECRET: ${JWT_SECRET:?Tetapkan JWT_SECRET dalam .env}
+      CORS_ORIGIN: ${APP_URL:-http://localhost:8080}
+      # Di belakang nginx: had kadar menggunakan IP klien sebenar
+      TRUST_PROXY: "1"
+      HAD_LOG_MASUK_IP: ${HAD_LOG_MASUK_IP:-30}
+      HAD_API_IP: ${HAD_API_IP:-3000}
+    # Tidak didedahkan ke hos: hanya dicapai melalui nginx
+
+  frontend:
+    build: ./risk_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:80"
+
+volumes:
+  db_data:

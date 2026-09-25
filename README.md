@@ -552,6 +552,42 @@ npm run migrate:rollback  # Undur migrasi terakhir
 npm run migrate:status    # Semak status migrasi
 ```
 
+### Akaun Pentadbir Pertama
+
+Pangkalan data baharu tidak mempunyai pengguna. Cipta satu Admin (kata laluan
+sementara dipaparkan sekali dan wajib ditukar pada log masuk pertama):
+
+```bash
+cd risk_backend
+npm run cipta-pentadbir -- --staff-id=ADMIN01 --nama="Nama Pentadbir"
+```
+
+### Deploy dengan Docker Compose
+
+`docker-compose.yml` menjalankan PostgreSQL 16, backend (migrasi automatik
+semasa bermula) dan frontend (nginx menyajikan build + proxy `/api` ke backend):
+
+```bash
+cp .env.docker.example .env        # isi DB_PASS & JWT_SECRET (openssl rand -hex 32)
+docker compose up -d --build       # http://localhost:8080 (APP_PORT)
+docker compose exec backend npm run cipta-pentadbir -- --staff-id=ADMIN01 --nama="Nama"
+docker compose logs -f backend     # log
+docker compose down                # henti (data kekal dalam volume db_data)
+```
+
+- Backend tidak didedahkan ke hos; hanya melalui nginx (`/api/`). `TRUST_PROXY=1`
+  supaya had kadar menggunakan IP klien sebenar.
+- `RUN_MIGRATIONS=false` untuk melangkau migrasi automatik.
+- Sandarkan volume `db_data` (cth. `docker compose exec db pg_dump -U postgres UKMH_RMS > sandaran.sql`).
+- Untuk HTTPS, letakkan reverse proxy (Caddy/Traefik/nginx hos) di hadapan port
+  `APP_PORT` dan kemas kini `APP_URL`.
+
+### CI (GitHub Actions)
+
+`.github/workflows/ci.yml` — pada setiap push ke `main` & pull request: backend
+(format, lint, audit), frontend (lint, build, audit), bina imej Docker, dan suite
+E2E penuh pada PostgreSQL kosong. Butiran: `e2e/README.md`.
+
 ### Purge Data Soft-Delete
 
 Buang kekal `notifikasi` & `log_aktiviti` yang telah dipadam (soft-delete) lebih

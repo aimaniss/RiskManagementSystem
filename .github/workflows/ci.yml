@@ -58,6 +58,18 @@ jobs:
       - name: Audit kebergantungan produksi
         run: npm audit --omit=dev --audit-level=high
 
+  docker:
+    name: Docker (bina imej)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Pastikan Dockerfile & docker-compose.yml kekal boleh dibina
+      - name: Bina imej backend & frontend
+        env:
+          DB_PASS: ci
+          JWT_SECRET: ci
+        run: docker compose build
+
   e2e:
     name: E2E (Playwright + PostgreSQL)
     needs: [backend, frontend]

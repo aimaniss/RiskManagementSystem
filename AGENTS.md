@@ -66,6 +66,12 @@ npm run dev            # http://localhost:5175
 Frontend proxikan `/api` → `http://localhost:5001` (lihat `vite.config.js`).
 `VITE_BACKEND_URL` / `VITE_API_URL` boleh override backend URL.
 
+### Docker & Pentadbir Pertama
+
+`docker compose up -d --build` (salin `.env.docker.example` → `.env`). DB baharu
+tiada pengguna: `npm run cipta-pentadbir -- --staff-id=... --nama="..."`.
+Lihat README "Deploy dengan Docker Compose".
+
 ### Migrasi DB
 
 ```bash
