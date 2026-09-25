@@ -1,11 +1,16 @@
 import express from "express";
 import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 import { hadSyarikat } from "../middleware/aksesSyarikat.js";
-import { senaraiLaporan, dataPenuhLaporan } from "../controllers/laporanController.js";
+import {
+  senaraiLaporan,
+  dataPenuhLaporan,
+  analitikLaporan,
+} from "../controllers/laporanController.js";
 
 const router = express.Router();
 
 router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), senaraiLaporan);
+router.get("/analitik", verifyToken, authorizeKebenaran("laporan:jana"), analitikLaporan);
 router.get(
   "/:risiko_id/data-penuh",
   verifyToken,

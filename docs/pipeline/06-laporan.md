@@ -2,8 +2,12 @@
 
 ## Tujuan
 
-Penjanaan laporan risiko (senarai / laporan penuh per risiko) dengan penapis
-maju, dan eksport ke PDF di sisi klien menggunakan **jsPDF**.
+Halaman Laporan mempunyai dua tab (`?paparan=pdf` untuk tab kedua):
+
+1. **Analitik** (lalai) — dashboard perbandingan separuh tahun, syarikat,
+   kategori dan keberkesanan rawatan, dengan tapisan dan mod skrin penuh.
+2. **Jana Laporan PDF** — senarai risiko yang telah mempunyai rawatan dan
+   eksport laporan penuh per risiko ke PDF di sisi klien (**jsPDF**).
 
 ## Aliran
 
@@ -39,21 +43,44 @@ sequenceDiagram
 | Kaedah | Laluan | Guna |
 |--------|--------|------|
 | GET | `/api/laporan/` | Senarai laporan ringkas dengan penapis (`params`: tahun, syarikat, kategori, dll.) |
+| GET | `/api/laporan/analitik` | Data mentah analitik: `{ risiko, pemantauan, syarikat }` (tahap awal per risiko, skor/keberkesanan per log). Staff/Ketua Subsidiari hanya syarikat sendiri |
 | GET | `/api/laporan/:risiko_id/data-penuh` | Data lengkap satu risiko untuk laporan penuh |
 
 **Fail frontend** (`Laporan/*`):
 
 | Komponen | API |
 |----------|-----|
-| `Laporan.jsx` | GET `/syarikat`, GET `/laporan` (params), GET `/laporan/:id/data-penuh` |
+| `Laporan.jsx` | Tab Analitik / Jana Laporan PDF; GET `/syarikat`, GET `/laporan` (params), GET `/laporan/:id/data-penuh` |
+| `AnalitikLaporan.jsx` | GET `/laporan/analitik`; carta Recharts, tapisan, jadual, skrin penuh |
+| `analitik.js` | Agregasi di klien (tahap pada akhir separuh tahun, perbandingan syarikat/kategori, keberkesanan) |
 | `ReportOptionsModal.jsx` | Pemilihan penapis & jenis laporan |
 | `LogPreviewModal.jsx` | Pratinjau log pemantauan dalam laporan |
+
+## Analitik
+
+- **Tahap pada akhir separuh tahun** = skor log pemantauan terkini sehingga
+  tempoh itu; jika tiada log, penilaian awal (`risiko.skor_risiko`); tiada
+  kedua-duanya = "Belum Dinilai". Risiko dikira mulai tempoh ia didaftar.
+- Carta: profil tahap ikut separuh tahun, profil tahap ikut syarikat, risiko
+  baharu ikut syarikat (garis), keberkesanan (Berkesan/Tidak), kategori ikut
+  tahap. Setiap carta ada petunjuk warna, tooltip dan paparan jadual.
+- Warna tahap risiko = warna domain sistem (`getRiskColor`); warna syarikat =
+  palet kategori tetap 8 slot (warna ikut syarikat, bukan kedudukan; slot ke-9+
+  dilipat ke "Lain-lain"). Tiada paksi berganda.
+- Tapisan (satu baris di atas carta): syarikat, kategori, julat separuh tahun;
+  semua carta & statistik mengikut tapisan yang sama.
 
 ## Penjanaan PDF
 
 - **jsPDF** (`jspdf`) + **jspdf-autotable** + **html2canvas** dihasilkan
   sepenuhnya di browser (tiada endpoint PDF berasingan).
 - Semua data diperoleh dulu dari API kemudian di-render ke PDF.
+- Gaya rasmi: fon Times, rangka hitam-putih, pengepala & kaki muka surat
+  "SULIT". **Satu-satunya warna ialah sel tahap risiko** (warna sistem, teks
+  hitam, sentiasa berlabel "Tinggi (T)") dengan jadual petunjuk di hujung.
+- Setiap log pemantauan = satu jadual 7 lajur (`rowPageBreak: 'avoid'`);
+  pindaan penilaian/keberkesanan menjadi baris dalam jadual. Lebar lajur mesti
+  dalam mm (`lebar(peratus)`), rentetan peratus diabaikan jspdf-autotable.
 
 ## Jadual DB Disentuh
 

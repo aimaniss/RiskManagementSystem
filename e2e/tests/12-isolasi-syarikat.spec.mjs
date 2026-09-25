@@ -136,6 +136,31 @@ test("Laporan penuh risiko syarikat lain -> 403 bagi Staff, 200 bagi Executive",
   expect((await request.get(laluan, { headers: exec.auth })).status()).toBe(200);
 });
 
+test("Analitik laporan: Staff & Ketua Subsidiari hanya syarikat sendiri; Executive nampak semua", async ({
+  request,
+}) => {
+  const laluan = `${API}/laporan/analitik`;
+  for (const [peranan, sesi] of [
+    [CREDENTIALS.staff, staff],
+    [CREDENTIALS.ketuaSubsidiari, ketua],
+  ]) {
+    const { syarikat_id } = await satu("SELECT syarikat_id FROM pengguna WHERE staff_id = $1", [
+      peranan.staff_id,
+    ]);
+    const res = await request.get(laluan, { headers: sesi.auth });
+    expect(res.status()).toBe(200);
+    const data = await res.json();
+    expect(data.risiko.every((r) => r.syarikat_id === syarikat_id)).toBe(true);
+    expect(data.risiko.some((r) => r.id === fx.risikoId)).toBe(false);
+    expect(data.pemantauan.some((l) => l.risiko_id === fx.risikoId)).toBe(false);
+    expect(data.syarikat.every((s) => s.syarikat_id === syarikat_id)).toBe(true);
+  }
+  const exec = await apiLogin(request, CREDENTIALS.executive);
+  const semua = await (await request.get(laluan, { headers: exec.auth })).json();
+  expect(semua.risiko.some((r) => r.id === fx.risikoId)).toBe(true);
+  expect(semua.pemantauan.some((l) => l.risiko_id === fx.risikoId)).toBe(true);
+});
+
 test("Log aktiviti: Staff hanya nampak syarikat sendiri; Viewer nampak semua", async ({
   request,
 }) => {

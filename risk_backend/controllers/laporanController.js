@@ -297,3 +297,59 @@ export const dataPenuhLaporan = async (req, res) => {
     res.status(500).json({ error: "Gagal memuatkan data laporan penuh." });
   }
 };
+
+// GET /api/laporan/analitik
+// Data mentah (tahap risiko per risiko & per log pemantauan) untuk dashboard
+// analitik Laporan. Agregasi & tapisan tempoh/kategori dibuat di klien supaya
+// perbandingan boleh ditukar tanpa panggilan semula; skop syarikat dikuatkuasa
+// di sini untuk peranan terhad.
+export const analitikLaporan = async (req, res) => {
+  try {
+    const params = [];
+    let tapisSyarikat = "";
+    if (["Staff", "Ketua Subsidiari"].includes(req.user.nama_peranan)) {
+      params.push(req.user.syarikat_id);
+      tapisSyarikat = `AND r.syarikat_id::integer = $${params.length}`;
+    }
+
+    const [risiko, pemantauan, syarikat] = await Promise.all([
+      pool.query(
+        `SELECT r.risiko_id AS id, r.no_rujukan, r.syarikat_id::integer AS syarikat_id,
+                r.kategori, r.tahun, r.separuh_tahun, r.skor_risiko AS skor_awal,
+                r.status_kelulusan
+           FROM risiko r
+          WHERE r.is_deleted = false ${tapisSyarikat}
+          ORDER BY r.risiko_id`,
+        params
+      ),
+      pool.query(
+        `SELECT pm.risiko_id, pm.tahun_pemantauan AS tahun,
+                pm.separuh_tahun_pemantauan AS separuh_tahun, pm.tarikh_pemantauan,
+                pm.skor_risiko_pemantauan AS skor_risiko, pm.keberkesanan,
+                pm.status_pemantauan
+           FROM logpemantauan pm
+           JOIN risiko r ON r.risiko_id = pm.risiko_id AND r.is_deleted = false
+          WHERE pm.is_deleted = false ${tapisSyarikat}
+          ORDER BY pm.tahun_pemantauan, pm.separuh_tahun_pemantauan, pm.tarikh_pemantauan`,
+        params
+      ),
+      pool.query(
+        `SELECT DISTINCT s.syarikat_id, s.nama_syarikat
+           FROM syarikat s
+           JOIN risiko r ON r.syarikat_id::integer = s.syarikat_id AND r.is_deleted = false
+          WHERE true ${tapisSyarikat}
+          ORDER BY s.syarikat_id`,
+        params
+      ),
+    ]);
+
+    res.json({
+      risiko: risiko.rows,
+      pemantauan: pemantauan.rows,
+      syarikat: syarikat.rows,
+    });
+  } catch (err) {
+    console.error("Ralat GET /laporan/analitik:", err);
+    res.status(500).json({ error: "Gagal memuatkan data analitik laporan." });
+  }
+};

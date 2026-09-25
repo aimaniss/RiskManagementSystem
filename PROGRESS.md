@@ -165,6 +165,7 @@
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
+| 2026-09-25 | Laporan | **Dashboard analitik Laporan**: tab Analitik (lalai) + Jana Laporan PDF; `GET /api/laporan/analitik` (skop syarikat untuk Staff/Ketua Subsidiari, +spec 12); carta perbandingan separuh tahun, syarikat, risiko baharu ikut syarikat, keberkesanan & kategori dengan petunjuk warna, tooltip, paparan jadual, tapisan (syarikat/kategori/julat separuh tahun) dan skrin penuh; palet syarikat disahkan (CVD). Jadual Jana Laporan dikemaskan (lencana tahap berlabel, kategori, butang "Jana PDF"). PDF: warna tahap risiko dikembalikan (satu-satunya warna, berlabel) + jadual petunjuk; setiap log jadi satu jadual 7 lajur sejajar, pindaan sebagai baris jadual. `PageHeader` betul dalam mod gelap. Spec 16 — E2E **85/85** |
 | 2026-09-25 | Laporan | **PDF laporan rasmi**: hitam-putih (tiada blok warna; tahap risiko sebagai teks tebal "Sangat Tinggi (ST)"), fon Times, pengepala rasmi (logo, tajuk berpusat, garisan berkembar, no. rujukan & tarikh), klasifikasi "SULIT" dan kaki muka surat pada setiap halaman. Betulkan lebar lajur jadual yang diabaikan (`cellWidth: '20%'` tidak disokong jspdf-autotable → kini mm) |
 | 2026-09-25 | Merge | Gabung `main` (`6c63adf`, revamp UI selari dengan nama fail sama) ke branch: 10 konflik diselesaikan dengan mengekalkan versi yang diuji (spec 15); `dapatkanRisiko` & route/import `/risiko/:id` berganda (backend gagal mula jika digabung terus) dibuang; medan `sebab_ditolak_risiko`, `tarikh_kelulusan`, `diluluskan_oleh` dari versi `main` dimasukkan ke query & tab Ringkasan; penambahbaikan `status-stepper` dikekalkan; 4 fail tidak digunakan (`SenaraiInput`, `aliranRisiko`, `paparan`, `pilihan`) dibuang — E2E **83/83** pada DB kosong |
 | 2026-09-25 | UI U0–U6 | **Revamp UI butiran risiko**: halaman penuh `/risiko/:id` (pengepala ringkasan, stepper Daftar→Kelulusan→Penilaian→Rawatan→Pemantauan + tindakan seterusnya, tab Ringkasan/Penilaian/Rawatan/Pemantauan/Sejarah, sunting dalam tab, garis masa log + panel sisi); 4 borang bersatu `src/components/risiko/` ganti 10 fail modal (−4,755 baris); Senarai Risiko/Rawatan/Pemantauan buka halaman ini; `GET /api/risiko/:id` (+spec 12) & `status_kelulusan` dalam respons; susun atur responsif (menu luncur < 1024px). Pepijat dibetulkan: sunting pengenalpastian & pinda penilaian sentiasa gagal (`syarikat` vs `syarikatId`), penguncian medan log ikut kebenaran. Spec 15 (5 ujian UI) — E2E **83/83** pada DB kosong |
@@ -211,7 +212,7 @@
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **83/83 lulus** pada 2026-09-25 (DB baharu dari migrasi 001–027 + `e2e/seed-ci.mjs`).
+- Suite E2E Playwright: **85/85 lulus** pada 2026-09-25 (spec 01–16).
 - `npm audit`: **0 kerentanan** di backend & frontend (2026-09-25).
 - `npm run build` frontend lulus (termasuk Linux, selepas betulkan import
   huruf besar/kecil); `npm run lint` 0 error, 9 warning sedia ada.

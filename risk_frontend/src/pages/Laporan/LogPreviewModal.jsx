@@ -8,7 +8,7 @@ import AlertBanner from "@/components/ui/alert-banner";
 import { Button } from "@/components/ui/button";
 
 import Ukhmlogo from '../../assets/images/Light Background/UKMH_light.png';
-import { getRiskLevel } from "../../constants/riskMatrix";
+import { getRiskLevel, getRiskColor } from "../../constants/riskMatrix";
 
 // Kod pendek daripada label penuh
 const LABEL_TO_SHORT = {
@@ -19,8 +19,9 @@ const LABEL_TO_SHORT = {
 };
 const SHORT_TO_LABEL = { ST: "Sangat Tinggi", T: "Tinggi", S: "Sederhana", R: "Rendah" };
 
-// Dokumen rasmi: hitam-putih sahaja supaya kekal jelas bila dicetak/difotostat.
-// Tahap risiko ditulis sebagai teks tebal (bukan blok warna).
+// Dokumen rasmi: rangka hitam-putih; satu-satunya warna ialah sel tahap risiko
+// (warna sama seperti sistem) yang sentiasa berlabel supaya kekal jelas bila
+// dicetak/difotostat hitam-putih.
 const FON = 'times';
 const HITAM = [0, 0, 0];
 const KELABU_CAIR = [242, 242, 242];
@@ -28,7 +29,13 @@ const KLASIFIKASI = 'SULIT';
 
 const teksTahapRisiko = (shortCode) =>
   SHORT_TO_LABEL[shortCode] ? `${SHORT_TO_LABEL[shortCode]} (${shortCode})` : shortCode || '-';
-const gayaTahapRisiko = { halign: 'center', fontStyle: 'bold' };
+const hexKeRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const gayaTahapRisiko = (shortCode) => ({
+  halign: 'center',
+  valign: 'middle',
+  fontStyle: 'bold',
+  ...(SHORT_TO_LABEL[shortCode] && { fillColor: hexKeRgb(getRiskColor(shortCode)), textColor: HITAM }),
+});
 
 // =================================================================
 // KOMPONEN: LogPreviewModal (Pratonton Log)
@@ -84,6 +91,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           font: FON,
           fontSize: 9,
           cellPadding: 1.8,
+          valign: 'middle',
           lineColor: HITAM,
           lineWidth: 0.2,
           textColor: HITAM,
@@ -265,7 +273,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: 'SKOR IMPAK', styles: subHeaderStyles },
                     { content: 'IMPAK', styles: subHeaderStyles },
                     { content: 'TAHAP RISIKO', styles: subHeaderStyles },
-                    { content: 'STATUS RISIKO', styles: subHeaderStyles }
+                    { content: 'PERLU RAWATAN', styles: subHeaderStyles }
                   ],
                   [
                     { content: risk.skor_kebarangkalian_n ?? '-', styles: { halign: 'center' } },
@@ -274,10 +282,16 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: risk.impak || '-' },
                     {
                       content: teksTahapRisiko(risk.skor_risiko),
-                      styles: gayaTahapRisiko
+                      styles: gayaTahapRisiko(risk.skor_risiko)
                     },
-                    { content: risk.status_risiko || '-', styles: { halign: 'center' } }
-                  ]
+                    { content: risk.status_risiko || '-', styles: { halign: 'center', valign: 'middle' } }
+                  ],
+                  ...(risk.pindaan_penilaian
+                    ? [[
+                        { content: 'PINDAAN PENILAIAN', colSpan: 2, styles: labelStyles },
+                        { content: String(risk.pindaan_penilaian), colSpan: 4 },
+                      ]]
+                    : []),
               ],
               theme: 'grid',
               styles: globalStyles,
@@ -288,32 +302,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               }
           });
 
-          // --- Pindaan Penilaian (jika ada) ---
-          currentY = pdf.lastAutoTable.finalY;
-
-          if (risk.pindaan_penilaian) {
-            currentY += 3;
-            const pindaanLeftMargin = margin + 2;
-            const labelText = 'PINDAAN PENILAIAN:';
-
-            pdf.setFont(FON, 'bold');
-            pdf.setFontSize(globalStyles.fontSize);
-            pdf.text(labelText, pindaanLeftMargin, currentY);
-
-            pdf.setFont(FON, 'normal');
-            const labelWidth = pdf.getStringUnitWidth(labelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
-            const dataXPosition = pindaanLeftMargin + labelWidth + 2;
-
-            const maxWidth = pageWidth - dataXPosition - margin;
-            const splitData = pdf.splitTextToSize(String(risk.pindaan_penilaian), maxWidth);
-
-            pdf.text(splitData, dataXPosition, currentY);
-
-            const textHeight = splitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
-            currentY += textHeight;
-          }
-
-          currentY += 5;
+          currentY = pdf.lastAutoTable.finalY + 6;
 
           // --- SEKSYEN 3: RAWATAN ---
           const pelanTindakanBody = Array.isArray(risk.pelan_tindakan) && risk.pelan_tindakan.length > 0
@@ -383,133 +372,94 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               LABEL_TO_SHORT[getRiskLevel(k.skor_kebarangkalian, k.skor_impak)] ||
               '';
 
-            // --- 4.x Tajuk Log ---
-            autoTable(pdf, {
-              startY: currentY,
-              head: [[{ content: `4.${index + 1} ${String(log.label || '').toUpperCase()}`, colSpan: 1, styles: logHeaderStyles }]],
-              theme: 'grid',
-              styles: globalStyles,
-              margin: { left: margin, right: margin },
-            });
-            currentY = pdf.lastAutoTable.finalY;
+            // Satu jadual 7 lajur bagi setiap log supaya garisan sejajar dan
+            // blok tidak terpecah di tengah baris.
+            const tajukLog = (teks) => [
+              { content: teks, colSpan: 7, styles: { ...subSectionStyles, halign: 'center' } },
+            ];
+            const barisLog = [
+              [
+                { content: 'KELULUSAN', styles: labelStyles },
+                { content: log.kelulusan_log || '-', colSpan: 6 },
+              ],
+              tajukLog('PEMANTAUAN RISIKO'),
+              [
+                { content: 'PELAN TINDAKAN', colSpan: 3, styles: subHeaderStyles },
+                { content: 'KEKERAPAN', colSpan: 2, styles: subHeaderStyles },
+                { content: 'KAKITANGAN BERTANGGUNGJAWAB', colSpan: 2, styles: subHeaderStyles },
+              ],
+              [
+                { content: formatList(log.pelan_tindakan), colSpan: 3 },
+                { content: log.kekerapan || '-', colSpan: 2, styles: { halign: 'center' } },
+                { content: formatList(log.kakitangan_bertanggungjawab), colSpan: 2 },
+              ],
+              tajukLog('KEBERKESANAN TINDAKAN'),
+              [
+                'SKOR KEBARANGKALIAN', 'KEBARANGKALIAN', 'SKOR IMPAK', 'IMPAK',
+                'TAHAP RISIKO', 'KEBERKESANAN', 'STATUS PEMANTAUAN',
+              ].map((teks) => ({ content: teks, styles: subHeaderStyles })),
+              [
+                { content: k.skor_kebarangkalian ?? '-', styles: { halign: 'center', valign: 'middle' } },
+                { content: k.kebarangkalian || '-' },
+                { content: k.skor_impak ?? '-', styles: { halign: 'center', valign: 'middle' } },
+                { content: k.impak || '-' },
+                { content: teksTahapRisiko(logRiskShort), styles: gayaTahapRisiko(logRiskShort) },
+                { content: k.keberkesanan || '-', styles: { halign: 'center', valign: 'middle' } },
+                { content: k.status_pemantauan || '-', styles: { halign: 'center', valign: 'middle' } },
+              ],
+              ...(log.pindaan_keberkesanan
+                ? [[
+                    { content: 'PINDAAN KEBERKESANAN', colSpan: 2, styles: labelStyles },
+                    { content: String(log.pindaan_keberkesanan), colSpan: 5 },
+                  ]]
+                : []),
+            ];
 
-            // --- Kelulusan ---
-            autoTable(pdf, {
-              startY: currentY,
-              body: [[{ content: 'KELULUSAN', styles: labelStyles }, { content: log.kelulusan_log || '-' }]],
-              theme: 'grid',
-              styles: globalStyles,
-              margin: { left: margin, right: margin },
-              columnStyles: { 0: { cellWidth: lebar(20) }, 1: { cellWidth: lebar(80) } }
-            });
-            currentY = pdf.lastAutoTable.finalY;
-
-            // --- Sub-tajuk Pemantauan Risiko ---
-            autoTable(pdf, {
-              startY: currentY,
-              body: [[{ content: 'PEMANTAUAN RISIKO', styles: { ...subSectionStyles, halign: 'center' } }]],
-              theme: 'grid',
-              styles: globalStyles,
-              margin: { left: margin, right: margin },
-            });
-            currentY = pdf.lastAutoTable.finalY;
-
-            // --- Data Pemantauan ---
             autoTable(pdf, {
               startY: currentY,
               head: [[
-                { content: 'PELAN TINDAKAN', styles: subHeaderStyles },
-                { content: 'KEKERAPAN', styles: subHeaderStyles },
-                { content: 'KAKITANGAN BERTANGGUNGJAWAB', styles: subHeaderStyles }
+                {
+                  content: `4.${index + 1} ${String(log.label || '').toUpperCase()}`,
+                  colSpan: 7,
+                  styles: logHeaderStyles,
+                },
               ]],
-              body: [[
-                formatList(log.pelan_tindakan),
-                log.kekerapan || '-',
-                formatList(log.kakitangan_bertanggungjawab)
-              ]],
+              body: barisLog,
               theme: 'grid',
               styles: globalStyles,
+              rowPageBreak: 'avoid',
               margin: { left: margin, right: margin },
               columnStyles: {
-                0: { cellWidth: lebar(48) },
-                1: { cellWidth: lebar(14) },
-                2: { cellWidth: lebar(38) }
+                0: { cellWidth: lebar(18) }, 1: { cellWidth: lebar(17) }, 2: { cellWidth: lebar(8) },
+                3: { cellWidth: lebar(12) }, 4: { cellWidth: lebar(15) }, 5: { cellWidth: lebar(15) },
+                6: { cellWidth: lebar(15) }
               }
             });
             currentY = pdf.lastAutoTable.finalY;
 
-            // --- Keberkesanan Tindakan ---
-            autoTable(pdf, {
-              startY: currentY,
-              body: [[{ content: 'KEBERKESANAN TINDAKAN', colSpan: 7, styles: { ...subSectionStyles, halign: 'center' } }]],
-              theme: 'grid',
-              styles: globalStyles,
-              margin: { left: margin, right: margin },
-            });
-            currentY = pdf.lastAutoTable.finalY;
-
-            autoTable(pdf, {
-                startY: currentY,
-                head: [[
-                    { content: 'SKOR KEBARANGKALIAN', styles: subHeaderStyles },
-                    { content: 'KEBARANGKALIAN', styles: subHeaderStyles },
-                    { content: 'SKOR IMPAK', styles: subHeaderStyles },
-                    { content: 'IMPAK', styles: subHeaderStyles },
-                    { content: 'TAHAP RISIKO', styles: subHeaderStyles },
-                    { content: 'KEBERKESANAN', styles: subHeaderStyles },
-                    { content: 'STATUS PEMANTAUAN', styles: subHeaderStyles }
-                ]],
-                body: [[
-                    { content: k.skor_kebarangkalian ?? '-', styles: { halign: 'center' } },
-                    { content: k.kebarangkalian || '-' },
-                    { content: k.skor_impak ?? '-', styles: { halign: 'center' } },
-                    { content: k.impak || '-' },
-                    {
-                      content: teksTahapRisiko(logRiskShort),
-                      styles: gayaTahapRisiko
-                    },
-                    { content: k.keberkesanan || '-', styles: { halign: 'center' } },
-                    { content: k.status_pemantauan || '-', styles: { halign: 'center' } }
-                ]],
-                theme: 'grid',
-                styles: globalStyles,
-                margin: { left: margin, right: margin },
-                columnStyles: {
-                    0: { cellWidth: lebar(18) }, 1: { cellWidth: lebar(17) }, 2: { cellWidth: lebar(9) },
-                    3: { cellWidth: lebar(14) }, 4: { cellWidth: lebar(12) }, 5: { cellWidth: lebar(15) },
-                    6: { cellWidth: lebar(15) }
-                }
-            });
-            currentY = pdf.lastAutoTable.finalY;
-
-            // --- Pindaan Keberkesanan (jika ada) ---
-            if (log.pindaan_keberkesanan) {
-              currentY += 3;
-              const pindaanLeftMargin = margin + 2;
-              const logLabelText = 'PINDAAN KEBERKESANAN:';
-
-              pdf.setFont(FON, 'bold');
-              pdf.setFontSize(globalStyles.fontSize);
-              pdf.text(logLabelText, pindaanLeftMargin, currentY);
-
-              pdf.setFont(FON, 'normal');
-
-              const logLabelWidth = pdf.getStringUnitWidth(logLabelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
-              const logDataXPosition = pindaanLeftMargin + logLabelWidth + 2;
-
-              const logDataText = String(log.pindaan_keberkesanan || '');
-              const logMaxWidth = pageWidth - logDataXPosition - margin;
-              const logSplitData = pdf.splitTextToSize(logDataText, logMaxWidth);
-
-              pdf.text(logSplitData, logDataXPosition, currentY);
-
-              const logTextHeight = logSplitData.length * (globalStyles.fontSize / pdf.internal.scaleFactor) * 1.15;
-              currentY += logTextHeight;
-            }
-
-            currentY += 6; // Jarak antara log
+            currentY += 5; // Jarak antara log
           });
         }
+
+        // --- Petunjuk warna tahap risiko ---
+        ensureSpace(14);
+        autoTable(pdf, {
+          startY: currentY + 1,
+          body: [[
+            { content: 'PETUNJUK TAHAP RISIKO', styles: { ...labelStyles, fontSize: 8, valign: 'middle' } },
+            ...['R', 'S', 'T', 'ST'].map((kod) => ({
+              content: teksTahapRisiko(kod),
+              styles: { ...gayaTahapRisiko(kod), fontSize: 8 },
+            })),
+          ]],
+          theme: 'grid',
+          styles: globalStyles,
+          margin: { left: margin, right: margin },
+          columnStyles: {
+            0: { cellWidth: lebar(24) }, 1: { cellWidth: lebar(19) }, 2: { cellWidth: lebar(19) },
+            3: { cellWidth: lebar(19) }, 4: { cellWidth: lebar(19) }
+          }
+        });
 
         // --- 5. KAKI MUKA SURAT (semua halaman) ---
         const totalPages = pdf.getNumberOfPages();
