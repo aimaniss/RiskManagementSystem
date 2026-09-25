@@ -31,11 +31,11 @@ test("Kebenaran mengikut peranan (jumlah minimum disahkan)", async ({ request })
     const sesi = await apiLogin(request, akaun);
     hasil[akaun.staff_id] = sesi.user.kebenaran.length;
   }
-  // Nilai disahkan dari migrasi 020/021: Admin 17, Executive 14, KS 11, Staff 9, Viewer 5
+  // Nilai disahkan dari migrasi 020/021/024: Admin 17, Executive 15, KS 12, Staff 10, Viewer 5
   expect(hasil[CREDENTIALS.admin.staff_id]).toBe(17);
-  expect(hasil[CREDENTIALS.executive.staff_id]).toBe(14);
-  expect(hasil[CREDENTIALS.ketuaSubsidiari.staff_id]).toBe(11);
-  expect(hasil[CREDENTIALS.staff.staff_id]).toBe(9);
+  expect(hasil[CREDENTIALS.executive.staff_id]).toBe(15);
+  expect(hasil[CREDENTIALS.ketuaSubsidiari.staff_id]).toBe(12);
+  expect(hasil[CREDENTIALS.staff.staff_id]).toBe(10);
   expect(hasil[CREDENTIALS.viewer.staff_id]).toBe(5);
 });
 

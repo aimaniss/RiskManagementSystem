@@ -6,6 +6,7 @@ import {
   dapatkanPenerimaIkutKebenaran,
 } from "../utils/notifikasi.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
+import { dapatkanKebenaranPeranan } from "../middleware/authMiddleware.js";
 
 /**
  * -------------------------------------------------------
@@ -128,12 +129,15 @@ export const mohonPindaan = async (req, res) => {
   const { risk_id } = req.params;
   const { justifikasi, perubahan } = req.body;
   // Ambil ID INTEGER dari req.user. Pastikan nama 'pengguna_id' betul
-  const { pengguna_id: userIntegerId, nama_peranan } = req.user;
+  const { pengguna_id: userIntegerId, peranan_id } = req.user;
   let { data_sebelum, data_selepas } = perubahan;
   const { penilaian, keberkesanan } = justifikasi;
   const client = await pool.connect();
 
   try {
+    // Pemohon yang boleh meluluskan pindaan (Admin, Executive) diluluskan terus
+    const lulusTerus = (await dapatkanKebenaranPeranan(peranan_id)).has("pindaan:lulus");
+
     await client.query("BEGIN");
     let status_permohonan = "Menunggu Kelulusan";
     let pengguna_id_pelulus = null;
@@ -218,10 +222,9 @@ export const mohonPindaan = async (req, res) => {
       }
     }
 
-    // --- Logik Lulus Auto Admin ---
-    if (nama_peranan === "Admin") {
+    if (lulusTerus) {
       status_permohonan = "Diluluskan";
-      pengguna_id_pelulus = userIntegerId; // Simpan ID INTEGER Admin
+      pengguna_id_pelulus = userIntegerId;
       tarikh_diproses = new Date();
 
       let hasRisikoChanges = hasPenilaianInputChange || penilaian;
@@ -336,7 +339,7 @@ export const mohonPindaan = async (req, res) => {
     newPermohonan.rows[0].no_rujukan_pindaan = noRujukanPindaan;
 
     try {
-      if (nama_peranan !== "Admin") {
+      if (!lulusTerus) {
         const pelulusIds = await dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], {
           kecuali: [userIntegerId],
         });
@@ -480,7 +483,8 @@ export const senaraiPindaan = async (req, res) => {
       params.push(status);
     }
 
-    if (user.nama_peranan === "Admin" && syarikat_id && syarikat_id !== "Semua") {
+    // Endpoint ini hanya untuk pindaan:lihat (Admin, Executive) — kedua-duanya boleh tapis syarikat
+    if (syarikat_id && syarikat_id !== "Semua") {
       query += ` AND CAST(r.syarikat_id AS INTEGER) = $${paramIndex++}`;
       params.push(syarikat_id);
     }

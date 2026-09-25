@@ -22,9 +22,9 @@ sequenceDiagram
   B-->>P: Risiko yang boleh dipinda
   U->>P: Kemas kini medan + justifikasi
   P->>B: POST /api/pindaan/:risk_id { data_selepas, justifikasi }
-  B->>B: Jika Admin → auto-lulus terus; jika lain → status Menunggu
+  B->>B: Jika pemohon ada pindaan:lulus (Admin/Executive) → lulus terus; jika lain → Menunggu
   B->>D: INSERT permohonan_pindaan (data_sebelum = risiko semasa, data_selepas)
-  B->>D: hantarNotifikasi → role Admin/Executive
+  B->>D: hantarNotifikasiBulk → pemegang pindaan:lulus (kecuali pemohon)
   B-->>P: 201 { permohonan }
 
   A->>P: Buka senarai pindaan (admin)
@@ -42,7 +42,7 @@ sequenceDiagram
 | Kaedah | Laluan | Middleware | Guna |
 |--------|--------|------------|------|
 | GET | `/api/pindaan/risks-for-amendment` | `verifyToken` | Senarai risiko layak dipinda |
-| POST | `/api/pindaan/:risk_id` | `verifyToken` | Mohon pindaan (Admin auto-lulus) |
+| POST | `/api/pindaan/:risk_id` | `verifyToken, pindaan:urus` | Mohon pindaan (pemegang `pindaan:lulus` lulus terus) |
 | GET | `/api/pindaan/` | `verifyToken, authorizeRoles("Admin","Executive")` | Senarai permohonan |
 | GET | `/api/pindaan/stats` | `verifyToken, authorizeRoles("Admin")` | Statistik |
 | PUT | `/api/pindaan/:pindaan_id/approve` | `verifyToken, authorizeRoles("Admin")` | Lulus (apply ke risiko) |
@@ -64,7 +64,8 @@ dan `SenaraiTugasanDetailModal.jsx` memanggil approve/reject pindaan.
 ## Status Permohonan
 
 - `Menunggu` / `Diluluskan` / `Ditolak` — disimpan dalam `status_permohonan`.
-- **Admin auto-lulus**: bila pemohon ialah Admin, permohonan diluluskan serta-merta.
+- **Lulus terus**: bila pemohon memegang `pindaan:lulus` (Admin & Executive), permohonan
+  diluluskan serta-merta (`dapatkanKebenaranPeranan(peranan_id).has("pindaan:lulus")`).
 
 ## Jadual DB Disentuh
 
@@ -77,16 +78,18 @@ timestamps + soft-delete), `risiko` (dikemas kini bila approve), `notifikasi`,
 
 | Tindakan | Admin | Executive | Ketua Subsidiari | Staff | Viewer |
 |----------|-------|-----------|------------------|-------|--------|
-| Mohon pindaan | ✔ (auto-lulus) | ✔ | ✔ | ✔ | ✔ |
-| Lihat permohonan (senarai) | ✔ | ✔ | ✘ | ✘ | ✘ |
-| Lulus / Tolak | ✔ | ✘ | ✘ | ✘ | ✘ |
+| Mohon pindaan | ✔ (lulus terus) | ✔ (lulus terus) | ✔ | ✔ | ✘ |
+| Lihat permohonan (senarai) + tapis syarikat | ✔ | ✔ | ✘ | ✘ | ✘ |
+| Lulus / Tolak | ✔ | ✔ | ✘ | ✘ | ✘ |
 
 ## Nota / Gotcha
 
 - `data_sebelum` ialah snapshot risiko semasa ketika permohonan dibuat (JSONB),
   jadi bandingan tidak bergantung pada perubahan semasa.
 - Approve/reject perlu `pindaan:lulus` (Admin & Executive); reject turut
-  menerima body `{ komen_pelulus }`. Permohonan oleh Admin diluluskan terus.
+  menerima body `{ komen_pelulus }`. Permohonan oleh Admin/Executive diluluskan terus.
+- UI `Pindaan.jsx`: Admin & Executive (`PERANAN_PELULUS`) melihat statistik,
+  tapisan syarikat dan lajur Pemohon yang sama.
 - Notifikasi "Permohonan Pindaan Baru" dihantar kepada **semua pemegang
   `pindaan:lulus`** kecuali pemohon — `dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], { kecuali })`
   (fallback pentadbir bila tiada). Keputusan dimaklumkan kepada pemohon.

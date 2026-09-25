@@ -17,8 +17,8 @@
 | 7 — Documentation | ✅ | `01-auth-rbac.md` (ditulis semula), fail ini, `10-PLAN-lanjutan.md`, `AGENTS.md`, `PROGRESS.md`. |
 
 **Pengesahan teknikal**: `npm run migrate:status` → 21 migrasi lengkap, 0 pending.
-(Selepas lanjutan: 23 migrasi — 022 `token_dikemaskini_at`, 023 rehash bcrypt +
-isi revisi token; lih. `10-PLAN-lanjutan.md`.)
+(Selepas lanjutan: 24 migrasi — 022 `token_dikemaskini_at`, 023 rehash bcrypt +
+isi revisi token, 024 `rujukan:urus` untuk semua pendaftar risiko; lih. `10-PLAN-lanjutan.md`.)
 Smoke test semua endpoint (dashboard, laporan, rawatan, pemantauan, pindaan,
 users, log_aktiviti, risiko, bahagian, tahun, notifikasi) → OK. Lint/build
 frontend OK (hanya isu pre-existing). Kata laluan log masuk teras kini bcrypt.

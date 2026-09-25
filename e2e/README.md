@@ -6,7 +6,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 
 | Spec | Perkara yang disahkan |
 |------|------------------------|
-| `01-login-peranan.spec.mjs` | Login kelima-lima peranan (Admin/Executive/Ketua Subsidiari/Staff/Viewer), respons login mengembalikan array `kebenaran` dengan jumlah betul (17/14/11/9/5) |
+| `01-login-peranan.spec.mjs` | Login kelima-lima peranan (Admin/Executive/Ketua Subsidiari/Staff/Viewer), respons login mengembalikan array `kebenaran` dengan jumlah betul (17/15/12/10/5) |
 | `02-kebenaran.spec.mjs` | Kebenaran dikuatkuasakan: API pulang `403` untuk yang tiada kebenaran; menu UI sembunyi/tunjuk per peranan |
 | `03-rollback-transaksi.spec.mjs` | `dalamTransaksi` (utils/transaksi.js): ROLLBACK bila gagal / kena kekangan, COMMIT bila berjaya |
 | `04-soft-delete.spec.mjs` | DELETE pengguna & log_aktiviti = soft-delete (baris kekal `is_deleted=true`, hilang dari API, pengguna padam gagal log masuk) |
@@ -15,6 +15,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `07-flush-cache-kebenaran.spec.mjs` | Perubahan `peranan_kebenaran` hanya berkuat kuasa selepas `POST /api/roles/flush-cache`; Staff ditolak `403`; matriks dipulihkan selepas ujian |
 | `08-purge-soft-delete.spec.mjs` | `scripts/purge.js`: pratonton tanpa ubah data; tolak bukan pentadbir; buang hanya baris soft-delete melepasi tempoh (langkau `deleted_at NULL` & baris aktif); jejak audit dicatat |
 | `09-keselamatan.spec.mjs` | Pengawal regresi: tiada kata laluan plain-text dalam DB, setiap pengguna ada `token_dikemaskini_at`, tiada respons 5xx yang memulangkan `err.message` (semakan statik controllers) |
+| `10-executive.spec.mjs` | Dasar Executive = Admin: tapis pindaan ikut syarikat sama seperti Admin; `pengguna:urus` & `log:padam` masih `403`. `rujukan:urus`: Executive, Ketua Subsidiari & Staff boleh tambah bahagian, Viewer `403` |
 
 ## Prasyarat
 
@@ -43,7 +44,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **33/33 ujian lulus**.
+- Suite semasa: **37/37 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

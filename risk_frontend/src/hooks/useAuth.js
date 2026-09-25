@@ -68,7 +68,7 @@ const MATRIX_KEBENARAN = {
   "notifikasi:urus": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
   "laporan:jana": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
   "dashboard:lihat": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
-  "rujukan:urus": ["ADMIN"],
+  "rujukan:urus": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF"],
 };
 
 /**

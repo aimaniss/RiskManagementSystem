@@ -106,8 +106,11 @@ npm run migrate:status
   `risiko:lulus`, `risiko:padam`, `rawatan:urus`, `pemantauan:urus`,
   `pindaan:urus`, `pindaan:lihat`, `pindaan:lulus`, `pengguna:urus`,
   `log:baca`, `log:padam`, `notifikasi:urus`, `laporan:jana`,
-  `dashboard:lihat`, `rujukan:urus`. Jumlah per peranan: Admin 17, Executive 14,
-  Ketua Subsidiari 11, Staff 9, Viewer 5.
+  `dashboard:lihat`, `rujukan:urus`. Jumlah per peranan: Admin 17, Executive 15,
+  Ketua Subsidiari 12, Staff 10, Viewer 5. **Dasar: Executive = Admin untuk
+  kerja risiko/pindaan** (termasuk lulus-terus pindaan sendiri & tapisan
+  syarikat); hanya `pengguna:urus` & `log:padam` kekal Admin sahaja.
+  Semakan "boleh lulus" guna kebenaran (`pindaan:lulus`), bukan nama peranan.
 - **Soft-delete**: TIADA `DELETE FROM` dalam kod aplikasi. Semua "padam" =
   `UPDATE <jadual> SET is_deleted = true, deleted_at = NOW()`. Semua query
   pembacaan menapis `is_deleted = false`. Satu-satunya pengecualian:
@@ -168,7 +171,7 @@ npm run migrate:status
 | peranan_id | nama_peranan | Skop data |
 |-----------|--------------|-----------|
 | 1 | Admin | Semua, penuh CRUD, kelulusan pindaan |
-| 2 | Executive | Semua syarikat (lihat + pindaan) |
+| 2 | Executive | Semua syarikat — sama seperti Admin kecuali urus pengguna & padam log |
 | 3 | Ketua Subsidiari | Syarikat sendiri sahaja |
 | 4 | Staff | Syarikat sendiri sahaja |
 | 5 | Viewer | Semua (baca sahaja) |

@@ -179,7 +179,7 @@ RiskManagementSystem/
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
-│   │   ├── knex/                     # Migrasi Knex (23 fail)
+│   │   ├── knex/                     # Migrasi Knex (24 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
 │   ├── routes/                       # Daftar endpoint + middleware sahaja
 │   │   ├── auth.js                   # Log masuk / JWT
@@ -403,7 +403,7 @@ RiskManagementSystem/
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
 | `GET` | `/api/pindaan/risks-for-amendment` | Risiko yang boleh dipinda | `pindaan:urus` |
-| `POST` | `/api/pindaan/:risk_id` | Mohon pindaan baru (Admin auto-lulus) | `pindaan:urus` |
+| `POST` | `/api/pindaan/:risk_id` | Mohon pindaan baru (Admin/Executive lulus terus) | `pindaan:urus` |
 | `GET` | `/api/pindaan/` | Senarai permohonan pindaan | `pindaan:lihat` |
 | `GET` | `/api/pindaan/stats` | Statistik pindaan | `pindaan:lulus` |
 | `PUT` | `/api/pindaan/:id/approve` | Luluskan pindaan | `pindaan:lulus` |
@@ -420,7 +420,7 @@ RiskManagementSystem/
 | `GET` | `/api/syarikat` | Senarai syarikat (ditapis mengikut peranan) | Semua |
 | `GET` | `/api/tahun` | Senarai tahun | Semua |
 | `GET` | `/api/bahagian` | Senarai bahagian | Semua |
-| `POST` | `/api/bahagian` | Tambah bahagian | `rujukan:urus` |
+| `POST` | `/api/bahagian` | Tambah bahagian | `rujukan:urus` (Admin, Executive, Ketua Subsidiari, Staff) |
 | `GET` | `/api/roles` | Senarai peranan | `pengguna:urus` |
 | `POST` | `/api/roles/flush-cache` | Kosongkan cache kebenaran (selepas ubah `peranan_kebenaran`) | `pengguna:urus` |
 | `*` | `/api/notifikasi/*` | Notifikasi sendiri (senarai, baca, padam) | Semua |
@@ -435,7 +435,7 @@ kebenaran per peranan: `docs/pipeline/01-auth-rbac.md`.
 | Peranan | Keterangan | Kebolehan Utama |
 |---------|-----------|----------------|
 | **Admin** | Pentadbir sistem | Penuh CRUD pada semua modul. Kelulusan pindaan. Urus pengguna. Laporan. |
-| **Executive** | Eksekutif | Lihat semua syarikat. Mohon & lihat pindaan. Paparan utama. |
+| **Executive** | Eksekutif | Sama seperti Admin untuk kerja risiko & pindaan (termasuk lulus pindaan dan tambah data rujukan), kecuali urus pengguna dan padam log aktiviti. |
 | **Staff** | Kakitangan | Daftar risiko. Lihat risiko syarikat sendiri sahaja. Mohon pindaan. |
 | **Ketua Subsidiari** | Ketua subsidiari | Sama seperti Staff + kawalan ke atas subsidiari masing-masing. |
 | **Viewer** | Pemerhati | Baca sahaja. Tiada keupayaan mengubah suai data. |

@@ -27,6 +27,9 @@ import {
 import EmptyState from "@/components/ui/empty-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
+// Admin & Executive boleh edit semua bahagian risiko dari paparan ini
+const PERANAN_PENUH = ["ADMIN", "EXECUTIVE"];
+
 // ==========================================================
 // PEMBANTANG PRESENTASI (tiada logik — paparan sahaja)
 // ==========================================================
@@ -148,7 +151,7 @@ function LogEntryCard({ log, userRole, handleViewLog, handleEditLog, handleDelet
           }>
             {log.status_pemantauan || "-"}
           </Badge>
-          {userRole === "ADMIN" && (
+          {PERANAN_PENUH.includes(userRole) && (
             <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" onClick={(e) => handleEditLog(log, e)} title="Kemaskini Log">
                 <Pencil size={13} />
@@ -630,7 +633,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
                   <BookOpen />
                   Panduan
                 </Button>
-                {userRole === "ADMIN" && (
+                {PERANAN_PENUH.includes(userRole) && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -683,7 +686,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               number="2"
               title="Penilaian Risiko"
               actions={
-                userRole === "ADMIN" && (
+                PERANAN_PENUH.includes(userRole) && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -769,7 +772,7 @@ export default function ViewRisikoModal({ isOpen, risk, onClose }) {
               number="3"
               title="Rawatan Risiko"
               actions={
-                userRole === "ADMIN" && (
+                PERANAN_PENUH.includes(userRole) && (
                   <Button
                     type="button"
                     variant="ghost"

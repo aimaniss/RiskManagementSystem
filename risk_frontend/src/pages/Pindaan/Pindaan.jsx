@@ -22,6 +22,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { getAuthUser } from "../../utils/auth";
 import { riskMatrix } from "../../constants/riskMatrix";
 
+// Peranan yang boleh melihat & meluluskan pindaan (pindaan:lihat + pindaan:lulus)
+const PERANAN_PELULUS = ["Admin", "Executive"];
+
 
 function PindaanRisiko() {
   const [currentUserRole, setCurrentUserRole] = useState(null);
@@ -71,13 +74,11 @@ function PindaanRisiko() {
     setCurrentUserId(userId);
     setCurrentUserSyarikatId(userSubsId);
 
-    if (role === "Admin" || role === "Executive") {
+    if (PERANAN_PELULUS.includes(role)) {
       fetchAllRisks();
       fetchAmendments(role, userId, "Menunggu Kelulusan", filterSyarikat);
       fetchSyarikatList();
-      if (role === "Admin") {
-        fetchAmendmentStats(); 
-      }
+      fetchAmendmentStats();
     } else {
       setLoadingAmendments(false);
     }
@@ -140,7 +141,7 @@ function PindaanRisiko() {
       
       if (statusFilter !== "Semua") params.status = statusFilter;
       
-      if (role === "Admin" && syarikatFilter !== "Semua") {
+      if (syarikatFilter !== "Semua") {
         params.syarikat_id = syarikatFilter;
       }
       
@@ -157,7 +158,7 @@ function PindaanRisiko() {
 
   // useEffect untuk memuat semula data apabila penapis berubah
   useEffect(() => {
-    if (currentUserRole === "Admin" || currentUserRole === "Executive") {
+    if (PERANAN_PELULUS.includes(currentUserRole)) {
       fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
     }
   }, [filterStatus, filterSyarikat, currentUserRole, currentUserId]); 
@@ -177,17 +178,17 @@ function PindaanRisiko() {
         variant: "success",
         title: "Berjaya",
         message: `Permohonan Pindaan ${
-          currentUserRole === "Admin" ? "dicipta dan diluluskan secara automatik" : "berjaya dihantar"
+          PERANAN_PELULUS.includes(currentUserRole)
+            ? "dicipta dan diluluskan secara automatik"
+            : "berjaya dihantar"
         }!`
       });
       setIsPindaanModalOpen(false);
       setSelectedRiskForPindaan(null);
       // Muat semula data (hanya jika Executive/Admin)
-      if (currentUserRole === "Admin" || currentUserRole === "Executive") {
+      if (PERANAN_PELULUS.includes(currentUserRole)) {
         fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
-        if (currentUserRole === "Admin") {
-          fetchAmendmentStats(); 
-        }
+        fetchAmendmentStats();
       }
     } catch (err) {
       console.error("Gagal hantar permohonan:", err.response?.data || err);
@@ -217,9 +218,7 @@ function PindaanRisiko() {
       setIsDetailsModalOpen(false);
       // Muat semula data
       fetchAmendments(currentUserRole, currentUserId, filterStatus, filterSyarikat);
-      if (currentUserRole === "Admin") {
-        fetchAmendmentStats(); // Muat semula statistik
-      }
+      fetchAmendmentStats();
     } catch (err) {
       console.error(`Gagal ${action} permohonan:`, err.response?.data || err);
       setToast({
@@ -256,7 +255,7 @@ function PindaanRisiko() {
   };
     
   // Logik untuk siapa yang boleh melihat halaman ini (Admin atau Executive)
-  const canViewPage = currentUserRole === "Admin" || currentUserRole === "Executive";
+  const canViewPage = PERANAN_PELULUS.includes(currentUserRole);
   // Logik untuk siapa yang boleh memohon pindaan (Semua)
   const canApplyForAmendment = ["Admin", "Executive", "Ketua Subsidiari", "Staff"].includes(currentUserRole);
 
@@ -290,15 +289,11 @@ function PindaanRisiko() {
         }
       />
 
-      {currentUserRole === 'Admin' && (
-        <StatsCardSection stats={amendmentStats} loading={loadingStats} />
-      )}
+      <StatsCardSection stats={amendmentStats} loading={loadingStats} />
 
       {/* --- SEKSYEN SENARAI PINDAAN (HANYA ADMIN/EXECUTIVE) --- */}
       {canViewPage ? (
         <AmendmentsListSection
-          userRole={currentUserRole}
-          currentUserId={currentUserId}
           // Props Penapis
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
@@ -411,8 +406,6 @@ function StatsCardSection({ stats, loading }) {
 
 // --- Komponen Senarai Pindaan ---
 function AmendmentsListSection({
-  userRole,
-  currentUserId,
   // Props Penapis
   filterStatus,
   setFilterStatus,
@@ -430,8 +423,7 @@ function AmendmentsListSection({
     return amendments; 
   }, [amendments]);
 
-  // 8 lajur untuk Admin (dengan Pemohon), 7 lajur untuk Executive (tanpa Pemohon)
-  const columnCount = userRole === "Admin" ? 8 : 7; 
+  const columnCount = 8;
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {
@@ -449,9 +441,7 @@ function AmendmentsListSection({
   return (
     <div>
       <h2 className="text-base font-semibold text-foreground mb-3">
-        {userRole === "Executive"
-          ? "Senarai Semua Permohonan Pindaan"
-          : "Senarai Permohonan Untuk Kelulusan"}
+        Senarai Permohonan Untuk Kelulusan
       </h2>
 
       {/* Bekas Penapis */}
@@ -468,21 +458,19 @@ function AmendmentsListSection({
           <option value="Semua">Semua Status</option>
         </Select>
         
-        {userRole === "Admin" && (
-          <Select
-            value={filterSyarikat}
-            onChange={(e) => setFilterSyarikat(e.target.value)}
-            className="h-9 w-[210px]"
-            aria-label="Tapis mengikut syarikat"
-          >
-            <option value="Semua">Semua Syarikat</option>
-            {syarikatList.map((subs) => (
-              <option key={subs.syarikat_id} value={subs.syarikat_id}>
-                {subs.nama_syarikat}
-              </option>
-            ))}
-          </Select>
-        )}
+        <Select
+          value={filterSyarikat}
+          onChange={(e) => setFilterSyarikat(e.target.value)}
+          className="h-9 w-[210px]"
+          aria-label="Tapis mengikut syarikat"
+        >
+          <option value="Semua">Semua Syarikat</option>
+          {syarikatList.map((subs) => (
+            <option key={subs.syarikat_id} value={subs.syarikat_id}>
+              {subs.nama_syarikat}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -493,7 +481,7 @@ function AmendmentsListSection({
               <TableHead>No Rujukan</TableHead>
               <TableHead>Risiko</TableHead> 
               <TableHead>Syarikat</TableHead> 
-              {userRole === "Admin" && <TableHead>Pemohon</TableHead>}
+              <TableHead>Pemohon</TableHead>
               <TableHead>Tarikh Mohon</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-center">Tindakan</TableHead>
@@ -525,9 +513,7 @@ function AmendmentsListSection({
                   <TableCell className="font-mono text-sm font-semibold whitespace-nowrap">{amend.no_rujukan || "N/A"}</TableCell>
                   <TableCell className="max-w-[280px] truncate" title={amend.risiko}>{amend.risiko || "N/A"}</TableCell> 
                   <TableCell>{amend.nama_syarikat || "N/A"}</TableCell> 
-                  {userRole === "Admin" && (
-                    <TableCell>{amend.nama_pemohon || "N/A"}</TableCell>
-                  )}
+                  <TableCell>{amend.nama_pemohon || "N/A"}</TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
                     {new Date(amend.created_at).toLocaleDateString("ms-MY")}
                   </TableCell>

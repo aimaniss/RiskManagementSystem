@@ -117,10 +117,9 @@ flowchart LR
 | `laporan:jana` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `dashboard:lihat` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `rujukan:urus` | ✔ | ✔ | ✔ | ✔ | — |
-
 \* Skop terhad `syarikat_id` sendiri — kekalkan klausa `WHERE syarikat_id`.
-Jumlah kebenaran disahkan dalam spec E2E `01` (Admin 17, Executive 14,
-Ketua Subsidiari 11, Staff 9, Viewer 5).
+Jumlah kebenaran disahkan dalam spec E2E `01` (Admin 17, Executive 15,
+Ketua Subsidiari 12, Staff 10, Viewer 5). Jadual dijana dari DB (2026-09-25).
 
 ## Isolasi Data (kekal)
 
