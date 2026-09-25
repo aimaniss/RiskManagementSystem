@@ -14,6 +14,7 @@ import {
   semakPenduaRisiko,
   luluskanRisiko,
   tolakRisiko,
+  dapatkanRisiko,
 } from "../controllers/risikoController.js";
 
 const router = express.Router();
@@ -55,6 +56,14 @@ router.delete(
 );
 router.get("/check-no-rujukan/:noRujukan", verifyToken, semakNoRujukan);
 router.get("/check-duplicate", verifyToken, semakPenduaRisiko);
+// Selepas laluan statik (/tahun, /check-*) supaya tidak ditangkap sebagai :risiko_id
+router.get(
+  "/:risiko_id",
+  verifyToken,
+  authorizeKebenaran("risiko:lihat"),
+  risikoParam,
+  dapatkanRisiko
+);
 router.put("/:risiko_id/approve", verifyToken, authorizeKebenaran("risiko:lulus"), luluskanRisiko);
 router.put("/:risiko_id/reject", verifyToken, authorizeKebenaran("risiko:lulus"), tolakRisiko);
 

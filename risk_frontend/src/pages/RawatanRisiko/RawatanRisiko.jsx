@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Stethoscope, Check, Search } from "lucide-react";
 import api from "../../api/api";
-import EditRawatan from "./EditRawatan"; 
-import PenilaianModal from './PenilaianModal';
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmptyState from "@/components/ui/empty-state";
 import PageHeader from "@/components/ui/page-header";
@@ -81,13 +80,7 @@ function PenilaianDanRawatan() {
     const [syarikatList, setSyarikatList] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    const [showPenilaianModal, setShowPenilaianModal] = useState(false); 
-    const [showRawatanModal, setShowRawatanModal] = useState(false); 
-
-    const [selectedData, setSelectedData] = useState(null); 
-
-    const pelanList = ["Kurangkan Risiko", "Pindahkan Risiko", "Terima Risiko", "Elakkan Risiko"];
-    const kakitanganList = ["Ali", "Fatimah", "Siti", "Rahman", "Aiman"];
+    const navigate = useNavigate();
 
     const getRiskData = (k,i) => getRiskMatrix(k, i);
 
@@ -145,25 +138,8 @@ function PenilaianDanRawatan() {
         return [...new Set(data.map(d => d.kategori).filter(k => k))].sort();
     }, [data]);
 
-    const handleAction = (item)=>{ 
-        setSelectedData(item); 
-        if (activeTab === 'penilaian') {
-            setShowPenilaianModal(true);
-        } else {
-            setShowRawatanModal(true);
-        }
-    };
-    
-    const handleSave = ()=>{ 
-        setShowPenilaianModal(false); 
-        setShowRawatanModal(false); 
-        setSearch("");
-        setTahunFilter("");
-        setSeparuhFilter("");
-        setSyarikatFilter("");
-        setKategoriFilter("");
-        fetchData(); 
-    };
+    // Penilaian & rawatan disunting di halaman butiran risiko (tab berkaitan)
+    const handleAction = (item) => navigate(`/risiko/${item.risiko_id}?tab=${activeTab === "penilaian" ? "penilaian" : "rawatan"}`);
 
     const filteredData = useMemo(()=>{
         const tabFiltered = data.filter(d => {
@@ -402,30 +378,6 @@ function PenilaianDanRawatan() {
                 </Table>
             </div>
 
-            {showPenilaianModal && (
-                <PenilaianModal
-                    isOpen={showPenilaianModal} 
-                    initialData={selectedData}
-                    onClose={onSave => {
-                        setShowPenilaianModal(false);
-                        if(onSave) handleSave();
-                    }}
-                />
-            )}
-
-            {showRawatanModal && (
-                <EditRawatan 
-                    isOpen={showRawatanModal} 
-                    risk={selectedData} 
-                    isPenilaian={false}
-                    isAddMode={true}
-                    pelanList={pelanList} 
-                    kakitanganList={kakitanganList} 
-                    syarikatList={syarikatList}
-                    onClose={() => setShowRawatanModal(false)} 
-                    onSave={handleSave} 
-                />
-            )}
         </div>
     );
 }

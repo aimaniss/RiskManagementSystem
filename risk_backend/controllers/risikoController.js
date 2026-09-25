@@ -274,6 +274,51 @@ export const senaraiRisiko = async (req, res) => {
 };
 
 // ------------------- GET: Tahun Unik -------------------
+// GET /api/risiko/:risiko_id — satu risiko untuk halaman butiran.
+// Rawatan & log pemantauan dimuat melalui endpoint masing-masing.
+export const dapatkanRisiko = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         r.risiko_id AS id,
+         r.no_rujukan,
+         r.tahun,
+         r.separuh_tahun,
+         r.syarikat_id,
+         s.nama_syarikat AS syarikat,
+         s.singkatan AS singkatan_syarikat,
+         r.kategori,
+         r.bahagian,
+         r.risiko,
+         r.skor_kebarangkalian,
+         r.skor_impak,
+         r.skor_risiko,
+         r.status_risiko,
+         r.status_kelulusan,
+         r.sebab_ditolak_risiko,
+         r.tarikh_kelulusan,
+         r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
+         r.created_at,
+         COALESCE(u.nama_penuh, '—') AS didaftarkan_oleh,
+         pelulus.nama_penuh AS diluluskan_oleh,
+         ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id = r.risiko_id AND is_deleted = false ORDER BY id) AS punca,
+         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id AND is_deleted = false ORDER BY id) AS kesan
+       FROM risiko r
+       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
+       LEFT JOIN pengguna u ON u.pengguna_id = r.created_by
+       LEFT JOIN pengguna pelulus ON pelulus.pengguna_id = r.diluluskan_oleh_id
+       WHERE r.risiko_id = $1 AND r.is_deleted = false`,
+      [req.params.risiko_id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: "Risiko tidak ditemui." });
+    res.json(rows[0]);
+  } catch (err) {
+    if (err.code === "22P02") return res.status(404).json({ error: "Risiko tidak ditemui." });
+    console.error("Ralat GET /risiko/:risiko_id:", err);
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
+  }
+};
+
 export const senaraiTahunRisiko = async (req, res) => {
   try {
     const { rows } = await pool.query(`SELECT DISTINCT tahun FROM risiko ORDER BY tahun DESC`);

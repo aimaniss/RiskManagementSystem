@@ -14,6 +14,7 @@ import UrusPengguna from "./pages/UrusPengguna/UrusPengguna";
 import LogAktiviti from "./pages/LogAktiviti/LogAktiviti";
 import LogKeluar from "./pages/LogKeluar/LogKeluar";
 import SenaraiTugasan from "./pages/SenaraiTugasan/SenaraiTugasan";
+import ButiranRisiko from "./pages/ButiranRisiko/ButiranRisiko";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -51,6 +52,7 @@ function App() {
                     element={<DaftarRisiko onSubmitSuccess={handleRefreshRisiko} />} 
                   />
                   <Route path="SenaraiTugasan" element={<SenaraiTugasan />} />
+                  <Route path="risiko/:id" element={<ButiranRisiko />} />
                   <Route path="RawatanRisiko" element={<RawatanRisiko />} />
                   <Route path="PemantauanRisiko" element={<PemantauanRisiko />} />
                   <Route path="Pindaan" element={<Pindaan />} />

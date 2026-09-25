@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Trash2, Search, Eye, X, Filter, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { getAuthUser } from "../../utils/auth";
 import { getRiskAbbreviation, getRiskColor } from "../../constants/riskMatrix";
@@ -7,7 +7,6 @@ import { formatSeparuhTahun } from "../../utils/formatters";
 import { useRisks } from "../../hooks/useRisks";
 import { useSyarikats } from "../../hooks/useSyarikats";
 import api from "../../api/api";
-import ViewRisikoModal from "./ViewRisikoModal";
 import PageHeader from "@/components/ui/page-header";
 import ConfirmModal from "@/components/ui/confirm-modal";
 import Toast from "@/components/ui/toast";
@@ -68,8 +67,7 @@ function SenaraiRisiko() {
   const [sortKey, setSortKey] = useState("no_rujukan");
   const [sortDir, setSortDir] = useState("asc");
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [riskToView, setRiskToView] = useState(null);
+  const navigate = useNavigate();
   const [confirmAction, setConfirmAction] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -114,12 +112,7 @@ function SenaraiRisiko() {
     });
   };
 
-  const handleViewRisk = (risk) => { setRiskToView(risk); setIsViewModalOpen(true); };
-  const handleCloseViewModal = (shouldRefresh = false) => {
-    setIsViewModalOpen(false);
-    setRiskToView(null);
-    if (shouldRefresh) refetch();
-  };
+  const handleViewRisk = (risk) => navigate(`/risiko/${risk.id}`);
 
   const clearFilters = () => {
     setSearch("");
@@ -343,10 +336,6 @@ function SenaraiRisiko() {
             </TableBody>
           </Table>
         </div>
-      )}
-
-      {isViewModalOpen && (
-        <ViewRisikoModal isOpen={isViewModalOpen} risk={riskToView} userRole={userRole} onClose={handleCloseViewModal} />
       )}
 
       <ConfirmModal

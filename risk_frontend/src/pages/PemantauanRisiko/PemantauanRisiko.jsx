@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import { Eye, Loader2, ChevronDown, ChevronRight, Filter, Activity, Search } from "lucide-react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -24,7 +25,6 @@ import {
     SheetTitle,
     SheetDescription,
 } from "@/components/ui/sheet";
-import EditPemantauan from "./EditPemantauan";
 import { riskMatrix } from "../../constants/riskMatrix";
 import RiskLevelProgress from "@/components/ui/risk-level-progress";
 
@@ -373,8 +373,7 @@ function PemantauanRisiko() {
     const [syarikatList, setSyarikatList] = useState([]);
     const [kategoriList, setKategoriList] = useState([]);
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedRiskForEdit, setSelectedRiskForEdit] = useState(null);
+    const navigate = useNavigate();
 
     const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
     const [selectedFilterTahun, setSelectedFilterTahun] = useState("");
@@ -448,30 +447,8 @@ function PemantauanRisiko() {
         }
     }, []);
 
-    const handleCloseModal = () => { setIsModalOpen(false); setSelectedRiskForEdit(null); fetchData(); };
-
-    const handleEdit = async (risikoSenarai) => {
-        try {
-            const res = await api.get(`/rawatan/${risikoSenarai.risiko_id}`);
-            const fullRiskData = res.data;
-
-            const dataUntukModal = {
-                ...risikoSenarai,
-                ...fullRiskData,
-                punca_risiko_data: Array.isArray(fullRiskData.punca) ? fullRiskData.punca : [],
-                kesan_risiko_data: Array.isArray(fullRiskData.kesan) ? fullRiskData.kesan : [],
-                skor_kebarangkalian_sebelum: fullRiskData.skor_kebarangkalian,
-                skor_impak_sebelum: fullRiskData.skor_impak,
-            };
-
-            setSelectedRiskForEdit(dataUntukModal);
-            setIsModalOpen(true);
-        } catch (err) {
-            console.error(`Ralat memuat data risiko lengkap ${risikoSenarai.risiko_id}:`, err);
-        }
-    };
-
-    const handleRefreshData = useCallback(() => { fetchData(); }, [fetchData]);
+    // Log pemantauan disunting di halaman butiran risiko (tab Pemantauan)
+    const handleEdit = (risikoSenarai) => navigate(`/risiko/${risikoSenarai.risiko_id}?tab=pemantauan`);
 
     useEffect(() => {
         fetchSyarikatList();
@@ -631,15 +608,6 @@ function PemantauanRisiko() {
                 )}
             </div>
 
-            {/* Modal Edit Pemantauan */}
-            {isModalOpen && selectedRiskForEdit && (
-                <EditPemantauan
-                    isOpen={isModalOpen}
-                    risk={selectedRiskForEdit}
-                    onClose={handleCloseModal}
-                    onSave={handleRefreshData}
-                />
-            )}
 
             {/* Modal Filter Tarikh */}
             {isDateFilterModalOpen && (

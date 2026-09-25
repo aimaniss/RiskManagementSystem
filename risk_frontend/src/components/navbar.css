@@ -431,6 +431,13 @@
 }
 
 /* --- DARK MODE --- */
+@media (max-width: 1023px) {
+  .navbar {
+    left: 0;
+    padding: 0 12px 0 60px; /* ruang untuk butang menu */
+  }
+}
+
 .dark .navbar {
   background: var(--color-background);
   border-bottom-color: var(--color-border);

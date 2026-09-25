@@ -18,7 +18,7 @@ import LogoLight from "../assets/images/Light Background/UKMH_light.png";
 import LogoDark from "../assets/images/Dark Background/UKMH_dark.png";
 import { getAuthUser } from "../utils/auth";
 
-function Sidebar() {
+function Sidebar({ terbuka = false }) {
   const location = useLocation();
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
@@ -36,7 +36,7 @@ function Sidebar() {
   if (!role) return null;
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar${terbuka ? " terbuka" : ""}`}>
       {/* Header */}
       <div className="sidebar-header">
         <img src={isDark ? LogoDark : LogoLight} alt="Logo" className="sidebar-logo" />
