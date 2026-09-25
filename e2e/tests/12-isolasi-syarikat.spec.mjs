@@ -98,6 +98,7 @@ test("Setiap endpoint tulis menolak risiko syarikat lain -> 403", async ({ reque
 const bacaan = () => [
   `/risiko/${fx.risikoId}`,
   `/risiko/${fx.risikoId}/rawatan`,
+  `/pindaan/risiko/${fx.risikoId}`,
   `/rawatan/${fx.risikoId}`,
   `/pemantauan-risiko/${fx.risikoId}/info`,
   `/pemantauan-risiko/${fx.risikoId}/sejarah`,

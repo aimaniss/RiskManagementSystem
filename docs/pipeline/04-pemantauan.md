@@ -49,11 +49,11 @@ sequenceDiagram
 
 | Halaman/Komponen | API |
 |------------------|-----|
-| `PemantauanRisiko.jsx` | GET `/pemantauan-risiko`, GET `/syarikat`, GET `/rawatan/:risiko_id` |
+| `PemantauanRisiko.jsx` | GET `/pemantauan-risiko` (risiko aktif & diluluskan; + `skor_*_awal`, `ada_rawatan`) |
 | `components/risiko/BorangLogPemantauan.jsx` | GET `/:id/tahap-rujukan`, `/:id/info`, `/check-duplicate`; POST `/log` / PUT `/log/:log_id` (hantar `pelan_tindakan_list` & `kakitangan_list` — POST tidak membaca `*_log`) |
 | `ButiranRisiko/TabPemantauan.jsx` | GET `/:id/sejarah` (melalui halaman), DELETE `/log/:log_id` |
 
-Kad di `PemantauanRisiko.jsx` membuka `/risiko/:id?tab=pemantauan`.
+`PemantauanRisiko.jsx` = langkah 3 & 4 jalur aliran (`AliranKerjaRisiko`); tab `?kumpulan=aktif|tertunggak|selesai|semua`, tahap awal → terkini dengan trend, status lembut. Baris membuka `/risiko/:id?tab=pemantauan`. Log pemantauan dipapar/disunting dalam drawer (`SheetHeader`/`SheetBody`/`SheetFooter` dari `components/ui/sheet.jsx`; bar simpan melekat di dasar).
 
 ## Konsep Utama
 

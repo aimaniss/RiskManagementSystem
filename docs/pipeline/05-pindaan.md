@@ -46,33 +46,36 @@ sequenceDiagram
 
 | Kaedah | Laluan | Middleware | Guna |
 |--------|--------|------------|------|
-| GET | `/api/pindaan/risks-for-amendment` | `verifyToken, pindaan:urus` | Senarai risiko layak dipinda |
+| GET | `/api/pindaan/risks-for-amendment` | `verifyToken, pindaan:urus` | Senarai risiko layak dipinda (aktif, diluluskan, sudah dinilai) |
+| GET | `/api/pindaan/risiko/:risk_id` | `verifyToken, risiko:lihat, hadSyarikat` | Sejarah semua permohonan bagi satu risiko (tab Pindaan) |
 | POST | `/api/pindaan/:risk_id` | `verifyToken, pindaan:urus, hadSyarikat` | Mohon pindaan (pemegang `pindaan:lulus` lulus terus; `409` jika permohonan lain masih menunggu) |
-| GET | `/api/pindaan/` | `verifyToken, pindaan:lihat` | Senarai permohonan |
+| GET | `/api/pindaan/` | `verifyToken, pindaan:lihat` | Senarai permohonan (`?status=Menunggu Kelulusan|Diluluskan|Ditolak|Sejarah|Semua`, `?syarikat_id`); termasuk `nama_pelulus` |
 | GET | `/api/pindaan/stats` | `verifyToken, pindaan:lulus` | Statistik |
 | PUT | `/api/pindaan/:pindaan_id/approve` | `verifyToken, pindaan:lulus` | Lulus (apply ke risiko) |
 | PUT | `/api/pindaan/:pindaan_id/reject` | `verifyToken, pindaan:lulus` | Tolak (`{ komen_pelulus }` → `sebab_ditolak`) |
 
-**Titik masuk UI pemohon**: tab Penilaian di `/risiko/:id`
-(`components/risiko/BorangPenilaian.jsx`, mod pinda) — butang "Pinda" untuk
-pemegang `pindaan:lulus` (lulus terus) dan "Mohon Pindaan" untuk Staff/Ketua
-Subsidiari. Justifikasi wajib. `GET /api/risiko/:id` memulangkan
-`pindaan_terkini` (no. rujukan, status, sebab ditolak) supaya pemohon nampak
-banner "menunggu kelulusan" / "ditolak" tanpa akses `/pindaan`. Halaman
-`/Pindaan` (pindaan:lihat) kekal untuk pelulus, termasuk pindaan keberkesanan.
+**Satu borang pindaan**: tab **Pindaan** di `/risiko/:id` (`?tab=pindaan&sunting=1`)
+memaparkan `components/risiko/BorangPindaan.jsx` — skor penilaian dan (jika log
+terkini ada skor) skor keberkesanan, satu justifikasi wajib dan ringkasan perubahan.
+Butang "Pinda" (pemegang `pindaan:lulus`, lulus terus) / "Mohon Pindaan"
+(Staff/Ketua Subsidiari) di tab Penilaian & Pindaan membuka borang ini.
+Butang "Mohon Pindaan" di halaman `/Pindaan` membuka `PilihRisikoPindaan` (dialog
+carian risiko) lalu ke borang yang sama. `GET /api/risiko/:id` memulangkan
+`pindaan_terkini` untuk banner "menunggu kelulusan" / "ditolak".
 
-**Fail frontend** (`Pindaan/*`):
+**Fail frontend**:
 
 | Komponen | API |
 |----------|-----|
-| `Pindaan.jsx` | GET `/syarikat`, GET `/pindaan/stats`, GET `/pindaan/risks-for-amendment`, GET `/pindaan`, POST `/pindaan/:risikoId`, PUT (approve/reject) |
-| `MohonPindaanModal.jsx` | POST `/pindaan/:risk_id` |
-| `ComparisonView.jsx` | Paparan sebelum vs selepas (client dari data JSONB) |
-| `PengesahanPindaanModal.jsx` | PUT `/pindaan/:id/approve` |
-| `PindaanDetailsModal.jsx`, `PindaanFormModal.jsx`, `StatusBadge.jsx` | UI sokongan |
+| `Pindaan/Pindaan.jsx` | GET `/syarikat`, GET `/pindaan/stats`, GET `/pindaan` — tab "Menunggu Kelulusan" / "Sejarah" (tapis keputusan & syarikat), kad statistik boleh diklik |
+| `Pindaan/PilihRisikoPindaan.jsx` | GET `/pindaan/risks-for-amendment` (dialog pilih risiko) |
+| `components/risiko/BorangPindaan.jsx` | POST `/pindaan/:risk_id` |
+| `components/risiko/PanelKelulusan.jsx` | PUT `/risiko/:id/approve|reject`, PUT `/pindaan/:id/approve|reject` (panel sisi; dikongsi Senarai Tugasan & halaman Pindaan) |
+| `components/risiko/KadPindaan.jsx` | Paparan satu permohonan (perubahan, justifikasi, status, pelulus) |
+| `ButiranRisiko/TabPindaan.jsx` | GET `/pindaan/risiko/:id` (melalui halaman butiran) |
 
-`SenaraiTugasan/SenaraiTugasan.jsx` juga memanggil `GET /pindaan?tugasan=true`
-dan `SenaraiTugasanDetailModal.jsx` memanggil approve/reject pindaan.
+`SenaraiTugasan/SenaraiTugasan.jsx` memanggil `GET /pindaan?tugasan=true` dan
+membuka `PanelKelulusan`.
 
 ## Status Permohonan
 
@@ -97,6 +100,10 @@ timestamps + soft-delete), `risiko` (dikemas kini bila approve), `notifikasi`,
 
 ## Nota / Gotcha
 
+- **No. rujukan `PIN-<tahun>-<0001>`** dijana dalam transaksi permohonan di bawah
+  `pg_advisory_xact_lock` (jujukan setahun, termasuk rekod soft-delete supaya tidak
+  diguna semula); indeks unik `permohonan_pindaan_no_rujukan_unik` (migrasi 029,
+  yang turut menomborkan rekod lama ikut tarikh).
 - `data_sebelum` ialah snapshot risiko semasa ketika permohonan dibuat (JSONB),
   jadi bandingan tidak bergantung pada perubahan semasa.
 - Approve/reject perlu `pindaan:lulus` (Admin & Executive); reject turut
@@ -108,8 +115,7 @@ timestamps + soft-delete), `risiko` (dikemas kini bila approve), `notifikasi`,
   → `409`.
 - Notifikasi pindaan menyimpan `pindaan_id` dalam `entiti_id`; `GET /api/notifikasi`
   menambah `risiko_id` supaya klik notifikasi membuka `/risiko/:id?tab=penilaian`.
-- UI `Pindaan.jsx`: Admin & Executive (`PERANAN_PELULUS`) melihat statistik,
-  tapisan syarikat dan lajur Pemohon yang sama.
+  Mesej notifikasi menyebut no. rujukan pindaan.
 - Notifikasi "Permohonan Pindaan Baru" dihantar kepada **semua pemegang
   `pindaan:lulus`** kecuali pemohon — `dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], { kecuali })`
   (fallback pentadbir bila tiada). Keputusan dimaklumkan kepada pemohon.

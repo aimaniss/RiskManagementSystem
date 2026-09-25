@@ -56,16 +56,23 @@ async function bukaTugasan(page, teks) {
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
-// Staff mohon pindaan penilaian dari tab Penilaian halaman butiran
+// Borang pindaan bersatu di tab Pindaan (skor penilaian)
+async function isiBorangPindaan(page, kebarangkalian, impak, justifikasi) {
+  await expect(page).toHaveURL(/tab=pindaan&sunting=1/);
+  await page.getByLabel("Skor Kebarangkalian", { exact: true }).selectOption(String(kebarangkalian));
+  await page.getByLabel("Skor Impak", { exact: true }).selectOption(String(impak));
+  await page.getByLabel("Justifikasi Pindaan *").fill(justifikasi);
+}
+
+// Staff mohon pindaan: butang di tab Penilaian membuka borang di tab Pindaan
 async function mohonPindaanUI(page, kebarangkalian, impak, justifikasi) {
   await page.goto(`/risiko/${ctx.risikoA}?tab=penilaian`);
   await page.getByRole("button", { name: "Mohon Pindaan" }).click();
-  await page.getByLabel("Skor Kebarangkalian *").selectOption(String(kebarangkalian));
-  await page.getByLabel("Skor Impak *").selectOption(String(impak));
-  await page.getByLabel("Justifikasi Pindaan *").fill(justifikasi);
+  await isiBorangPindaan(page, kebarangkalian, impak, justifikasi);
   await page.getByRole("button", { name: "Hantar Permohonan" }).click();
   await expect(page.getByText("Permohonan pindaan dihantar untuk kelulusan.")).toBeVisible();
   const p = await pindaanTerkini();
+  expect(p.no_rujukan_pindaan).toMatch(/^PIN-\d{4}-\d{4}$/);
   ctx.rujukan.push(p.no_rujukan_pindaan);
   return p;
 }
@@ -274,24 +281,22 @@ test("Executive mohon pindaan dari halaman Pindaan -> diluluskan terus", async (
   await page.goto("/Pindaan");
   await page.getByRole("button", { name: "Mohon Pindaan" }).click();
   const noRujukan = ctx.rujukan[0];
-  await page.getByPlaceholder("Cari No Rujukan / Risiko...").fill(noRujukan);
+  await page.getByLabel("Cari risiko untuk dipinda").fill(noRujukan);
   await page.getByRole("button", { name: `Pilih risiko ${noRujukan}` }).click();
 
-  await expect(page.getByText(`Borang Pindaan: ${noRujukan}`)).toBeVisible();
-  // Log awal kelulusan tiada skor, jadi hanya blok penilaian dipaparkan
-  await expect(page.locator('select[name="skor_kebarangkalian_selepas"]')).toHaveCount(0);
-  await page.locator('select[name="skor_kebarangkalian"]').selectOption("5");
-  await page.locator('select[name="skor_impak"]').selectOption("5");
-  await page
-    .getByPlaceholder("Sila isi justifikasi jika anda meminda skor Penilaian Risiko...")
-    .fill(`${TANDA} justifikasi Executive`);
+  // Dialog membuka borang bersatu di tab Pindaan risiko tersebut
+  await expect(page).toHaveURL(new RegExp(`/risiko/${ctx.risikoA}\\?tab=pindaan&sunting=1`));
+  // Log awal kelulusan tiada skor, jadi hanya bahagian penilaian dipaparkan
+  await expect(page.getByLabel("Kebarangkalian Keberkesanan")).toHaveCount(0);
+  await isiBorangPindaan(page, 5, 5, `${TANDA} justifikasi Executive`);
+  await expect(page.getByText("Ringkasan perubahan")).toBeVisible();
   const sebelum = (await pindaanTerkini()).pindaan_id;
-  await page.locator('form button[type="submit"]').click();
-  await expect(page.getByRole("heading", { name: "Sahkan Perubahan" })).toBeVisible();
-  await page.getByRole("button", { name: "Sahkan & Hantar" }).click();
+  await page.getByRole("button", { name: "Simpan Pindaan" }).click();
+  await expect(page.getByText("Pindaan disimpan dan berkuat kuasa.")).toBeVisible();
 
   await expect.poll(async () => (await pindaanTerkini()).pindaan_id).not.toBe(sebelum);
   const p = await pindaanTerkini();
+  expect(p.no_rujukan_pindaan).toMatch(/^PIN-\d{4}-\d{4}$/);
   ctx.rujukan.push(p.no_rujukan_pindaan);
   expect(p.status_permohonan).toBe("Diluluskan");
   expect(await skor()).toMatchObject({ skor_kebarangkalian: 5, skor_impak: 5, skor_risiko: "ST" });
@@ -303,11 +308,9 @@ test("Executive pinda terus di halaman butiran -> direkodkan; Perlu rawatan dike
   await sealSession(page, sesi.executive.token);
   await page.goto(`/risiko/${ctx.risikoA}?tab=penilaian`);
   await page.getByRole("button", { name: "Pinda", exact: true }).click();
-  await page.getByLabel("Skor Kebarangkalian *").selectOption("1");
-  await page.getByLabel("Skor Impak *").selectOption("1");
-  await page.getByLabel("Justifikasi Pindaan *").fill(`${TANDA} kawalan berkesan`);
+  await isiBorangPindaan(page, 1, 1, `${TANDA} kawalan berkesan`);
   await page.getByRole("button", { name: "Simpan Pindaan" }).click();
-  await expect(page.getByText("Penilaian risiko dipinda.")).toBeVisible();
+  await expect(page.getByText("Pindaan disimpan dan berkuat kuasa.")).toBeVisible();
 
   const p = await pindaanTerkini();
   ctx.rujukan.push(p.no_rujukan_pindaan);
@@ -318,4 +321,96 @@ test("Executive pinda terus di halaman butiran -> direkodkan; Perlu rawatan dike
     skor_risiko: "R",
     status_risiko: "Tidak",
   });
+});
+
+test("Tab Pindaan di butiran: Staff nampak semua permohonan, status & sebab ditolak", async ({
+  page,
+}) => {
+  await sealSession(page, sesi.staff.token);
+  await page.goto(`/risiko/${ctx.risikoA}?tab=pindaan`);
+  await expect(page.getByRole("tab", { name: /Pindaan\s*4/ })).toBeVisible();
+  const item = page.getByRole("list", { name: "Sejarah pindaan" }).getByRole("listitem");
+  await expect(item).toHaveCount(4);
+  // Terkini dahulu: pinda terus Executive (1×1), ...; permohonan Staff yang ditolak
+  await expect(item.first()).toContainText("Diluluskan");
+  await expect(item.first()).toContainText(`${TANDA} kawalan berkesan`);
+  const ditolak = item.filter({ hasText: "Ditolak" });
+  await expect(ditolak).toHaveCount(1);
+  await expect(ditolak).toContainText(`Sebab ditolak: ${TANDA} tiada bukti`);
+  await expect(ditolak).toContainText("Tinggi");
+});
+
+test("Halaman Pindaan: tab Sejarah menyenaraikan keputusan & membuka tab Pindaan risiko", async ({
+  page,
+}) => {
+  await sealSession(page, sesi.executive.token);
+  await page.goto("/Pindaan");
+  await expect(page.getByRole("tab", { name: /Menunggu Kelulusan/ })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  );
+  await page.getByRole("tab", { name: /Sejarah/ }).click();
+  const baris = page.getByRole("row").filter({ hasText: ctx.rujukan[0] });
+  await expect(baris.filter({ hasText: "Ditolak" })).toHaveCount(1);
+  await expect(baris.filter({ hasText: "Diluluskan" })).toHaveCount(3);
+
+  await page.getByLabel("Tapis mengikut keputusan").selectOption("Ditolak");
+  await expect(baris).toHaveCount(1);
+  await baris.getByRole("link", { name: ctx.rujukan[0] }).click();
+  await expect(page).toHaveURL(new RegExp(`/risiko/${ctx.risikoA}\\?tab=pindaan`));
+});
+
+test("Penilaian & Rawatan: jalur aliran, hanya risiko diluluskan, butang membuka borang", async ({
+  page,
+}) => {
+  await sealSession(page, sesi.executive.token);
+  await page.goto("/RawatanRisiko");
+  const aliran = page.getByRole("navigation", { name: "Aliran kerja risiko" });
+  await expect(aliran.getByRole("button", { name: /Perlu Dinilai/ })).toHaveAttribute("aria-current", "step");
+
+  // Risiko A sudah dinilai tetapi belum dirawat; B ditolak — tidak disenaraikan
+  await aliran.getByRole("button", { name: /Perlu Rawatan/ }).click();
+  await expect(page).toHaveURL(/tab=rawatan/);
+  await page.getByLabel("Cari no. rujukan atau risiko").fill(TANDA);
+  const baris = page.getByRole("row").filter({ hasText: TANDA });
+  await expect(baris).toHaveCount(1);
+  await expect(baris).toContainText(`${TANDA} A`);
+
+  await aliran.getByRole("button", { name: /Perlu Dinilai/ }).click();
+  await expect(page.getByRole("row").filter({ hasText: TANDA })).toHaveCount(0);
+
+  await aliran.getByRole("button", { name: /Perlu Rawatan/ }).click();
+  await baris.getByRole("button", { name: "Rawat" }).click();
+  await expect(page).toHaveURL(new RegExp(`/risiko/${ctx.risikoA}\\?tab=rawatan&sunting=1`));
+  await expect(page.getByLabel("Jenis Kawalan *")).toBeVisible();
+
+  // Langkah 3 membawa ke halaman Pemantauan
+  await page.goto("/RawatanRisiko");
+  await page
+    .getByRole("navigation", { name: "Aliran kerja risiko" })
+    .getByRole("button", { name: /Dalam Pemantauan/ })
+    .click();
+  await expect(page).toHaveURL(/\/PemantauanRisiko\?kumpulan=aktif/);
+});
+
+test("Pemantauan: peringkat aliran, tahap terkini & membuka tab Pemantauan", async ({ page }) => {
+  await sealSession(page, sesi.executive.token);
+  await page.goto("/PemantauanRisiko");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Aliran kerja risiko" })
+      .getByRole("button", { name: /Dalam Pemantauan/ })
+  ).toHaveAttribute("aria-current", "step");
+  await page.getByLabel("Cari no. rujukan, risiko atau syarikat").fill(TANDA);
+  // Risiko A belum dirawat: bukan "Dalam Pemantauan", tetapi ada dalam "Semua"; B ditolak tiada
+  await expect(page.getByRole("tab", { name: /Dalam Pemantauan\s*0/ })).toBeVisible();
+  await page.getByRole("tab", { name: /^Semua/ }).click();
+  await expect(page.getByRole("tab", { name: /^Semua\s*1/ })).toBeVisible();
+  const baris = page.getByRole("row").filter({ hasText: TANDA });
+  await expect(baris).toHaveCount(1);
+  await expect(baris).toContainText("Rendah");
+  await expect(baris).toContainText("Belum dirawat");
+
+  await baris.getByRole("button", { name: "Buka" }).click();
+  await expect(page).toHaveURL(new RegExp(`/risiko/${ctx.risikoA}\\?tab=pemantauan`));
 });

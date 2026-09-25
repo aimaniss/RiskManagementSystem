@@ -29,6 +29,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetBody,
   SheetHeader,
   SheetTitle,
   SheetDescription,
@@ -414,32 +415,34 @@ function LogAktiviti() {
 
       {/* Perincian */}
       <Sheet open={Boolean(dipilih)} onOpenChange={(buka) => !buka && setDipilih(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent>
           {dipilih && (
             <>
               <SheetHeader>
                 <SheetTitle>{dipilih.aktiviti}</SheetTitle>
                 <SheetDescription>{formatDate(dipilih.tarikh_masa)}</SheetDescription>
               </SheetHeader>
-              <dl className="mt-6 grid gap-4 text-sm">
-                {[
-                  ["Pengguna", `${dipilih.nama_pengguna} (${dipilih.staff_id})`],
-                  ["Peranan", dipilih.peranan_pengguna],
-                  ["Syarikat", dipilih.syarikat || "-"],
-                  ["Ringkasan", dipilih.ringkasan],
-                ].map(([label, nilai]) => (
-                  <div key={label}>
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="font-medium text-foreground">{nilai}</dd>
+              <SheetBody>
+                <dl className="grid gap-4 text-sm">
+                  {[
+                    ["Pengguna", `${dipilih.nama_pengguna} (${dipilih.staff_id})`],
+                    ["Peranan", dipilih.peranan_pengguna],
+                    ["Syarikat", dipilih.syarikat || "-"],
+                    ["Ringkasan", dipilih.ringkasan],
+                  ].map(([label, nilai]) => (
+                    <div key={label}>
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="font-medium text-foreground">{nilai}</dd>
+                    </div>
+                  ))}
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Perincian</dt>
+                    <dd className="mt-1 whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-foreground">
+                      {dipilih.perincian || "-"}
+                    </dd>
                   </div>
-                ))}
-                <div>
-                  <dt className="text-xs text-muted-foreground">Perincian</dt>
-                  <dd className="mt-1 whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-foreground">
-                    {dipilih.perincian || "-"}
-                  </dd>
-                </div>
-              </dl>
+                </dl>
+              </SheetBody>
             </>
           )}
         </SheetContent>

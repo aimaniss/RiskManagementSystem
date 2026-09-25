@@ -17,12 +17,12 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `09-keselamatan.spec.mjs` | Pengawal regresi: tiada kata laluan plain-text dalam DB, setiap pengguna ada `token_dikemaskini_at`, tiada respons 5xx yang memulangkan `err.message` (semakan statik controllers) |
 | `10-executive.spec.mjs` | Dasar Executive = Admin: tapis pindaan ikut syarikat sama seperti Admin; `pengguna:urus` & `tetapan:urus` masih `403`. `rujukan:urus`: Executive, Ketua Subsidiari & Staff boleh tambah bahagian, Viewer `403` |
 | `11-aliran-tulis.spec.mjs` | Aliran tulis penuh melalui API: daftar/kemaskini/lulus risiko, rawatan & log pemantauan (tambah/kemaskini/padam, anak soft-delete), pindaan (mohon/lulus/tolak/lulus terus + notifikasi Executive), padam risiko berlata. Semua data & kesan sampingan dibuang kekal selepas ujian |
-| `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 7 bacaan ikut ID untuk risiko syarikat lain -> `403`, data kekal; laporan penuh syarikat lain `403`; `/laporan/analitik` hanya syarikat sendiri; log aktiviti hanya syarikat sendiri; `check-no-rujukan` tanpa rekod; Executive/Viewer masih boleh baca |
+| `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 9 bacaan ikut ID (termasuk `/pindaan/risiko/:id`) untuk risiko syarikat lain -> `403`, data kekal; laporan penuh syarikat lain `403`; `/laporan/analitik` hanya syarikat sendiri; log aktiviti hanya syarikat sendiri; `check-no-rujukan` tanpa rekod; Executive/Viewer masih boleh baca |
 | `13-pengurusan-pengguna.spec.mjs` | Kitaran hayat akaun: kata laluan sementara dijana + wajib tukar pada log masuk pertama (backend `403 PERLU_TUKAR_KATALALUAN`), polisi kata laluan, kunci selepas 5 gagal (`423`), reset pentadbir membuka kunci & mencabut sesi, nyahaktif/aktifkan, perlindungan akaun sendiri, `pengguna:urus` sahaja; UI log masuk → `/tukar-katalaluan` → papan pemuka |
 | `14-tetapan-sistem.spec.mjs` | Tetapan Sistem (`tetapan:urus` Admin sahaja): kategori risiko tambah/duplikasi/tukar nama dikaskad ke risiko/nyahaktif (dashboard masih kira); syarikat tambah/sahkan warna/nyahaktif disekat jika ada pengguna aktif; bahagian tukar nama dikaskad & tidak aktif disembunyi. Log aktiviti berhalaman, tapisan, jenis, eksport CSV; Staff hanya syarikat sendiri |
 | `15-ui-aliran-risiko.spec.mjs` | UI halaman butiran `/risiko/:id`: stepper & tindakan seterusnya; penilaian → rawatan → log pemantauan disunting dalam tab (tiada modal bersarang), pelan tindakan tersimpan; pinda pengenalpastian/penilaian kekalkan syarikat & punca; Staff tiada pinda & medan log terhad; telefon 390px tanpa skrol mendatar; Senarai Risiko membuka halaman butiran |
 | `16-laporan-analitik.spec.mjs` | Dashboard analitik Laporan: tahap risiko pada akhir separuh tahun (log terkini / penilaian awal), tapisan kategori/syarikat/julat, paparan jadual, skrin penuh, tab Jana Laporan PDF dengan lencana tahap |
-| `17-ui-aliran-penuh.spec.mjs` | Aliran pengguna penuh melalui UI: Staff log masuk & daftar risiko dari borang (terus ke halaman risiko, syarikat sendiri); Executive lulus/tolak dari Senarai Tugasan (sebab tolak wajib); penilaian; Staff mohon pindaan dari tab Penilaian (banner menunggu, permohonan kedua `409`); Executive lulus → Staff klik notifikasi ke tab Penilaian; Admin tolak → Staff nampak sebab; Executive mohon dari halaman Pindaan & pinda terus di butiran (direkodkan, `status_risiko` dikemas kini) |
+| `17-ui-aliran-penuh.spec.mjs` | Aliran pengguna penuh melalui UI: Staff log masuk & daftar risiko dari borang (terus ke halaman risiko, syarikat sendiri); Executive lulus/tolak dari Senarai Tugasan (sebab tolak wajib); penilaian; Staff mohon pindaan dari tab Penilaian (banner menunggu, permohonan kedua `409`); Executive lulus → Staff klik notifikasi ke tab Penilaian; Admin tolak → Staff nampak sebab; Executive mohon dari halaman Pindaan (dialog pilih risiko → borang bersatu) & pinda terus di butiran (direkodkan, `status_risiko` dikemas kini); no. rujukan `PIN-YYYY-NNNN`; tab Pindaan (sejarah & sebab ditolak); halaman Pindaan tab Sejarah; jalur aliran Penilaian & Rawatan / Pemantauan |
 
 ## Prasyarat
 
@@ -51,7 +51,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **94/94 ujian lulus**.
+- Suite semasa: **98/98 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

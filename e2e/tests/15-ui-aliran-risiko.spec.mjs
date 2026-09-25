@@ -172,12 +172,13 @@ test("Executive: sunting pengenalpastian & pinda penilaian menyimpan syarikat as
 
   await page.getByRole("tab", { name: /Penilaian/ }).click();
   await page.getByRole("button", { name: "Pinda", exact: true }).click();
-  await page.getByLabel("Skor Impak *").selectOption("3");
+  await expect(page).toHaveURL(/tab=pindaan&sunting=1/);
+  await page.getByLabel("Skor Impak", { exact: true }).selectOption("3");
   await page.getByRole("button", { name: "Simpan Pindaan" }).click();
   await expect(page.getByText("Sila nyatakan justifikasi pindaan.")).toBeVisible();
   await page.getByLabel("Justifikasi Pindaan *").fill(`${TANDA} impak disemak semula`);
   await page.getByRole("button", { name: "Simpan Pindaan" }).click();
-  await expect(page.getByText("Penilaian risiko dipinda.")).toBeVisible();
+  await expect(page.getByText("Pindaan disimpan dan berkuat kuasa.")).toBeVisible();
 
   // Pinda terus oleh pelulus tetap direkodkan sebagai permohonan diluluskan
   const p = await satu(

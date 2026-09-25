@@ -99,7 +99,12 @@ export const senaraiRisikoUntukPindaan = async (req, res) => {
     // =================================================================
     // =================================================================
     const params = [];
-    let whereClause = ["r.skor_risiko IS NOT NULL"]; // Syarat baharu
+    // Hanya risiko aktif yang diluluskan & sudah dinilai boleh dipinda
+    let whereClause = [
+      "r.skor_risiko IS NOT NULL",
+      "r.is_deleted = false",
+      "COALESCE(r.status_kelulusan, 'Diluluskan') = 'Diluluskan'",
+    ];
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       params.push(user.syarikat_id);
@@ -318,14 +323,27 @@ export const mohonPindaan = async (req, res) => {
       }
     } // --- Tamat Lulus Auto Admin ---
 
-    // 3. Simpan rekod permohonan (semua pengguna)
+    // 3. No. rujukan PIN-<tahun>-<0001>: dijana dalam transaksi yang sama di
+    // bawah kunci advisori supaya permohonan serentak tidak berkongsi nombor.
+    // MAX (termasuk rekod soft-delete) memastikan nombor tidak digunakan semula.
+    const tahunSemasa = new Date().getFullYear();
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('no_rujukan_pindaan'))");
+    const { rows: jujukan } = await client.query(
+      `SELECT COALESCE(MAX(CAST(split_part(no_rujukan_pindaan, '-', 3) AS INTEGER)), 0) + 1 AS bil
+         FROM permohonan_pindaan
+        WHERE no_rujukan_pindaan LIKE $1`,
+      [`PIN-${tahunSemasa}-%`]
+    );
+    const noRujukanPindaan = `PIN-${tahunSemasa}-${String(jujukan[0].bil).padStart(4, "0")}`;
+
+    // 4. Simpan rekod permohonan (semua pengguna)
     const insertQuery = `INSERT INTO permohonan_pindaan (
         risiko_id, pengguna_id_pemohon, status_permohonan,
         data_sebelum, data_selepas,
         justifikasi_penilaian, justifikasi_keberkesanan,
         pengguna_id_pelulus, tarikh_diproses, created_at,
-        sebab_ditolak
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NULL) RETURNING *;
+        sebab_ditolak, no_rujukan_pindaan
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NULL, $10) RETURNING *;
     `;
     const newPermohonan = await client.query(insertQuery, [
       risk_id,
@@ -337,22 +355,10 @@ export const mohonPindaan = async (req, res) => {
       keberkesanan || null,
       pengguna_id_pelulus,
       tarikh_diproses, // pengguna_id_pelulus adalah INTEGER Admin jika auto-lulus
+      noRujukanPindaan,
     ]);
 
     await client.query("COMMIT");
-
-    const { rows: countRows } = await pool.query(
-      `SELECT COUNT(*) as cnt FROM permohonan_pindaan WHERE EXTRACT(YEAR FROM created_at) = $1 AND is_deleted = false`,
-      [new Date().getFullYear()]
-    );
-    const seqNum = parseInt(countRows[0].cnt) + 1;
-    const noRujukanPindaan = `PIN-${String(seqNum).padStart(3, "0")}/${new Date().getFullYear()}`;
-    await pool.query(
-      `UPDATE permohonan_pindaan SET no_rujukan_pindaan = $1 WHERE pindaan_id = $2`,
-      [noRujukanPindaan, newPermohonan.rows[0].pindaan_id]
-    );
-
-    newPermohonan.rows[0].no_rujukan_pindaan = noRujukanPindaan;
 
     try {
       if (!lulusTerus) {
@@ -366,7 +372,7 @@ export const mohonPindaan = async (req, res) => {
           );
           const noRujukan = risikoRow[0]?.no_rujukan || `ID ${risk_id}`;
           const tajuk = "Permohonan Pindaan Baru";
-          const mesej = `${req.user.nama_penuh} telah memohon pindaan untuk risiko ${noRujukan}.`;
+          const mesej = `${req.user.nama_penuh} telah memohon pindaan ${noRujukanPindaan} untuk risiko ${noRujukan}.`;
           await hantarNotifikasiBulk(
             pelulusIds,
             tajuk,
@@ -415,6 +421,32 @@ export const mohonPindaan = async (req, res) => {
  * ENDPOINT: /api/pindaan/stats
  * -------------------------------------------------------
  */
+/**
+ * GET /api/pindaan/risiko/:risk_id — sejarah semua permohonan pindaan bagi satu
+ * risiko. Dibuka kepada pemegang risiko:lihat (termasuk Staff) kerana ia hanya
+ * merangkumi risiko yang sudah boleh mereka lihat (hadSyarikat di route).
+ */
+export const sejarahPindaanRisiko = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT p.pindaan_id, p.no_rujukan_pindaan, p.status_permohonan, p.data_sebelum,
+              p.data_selepas, p.justifikasi_penilaian, p.justifikasi_keberkesanan,
+              p.sebab_ditolak, p.created_at, p.tarikh_diproses,
+              u.nama_penuh AS nama_pemohon, up.nama_penuh AS nama_pelulus
+         FROM permohonan_pindaan p
+         LEFT JOIN pengguna u ON u.pengguna_id = p.pengguna_id_pemohon
+         LEFT JOIN pengguna up ON up.pengguna_id = p.pengguna_id_pelulus
+        WHERE p.risiko_id = $1 AND p.is_deleted = false
+        ORDER BY p.created_at DESC, p.pindaan_id DESC`,
+      [req.params.risk_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Ralat GET /pindaan/risiko/:risk_id:", err);
+    res.status(500).json({ error: "Gagal memuatkan sejarah pindaan." });
+  }
+};
+
 export const statistikPindaan = async (req, res) => {
   try {
     const query = `
@@ -477,6 +509,7 @@ export const senaraiPindaan = async (req, res) => {
         r.tahun AS tahun_daftar,
         r.separuh_tahun AS separuh_tahun_daftar,
         u.nama_penuh AS nama_pemohon,
+        up.nama_penuh AS nama_pelulus,
         s.nama_syarikat,
         s.singkatan AS singkatan_syarikat,
         lt.tahun_pemantauan,
@@ -484,6 +517,7 @@ export const senaraiPindaan = async (req, res) => {
       FROM permohonan_pindaan p
       JOIN "risiko" r ON p.risiko_id = r.risiko_id
       JOIN pengguna u ON p.pengguna_id_pemohon = u.pengguna_id -- Pastikan pengguna_id_pemohon adalah INTEGER
+      LEFT JOIN pengguna up ON p.pengguna_id_pelulus = up.pengguna_id
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN LogTerkini lt ON p.risiko_id = lt.risiko_id AND lt.rn = 1
       WHERE 1=1 AND p.is_deleted = false
@@ -494,7 +528,10 @@ export const senaraiPindaan = async (req, res) => {
 
     /* (Executive kini boleh lihat semua) */
 
-    if (status && status !== "Semua") {
+    // "Sejarah" = permohonan yang telah diproses (lulus atau tolak)
+    if (status === "Sejarah") {
+      query += ` AND p.status_permohonan IN ('Diluluskan', 'Ditolak')`;
+    } else if (status && status !== "Semua") {
       query += ` AND p.status_permohonan = $${paramIndex++}`;
       params.push(status);
     }
@@ -667,7 +704,7 @@ export const luluskanPindaan = async (req, res) => {
       );
       const noRujukan = risikoRow[0]?.no_rujukan || `ID ${risiko_id}`;
       const tajuk = "Pindaan Diluluskan";
-      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah diluluskan oleh ${req.user.nama_penuh}.`;
+      const mesej = `Pindaan ${permohonan.no_rujukan_pindaan || "anda"} untuk risiko ${noRujukan} telah diluluskan oleh ${req.user.nama_penuh}.`;
       await hantarNotifikasi(
         pengguna_id_pemohon,
         tajuk,
@@ -747,7 +784,7 @@ export const tolakPindaan = async (req, res) => {
       );
       const noRujukan = risikoRow[0]?.no_rujukan || `ID ${permohonan.risiko_id}`;
       const tajuk = "Pindaan Ditolak";
-      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah ditolak.${komen_pelulus ? ` Sebab: ${komen_pelulus}` : ""}`;
+      const mesej = `Pindaan ${permohonan.no_rujukan_pindaan || "anda"} untuk risiko ${noRujukan} telah ditolak.${komen_pelulus ? ` Sebab: ${komen_pelulus}` : ""}`;
       await hantarNotifikasi(
         permohonan.pengguna_id_pemohon,
         tajuk,

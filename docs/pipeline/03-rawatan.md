@@ -48,12 +48,12 @@ sequenceDiagram
 
 | Halaman/Komponen | API |
 |------------------|-----|
-| `RawatanRisiko.jsx` | GET `/syarikat`, GET `/rawatan/with-status` |
+| `RawatanRisiko.jsx` | GET `/rawatan/with-status` (risiko aktif & diluluskan sahaja; status log terkini) |
+| `components/risiko/AliranKerjaRisiko.jsx` | GET `/pemantauan-risiko` — jalur aliran 1 Perlu Dinilai → 2 Perlu Rawatan → 3 Dalam Pemantauan → 4 Selesai (kiraan ikut `peringkatAliran()` dalam `components/risiko/data.js`) |
 | `components/risiko/BorangRawatan.jsx` | GET `/rawatan/:risiko_id`; tiada rekod → POST `/rawatan`, ada → PUT `/rawatan/:rawatan_id` |
 | `components/risiko/BorangPenilaian.jsx` | PUT `/rawatan/penilaian/:risiko_id` (penilaian pertama; set status pemantauan sesi "Sedang Dilaksanakan") |
 
-Butang tindakan di `RawatanRisiko.jsx` membuka `/risiko/:id?tab=penilaian|rawatan&sunting=1`.
-| `PemantauanRisiko.jsx` | GET `/rawatan/:risiko_id` (paparan rawatan dalam pemantauan) |
+`RawatanRisiko.jsx` (Penilaian & Rawatan) = langkah 1 & 2 jalur aliran (`?tab=penilaian|rawatan`); butang "Nilai"/"Rawat" membuka `/risiko/:id?tab=penilaian|rawatan&sunting=1`. Jadual padat pada desktop, kad pada telefon, 20 rekod setiap halaman.
 
 ## Jenis Rawatan
 

@@ -8,6 +8,7 @@ import {
   senaraiPindaan,
   luluskanPindaan,
   tolakPindaan,
+  sejarahPindaanRisiko,
 } from "../controllers/pindaanController.js";
 
 const router = express.Router();
@@ -25,6 +26,14 @@ router.post(
   authorizeKebenaran("pindaan:urus"),
   hadSyarikat(["risiko", (req) => req.params.risk_id]),
   mohonPindaan
+);
+// Sejarah pindaan satu risiko (paparan butiran); ikut skop syarikat
+router.get(
+  "/risiko/:risk_id",
+  verifyToken,
+  authorizeKebenaran("risiko:lihat"),
+  hadSyarikat(["risiko", (req) => req.params.risk_id]),
+  sejarahPindaanRisiko
 );
 router.get("/stats", verifyToken, authorizeKebenaran("pindaan:lulus"), statistikPindaan);
 router.get("/", verifyToken, authorizeKebenaran("pindaan:lihat"), senaraiPindaan);

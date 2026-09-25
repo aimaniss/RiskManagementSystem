@@ -1,5 +1,6 @@
 // Logik data (tanpa JSX) untuk borang & halaman butiran risiko
 import { hasKebenaran } from "@/utils/auth";
+import { formatSeparuhTahun } from "@/utils/formatters";
 
 export const bersihkanSenarai = (senarai) =>
   (senarai || []).map((s) => String(s ?? "").trim()).filter(Boolean);
@@ -140,3 +141,35 @@ export const JENIS_KAWALAN = [
 
 // Status pemantauan: logik dashboard & aliran bergantung pada nilai ini
 export const STATUS_PEMANTAUAN = ["Buka", "Sedang Dilaksanakan", "Pemantauan", "Selesai", "Tutup"];
+
+/** Saiz halaman senarai kerja risiko */
+export const SAIZ_HALAMAN = 20;
+
+/** Pilihan "2026 · Kedua" daripada senarai rekod, terkini dahulu. Nilai: "2026-2". */
+export function pilihanSesi(rekod, ambil) {
+  const set = new Map();
+  for (const r of rekod) {
+    const [tahun, separuh] = ambil(r);
+    if (!tahun) continue;
+    const kunci = `${tahun}-${separuh || ""}`;
+    set.set(kunci, { kunci, tahun: Number(tahun), separuh: Number(separuh) || 0 });
+  }
+  return [...set.values()]
+    .sort((a, b) => b.tahun - a.tahun || b.separuh - a.separuh)
+    .map((s) => ({
+      nilai: s.kunci,
+      label: s.separuh ? `${s.tahun} · ${formatSeparuhTahun(s.separuh)}` : String(s.tahun),
+    }));
+}
+
+/**
+ * Peringkat aliran kerja bagi risiko yang diluluskan (bentuk rekod
+ * GET /pemantauan-risiko): penilaian → rawatan → pemantauan → selesai.
+ * Risiko yang ditutup dikira selesai walaupun peringkat awal tidak lengkap.
+ */
+export const peringkatAliran = (r) => {
+  if (["Selesai", "Tutup"].includes(r.status_pemantauan_terkini)) return "selesai";
+  if (!(Number(r.skor_kebarangkalian_awal) > 0 && Number(r.skor_impak_awal) > 0)) return "penilaian";
+  if (!r.ada_rawatan) return "rawatan";
+  return "pemantauan";
+};

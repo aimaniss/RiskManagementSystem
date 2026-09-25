@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BookOpen,
   ClipboardCheck,
+  FilePenLine,
   FileSearch,
   History,
   Pencil,
@@ -26,6 +27,7 @@ import { usePanduan } from "@/hooks/usePanduan";
 import { cn } from "@/lib/utils";
 import BorangPengenalpastian from "@/components/risiko/BorangPengenalpastian";
 import BorangPenilaian from "@/components/risiko/BorangPenilaian";
+import BorangPindaan from "@/components/risiko/BorangPindaan";
 import BorangRawatan from "@/components/risiko/BorangRawatan";
 import StepperAliran from "@/components/risiko/StepperAliran";
 import {
@@ -38,12 +40,14 @@ import {
 } from "@/components/risiko/data";
 import { LencanaTahap, Medan, SenaraiCip } from "@/components/risiko/umum";
 import TabPemantauan from "./TabPemantauan";
+import TabPindaan from "./TabPindaan";
 
 const TAB = [
   { id: "ringkasan", label: "Ringkasan", icon: FileSearch },
   { id: "penilaian", label: "Penilaian", icon: ClipboardCheck },
   { id: "rawatan", label: "Rawatan", icon: Stethoscope },
   { id: "pemantauan", label: "Pemantauan", icon: Activity },
+  { id: "pindaan", label: "Pindaan", icon: FilePenLine },
   { id: "sejarah", label: "Sejarah", icon: History },
 ];
 
@@ -86,6 +90,7 @@ export default function ButiranRisiko() {
 
   const [risiko, setRisiko] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [pindaanSemua, setPindaanSemua] = useState(null);
   const [sejarah, setSejarah] = useState(null);
   const [ralatMuat, setRalatMuat] = useState(null);
   // Mesej daripada halaman sebelum (cth. selepas daftar risiko)
@@ -102,12 +107,14 @@ export default function ButiranRisiko() {
 
   const muat = useCallback(async () => {
     try {
-      const [{ data: r }, { data: l }] = await Promise.all([
+      const [{ data: r }, { data: l }, { data: p }] = await Promise.all([
         api.get(`/risiko/${id}`),
         api.get(`/pemantauan-risiko/${id}/sejarah`),
+        api.get(`/pindaan/risiko/${id}`),
       ]);
       setRisiko(r);
       setLogs(susunLog(Array.isArray(l) ? l : []));
+      setPindaanSemua(Array.isArray(p) ? p : []);
       setRalatMuat(null);
     } catch (err) {
       setRalatMuat(
@@ -244,6 +251,9 @@ export default function ButiranRisiko() {
             {t.id === "pemantauan" && logs.length > 0 && (
               <span className="rounded-full bg-muted px-1.5 text-[11px]">{logs.length}</span>
             )}
+            {t.id === "pindaan" && pindaanSemua?.length > 0 && (
+              <span className="rounded-full bg-muted px-1.5 text-[11px]">{pindaanSemua.length}</span>
+            )}
           </button>
         ))}
       </div>
@@ -296,7 +306,7 @@ export default function ButiranRisiko() {
           tindakan={
             bolehPinda &&
             !sunting && (
-              <ButangSunting onClick={() => pergi("penilaian", true)}>
+              <ButangSunting onClick={() => pergi("pindaan", true)}>
                 {penuh ? "Pinda" : "Mohon Pindaan"}
               </ButangSunting>
             )
@@ -318,7 +328,7 @@ export default function ButiranRisiko() {
               description={pindaan.sebab_ditolak ? `Sebab: ${pindaan.sebab_ditolak}` : undefined}
             />
           )}
-          {sunting && diluluskan && (dinilai ? bolehPinda : hasKebenaran("risiko:nilai", "rawatan:urus")) ? (
+          {sunting && diluluskan && !dinilai && hasKebenaran("risiko:nilai", "rawatan:urus") ? (
             <BorangPenilaian risiko={risiko} onSelesai={selepasSimpan} onBatal={() => pergi("penilaian")} />
           ) : dinilai ? (
             <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
@@ -393,6 +403,39 @@ export default function ButiranRisiko() {
             bukaTambah={sunting && diluluskan && dirawat && hasKebenaran("pemantauan:urus")}
             onBerubah={selepasSimpan}
           />
+        </Kad>
+      )}
+
+      {tab === "pindaan" && (
+        <Kad
+          tajuk={sunting && bolehPinda ? (penuh ? "Pinda Skor Risiko" : "Mohon Pindaan") : "Sejarah Pindaan"}
+          tindakan={
+            bolehPinda &&
+            !sunting && (
+              <ButangSunting onClick={() => pergi("pindaan", true)}>
+                {penuh ? "Pinda" : "Mohon Pindaan"}
+              </ButangSunting>
+            )
+          }
+        >
+          {pindaanMenunggu && (
+            <AlertBanner
+              variant="warning"
+              className="mb-4"
+              title={`Permohonan pindaan ${pindaan.no_rujukan_pindaan || ""} sedang menunggu kelulusan`}
+              description="Permohonan baharu boleh dibuat selepas permohonan ini diproses."
+            />
+          )}
+          {sunting && bolehPinda ? (
+            <BorangPindaan
+              risiko={risiko}
+              logTerkini={logs[0]}
+              onSelesai={selepasSimpan}
+              onBatal={() => pergi("pindaan")}
+            />
+          ) : (
+            <TabPindaan senarai={pindaanSemua} />
+          )}
         </Kad>
       )}
 

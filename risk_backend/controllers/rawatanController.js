@@ -79,15 +79,21 @@ SELECT
 FROM risiko r
 LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id AND rr.is_deleted = false
 LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
-LEFT JOIN LogPemantauan lp
-    ON lp.risiko_id = r.risiko_id
-    AND lp.tahun_pemantauan = r.tahun
-    AND lp.separuh_tahun_pemantauan = r.separuh_tahun`;
+LEFT JOIN LATERAL (
+    SELECT status_pemantauan FROM LogPemantauan
+     WHERE risiko_id = r.risiko_id AND is_deleted = false
+     ORDER BY tahun_pemantauan DESC, separuh_tahun_pemantauan DESC, tarikh_pemantauan DESC NULLS LAST
+     LIMIT 1
+) lp ON true
+WHERE r.is_deleted = false
+  AND COALESCE(r.status_kelulusan, 'Diluluskan') = 'Diluluskan'`;
 
+    // Penilaian & rawatan hanya bermula selepas risiko diluluskan; log terkini
+    // sahaja (LATERAL) supaya satu baris setiap risiko
     const params = [];
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE CAST(r.syarikat_id AS INTEGER) = $1`;
+      query += ` AND CAST(r.syarikat_id AS INTEGER) = $1`;
       params.push(user.syarikat_id);
     }
 

@@ -16,7 +16,7 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
-| Ujian E2E Playwright | ✅ 94/94 lulus (DB kosong + seed, dan salinan DB sebenar; juga dalam CI) |
+| Ujian E2E Playwright | ✅ 98/98 lulus (DB kosong + seed, dan salinan DB sebenar; juga dalam CI) |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
 | Revamp UI (penilaian/rawatan/pemantauan) | ✅ Selesai — halaman `/risiko/:id` (lih. `docs/pipeline/11-PLAN-ui-revamp.md` §8) |
@@ -171,7 +171,7 @@ Keutamaan tinggi (aliran rosak / hilang):
 
 Konsistensi & kejelasan:
 - [x] "Pinda" di halaman butiran kini melalui `POST /pindaan` (justifikasi wajib, direkodkan, lulus terus bagi pelulus); pindaan diluluskan mengemas kini `status_risiko`
-- [ ] Modal Senarai Tugasan & Pindaan masih gaya lama (pengepala biru, CSS sendiri) — kini papar nama syarikat penuh, pautan "Lihat butiran risiko", `role="dialog"` & Escape
+- [x] Modal lama Senarai Tugasan & Pindaan diganti `PanelKelulusan` (drawer) + satu `BorangPindaan` di tab Pindaan; 15 fail modal/CSS lama dibuang
 - [x] Borang pindaan: blok Keberkesanan hanya bila log terkini ada skor
 - [x] Borang Daftar: tanda `*`, label dikaitkan, contoh placeholder
 - [x] Log masuk: placeholder "contoh: UKMH001", label dikaitkan, `autoComplete`
@@ -180,10 +180,11 @@ Konsistensi & kejelasan:
 
 Aksesibiliti & telefon:
 - [x] Label dikaitkan: Daftar Risiko, Log Masuk, borang penilaian/pindaan
-- [ ] Label halaman Pindaan lama (`PindaanFormModal`) masih tanpa `htmlFor`
+- [x] Borang pindaan lama dibuang; `BorangPindaan` berlabel penuh
 - [x] Loceng notifikasi ialah `<button>` dengan `aria-label` & `aria-expanded`
 - [x] Telefon: label kad statistik dibalut (tidak dipotong)
-- [ ] Telefon: jadual Senarai Risiko/Tugasan perlu skrol mendatar — guna paparan kad
+- [x] Telefon: Penilaian & Rawatan dan Pemantauan guna paparan kad
+- [ ] Telefon: jadual Senarai Risiko & Senarai Tugasan masih perlu skrol mendatar
 
 ---
 
@@ -191,6 +192,7 @@ Aksesibiliti & telefon:
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
+| 2026-09-26 | Pindaan & aliran | **Sejarah pindaan**: tab Pindaan di `/risiko/:id` (`GET /pindaan/risiko/:id`, +spec 12) & halaman Pindaan bertab "Menunggu Kelulusan / Sejarah" (`?status=Sejarah`, lajur diproses oleh/tarikh). **No. rujukan `PIN-YYYY-NNNN`** (migrasi 029: nombor rekod lama + indeks unik; dijana dalam transaksi dengan kunci advisori; dalam notifikasi). **Revamp UI pindaan**: satu `BorangPindaan` (penilaian + keberkesanan, justifikasi, ringkasan) di tab Pindaan; dialog `PilihRisikoPindaan`; `PanelKelulusan` (drawer) untuk Senarai Tugasan & Pindaan; 15 fail modal lama dibuang. **Penilaian & Rawatan / Pemantauan**: jalur aliran bersama `AliranKerjaRisiko` (1 Perlu Dinilai → 2 Perlu Rawatan → 3 Dalam Pemantauan → 4 Selesai, berkiraan & boleh diklik), jadual padat + kad telefon + paging; Pemantauan tahap awal → terkini + trend. **Drawer seragam** (`SheetHeader`/`SheetBody`/`SheetFooter`, penuh lebar telefon, bar simpan melekat). Pepijat: `/rawatan/with-status`, `/pemantauan-risiko` & `/pindaan/risks-for-amendment` tidak menapis risiko dipadam/belum lulus. `UKMH_RMS` dimigrasi ke 029 (backup `UKMH_RMS_backup_20260926b`) — E2E **98/98** pada DB kosong & salinan DB sebenar |
 | 2026-09-26 | UX | **Pembaikan UX dari walkthrough**: Staff/Ketua Subsidiari mohon pindaan dari tab Penilaian (butang "Mohon Pindaan"); "Pinda" oleh pelulus kini melalui `POST /pindaan` (justifikasi wajib, direkodkan); `GET /risiko/:id` + `pindaan_terkini` (banner menunggu/ditolak); permohonan kedua semasa menunggu → `409`; pindaan diluluskan mengemas kini `status_risiko`; `GET /notifikasi` + `risiko_id`, klik notifikasi membuka rekod, `**tebal**` lama dipapar, "diluluskan oleh <nama>"; daftar risiko terus ke `/risiko/:id` (respons + `no_rujukan`); modal Senarai Tugasan: "Sebab Penolakan", nama syarikat, pautan butiran, `role=dialog`/Escape; label & `*` borang Daftar/Log Masuk; loceng `<button>`; pengepala nama pengguna; menu Laporan untuk Executive; kad statistik telefon dibalut. `UKMH_RMS` dimigrasi ke 028 (backup `UKMH_RMS_backup_20260926`). Spec 17 → 9 ujian; spec 02/13/15 dikemas kini — E2E **94/94** pada DB kosong & salinan DB sebenar |
 | 2026-09-26 | UI E2E | Branch cloud `claude/boleh-edit-terus-ke-vrrcbj` di-merge (fast-forward); migrasi 025–027 diuji pada salinan `UKMH_RMS` (data kekal). **Spec 17** `17-ui-aliran-penuh` (7 ujian): Staff log masuk & daftar dari borang → Executive lulus/tolak dari Senarai Tugasan → penilaian → pindaan Staff lulus (Executive) / tolak (Admin) → Executive mohon dari halaman Pindaan (lulus terus). Pepijat dibetulkan: borang Daftar Risiko menghantar `syarikat` bukan `syarikatId` (daftar melalui UI gagal `403` untuk Staff sejak refactor controller); migration 028 `risiko.status_risiko` boleh NULL (pemasangan baharu gagal `500` semasa daftar). To-Do UX ditambah — E2E **92/92** pada DB kosong & salinan DB sebenar |
 | 2026-09-25 | Laporan | **Dashboard analitik Laporan**: tab Analitik (lalai) + Jana Laporan PDF; `GET /api/laporan/analitik` (skop syarikat untuk Staff/Ketua Subsidiari, +spec 12); carta perbandingan separuh tahun, syarikat, risiko baharu ikut syarikat, keberkesanan & kategori dengan petunjuk warna, tooltip, paparan jadual, tapisan (syarikat/kategori/julat separuh tahun) dan skrin penuh; palet syarikat disahkan (CVD). Jadual Jana Laporan dikemaskan (lencana tahap berlabel, kategori, butang "Jana PDF"). PDF: warna tahap risiko dikembalikan (satu-satunya warna, berlabel) + jadual petunjuk; setiap log jadi satu jadual 7 lajur sejajar, pindaan sebagai baris jadual. `PageHeader` betul dalam mod gelap. Spec 16 — E2E **85/85** |
@@ -223,7 +225,7 @@ Aksesibiliti & telefon:
 
 ## Rekod / Nota
 
-- **Migrasi sedia**: 001–028 (28 migrasi; 025 = status akaun pengguna, 026 = `tarikh_pemantauan` boleh NULL, 027 = Tetapan Sistem, 028 = `status_risiko` boleh NULL — jalankan `npm run migrate` kemudian `POST /api/roles/flush-cache`).
+- **Migrasi sedia**: 001–029 (29 migrasi; 029 = no. rujukan pindaan `PIN-YYYY-NNNN`; 025 = status akaun pengguna, 026 = `tarikh_pemantauan` boleh NULL, 027 = Tetapan Sistem, 028 = `status_risiko` boleh NULL — jalankan `npm run migrate` kemudian `POST /api/roles/flush-cache`).
 - Jadual `is_deleted` + `deleted_at`: 11 jadual (migration 015) + `pengguna`,
   `notifikasi` (migration 019). Semua query pembacaan menapis `is_deleted = false`.
 - `kebenaran` / `peranan_kebenaran` (migration 014 seed dalam 020/021) kini
@@ -240,7 +242,7 @@ Aksesibiliti & telefon:
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **94/94 lulus** pada 2026-09-26 (spec 01–17).
+- Suite E2E Playwright: **98/98 lulus** pada 2026-09-26 (spec 01–17).
 - `npm audit`: **0 kerentanan** di backend & frontend (2026-09-25).
 - `npm run build` frontend lulus (termasuk Linux, selepas betulkan import
   huruf besar/kecil); `npm run lint` 0 error, 9 warning sedia ada.

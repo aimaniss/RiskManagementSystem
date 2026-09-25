@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { Search, CheckCircle, XCircle, ClipboardList, Clock } from "lucide-react";
 import api from "../../api/api";
 import { formatSeparuhTahun } from "../../utils/formatters";
-import SenaraiTugasanDetailModal from "./SenaraiTugasanDetailModal";
+import PanelKelulusan from "@/components/risiko/PanelKelulusan";
+import Toast from "@/components/ui/toast";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmptyState from "@/components/ui/empty-state";
 import PageHeader from "@/components/ui/page-header";
@@ -19,7 +20,7 @@ function SenaraiTugasan() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -38,7 +39,7 @@ function SenaraiTugasan() {
         _id: r.id,
         _rujukan: r.no_rujukan,
         _description: r.risiko,
-        _syarikat: r.singkatan_syarikat || "\u2014",
+        _syarikat: r.syarikat || r.singkatan_syarikat || "\u2014",
         _sesi: `${r.tahun || "\u2014"} / ${formatSeparuhTahun(r.separuh_tahun)}`,
         _date: r.created_at,
         _didaftarkanOleh: r.didaftarkan_oleh || "\u2014",
@@ -48,9 +49,9 @@ function SenaraiTugasan() {
       const amendmentItems = amendmentsRes.data.map((a) => ({
         _type: "pindaan",
         _id: a.pindaan_id,
-        _rujukan: a.no_rujukan_pindaan || `Pindaan/${a.pindaan_id}`,
-        _description: `Pindaan untuk ${a.no_rujukan}`,
-        _syarikat: a.singkatan_syarikat || "\u2014",
+        _rujukan: a.no_rujukan_pindaan || `#${a.pindaan_id}`,
+        _description: `${a.no_rujukan} · ${a.risiko || ""}`,
+        _syarikat: a.nama_syarikat || a.singkatan_syarikat || "\u2014",
         _sesi: "\u2014",
         _date: a.created_at,
         _didaftarkanOleh: a.nama_pemohon || "\u2014",
@@ -99,19 +100,13 @@ function SenaraiTugasan() {
     });
   };
 
-  const handleOpenDetail = (item) => {
-    setSelectedItem(item);
-    setIsDetailOpen(true);
-  };
+  const handleOpenDetail = (item) => setSelectedItem(item);
+  const handleCloseDetail = () => setSelectedItem(null);
 
-  const handleCloseDetail = () => {
-    setIsDetailOpen(false);
+  const handleActionComplete = (mesej) => {
     setSelectedItem(null);
-  };
-
-  const handleActionComplete = () => {
+    setToast({ variant: "success", title: mesej });
     fetchData();
-    handleCloseDetail();
   };
 
   const statCards = [
@@ -214,12 +209,16 @@ function SenaraiTugasan() {
         </Table>
       </div>
 
-      <SenaraiTugasanDetailModal
-        isOpen={isDetailOpen}
-        item={selectedItem}
-        onClose={handleCloseDetail}
-        onActionComplete={handleActionComplete}
+      <PanelKelulusan
+        item={selectedItem && { jenis: selectedItem._type, data: selectedItem._raw }}
+        onTutup={handleCloseDetail}
+        onSelesai={handleActionComplete}
       />
+      {toast && (
+        <div className="fixed right-4 top-[64px] z-50 w-[320px]">
+          <Toast variant={toast.variant} title={toast.title} onClose={() => setToast(null)} />
+        </div>
+      )}
     </div>
   );
 }

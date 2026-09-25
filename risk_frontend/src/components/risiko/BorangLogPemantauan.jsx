@@ -145,7 +145,7 @@ export default function BorangLogPemantauan({ risikoId, log, terhad, onSelesai, 
   };
 
   return (
-    <form onSubmit={simpan} className="grid gap-4">
+    <form onSubmit={simpan} className="flex flex-1 flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div className="grid gap-1.5">
           <Label htmlFor="tahun_pemantauan">Tahun *</Label>
@@ -271,7 +271,7 @@ export default function BorangLogPemantauan({ risikoId, log, terhad, onSelesai, 
         </div>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="sticky bottom-0 -mx-5 mt-auto flex justify-end gap-2 border-t bg-background px-5 py-3 sm:-mx-6 sm:px-6">
         <Button type="button" variant="outline" onClick={onBatal} disabled={menyimpan}>
           Batal
         </Button>

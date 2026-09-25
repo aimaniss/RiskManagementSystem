@@ -66,6 +66,11 @@ export const senaraiPemantauan = async (req, res) => {
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
         r.justifikasi_pindaan_penilaian,
+        r.skor_kebarangkalian AS skor_kebarangkalian_awal,
+        r.skor_impak AS skor_impak_awal,
+        EXISTS (
+          SELECT 1 FROM rawatan_risiko rr WHERE rr.risiko_id = r.risiko_id AND rr.is_deleted = false
+        ) AS ada_rawatan,
 
         COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
         COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
@@ -91,7 +96,9 @@ export const senaraiPemantauan = async (req, res) => {
     `;
 
     const params = [];
-    let whereClause = " WHERE r.is_deleted = false";
+    // Pemantauan hanya bermakna bagi risiko yang telah diluluskan
+    let whereClause =
+      " WHERE r.is_deleted = false AND COALESCE(r.status_kelulusan, 'Diluluskan') = 'Diluluskan'";
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       whereClause += ` AND CAST(r.syarikat_id AS INTEGER) = $1`;
       params.push(user.syarikat_id);

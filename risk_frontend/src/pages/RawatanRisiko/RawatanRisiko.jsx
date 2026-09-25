@@ -1,390 +1,302 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Stethoscope, Check, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ClipboardCheck, Stethoscope } from "lucide-react";
 import api from "../../api/api";
-import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmptyState from "@/components/ui/empty-state";
 import PageHeader from "@/components/ui/page-header";
+import AlertBanner from "@/components/ui/alert-banner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableRow,
-    TableHead,
-    TableCell,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
 } from "@/components/ui/table";
-import { getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
-import { formatSeparuhTahun } from "../../utils/formatters";
+import { hasKebenaran } from "@/utils/auth";
+import { formatSeparuhTahun } from "@/utils/formatters";
+import { LencanaTahap } from "@/components/risiko/umum";
+import { KotakCarian, Paging, SelRisiko } from "@/components/risiko/senarai";
+import AliranKerjaRisiko from "@/components/risiko/AliranKerjaRisiko";
+import { SAIZ_HALAMAN, peringkatAliran, pilihanSesi } from "@/components/risiko/data";
 
-const RISK_LEVEL_COLORS = {
-    "Rendah": "#22c55e",
-    "Sederhana": "#eab308",
-    "Tinggi": "#f97316",
-    "Sangat Tinggi": "#ef4444",
-    "Tiada Data": "#94a3b8",
+// Peringkat yang sama dengan jalur aliran (rekod /rawatan/with-status)
+const peringkat = (d) =>
+  peringkatAliran({
+    skor_kebarangkalian_awal: d.skor_kebarangkalian,
+    skor_impak_awal: d.skor_impak,
+    ada_rawatan: Boolean(d.rawatan_id),
+    status_pemantauan_terkini: d.status_pemantauan,
+  });
+
+const TAB = {
+  penilaian: {
+    label: "Perlu Dinilai",
+    huraian: "Risiko yang diluluskan tetapi belum mempunyai skor penilaian.",
+    tapis: (d) => peringkat(d) === "penilaian",
+    kosong: "Semua risiko yang diluluskan telah dinilai.",
+    ikon: ClipboardCheck,
+  },
+  rawatan: {
+    label: "Perlu Rawatan",
+    huraian: "Risiko yang telah dinilai tetapi belum mempunyai pelan rawatan.",
+    tapis: (d) => peringkat(d) === "rawatan",
+    kosong: "Tiada risiko yang telah dinilai menunggu rawatan.",
+    ikon: Stethoscope,
+  },
 };
-const riskBadgeColor = (label) => RISK_LEVEL_COLORS[label] || "#94a3b8";
 
-const STATUS_BADGE_VARIANTS = {
-    "Buka": "outline",
-    "Sedang Dilaksanakan": "default",
-    "Pemantauan": "warning",
-    "Selesai": "success",
-    "Tutup": "secondary",
-    "Tertunggak": "destructive",
-};
-const statusBadgeVariant = (status) => STATUS_BADGE_VARIANTS[status] || "secondary";
-
-function FlowStep({ step, label, count, active, onClick }) {
-    const completed = count === 0;
-
-    const circleCls = active
-        ? "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold bg-primary text-white shadow-sm"
-        : completed
-            ? "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold bg-success/10 text-success"
-            : "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold border border-primary/40 bg-primary/5 text-primary";
-
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="group flex flex-col items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-            <span className={circleCls}>
-                {completed ? <Check className="h-3.5 w-3.5" /> : step}
-            </span>
-            <span className={`text-sm font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
-                {label}
-            </span>
-            {completed ? (
-                <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">Selesai</span>
-            ) : (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">{count} menunggu</span>
-            )}
-        </button>
-    );
-}
-
+/**
+ * Senarai kerja penilaian & rawatan. Borang sebenar berada di tab halaman
+ * butiran risiko; halaman ini hanya menyusun apa yang perlu dibuat.
+ */
 function PenilaianDanRawatan() {
-    const [data, setData] = useState([]);
-    const [activeTab, setActiveTab] = useState('penilaian');
-    const [search, setSearch] = useState("");
-    const [tahunFilter, setTahunFilter] = useState("");
-    const [separuhFilter, setSeparuhFilter] = useState("");
-    const [syarikatFilter, setSyarikatFilter] = useState("");
-    const [kategoriFilter, setKategoriFilter] = useState("");
-    const [syarikatList, setSyarikatList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    
+  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [ralat, setRalat] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "rawatan" ? "rawatan" : "penilaian";
+  const setTab = (id) => setParams({ tab: id }, { replace: true });
+  const [carian, setCarian] = useState("");
+  const [syarikat, setSyarikat] = useState("");
+  const [sesi, setSesi] = useState("");
+  const [kategori, setKategori] = useState("");
+  const [halaman, setHalaman] = useState(1);
 
-    const navigate = useNavigate();
+  const bolehNilai = hasKebenaran("risiko:nilai", "rawatan:urus");
+  const bolehRawat = hasKebenaran("rawatan:urus");
 
+  useEffect(() => {
+    api
+      .get("/rawatan/with-status")
+      .then(({ data: d }) => setData(Array.isArray(d) ? d : []))
+      .catch((err) => setRalat(err.response?.data?.error || "Gagal memuatkan senarai risiko."))
+      .finally(() => setLoading(false));
+  }, []);
 
-    const getRiskData = (k,i) => getRiskMatrix(k, i);
+  const kiraan = useMemo(
+    () => ({
+      penilaian: data.filter(TAB.penilaian.tapis).length,
+      rawatan: data.filter(TAB.rawatan.tapis).length,
+    }),
+    [data]
+  );
 
-    const isDinilai = (d) => (d.skor_kebarangkalian > 0 && d.skor_impak > 0) || (d.skor_kebarangkalian !== null && d.skor_impak !== null);
-    const hasRawatan = (d) => d.plan_tindakan && Array.isArray(d.plan_tindakan) && d.plan_tindakan.filter(p => p && p.trim() !== "").length > 0;
-    
-    const fetchSyarikatList = async () => {
-        try {
-            const res = await api.get("/syarikat");
-            setSyarikatList(res.data);
-        } catch(err){ console.error("❌ Gagal fetch syarikat:",err); }
-    };
+  const senaraiSyarikat = useMemo(
+    () => [...new Set(data.map((d) => d.nama_syarikat).filter(Boolean))].sort(),
+    [data]
+  );
+  const senaraiKategori = useMemo(
+    () => [...new Set(data.map((d) => d.kategori).filter(Boolean))].sort(),
+    [data]
+  );
+  const senaraiSesi = useMemo(() => pilihanSesi(data, (d) => [d.tahun, d.separuh_tahun]), [data]);
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            
-            const res = await api.get("/rawatan/with-status");
-            
-            const dataWithScore = res.data.map(d=>{
-                const k = parseInt(d.skor_kebarangkalian)||0;
-                const i = parseInt(d.skor_impak)||0;
-                
-                const {label,color} = getRiskData(k, i);
-                
-                const planTindakan = d.plan_tindakan;
-                const kakitangan = d.kakitangan_bertanggungjawab;
-                
-                return {
-                    ...d, 
-                    tahap_risiko: label, 
-                    risk_color: color,
-                    plan_tindakan: Array.isArray(planTindakan) ? planTindakan : [planTindakan].filter(p => p),
-                    kakitangan_bertanggungjawab: Array.isArray(kakitangan) ? kakitangan : [kakitangan].filter(k => k),
-                    bahagian_unit: d.bahagian || d.unit || null,
-                    status_pemantauan: d.status_pemantauan || "Buka",
-                };
-            });
-            setData(dataWithScore);
-        } catch(err){ 
-            console.error("❌ Gagal fetch rawatan risiko:",err); 
-        }
-        finally{ setLoading(false); }
-    };
-
-    useEffect(()=>{ 
-        fetchSyarikatList(); 
-        fetchData(); 
-    }, []);
-
-    const risikoBelumDinilai = data.filter(d => !isDinilai(d)).length;
-    const risikoMemerlukanRawatan = data.filter(d => isDinilai(d) && !hasRawatan(d)).length;
-
-    const kategoriList = useMemo(() => {
-        return [...new Set(data.map(d => d.kategori).filter(k => k))].sort();
-    }, [data]);
-
-    // Borang dibuka dalam tab halaman butiran risiko (satu cara menyunting)
-    const handleAction = (item) => {
-        const tab = activeTab === 'penilaian' ? 'penilaian' : 'rawatan';
-        navigate(`/risiko/${item.risiko_id}?tab=${tab}&sunting=1`);
-    };
-
-    const filteredData = useMemo(()=>{
-        const tabFiltered = data.filter(d => {
-            const dinilai = isDinilai(d);
-            
-            if (activeTab === 'penilaian') {
-                return !dinilai;
-            } else {
-                return dinilai && !hasRawatan(d); 
-            }
-        });
-
-        return tabFiltered.filter(d => {
-            const matchSearch = !search || d.no_rujukan?.toLowerCase().includes(search.toLowerCase());
-            const matchSyarikat = !syarikatFilter || d.nama_syarikat === syarikatFilter;
-            const matchTahun = !tahunFilter || String(d.tahun) === tahunFilter;
-            const matchSeparuh = !separuhFilter || String(d.separuh_tahun) === separuhFilter;
-            const matchKategori = !kategoriFilter || d.kategori === kategoriFilter;
-            return matchSearch && matchSyarikat && matchTahun && matchSeparuh && matchKategori;
-        });
-    }, [data, activeTab, search, syarikatFilter, tahunFilter, separuhFilter, kategoriFilter]);
-
-    const penilaianColSpan = 9; 
-    const rawatanColSpan = 11; 
-
-    const renderActionCell = (d) => (
-        <TableCell className="text-center">
-            <Button
-                size="sm"
-                variant="default"
-                onClick={()=>handleAction(d)}
-                title={activeTab === 'penilaian' ? "Nilai Risiko" : "Tambah Rawatan"}
-            >
-                <Plus className="h-3.5 w-3.5" />
-                {activeTab === 'penilaian' ? "Nilai" : "Rawat"}
-            </Button>
-        </TableCell>
+  const ditapis = useMemo(() => {
+    const q = carian.trim().toLowerCase();
+    return data.filter(
+      (d) =>
+        TAB[tab].tapis(d) &&
+        (!q || `${d.no_rujukan} ${d.risiko}`.toLowerCase().includes(q)) &&
+        (!syarikat || d.nama_syarikat === syarikat) &&
+        (!kategori || d.kategori === kategori) &&
+        (!sesi || `${d.tahun}-${d.separuh_tahun || ""}` === sesi)
     );
+  }, [data, tab, carian, syarikat, kategori, sesi]);
 
-    const renderTableContent = () => {
-        const currentColSpan = activeTab === 'penilaian' ? penilaianColSpan : rawatanColSpan;
-        
-        if (loading) return (
-            <TableRow>
-                <TableCell colSpan={currentColSpan} className="h-32 text-center">
-                    <LoadingSpinner text="Memuatkan..." />
-                </TableCell>
-            </TableRow>
-        );
-        if (filteredData.length === 0) {
-            const message = activeTab === 'penilaian' ? 
-                "Semua risiko telah dinilai." : 
-                "Tiada risiko telah dinilai yang memerlukan rawatan."; 
-            return (
+  useEffect(() => setHalaman(1), [tab, carian, syarikat, kategori, sesi]);
+  const paparan = ditapis.slice((halaman - 1) * SAIZ_HALAMAN, halaman * SAIZ_HALAMAN);
+  const adaPenapis = carian || syarikat || kategori || sesi;
+
+  const boleh = tab === "penilaian" ? bolehNilai : bolehRawat;
+  const labelTindakan = boleh ? (tab === "penilaian" ? "Nilai" : "Rawat") : "Lihat";
+  const buka = (d) =>
+    navigate(`/risiko/${d.risiko_id}?tab=${tab}${boleh ? "&sunting=1" : ""}`);
+
+  const Kosong = () => (
+    <EmptyState
+      icon={TAB[tab].ikon}
+      title={adaPenapis ? "Tiada risiko sepadan dengan penapis" : TAB[tab].kosong}
+    />
+  );
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Penilaian & Rawatan"
+        description="Langkah 1 dan 2 aliran kerja: nilai risiko yang diluluskan, kemudian rancang rawatannya."
+      />
+
+      <AliranKerjaRisiko
+        aktif={tab}
+        onPilih={(id) => {
+          if (!TAB[id]) return false;
+          setTab(id);
+          return true;
+        }}
+      />
+
+      <div>
+        <h2 className="text-base font-semibold text-foreground">
+          {TAB[tab].label}{" "}
+          <span className="font-normal text-muted-foreground">· {kiraan[tab]} risiko</span>
+        </h2>
+        <p className="text-sm text-muted-foreground">{TAB[tab].huraian}</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <KotakCarian nilai={carian} onUbah={setCarian} placeholder="Cari no. rujukan atau risiko" />
+        <Select
+          className="h-9 w-full sm:w-48"
+          value={syarikat}
+          onChange={(e) => setSyarikat(e.target.value)}
+          aria-label="Syarikat"
+        >
+          <option value="">Semua syarikat</option>
+          {senaraiSyarikat.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </Select>
+        <Select
+          className="h-9 w-full sm:w-40"
+          value={sesi}
+          onChange={(e) => setSesi(e.target.value)}
+          aria-label="Sesi"
+        >
+          <option value="">Semua sesi</option>
+          {senaraiSesi.map((s) => (
+            <option key={s.nilai} value={s.nilai}>
+              {s.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          className="h-9 w-full sm:w-48"
+          value={kategori}
+          onChange={(e) => setKategori(e.target.value)}
+          aria-label="Kategori"
+        >
+          <option value="">Semua kategori</option>
+          {senaraiKategori.map((k) => (
+            <option key={k} value={k}>
+              {k}
+            </option>
+          ))}
+        </Select>
+        {adaPenapis && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setCarian("");
+              setSyarikat("");
+              setSesi("");
+              setKategori("");
+            }}
+          >
+            Set semula
+          </Button>
+        )}
+      </div>
+
+      {ralat ? (
+        <AlertBanner variant="error" title="Ralat" description={ralat} />
+      ) : loading ? (
+        <LoadingSpinner text="Memuatkan..." />
+      ) : (
+        <>
+          {/* Desktop: jadual padat */}
+          <div className="hidden overflow-hidden rounded-xl border bg-card shadow-sm md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                    <TableCell colSpan={currentColSpan} className="h-32">
-                        <EmptyState icon={Stethoscope} title={message} />
-                    </TableCell>
+                  <TableHead>Risiko</TableHead>
+                  <TableHead>Syarikat</TableHead>
+                  <TableHead>Sesi</TableHead>
+                  {tab === "rawatan" && <TableHead>Tahap</TableHead>}
+                  <TableHead className="w-[110px] text-right">Tindakan</TableHead>
                 </TableRow>
-            );
-        }
-
-        return filteredData.map((d,i)=>(
-            <TableRow key={i}>
-                <TableCell className="text-center text-muted-foreground">{i+1}</TableCell>
-                
-                {activeTab === 'penilaian' ? (
-                    <>
-                        <TableCell className="whitespace-nowrap font-semibold text-foreground">{d.no_rujukan}</TableCell>
-                        <TableCell className="whitespace-nowrap">
-                            <div className="text-sm font-medium text-foreground">{d.tahun}</div>
-                            <div className="text-xs text-muted-foreground">{formatSeparuhTahun(d.separuh_tahun)}</div>
-                        </TableCell>
-                        <TableCell>{d.nama_syarikat||"-"}</TableCell>
-                        <TableCell>{d.kategori||"-"}</TableCell> 
-                        <TableCell>{d.bahagian_unit||"-"}</TableCell> 
-                        <TableCell>{d.risiko}</TableCell>
-
-                        <TableCell className="text-center">
-                            <Badge variant={statusBadgeVariant(d.status_pemantauan)}>
-                                {d.status_pemantauan || "Buka"}
-                            </Badge>
-                        </TableCell>
-                        {renderActionCell(d)}
-                    </>
+              </TableHeader>
+              <TableBody>
+                {paparan.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32">
+                      <Kosong />
+                    </TableCell>
+                  </TableRow>
                 ) : (
-                    <>
-                        <TableCell className="whitespace-nowrap font-semibold text-foreground">{d.no_rujukan}</TableCell>
-                        <TableCell className="whitespace-nowrap">
-                            <div className="text-sm font-medium text-foreground">{d.tahun}</div>
-                            <div className="text-xs text-muted-foreground">{formatSeparuhTahun(d.separuh_tahun)}</div>
+                  paparan.map((d) => (
+                    <TableRow key={d.risiko_id}>
+                      <TableCell className="max-w-[420px]">
+                        <SelRisiko id={d.risiko_id} noRujukan={d.no_rujukan} risiko={d.risiko} tab={tab} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{d.nama_syarikat || "-"}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {[d.kategori, d.bahagian].filter(Boolean).join(" · ")}
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {d.tahun} · {formatSeparuhTahun(d.separuh_tahun)}
+                      </TableCell>
+                      {tab === "rawatan" && (
+                        <TableCell>
+                          <LencanaTahap k={d.skor_kebarangkalian} i={d.skor_impak} />
                         </TableCell>
-                        <TableCell>{d.nama_syarikat||"-"}</TableCell>
-                        <TableCell>{d.kategori||"-"}</TableCell>
-                        <TableCell>{d.bahagian_unit||"-"}</TableCell>
-                        <TableCell>{d.risiko}</TableCell>
-
-                        <TableCell className="text-center">
-                            <Badge
-                                className="border-transparent text-white"
-                                style={{ backgroundColor: riskBadgeColor(d.tahap_risiko) }}
-                            >
-                                {getRiskAbbreviation(d.tahap_risiko)}
-                            </Badge>
-                        </TableCell>
-                        
-                        <TableCell className="text-center">
-                            <Badge variant="outline">{d.status_risiko || "-"}</Badge>
-                        </TableCell>
-
-                        <TableCell className="text-center">
-                            <Badge variant={statusBadgeVariant(d.status_pemantauan)}>
-                                {d.status_pemantauan || "Sedang Dilaksanakan"}
-                            </Badge>
-                        </TableCell>
-
-                        {renderActionCell(d)}
-                    </>
+                      )}
+                      <TableCell className="text-right">
+                        <Button size="sm" variant={boleh ? "default" : "outline"} onClick={() => buka(d)}>
+                          {labelTindakan}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-            </TableRow>
-        ));
-    };
+              </TableBody>
+            </Table>
+          </div>
 
-    return (
-        <div className="space-y-6">
-            <PageHeader
-                title="Rawatan Risiko"
-                description="Nilai risiko yang belum dinilai dan urus pelan rawatan risiko."
-            />
+          {/* Telefon: kad */}
+          <ul className="grid gap-3 md:hidden">
+            {paparan.length === 0 ? (
+              <li className="rounded-xl border bg-card p-4">
+                <Kosong />
+              </li>
+            ) : (
+              paparan.map((d) => (
+                <li key={d.risiko_id} className="grid gap-2 rounded-xl border bg-card p-4 shadow-sm">
+                  <SelRisiko id={d.risiko_id} noRujukan={d.no_rujukan} risiko={d.risiko} tab={tab} />
+                  <p className="text-xs text-muted-foreground">
+                    {[d.nama_syarikat, d.kategori, `${d.tahun} · ${formatSeparuhTahun(d.separuh_tahun)}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    {tab === "rawatan" ? (
+                      <LencanaTahap k={d.skor_kebarangkalian} i={d.skor_impak} />
+                    ) : (
+                      <span />
+                    )}
+                    <Button size="sm" variant={boleh ? "default" : "outline"} onClick={() => buka(d)}>
+                      {labelTindakan}
+                    </Button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
 
-            {/* Aliran Kerja */}
-            <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex items-start">
-                    <FlowStep
-                        step={1}
-                        label="Penilaian Risiko"
-                        count={risikoBelumDinilai}
-                        active={activeTab === 'penilaian'}
-                        onClick={() => setActiveTab('penilaian')}
-                    />
-                    <div className="mx-1 mt-[13px] h-0.5 flex-1 rounded-full bg-border" />
-                    <FlowStep
-                        step={2}
-                        label="Rawatan Risiko"
-                        count={risikoMemerlukanRawatan}
-                        active={activeTab === 'rawatan'}
-                        onClick={() => setActiveTab('rawatan')}
-                    />
-                    <div className="mx-1 mt-[13px] h-0.5 flex-1 rounded-full bg-border" />
-                    <div className="flex flex-col items-center gap-1 px-2 py-1 opacity-80">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold text-muted-foreground">3</span>
-                        <span className="text-sm font-medium text-muted-foreground">Pemantauan</span>
-                        <span className="text-[10px] text-muted-foreground">diurus di page Pemantauan Risiko</span>
-                    </div>
-                </div>
-            </div>
-            <p className="-mt-4 px-1 text-xs text-muted-foreground">
-                Aliran kerja: Risiko dinilai dahulu, kemudian rawatan dirancang, akhirnya dipantau dari semasa ke semasa.
-            </p>
-
-            {/* Penapis */}
-            <div className="rounded-xl border border-border bg-card shadow-sm">
-                <div className="flex flex-wrap items-center gap-3 p-4">
-                    <div className="relative w-full sm:w-44">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input type="text" placeholder="Cari No Rujukan..." className="pl-9" value={search} onChange={e=>setSearch(e.target.value)} />
-                    </div>
-                    <Select className="w-full sm:w-44" value={syarikatFilter} onChange={e=>setSyarikatFilter(e.target.value)}>
-                        <option value="">-- Semua Syarikat --</option>
-                        {syarikatList.map(s=><option key={s.syarikat_id} value={s.nama_syarikat}>{s.nama_syarikat}</option>)}
-                    </Select>
-                    <Select className="w-full sm:w-40" value={tahunFilter} onChange={e=>setTahunFilter(e.target.value)}>
-                        <option value="">-- Semua Tahun --</option>
-                        {[...new Set(data.map(d=>d.tahun))].filter(t => t).sort((a,b)=>b-a).map(t=><option key={t} value={t}>{t}</option>)}
-                    </Select>
-                    <Select className="w-full sm:w-44" value={separuhFilter} onChange={e=>setSeparuhFilter(e.target.value)}>
-                        <option value="">-- Semua Separuh Tahun --</option>
-                        <option value="1">Pertama</option>
-                        <option value="2">Kedua</option>
-                    </Select>
-                    <Select className="w-full sm:w-44" value={kategoriFilter} onChange={e=>setKategoriFilter(e.target.value)}>
-                        <option value="">-- Semua Kategori --</option>
-                        {kategoriList.map(k=><option key={k} value={k}>{k}</option>)}
-                    </Select>
-                </div>
-            </div>
-
-            {/* Jadual */}
-            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-                <Table>
-                    <TableHeader key={activeTab}> 
-                        {activeTab === 'penilaian' ? (
-                            <>
-                                <TableRow>
-                                    <TableHead rowSpan={2} className="w-12 align-middle">BIL.</TableHead>
-                                    <TableHead colSpan={6} className="text-center">Maklumat Risiko</TableHead> 
-                                    <TableHead colSpan={2} className="text-center">Penilaian</TableHead> 
-                                </TableRow>
-                                <TableRow>
-                                    <TableHead>No Rujukan</TableHead>
-                                    <TableHead>Tahun / Separuh Tahun</TableHead>
-                                    <TableHead>Syarikat</TableHead>
-                                    <TableHead>Kategori Risiko</TableHead> 
-                                    <TableHead>Bahagian/Unit</TableHead>
-                                    <TableHead>Risiko</TableHead>
-                                    <TableHead className="text-center">Status Pemantauan</TableHead>
-                                    <TableHead className="text-center">Tindakan</TableHead>
-                                </TableRow>
-                            </>
-                        ) : (
-                            <>
-                                <TableRow>
-                                    <TableHead rowSpan={2} className="w-12 align-middle">BIL.</TableHead>
-                                    <TableHead colSpan={8} className="text-center">Maklumat Risiko</TableHead>
-                                    <TableHead colSpan={2} className="text-center">Rawatan</TableHead>
-                                </TableRow>
-                                <TableRow>
-                                    <TableHead>No Rujukan</TableHead>
-                                    <TableHead>Tahun / Separuh Tahun</TableHead>
-                                    <TableHead>Syarikat</TableHead>
-                                    <TableHead>Kategori Risiko</TableHead>
-                                    <TableHead>Bahagian/Unit</TableHead>
-                                    <TableHead>Risiko</TableHead>
-                                    <TableHead className="text-center">Tahap Risiko</TableHead> 
-                                    <TableHead className="text-center">Status Risiko</TableHead>
-                                    <TableHead className="text-center">Status Pemantauan</TableHead>
-                                    <TableHead className="text-center">Tindakan</TableHead>
-                                </TableRow>
-                            </>
-                        )}
-                    </TableHeader>
-
-                    <TableBody>
-                        {renderTableContent()}
-                    </TableBody>
-                </Table>
-            </div>
-
-        </div>
-    );
+          <Paging halaman={halaman} jumlah={ditapis.length} onTukar={setHalaman} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export default PenilaianDanRawatan;

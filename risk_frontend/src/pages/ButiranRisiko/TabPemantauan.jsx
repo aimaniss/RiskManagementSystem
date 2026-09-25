@@ -8,6 +8,8 @@ import ConfirmModal from "@/components/ui/confirm-modal";
 import {
   Sheet,
   SheetContent,
+  SheetBody,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetDescription,
@@ -136,70 +138,76 @@ export default function TabPemantauan({ risiko, logs, bolehTambah, bukaTambah, o
       )}
 
       <Sheet open={Boolean(panel)} onOpenChange={(buka) => !buka && setPanel(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+        <SheetContent className="sm:max-w-xl">
           {panel?.mod === "papar" && (
             <>
               <SheetHeader>
                 <SheetTitle>Log pemantauan {labelSesi(panel.log)}</SheetTitle>
                 <SheetDescription>{risiko.no_rujukan}</SheetDescription>
               </SheetHeader>
-              <dl className="mt-5 grid grid-cols-2 gap-4">
-                <Medan label="Tahap selepas">
-                  <LencanaTahap
-                    k={panel.log.skor_kebarangkalian_selepas}
-                    i={panel.log.skor_impak_selepas}
-                    tunjukSkor
-                  />
-                </Medan>
-                <Medan label="Status">{panel.log.status_pemantauan}</Medan>
-                <Medan label="Keberkesanan">
-                  {panel.log.keberkesanan
-                    ? `${panel.log.keberkesanan} (${KEBERKESANAN_MAPPING[panel.log.keberkesanan] || ""})`
-                    : "-"}
-                </Medan>
-                <Medan label="Kekerapan">{panel.log.kekerapan_pemantauan}</Medan>
-                <Medan label="No. Bil Kelulusan">{panel.log.no_bil_kelulusan}</Medan>
-                <Medan label="Justifikasi Pindaan">{panel.log.justifikasi_pindaan_pemantauan}</Medan>
-                <Medan label="Pelan Tindakan" className="col-span-2">
-                  <SenaraiCip items={keSenarai(panel.log.pelan_tindakan_log)} />
-                </Medan>
-                <Medan label="Kakitangan Bertanggungjawab" className="col-span-2">
-                  <SenaraiCip items={keSenarai(panel.log.kakitangan_log)} />
-                </Medan>
-                <Medan label="Catatan" className="col-span-2">
-                  <span className="whitespace-pre-wrap">{panel.log.catatan}</span>
-                </Medan>
-              </dl>
-              <div className="mt-6 flex justify-end gap-2">
-                {penuh && (
-                  <Button variant="outline" className="text-destructive" onClick={() => setPadam(panel.log)}>
-                    <Trash2 size={15} /> Padam
-                  </Button>
-                )}
-                {bolehSunting(panel.log) && (
-                  <Button onClick={() => setPanel({ mod: "sunting", log: panel.log })}>
-                    <Pencil size={15} /> Sunting
-                  </Button>
-                )}
-              </div>
+              <SheetBody>
+                <dl className="grid grid-cols-2 gap-4">
+                  <Medan label="Tahap selepas">
+                    <LencanaTahap
+                      k={panel.log.skor_kebarangkalian_selepas}
+                      i={panel.log.skor_impak_selepas}
+                      tunjukSkor
+                    />
+                  </Medan>
+                  <Medan label="Status">{panel.log.status_pemantauan}</Medan>
+                  <Medan label="Keberkesanan">
+                    {panel.log.keberkesanan
+                      ? `${panel.log.keberkesanan} (${KEBERKESANAN_MAPPING[panel.log.keberkesanan] || ""})`
+                      : "-"}
+                  </Medan>
+                  <Medan label="Kekerapan">{panel.log.kekerapan_pemantauan}</Medan>
+                  <Medan label="No. Bil Kelulusan">{panel.log.no_bil_kelulusan}</Medan>
+                  <Medan label="Justifikasi Pindaan">{panel.log.justifikasi_pindaan_pemantauan}</Medan>
+                  <Medan label="Pelan Tindakan" className="col-span-2">
+                    <SenaraiCip items={keSenarai(panel.log.pelan_tindakan_log)} />
+                  </Medan>
+                  <Medan label="Kakitangan Bertanggungjawab" className="col-span-2">
+                    <SenaraiCip items={keSenarai(panel.log.kakitangan_log)} />
+                  </Medan>
+                  <Medan label="Catatan" className="col-span-2">
+                    <span className="whitespace-pre-wrap">{panel.log.catatan}</span>
+                  </Medan>
+                </dl>
+              </SheetBody>
+              {(penuh || bolehSunting(panel.log)) && (
+                <SheetFooter>
+                  {penuh && (
+                    <Button variant="outline" className="text-destructive" onClick={() => setPadam(panel.log)}>
+                      <Trash2 size={15} /> Padam
+                    </Button>
+                  )}
+                  {bolehSunting(panel.log) && (
+                    <Button onClick={() => setPanel({ mod: "sunting", log: panel.log })}>
+                      <Pencil size={15} /> Sunting
+                    </Button>
+                  )}
+                </SheetFooter>
+              )}
             </>
           )}
 
           {(panel?.mod === "sunting" || panel?.mod === "tambah") && (
             <>
-              <SheetHeader className="mb-4">
+              <SheetHeader>
                 <SheetTitle>
                   {panel.mod === "tambah" ? "Tambah log pemantauan" : `Sunting log ${labelSesi(panel.log)}`}
                 </SheetTitle>
                 <SheetDescription>{risiko.no_rujukan}</SheetDescription>
               </SheetHeader>
-              <BorangLogPemantauan
-                risikoId={risiko.id}
-                log={panel.mod === "sunting" ? panel.log : null}
-                terhad={terhad}
-                onSelesai={selesai}
-                onBatal={() => setPanel(panel.mod === "sunting" ? { mod: "papar", log: panel.log } : null)}
-              />
+              <SheetBody className="flex flex-col pb-0">
+                <BorangLogPemantauan
+                  risikoId={risiko.id}
+                  log={panel.mod === "sunting" ? panel.log : null}
+                  terhad={terhad}
+                  onSelesai={selesai}
+                  onBatal={() => setPanel(panel.mod === "sunting" ? { mod: "papar", log: panel.log } : null)}
+                />
+              </SheetBody>
             </>
           )}
         </SheetContent>
