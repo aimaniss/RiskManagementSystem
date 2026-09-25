@@ -48,10 +48,38 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **74/74 ujian lulus**.
+- Suite semasa: **78/78 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,
   `log_aktiviti`, `pengguna`) tetapi **membersihkan semula** artefak selepas
   ujian; rollback difailkan oleh transaksi itu sendiri.
 - Laras kredensial DB dalam `e2e/db.helper.mjs` jika berbeza dari seed.
+## Pangkalan Data Ujian Baharu (CI / pembangun baharu)
+
+Suite boleh dijalankan pada PostgreSQL **kosong** — tidak perlukan salinan data
+sebenar:
+
+```bash
+createdb rms_test
+DB_NAME=rms_test npm run migrate --prefix risk_backend
+DB_NAME=rms_test node e2e/seed-ci.mjs --sahkan   # 8 syarikat + 5 akaun ujian
+DB_NAME=rms_test npm run test:e2e
+```
+
+`seed-ci.mjs` enggan berjalan jika jadual `pengguna` mempunyai akaun selain
+akaun ujian (perlindungan daripada tersilap sasaran). Pemboleh ubah env
+mengatasi `risk_backend/.env` untuk kedua-dua backend dan `db.helper.mjs`.
+Naikkan `HAD_LOG_MASUK_IP` / `HAD_API_IP` bila menjalankan suite berulang kali
+dari satu IP.
+
+## CI (GitHub Actions)
+
+`.github/workflows/ci.yml` berjalan pada setiap push ke `main` dan setiap pull
+request:
+
+| Job | Langkah |
+|-----|---------|
+| `backend` | `npm ci`, `format:check`, `lint` (ESLint `no-undef` dsb.), `npm audit --omit=dev` |
+| `frontend` | `npm ci`, `lint`, `build`, `npm audit --omit=dev` |
+| `e2e` | PostgreSQL 16 (service), `.env` dengan `JWT_SECRET` rawak, `migrate`, `seed-ci.mjs`, Chromium, suite penuh; laporan Playwright dimuat naik jika gagal |

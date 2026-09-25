@@ -185,8 +185,8 @@ export const sejarahPemantauan = async (req, res) => {
 };
 
 /* =======================================================
-  GET: Semak Kewujudan Tahun & Separuh Tahun
-  ENDPOINT: /pemantauan-risiko/check-duplicate
+  GET: Semak Kewujudan Tahun & Separuh Tahun
+  ENDPOINT: /pemantauan-risiko/check-duplicate
 ======================================================= */
 export const semakPenduaLog = async (req, res) => {
   try {

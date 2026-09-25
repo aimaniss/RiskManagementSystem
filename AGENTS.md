@@ -156,7 +156,11 @@ npm run migrate:status
   boleh dipulangkan untuk ralat 4xx tersuai yang dilontar sendiri (`statusCode`).
   Dikawal oleh spec E2E `09-keselamatan`.
 - Tiada suite unit dikonfig; E2E melalui Playwright — lihat root `e2e/README.md`
-  (`npm run test:e2e` dari root khas `e2e/`).
+  (`npm run test:e2e` dari root khas `e2e/`). `npm run lint` (ESLint) backend
+  mesti bebas ralat. **CI** (`.github/workflows/ci.yml`) menjalankan format,
+  lint, build, audit dan suite E2E penuh pada DB kosong (migrasi +
+  `e2e/seed-ci.mjs`) — spec baharu mesti lulus pada DB kosong, jangan bergantung
+  pada data sebenar.
 
 ## Konvensyen Frontend (`risk_frontend`)
 

@@ -22,7 +22,8 @@ function bacaEnv(fail) {
       if (m) ada.set(m[1], m[2].replace(/^["']|["']$/g, ""));
     }
   }
-  return ada.get(fail) || process.env[fail];
+  // Env proses diutamakan (sama seperti dotenv di backend) supaya CI boleh menindih .env
+  return process.env[fail] || ada.get(fail);
 }
 
 // Resolve 'pg' dari risk_backend/node_modules supaya tidak perlukan install di root

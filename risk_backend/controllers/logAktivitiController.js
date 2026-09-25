@@ -192,7 +192,7 @@ export const eksportLogAktiviti = async (req, res) => {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${namaFail}"`);
     // BOM supaya Excel membaca UTF-8 dengan betul
-    res.send(`﻿${[pengepala.map(selCsv).join(","), ...baris].join("\r\n")}`);
+    res.send(`\uFEFF${[pengepala.map(selCsv).join(","), ...baris].join("\r\n")}`);
   } catch (err) {
     hantarRalat(res, err, "Gagal mengeksport log aktiviti.", "eksport log aktiviti");
   }

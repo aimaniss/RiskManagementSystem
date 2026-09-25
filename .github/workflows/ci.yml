@@ -1,0 +1,142 @@
+# CI — Sistem Pengurusan Risiko
+# Setiap push & pull request: semak kualiti backend/frontend, kemudian jalankan
+# suite E2E penuh pada PostgreSQL kosong yang dibina daripada migrasi.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  backend:
+    name: Backend (format, lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: risk_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: risk_backend/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - name: Audit kebergantungan produksi
+        run: npm audit --omit=dev --audit-level=high
+
+  frontend:
+    name: Frontend (lint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: risk_frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: risk_frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - name: Audit kebergantungan produksi
+        run: npm audit --omit=dev --audit-level=high
+
+  e2e:
+    name: E2E (Playwright + PostgreSQL)
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rms_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: rms_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            risk_backend/package-lock.json
+            risk_frontend/package-lock.json
+
+      - name: Pasang kebergantungan
+        run: |
+          npm ci
+          npm ci --prefix risk_backend
+          npm ci --prefix risk_frontend
+
+      # Rahsia JWT dijana per larian; tiada rahsia sebenar digunakan dalam CI
+      - name: Sediakan risk_backend/.env
+        run: |
+          cat > risk_backend/.env <<ENV
+          DB_USER=$DB_USER
+          DB_PASS=$DB_PASS
+          DB_HOST=$DB_HOST
+          DB_PORT=$DB_PORT
+          DB_NAME=$DB_NAME
+          PORT=5001
+          JWT_SECRET=$(openssl rand -hex 32)
+          CORS_ORIGIN=http://localhost:5175
+          HAD_LOG_MASUK_IP=1000
+          HAD_API_IP=100000
+          ENV
+
+      - name: Migrasi & seed data ujian
+        run: |
+          npm run migrate --prefix risk_backend
+          node e2e/seed-ci.mjs --sahkan
+
+      - name: Pasang Chromium
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.mjs memulakan backend & frontend sendiri (webServer)
+      - name: Jalankan suite E2E
+        run: npm run test:e2e -- --reporter=list,html
+
+      - name: Muat naik laporan Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            e2e/playwright-report/
+            e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

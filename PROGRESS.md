@@ -137,6 +137,7 @@
 ### Kestabilan & Deploy (sedang berjalan)
 - [x] Peranan dikenal pasti ikut `nama_peranan`, bukan `peranan_id` (FE salah label Staff/Ketua pada DB baharu)
 - [x] Sidebar ditapis ikut kebenaran (ganti 17 semakan nama peranan)
+- [x] CI GitHub Actions: backend (format, lint, audit), frontend (lint, build, audit), E2E penuh pada Postgres kosong (`e2e/seed-ci.mjs`); ESLint backend ditambah
 - [x] Keselamatan: `helmet`, had kadar per IP (log masuk gagal 30/15 min, API 3000/15 min, boleh laras `.env`), `TRUST_PROXY`, buang 16 `console.log` nyahpepijat (termasuk yang mencetak data rawatan)
 
 ### Skema (selesai)
