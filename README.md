@@ -179,7 +179,7 @@ RiskManagementSystem/
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
-│   │   ├── knex/                     # Migrasi Knex (25 fail)
+│   │   ├── knex/                     # Migrasi Knex (26 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
 │   ├── routes/                       # Daftar endpoint + middleware sahaja
 │   │   ├── auth.js                   # Log masuk / JWT

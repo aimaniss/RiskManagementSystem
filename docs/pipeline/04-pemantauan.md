@@ -77,6 +77,11 @@ sequenceDiagram
 
 ## Nota / Gotcha
 
+- `logpemantauan.tarikh_pemantauan` **boleh NULL** (migrasi 026): log awal semasa
+  lulus risiko dan log baharu tidak mengisinya; susunan "log terkini" bergantung
+  pada `tahun_pemantauan` dahulu. Jangan tambah nilai lalai tanpa menyemak semua
+  `ORDER BY tarikh_pemantauan DESC` (NULL disusun pertama tanpa `NULLS LAST`).
+
 - Nama jadual dalam migrasi Knex ialah `logpemantauan`,
   `pelantindakanpemantauan`, `kakitanganpemantauan` (bersambung) — setara dengan
   `log_pemantauan`, `pelan_tindakan_pemantauan`, `kakitangan_pemantauan` dalam

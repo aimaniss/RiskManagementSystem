@@ -123,6 +123,9 @@
 - [x] Spec E2E `13-pengurusan-pengguna` (7 ujian)
 - [ ] Pilihan: reset kata laluan layan diri melalui e-mel (perlu infrastruktur SMTP)
 
+### Skema (selesai)
+- [x] Migration 026: `logpemantauan.tarikh_pemantauan` boleh NULL (pemasangan baharu gagal lulus risiko)
+
 ---
 
 ## To-Do Revamp UI (📋 dirancang — `docs/pipeline/11-PLAN-ui-revamp.md`)
@@ -141,7 +144,8 @@
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
-| 2026-09-25 | Pengguna | **Kitaran hayat akaun**: migration 025; akaun baharu/reset guna kata laluan sementara (jana crypto, dipapar sekali) + **wajib tukar** pada log masuk (`verifyToken` hadkan kepada `/users/me`, `/auth/tukar-katalaluan`, `/auth/logout`; `403 PERLU_TUKAR_KATALALUAN`); `tukar-katalaluan` pulang token baharu; polisi kata laluan (8+, huruf+nombor); kunci 15 min selepas 5 gagal (`423`); aktif/nyahaktif (login `403` hanya selepas kata laluan sah; token `401`); pentadbir tak boleh reset/nyahaktif/tukar peranan sendiri; Staff/Ketua Subsidiari wajib syarikat. FE: halaman `/tukar-katalaluan`, `UrusPengguna` diolah semula (lajur "Kata Laluan" dibuang; status/log masuk terakhir/ringkasan/reset/nyahaktif), Login papar mesej pelayan + panduan lupa kata laluan. Betulkan import `./Navbar.css` & `./KemaskiniRawatan` (huruf besar/kecil — build gagal di Linux). Spec 13 **7/7**; spec 04 guna kata laluan patuh polisi. Suite tempatan 48 lulus / 2 gagal sedia ada (`logpemantauan.tarikh_pemantauan NOT NULL` pada DB dari migrasi — gagal juga tanpa perubahan ini) |
+| 2026-09-25 | Skema | Migration 026: buang `NOT NULL` pada `logpemantauan.tarikh_pemantauan` — migrasi 010 tidak sepadan dengan DB sebenar; pada DB baharu, lulus risiko (log pemantauan awal) & tambah log gagal `500`. Tiada nilai lalai (elak ubah susunan "log terkini"). Suite E2E penuh pada DB baharu dari migrasi: **68/68 lulus** |
+| 2026-09-25 | Pengguna | **Kitaran hayat akaun**: migration 025; akaun baharu/reset guna kata laluan sementara (jana crypto, dipapar sekali) + **wajib tukar** pada log masuk (`verifyToken` hadkan kepada `/users/me`, `/auth/tukar-katalaluan`, `/auth/logout`; `403 PERLU_TUKAR_KATALALUAN`); `tukar-katalaluan` pulang token baharu; polisi kata laluan (8+, huruf+nombor); kunci 15 min selepas 5 gagal (`423`); aktif/nyahaktif (login `403` hanya selepas kata laluan sah; token `401`); pentadbir tak boleh reset/nyahaktif/tukar peranan sendiri; Staff/Ketua Subsidiari wajib syarikat. FE: halaman `/tukar-katalaluan`, `UrusPengguna` diolah semula (lajur "Kata Laluan" dibuang; status/log masuk terakhir/ringkasan/reset/nyahaktif), Login papar mesej pelayan + panduan lupa kata laluan. Betulkan import `./Navbar.css` & `./KemaskiniRawatan` (huruf besar/kecil — build gagal di Linux). Spec 13 **7/7**; spec 04 guna kata laluan patuh polisi. Suite tempatan 48 lulus / 2 gagal sedia ada (`logpemantauan.tarikh_pemantauan NOT NULL` — dibetulkan migration 026) |
 | 2026-09-25 | — | Siapkan MCP `rms-boost`, agent `rms-architect`, dokumentasi pipeline 00–09, audit revamp v2, daftar Playwright MCP |
 | 2026-09-25 | — | Bina fail ini (`PROGRESS.md`) + ikat dalam `opencode.json` instructions + konvensyen commit English |
 | 2026-09-25 | 1–7 | **Revamp v2 selesai**: `utils/transaksi.js`; bcrypt (`utils/katalaluan.js`); `authorizeKebenaran` + cache 60s; migrasi 019/020/021; soft-delete menyeluruh (grep `DELETE FROM` = 0); `controllers/` untuk users/bahagian/auth; pindaan:lihat; reflektor `useAuth.js`; smoke test semua endpoint lulus; suite E2E `e2e/` disediakan; docs dikemas kini |
@@ -164,7 +168,7 @@
 
 ## Rekod / Nota
 
-- **Migrasi sedia**: 001–025 (25 migrasi; 025 = status akaun pengguna — jalankan `npm run migrate`).
+- **Migrasi sedia**: 001–026 (26 migrasi; 025 = status akaun pengguna, 026 = `tarikh_pemantauan` boleh NULL — jalankan `npm run migrate`).
 - Jadual `is_deleted` + `deleted_at`: 11 jadual (migration 015) + `pengguna`,
   `notifikasi` (migration 019). Semua query pembacaan menapis `is_deleted = false`.
 - `kebenaran` / `peranan_kebenaran` (migration 014 seed dalam 020/021) kini
@@ -181,7 +185,7 @@
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **61/61 lulus** pada 2026-09-25.
+- Suite E2E Playwright: **68/68 lulus** pada 2026-09-25 (DB baharu dari migrasi 001–026).
 - `npm audit`: **0 kerentanan** di backend & frontend (2026-09-25).
 - `npm run build` frontend lulus (termasuk Linux, selepas betulkan import
   huruf besar/kecil); `npm run lint` 0 error, 9 warning sedia ada.
