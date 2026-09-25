@@ -110,6 +110,17 @@ export const dapatkanKebenaranPeranan = async (perananId) => {
 };
 
 /**
+ * Kosongkan cache kebenaran supaya perubahan `peranan_kebenaran` berkuat kuasa
+ * serta-merta (tanpa menunggu TTL). Hanya menjejaskan proses semasa.
+ * @returns {number} bilangan entri yang dikosongkan
+ */
+export const kosongkanCacheKebenaran = () => {
+  const bilangan = kebenaranCache.size;
+  kebenaranCache.clear();
+  return bilangan;
+};
+
+/**
  * Middleware kebenaran berasaskan role matrix.
  * Lalu jika pengguna memiliki SEKURANG-KURANGNYA satu kebenaran yang diberi.
  * Mesti digunakan SELEPAS verifyToken.

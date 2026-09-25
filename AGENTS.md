@@ -175,6 +175,8 @@ ini (klausa `WHERE syarikat_id` untuk peranan terhad).
   `/api/laporan`, `/api/dashboard`, `/api/notifikasi`) — daftarkan route baharu
   di sana.
 - Jangan ganggu `verifyToken`/auth flow tanpa ujian penuh — ia teras keselamatan.
+- Selepas ubah `peranan_kebenaran` terus di DB/migrasi, panggil
+  `POST /api/roles/flush-cache` (atau tunggu ≤60s) — kebenaran di-cache per proses.
 - Kebenaran UI diambil daripada `GET /api/users/me` dan disegarkan oleh
   `AppLayout`; backend mengesahkan `token_dikemaskini_at` untuk mencabut token
   selepas perubahan kata laluan/role/syarikat.

@@ -88,6 +88,8 @@ flowchart LR
   role, ID staf atau syarikat mencabut token lama dengan `401`.
 - `dapatkanKebenaranPeranan(perananId)` — query join `peranan_kebenaran`,
   **cache dalam proses selama 60 saat** (elak query setiap permintaan).
+  `POST /api/roles/flush-cache` (`pengguna:urus`) mengosongkan cache serta-merta
+  selepas mengubah `peranan_kebenaran` di DB (`kosongkanCacheKebenaran()`).
 - `authorizeKebenaran(...namaKebenaran)` — LULUS jika pengguna memiliki **sekurang-
   kurangnya SATU** daripada senarai (OR). Untuk keperluan "mesti ada SEMUA",
   hantar secara berasingan seperti `authorizeKebenaran("a"), authorizeKebenaran("b")`.

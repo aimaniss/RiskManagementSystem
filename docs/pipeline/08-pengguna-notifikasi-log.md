@@ -52,6 +52,7 @@ sequenceDiagram
 | PUT | `/api/users/:id` | `verifyToken, pengguna:urus, upload` | Urus Pengguna |
 | DELETE | `/api/users/:id` | `verifyToken, pengguna:urus` | Urus Pengguna (soft-delete) |
 | GET | `/api/roles/` | `verifyToken, pengguna:urus` | Rujukan |
+| POST | `/api/roles/flush-cache` | `verifyToken, pengguna:urus` | Kosongkan cache kebenaran (log aktiviti) |
 | GET | `/api/syarikat/` | `verifyToken` (RBAC-filtered) | Rujukan |
 | GET | `/api/bahagian/` | `verifyToken` | Rujukan |
 | POST | `/api/bahagian/` | `verifyToken, rujukan:urus` | Rujukan (DaftarRisiko tambah bahagian) |

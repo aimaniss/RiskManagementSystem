@@ -422,6 +422,7 @@ RiskManagementSystem/
 | `GET` | `/api/bahagian` | Senarai bahagian | Semua |
 | `POST` | `/api/bahagian` | Tambah bahagian | `rujukan:urus` |
 | `GET` | `/api/roles` | Senarai peranan | `pengguna:urus` |
+| `POST` | `/api/roles/flush-cache` | Kosongkan cache kebenaran (selepas ubah `peranan_kebenaran`) | `pengguna:urus` |
 | `*` | `/api/notifikasi/*` | Notifikasi sendiri (senarai, baca, padam) | Semua |
 
 "Semua" = mana-mana pengguna log masuk (`verifyToken` sahaja). Matriks

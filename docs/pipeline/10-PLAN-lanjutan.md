@@ -72,12 +72,20 @@ Backend masih mengesahkan kebenaran daripada role matrix pada setiap request
 (dengan cache proses 60 saat), jadi penyingkiran array daripada JWT tidak
 mengurangkan penguatkuasaan API.
 
-### 1.5 Cache kebenaran — invalidasi
+### 1.5 Cache kebenaran — invalidasi — **Selesai**
 
 Cache `dapatkanKebenaranPeranan` disimpan dalam memori proses. Perubahan
 `peranan_kebenaran` (migrasi/ad-hoc admin) tidak kelihatan sehingga 60s. Untuk
 pentauliahan segera, tambah endpooint `POST /api/roles/flush-cache` (Admin)
 atau `LISTEN/NOTIFY pg` untuk invalidasi. **(P2)**
+
+**Pelaksanaan (2026-09-25)**: `POST /api/roles/flush-cache` (`pengguna:urus`)
+memanggil `kosongkanCacheKebenaran()` (`middleware/authMiddleware.js`), mencatat
+`log_aktiviti`, dan memulangkan `{ message, dikosongkan }`. Guna selepas mengubah
+`peranan_kebenaran` terus di DB/migrasi. **Had**: cache per proses — jika backend
+dijalankan berbilang instance, flush hanya menjejaskan instance yang menerima
+permintaan (instance lain kemas kini dalam ≤60s); `LISTEN/NOTIFY` kekal pilihan
+masa depan. Spec `e2e/tests/07-flush-cache-kebenaran.spec.mjs`.
 
 ### 1.6 Soft-delete jadual anak (`deleted_at` karat)
 
@@ -180,5 +188,6 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
    penggunaan pra-login yang memerlukan endpoint awam.
 3. **[x] [P1] §2.5** — ralat `{ error }`, berjaya `{ message }`.
 4. **[x] [P2] §2.2** — penerima ikut kebenaran + fallback pentadbir.
-5. **[ ] [P2] §1.5 / §2.1** — flush-cache kebenaran & toolbar purge.
-6. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.
+5. **[x] [P2] §1.5** — `POST /api/roles/flush-cache`.
+6. **[ ] [P2] §2.1** — polisi retention & purge soft-delete (perlu keputusan tempoh simpanan).
+7. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.
