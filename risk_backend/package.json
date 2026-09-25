@@ -13,7 +13,8 @@
     "migrate:status": "knex migrate:status",
     "migrate:make": "knex migrate:make",
     "format": "prettier --write \"**/*.js\"",
-    "format:check": "prettier --check \"**/*.js\""
+    "format:check": "prettier --check \"**/*.js\"",
+    "purge": "node scripts/purge.js"
   },
   "keywords": [],
   "author": "",

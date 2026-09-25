@@ -542,6 +542,19 @@ npm run migrate:rollback  # Undur migrasi terakhir
 npm run migrate:status    # Semak status migrasi
 ```
 
+### Purge Data Soft-Delete
+
+Buang kekal `notifikasi` & `log_aktiviti` yang telah dipadam (soft-delete) lebih
+365 hari. Lalai ialah pratonton (tiada perubahan):
+
+```bash
+cd risk_backend
+
+npm run purge                                   # Pratonton
+npm run purge -- --laksana --oleh=UKMH001        # Laksana (staf dengan pengguna:urus)
+npm run purge -- --hari=730                     # Tukar tempoh simpanan (min 30)
+```
+
 ### Format Kod (Backend)
 
 ```bash

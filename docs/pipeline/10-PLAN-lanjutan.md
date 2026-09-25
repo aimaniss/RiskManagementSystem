@@ -100,7 +100,7 @@ muncul dalam statistik PDF. **(Selesai; tiada tindakan lanjut kecuali**
 
 ## 2. Scenario yang belum dikenal pasti semasa audit awal
 
-### 2.1 Policy retention & purging data soft-deleted (P2)
+### 2.1 Policy retention & purging data soft-deleted — **Selesai (skop terhad)**
 
 Soft-delete menyebabkan jadual membesar tanpa had. Cadangkan:
 - Backoff `/api/jadual/*` (Admin) untuk **purging nyata** baris yang
@@ -108,6 +108,21 @@ Soft-delete menyebabkan jadual membesar tanpa had. Cadangkan:
 - Senaraikan jadual berkenaan: `risiko` + anak, `log_aktiviti`, `notifikasi`,
   `permohonan_pindaan`, `pengguna`.
 - Log audit ke `log_aktiviti` sebelum purge supaya jejak kekal.
+
+**Keputusan & pelaksanaan (2026-09-25)**:
+- Tempoh simpanan **365 hari** (`--hari=N`, minimum 30).
+- Skop: **`notifikasi` & `log_aktiviti` sahaja**. `risiko` + anak, `pengguna`
+  dan `permohonan_pindaan` TIDAK di-purge (data perniagaan / rujukan FK).
+- Cara: skrip manual `npm run purge` (`risk_backend/scripts/purge.js`), bukan
+  endpoint API. Lalai = pratonton; `--laksana --oleh=<staff_id>` memerlukan
+  pengguna aktif dengan `pengguna:urus`. `DELETE` dalam `dalamTransaksi`;
+  ringkasan dicatat ke `log_aktiviti` selepas COMMIT (jejak audit kekal kerana
+  entri baharu tidak soft-delete).
+- Baris `is_deleted=true` tetapi `deleted_at NULL` dilangkau (umur tidak diketahui).
+- Spec `e2e/tests/08-purge-soft-delete.spec.mjs` (guna data bertarikh ~100 tahun
+  + `hari=36000` supaya data sebenar tidak tersentuh).
+- Turut dibetulkan: `config/db.js` memanggil `pool.connect()` tanpa `release()`
+  (bocor 1 sambungan; `pool.end()` tergantung) → kini `pool.query("SELECT 1")`.
 
 ### 2.2 Notifikasi terhadap pengguna yang dipadam — **Selesai**
 
@@ -176,7 +191,7 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 | ~~Pindah logik ke `controllers/`~~ | **Selesai 2026-09-25** — 48 handler dipindah (salinan AST); 180/180 respons GET (5 peranan) identik dengan versi sebelum; E2E 21/21 | — |
 | ~~Piawai `{ error }` vs `{ message }`~~ | **Selesai** | §2.5 |
 | Skrip migrasi pukal bcrypt | Pengguna tidak bertindak hilang | §1.2 |
-| Polisi purge `is_deleted` | Saiz DB | §2.1 |
+| ~~Polisi purge `is_deleted`~~ | **Selesai** (`npm run purge`) | §2.1 |
 
 ---
 
@@ -189,5 +204,5 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 3. **[x] [P1] §2.5** — ralat `{ error }`, berjaya `{ message }`.
 4. **[x] [P2] §2.2** — penerima ikut kebenaran + fallback pentadbir.
 5. **[x] [P2] §1.5** — `POST /api/roles/flush-cache`.
-6. **[ ] [P2] §2.1** — polisi retention & purge soft-delete (perlu keputusan tempoh simpanan).
+6. **[x] [P2] §2.1** — `npm run purge` (365 hari, notifikasi & log_aktiviti).
 7. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.

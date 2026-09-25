@@ -110,7 +110,9 @@ npm run migrate:status
   Ketua Subsidiari 11, Staff 9, Viewer 5.
 - **Soft-delete**: TIADA `DELETE FROM` dalam kod aplikasi. Semua "padam" =
   `UPDATE <jadual> SET is_deleted = true, deleted_at = NOW()`. Semua query
-  pembacaan menapis `is_deleted = false`.
+  pembacaan menapis `is_deleted = false`. Satu-satunya pengecualian:
+  `scripts/purge.js` (`npm run purge`) — buang kekal `notifikasi`/`log_aktiviti`
+  soft-delete > 365 hari; pratonton lalai, `--laksana --oleh=<staff_id pentadbir>`.
 - **Kata laluan**: bcrypt melalui `utils/katalaluan.js`
   (`hashKatalaluan`, `sahkanKatalaluan` — sokongan fallback legasi +
   rehash-on-login, `perluRehash`). Jangan simpan/banding plain-text.
@@ -131,6 +133,11 @@ npm run migrate:status
 ## Konvensyen Frontend (`risk_frontend`)
 
 - React 19 + Vite 7 + React Router 7. Alias import: `@` → `./src`.
+- **KESELAMATAN — JANGAN hardcode kunci API / rahsia / token dalam frontend**
+  (termasuk `VITE_*` env: semua `VITE_*` dibundel ke JS dan boleh dibaca
+  sesiapa). Kunci pihak ketiga mesti disimpan di `risk_backend/.env` dan
+  diakses melalui endpoint backend (proxy). `VITE_*` hanya untuk nilai awam
+  (cth. URL API).
 - Axios instance: `src/api/api.js` (auto-attach JWT dari `localStorage.token`)
   dengan `baseURL: VITE_API_URL || http://localhost:5001/api`.
 - Auth/RBAC di klien: `src/hooks/useAuth.js` — role uppercase (`ADMIN`,

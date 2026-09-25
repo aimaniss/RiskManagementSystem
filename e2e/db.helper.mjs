@@ -68,14 +68,18 @@ export const DB = {
   },
 };
 
-// Muatkan modul utils/<fail> terus dari risk_backend (ESM) dengan env DB backend
-export async function muatUtilBackend(fail) {
+// Muatkan modul risk_backend/<segmen...> terus (ESM) dengan env DB backend
+export async function muatModulBackend(...segmen) {
   for (const key of ["DB_USER", "DB_HOST", "DB_NAME", "DB_PASS", "DB_PORT", "JWT_SECRET"]) {
     const value = bacaEnv(key);
     if (value !== undefined) process.env[key] = value;
   }
 
-  return import(pathToFileURL(path.join(BACKEND_DIR, "utils", fail)));
+  return import(pathToFileURL(path.join(BACKEND_DIR, ...segmen)));
+}
+
+export async function muatUtilBackend(fail) {
+  return muatModulBackend("utils", fail);
 }
 
 export async function muatDalamTransaksi() {

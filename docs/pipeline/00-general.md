@@ -123,7 +123,8 @@ sequenceDiagram
   `/api/log_aktiviti` (underscore).
 - `GET /health` (luar prefix `/api`, tanpa auth) untuk semakan hayat server/E2E.
 - Operasi tulis berbilang jadual dibalut `dalamTransaksi` (`utils/transaksi.js`);
-  "padam" = soft-delete (`is_deleted = true`), tiada `DELETE FROM`.
+  "padam" = soft-delete (`is_deleted = true`), tiada `DELETE FROM` — kecuali
+  `scripts/purge.js` (buang kekal `notifikasi`/`log_aktiviti` soft-delete > 365 hari).
 - Kata laluan bcrypt (`utils/katalaluan.js`) dengan rehash-on-login bagi legasi.
 - Migrasi `bahagian` & jadual lain dicipta melalui SQL mentah (`knex.raw`),
   bukan `createTable` — diperlukan perhatian semasa membuat migration baru.

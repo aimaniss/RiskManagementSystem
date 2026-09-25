@@ -12,8 +12,10 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// Semak sambungan tanpa memegang client (pool.connect() tanpa release() membocorkan
+// satu sambungan dan menyebabkan pool.end() tergantung)
 pool
-  .connect()
+  .query("SELECT 1")
   .then(() => console.log("Connected to PostgreSQL"))
   .catch((err) => console.error("DB connection error:", err));
 
