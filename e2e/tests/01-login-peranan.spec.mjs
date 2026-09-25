@@ -1,6 +1,6 @@
 // 01-login-peranan.spec.mjs — Fasa 6: Spec login per peranan (5 peranan).
 // Tujuan: pastikan setiap peranan dapat log masuk melalui API dan menerima
-// token JWT yang membawa array 'kebenaran' yang sesuai.
+// array 'kebenaran' yang sesuai dalam respons pengguna.
 
 import { test, expect } from "@playwright/test";
 import { CREDENTIALS, apiLogin } from "./helpers.mjs";
@@ -19,9 +19,9 @@ for (const akaun of SEMUA) {
   }) => {
     const sesi = await apiLogin(request, akaun);
     expect(sesi.token).toBeTruthy();
-    expect(sesi.nama_peranan || sesi.peranan).toBe(akaun.label);
-    expect(Array.isArray(sesi.kebenaran)).toBe(true);
-    expect(sesi.kebenaran.length).toBeGreaterThan(0);
+    expect(sesi.user?.peranan).toBe(akaun.label);
+    expect(Array.isArray(sesi.user?.kebenaran)).toBe(true);
+    expect(sesi.user?.kebenaran?.length).toBeGreaterThan(0);
   });
 }
 
@@ -29,7 +29,7 @@ test("Kebenaran mengikut peranan (jumlah minimum disahkan)", async ({ request })
   const hasil = {};
   for (const akaun of SEMUA) {
     const sesi = await apiLogin(request, akaun);
-    hasil[akaun.staff_id] = sesi.kebenaran.length;
+    hasil[akaun.staff_id] = sesi.user.kebenaran.length;
   }
   // Nilai disahkan dari migrasi 020/021: Admin 17, Executive 14, KS 11, Staff 9, Viewer 5
   expect(hasil[CREDENTIALS.admin.staff_id]).toBe(17);

@@ -24,7 +24,8 @@ const verifyToken = async (req, res, next) => {
          u.nama_penuh,   
          u.peranan_id, 
          p.nama_peranan, 
-         u.syarikat_id
+         u.syarikat_id,
+         u.token_dikemaskini_at
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
        WHERE u.pengguna_id = $1 AND u.is_deleted = false`,
@@ -35,6 +36,15 @@ const verifyToken = async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({ error: "Akaun ini telah dipadam atau tidak lagi wujud." });
+    }
+
+    if (user.token_dikemaskini_at) {
+      const tokenRevision = decoded.token_dikemaskini_at;
+      const currentRevision = new Date(user.token_dikemaskini_at).getTime();
+      const tokenRevisionTime = tokenRevision ? new Date(tokenRevision).getTime() : NaN;
+      if (!Number.isFinite(tokenRevisionTime) || tokenRevisionTime !== currentRevision) {
+        return res.status(401).json({ error: "Sesi telah tamat. Sila log masuk semula." });
+      }
     }
 
     req.user = user;

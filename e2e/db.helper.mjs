@@ -42,16 +42,39 @@ if (!DB_PASS) {
   );
 }
 
-export const DB = new Pool({
+const konfigurasiDB = {
   user: DB_USER,
   host: DB_HOST,
   database: DB_NAME,
   password: DB_PASS,
   port: Number(DB_PORT),
-});
+};
+
+let pool = new Pool(konfigurasiDB);
+let poolDitutup = false;
+
+export const DB = {
+  query(...args) {
+    if (poolDitutup) {
+      pool = new Pool(konfigurasiDB);
+      poolDitutup = false;
+    }
+    return pool.query(...args);
+  },
+  end() {
+    if (poolDitutup) return Promise.resolve();
+    poolDitutup = true;
+    return pool.end();
+  },
+};
 
 // Muatkan helper 'dalamTransaksi' terus dari risk_backend (ESM)
 export async function muatDalamTransaksi() {
+  for (const key of ["DB_USER", "DB_HOST", "DB_NAME", "DB_PASS", "DB_PORT", "JWT_SECRET"]) {
+    const value = bacaEnv(key);
+    if (value !== undefined) process.env[key] = value;
+  }
+
   const mod = await import(
     pathToFileURL(path.join(BACKEND_DIR, "utils", "transaksi.js"))
   );

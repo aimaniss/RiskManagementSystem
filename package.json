@@ -9,6 +9,6 @@
     "test:e2e:headed": "npx playwright test --config e2e/playwright.config.mjs --headed"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.63.0"
   }
 }

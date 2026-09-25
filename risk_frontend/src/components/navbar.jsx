@@ -224,6 +224,8 @@ function Navbar() {
       return;
     }
 
+    const passwordChanged = Boolean(passwordNew && passwordNew.trim() !== "");
+
     try {
       const formData = new FormData();
       if (passwordOld) formData.append("katalaluan_lama", passwordOld);
@@ -252,6 +254,13 @@ function Navbar() {
       setShowPasswordOld(false);
       setShowPasswordNew(false);
       setModalOpen(false);
+
+      if (passwordChanged) {
+        localStorage.removeItem("token");
+        setToast({ variant: "success", title: "Kata laluan ditukar. Sila log masuk semula." });
+        window.setTimeout(() => window.location.assign("/login"), 800);
+        return;
+      }
 
       setToast({ variant: "success", title: "Profil berjaya dikemaskini!" });
     } catch (err) {

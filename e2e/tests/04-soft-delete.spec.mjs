@@ -65,15 +65,16 @@ test.describe("Soft-delete log_aktiviti", () => {
     // 1. Cipta baris log aktiviti ujian (langsung ke DB)
     const insert = await DB.query(
       `INSERT INTO log_aktiviti (pengguna_id, aktiviti, perincian, ringkasan)
-       VALUES (1, 'E2E', 'Ujian soft-delete', 'Log ujian E2E') RETURNING id`
+       VALUES ($1, 'E2E', 'Ujian soft-delete', 'Log ujian E2E') RETURNING id`,
+      [admin.user.pengguna_id]
     );
     idLog = insert.rows[0].id;
 
     // 2. Kelihatan dalam senarai API
     const senarai = await request.get(`${API}/log_aktiviti`, { headers: admin.auth });
     const body = await senarai.json();
-    const dijumpai = Array.isArray(body) ? body.find((l) => l.id === idLog) : null;
-    expect(dijumpai || body.rows?.some((l) => l.id === idLog)).toBeTruthy();
+    const dijumpai = Array.isArray(body) ? body.find((l) => l.log_id === idLog) : null;
+    expect(dijumpai || body.rows?.some((l) => l.log_id === idLog)).toBeTruthy();
 
     // 3. Padam melalui API
     const padam = await request.delete(`${API}/log_aktiviti/${idLog}`, { headers: admin.auth });
@@ -88,11 +89,12 @@ test.describe("Soft-delete log_aktiviti", () => {
 });
 
 test.afterAll(async () => {
-  if (idPengguna) {
-    await DB.query(`DELETE FROM pengguna WHERE pengguna_id = $1`, [idPengguna]);
-  }
   if (idLog) {
     await DB.query(`DELETE FROM log_aktiviti WHERE id = $1`, [idLog]);
+  }
+  if (idPengguna) {
+    await DB.query(`DELETE FROM log_aktiviti WHERE pengguna_id = $1`, [idPengguna]);
+    await DB.query(`DELETE FROM pengguna WHERE pengguna_id = $1`, [idPengguna]);
   }
   await tutupDB();
 });

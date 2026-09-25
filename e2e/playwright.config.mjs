@@ -19,7 +19,7 @@ export default {
     {
       command: "node server.js",
       cwd: "../risk_backend",
-      url: "http://localhost:5001/",
+      url: "http://localhost:5001/health",
       reuseExistingServer: true,
       timeout: 120_000,
     },

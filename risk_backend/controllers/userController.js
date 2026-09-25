@@ -3,6 +3,7 @@ import pool from "../config/db.js";
 import { dalamTransaksi } from "../utils/transaksi.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 import { hashKatalaluan, sahkanKatalaluan } from "../utils/katalaluan.js";
+import { dapatkanKebenaranPeranan } from "../middleware/authMiddleware.js";
 
 // Query JOIN pengguna yang SERAGAM (tidak termasuk katalaluan)
 const USER_SELECT = `
@@ -39,7 +40,8 @@ export const profilSemasa = async (req, res) => {
     );
 
     if (!rows[0]) return res.status(404).json({ error: "Pengguna tidak ditemui." });
-    res.json(rows[0]);
+    const kebenaran = Array.from(await dapatkanKebenaranPeranan(req.user.peranan_id));
+    res.json({ ...rows[0], kebenaran });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -93,7 +95,7 @@ export const kemaskiniProfilSendiri = async (req, res) => {
     await dalamTransaksi(async (client) => {
       if (newPassword) {
         await client.query(
-          `UPDATE pengguna SET katalaluan = $1, gambar_profil = $2, tarikh_dikemaskini = NOW() WHERE pengguna_id = $3`,
+          `UPDATE pengguna SET katalaluan = $1, gambar_profil = $2, tarikh_dikemaskini = NOW(), token_dikemaskini_at = NOW() WHERE pengguna_id = $3`,
           [newPassword, newProfile, pengguna_id]
         );
       } else {
@@ -206,6 +208,10 @@ export const kemaskiniPengguna = async (req, res) => {
       newPassword = await hashKatalaluan(katalaluan);
     }
     const passwordAkhir = newPassword || originalUser.katalaluan;
+    const tokenRevisionChanged = Boolean(newPassword) ||
+      String(staff_id) !== String(originalUser.staff_id) ||
+      String(peranan_id) !== String(originalUser.peranan_id) ||
+      String(syarikat_id) !== String(originalUser.syarikat_id);
 
     await dalamTransaksi(async (client) => {
       const result = await client.query(
@@ -215,11 +221,15 @@ export const kemaskiniPengguna = async (req, res) => {
              katalaluan = $3,
              peranan_id = $4,
              syarikat_id = $5,
-             gambar_profil = $6,
-             tarikh_dikemaskini = NOW()
-         WHERE pengguna_id = $7 AND is_deleted = false
-         RETURNING pengguna_id`,
-        [staff_id, nama_penuh, passwordAkhir, peranan_id, syarikat_id, newProfile, id]
+              gambar_profil = $6,
+              tarikh_dikemaskini = NOW(),
+              token_dikemaskini_at = CASE
+                WHEN $8 THEN NOW()
+                ELSE token_dikemaskini_at
+              END
+          WHERE pengguna_id = $7 AND is_deleted = false
+          RETURNING pengguna_id`,
+        [staff_id, nama_penuh, passwordAkhir, peranan_id, syarikat_id, newProfile, id, tokenRevisionChanged]
       );
       if (result.rowCount === 0) {
         const err = new Error("Pengguna tidak ditemui.");

@@ -14,7 +14,7 @@ export const login = async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan, 
-              u.peranan_id, u.syarikat_id, p.nama_peranan
+              u.peranan_id, u.syarikat_id, u.token_dikemaskini_at, p.nama_peranan
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
        WHERE u.staff_id = $1 AND u.is_deleted = false`,
@@ -38,7 +38,7 @@ export const login = async (req, res) => {
       );
     }
 
-    // Muat kebenaran peranan untuk role matrix (dikemas dalam JWT)
+    // Muat kebenaran peranan untuk respons login
     let kebenaran = [];
     try {
       const set = await dapatkanKebenaranPeranan(user.peranan_id);
@@ -54,7 +54,7 @@ export const login = async (req, res) => {
         peranan_id: user.peranan_id,
         nama_peranan: user.nama_peranan,
         syarikat_id: user.syarikat_id,
-        kebenaran,
+        token_dikemaskini_at: user.token_dikemaskini_at,
       },
       process.env.JWT_SECRET,
       { expiresIn: "5d" }
@@ -131,7 +131,7 @@ export const tukarKatalaluan = async (req, res) => {
 
     const hash = await hashKatalaluan(baru);
     await pool.query(
-      "UPDATE pengguna SET katalaluan = $1, tarikh_dikemaskini = NOW() WHERE pengguna_id = $2",
+      "UPDATE pengguna SET katalaluan = $1, tarikh_dikemaskini = NOW(), token_dikemaskini_at = NOW() WHERE pengguna_id = $2",
       [hash, req.user.pengguna_id]
     );
 
