@@ -14,6 +14,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `06-penerima-notifikasi.spec.mjs` | `dapatkanPenerimaIkutKebenaran`: penerima ikut kebenaran (Executive termasuk untuk `pindaan:lulus`), pelaku dikecualikan, fallback pentadbir, `[]` tanpa ralat |
 | `07-flush-cache-kebenaran.spec.mjs` | Perubahan `peranan_kebenaran` hanya berkuat kuasa selepas `POST /api/roles/flush-cache`; Staff ditolak `403`; matriks dipulihkan selepas ujian |
 | `08-purge-soft-delete.spec.mjs` | `scripts/purge.js`: pratonton tanpa ubah data; tolak bukan pentadbir; buang hanya baris soft-delete melepasi tempoh (langkau `deleted_at NULL` & baris aktif); jejak audit dicatat |
+| `09-keselamatan.spec.mjs` | Pengawal regresi: tiada kata laluan plain-text dalam DB, setiap pengguna ada `token_dikemaskini_at`, tiada respons 5xx yang memulangkan `err.message` (semakan statik controllers) |
 
 ## Prasyarat
 
@@ -42,7 +43,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **30/30 ujian lulus**.
+- Suite semasa: **33/33 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

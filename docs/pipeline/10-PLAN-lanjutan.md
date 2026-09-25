@@ -41,7 +41,7 @@ yang sama merentas DB — selamat. Walau bagaimanapun, `LOWER()` hanya normalkan
 cadang tambah indeks unik expression `UNIQUE (LOWER(nama_bahagian))` sebagai
 pelindung kedua.
 
-### 1.2 Rehash-on-login (kata laluan legasi → bcrypt)
+### 1.2 Rehash-on-login (kata laluan legasi → bcrypt) — **Selesai**
 
 Kata laluan lama disimpan **plain-text**. `utils/katalaluan.js`:
 `sahkanKatalaluan` sahkan bcrypt dahulu, jika gagal cuba plain-text; bila padan
@@ -49,6 +49,13 @@ dalam bentuk plain-text, kira hash bcrypt baharu dan tulis ke DB (dalam
 `authController.login`). **Skenario (P1 untuk audit)**: pengguna yang tidak log
 masuk sejak naik taraf masih plain-text di DB — jalankan skrip migrasi pukal
 atau biar rehash semula secara natural; jangan paksa reset kata laluan.
+
+**Pelaksanaan (2026-09-25)**: migration 023 menukar semua baki plain-text
+(5 pengguna aktif ketika itu) kepada bcrypt terus — kata laluan sama, tiada
+reset. Migration yang sama mengisi `token_dikemaskini_at` NULL + lalai `NOW()`
+(semua pengguna perlu log masuk semula sekali). Turut dibuat: 37 respons 5xx
+yang mendedahkan `err.message` (termasuk cawangan debug kod SQL dalam pindaan)
+kini mesej BM umum. Pengawal regresi: `e2e/tests/09-keselamatan.spec.mjs`.
 
 ### 1.3 `pindaan:lihat` — kebenaran paparan berasingan
 
@@ -190,7 +197,7 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 |------|-------|----------------------|
 | ~~Pindah logik ke `controllers/`~~ | **Selesai 2026-09-25** — 48 handler dipindah (salinan AST); 180/180 respons GET (5 peranan) identik dengan versi sebelum; E2E 21/21 | — |
 | ~~Piawai `{ error }` vs `{ message }`~~ | **Selesai** | §2.5 |
-| Skrip migrasi pukal bcrypt | Pengguna tidak bertindak hilang | §1.2 |
+| ~~Skrip migrasi pukal bcrypt~~ | **Selesai** (migration 023) | §1.2 |
 | ~~Polisi purge `is_deleted`~~ | **Selesai** (`npm run purge`) | §2.1 |
 
 ---

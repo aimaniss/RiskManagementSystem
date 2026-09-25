@@ -117,7 +117,7 @@ export const senaraiLaporan = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /laporan:", err);
-    res.status(500).json({ error: "Gagal memuatkan data laporan: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data laporan." });
   }
 };
 
@@ -305,6 +305,6 @@ export const dataPenuhLaporan = async (req, res) => {
     res.json(riskData);
   } catch (err) {
     console.error(`Ralat GET /laporan/${risiko_id}/data-penuh:`, err);
-    res.status(500).json({ error: "Gagal memuatkan data laporan penuh: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data laporan penuh." });
   }
 };

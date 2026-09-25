@@ -112,7 +112,7 @@ export const senaraiRisikoUntukPindaan = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /pindaan/risks-for-amendment:", err);
-    res.status(500).json({ error: "Gagal memuatkan data risiko untuk pindaan: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data risiko untuk pindaan." });
   }
 };
 
@@ -384,13 +384,7 @@ export const mohonPindaan = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /pindaan/:risk_id:", err);
-    if (err.code === "42804") {
-      res.status(500).json({
-        error: `Gagal memproses permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
-      });
-    } else {
-      res.status(500).json({ error: "Gagal memproses permohonan: " + err.message });
-    }
+    res.status(500).json({ error: "Gagal memproses permohonan." });
   } finally {
     client.release();
   }
@@ -509,15 +503,6 @@ export const senaraiPindaan = async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error("Ralat GET /pindaan:", err);
-    if (err.code === "42601") {
-      return res.status(500).json({ error: "Ralat Sintaks SQL (42601) di BE." });
-    } else if (err.code === "42P01") {
-      return res.status(500).json({ error: `Ralat Pangkalan Data (42P01): ${err.message}.` });
-    } else if (err.code === "42703") {
-      return res
-        .status(500)
-        .json({ error: `Ralat Pangkalan Data (42703): Lajur tidak dikenali - ${err.message}.` });
-    }
     res.status(500).json({ error: "Gagal memuatkan senarai permohonan." });
   }
 };
@@ -706,13 +691,7 @@ export const luluskanPindaan = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /pindaan/:pindaan_id/approve:", err);
-    if (err.code === "42804") {
-      res.status(500).json({
-        error: `Gagal meluluskan permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
-      });
-    } else {
-      res.status(500).json({ error: "Gagal meluluskan permohonan: " + err.message });
-    }
+    res.status(500).json({ error: "Gagal meluluskan permohonan." });
   } finally {
     client.release();
   }
@@ -791,12 +770,6 @@ export const tolakPindaan = async (req, res) => {
     res.json({ message: "Permohonan telah ditolak.", data: rows[0] });
   } catch (err) {
     console.error("Ralat PUT /pindaan/:pindaan_id/reject:", err);
-    if (err.code === "42804") {
-      res.status(500).json({
-        error: `Gagal menolak permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
-      });
-    } else {
-      res.status(500).json({ error: "Gagal menolak permohonan: " + err.message });
-    }
+    res.status(500).json({ error: "Gagal menolak permohonan." });
   }
 };

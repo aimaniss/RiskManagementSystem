@@ -127,6 +127,11 @@ npm run migrate:status
 - Mesej ralat API & respons pengguna dalam **Bahasa Melayu**. Ralat (4xx/5xx)
   SENTIASA `{ error: "..." }`; `{ message }` hanya untuk respons berjaya.
   Klien baca `err.response?.data?.error`.
+- **Jangan dedahkan butiran teknikal** dalam respons 5xx: tiada `err.message`,
+  `err.stack`, kod SQL atau nama jadual. Guna mesej BM umum dan
+  `console.error("Ralat <route>:", err)` di server. Mesej `err.message` hanya
+  boleh dipulangkan untuk ralat 4xx tersuai yang dilontar sendiri (`statusCode`).
+  Dikawal oleh spec E2E `09-keselamatan`.
 - Tiada suite unit dikonfig; E2E melalui Playwright — lihat root `e2e/README.md`
   (`npm run test:e2e` dari root khas `e2e/`).
 

@@ -84,9 +84,7 @@ export const login = async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err.message);
-    res
-      .status(500)
-      .json({ error: "Ralat pelayan. Sila cuba sebentar lagi.", details: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 

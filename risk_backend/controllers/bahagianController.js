@@ -9,7 +9,7 @@ export const senaraiBahagian = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -51,6 +51,6 @@ export const tambahBahagian = async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err.statusCode === 409) return res.status(409).json({ error: err.message });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };

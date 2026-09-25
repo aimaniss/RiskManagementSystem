@@ -16,7 +16,7 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
-| Ujian E2E Playwright | ✅ 30/30 lulus |
+| Ujian E2E Playwright | ✅ 33/33 lulus |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
 | Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5), §2.2, §1.5 & §2.1 selesai, Fasa 5 controllers; §2.4 (P3) berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
@@ -119,6 +119,7 @@
 | 2026-09-25 | 6 | Jalankan suite E2E penuh: **21/21 lulus**; tambah `/health`, betulkan kontrak respons login, env transaksi, lifecycle pool DB, dan fixture FK log aktiviti |
 | 2026-09-25 | P1 | Tambah migration 022 `token_dikemaskini_at`; `/users/me` kini sumber kebenaran UI; session refresh pada mount/focus/60s; token lama dicabut selepas role/password/staff/syarikat berubah; spec P1 E2E — suite **21/21 lulus** |
 | 2026-09-25 | 5 / §2.5 | **Ralat seragam** `{ error }` (±80 respons BE + 7 halaman FE). **Refactor BE**: 48 handler dari 11 `routes/*.js` dipindah ke `controllers/*Controller.js` (salinan AST), matriks risiko 4 salinan → `utils/matriksRisiko.js`, buang kod mati. Pengesahan: 180/180 respons GET identik vs HEAD (5 peranan), lint `no-undef` bersih, E2E 21/21, build FE lulus |
+| 2026-09-25 | Keselamatan | Migration 023: rehash 5 kata laluan plain-text → bcrypt + isi `token_dikemaskini_at` (lalai `NOW()`; semua pengguna log masuk semula sekali); tutup 37 kebocoran `err.message` dalam respons 5xx (buang cawangan debug SQL pindaan; tambah `console.error` yang tiada); spec 09 pengawal regresi — E2E **33/33** |
 | 2026-09-25 | §2.1 | `npm run purge` (`scripts/purge.js`): buang kekal `notifikasi`/`log_aktiviti` soft-delete > 365 hari; pratonton lalai, `--laksana --oleh` (pengguna:urus), transaksi + log audit; betulkan kebocoran sambungan `config/db.js` (`pool.connect()` tanpa release); spec 08 — E2E **30/30**. Tambah peraturan AGENTS: jangan hardcode kunci API/rahsia di FE |
 | 2026-09-25 | §1.5 | `POST /api/roles/flush-cache` (`pengguna:urus`) + `kosongkanCacheKebenaran()` + log aktiviti; spec 07 (kebenaran baharu hanya berkuat kuasa selepas flush; matriks dipulihkan) — E2E **27/27** |
 | 2026-09-25 | §2.2 | Penerima notifikasi ikut **kebenaran** (`dapatkanPenerimaIkutKebenaran`) + fallback pentadbir; betulkan bug Executive (`pindaan:lulus`) tidak dimaklumkan permohonan pindaan baru; buang 9 komen sejarah yang tertinggal; spec 06 — E2E **25/25** |
@@ -129,19 +130,19 @@
 
 ## Rekod / Nota
 
-- **Migrasi sedia**: 001–022 (22 migrasi, semuanya applied; `migrate:status` = 0 pending).
+- **Migrasi sedia**: 001–023 (23 migrasi, semuanya applied; `migrate:status` = 0 pending).
 - Jadual `is_deleted` + `deleted_at`: 11 jadual (migration 015) + `pengguna`,
   `notifikasi` (migration 019). Semua query pembacaan menapis `is_deleted = false`.
 - `kebenaran` / `peranan_kebenaran` (migration 014 seed dalam 020/021) kini
   **aktif** — 17 kebenaran; `authorizeKebenaran` di semua route sensitif.
 - Jumlah kebenaran per peranan (disahkan): Admin 17, Executive 14,
   Ketua Subsidiari 11, Staff 9, Viewer 5.
-- Kata laluan: legasi plain-text ditukar ke bcrypt secara rehash-on-login;
-  pengguna teras ujian (UKMH001, UKMDG1237, UKMH112, UKMSC007) sudah bcrypt.
+- Kata laluan: **semua** bcrypt (migration 023 menukar baki plain-text; tiada
+  reset). Semua pengguna ada `token_dikemaskini_at` (lalai `NOW()`).
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **30/30 lulus** pada 2026-09-25.
+- Suite E2E Playwright: **33/33 lulus** pada 2026-09-25.
 - `npm run build` frontend lulus; `npm run lint` masih melaporkan 49 error
   dan 9 warning sedia ada pada fail frontend yang tidak disentuh.
 - Dikenal pasti & difailkan untuk lanjutan: penamaan jadual (§2.4) — rujuk

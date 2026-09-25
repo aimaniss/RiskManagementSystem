@@ -26,7 +26,8 @@ export const senaraiPengguna = async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -44,7 +45,7 @@ export const profilSemasa = async (req, res) => {
     res.json({ ...rows[0], kebenaran });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -171,7 +172,7 @@ export const tambahPengguna = async (req, res) => {
     if (err.statusCode === 409) return res.status(409).json({ error: err.message });
     if (err.code === "23505")
       return res.status(409).json({ error: "ID Staf ini sudah digunakan." });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -347,6 +348,6 @@ export const padamPengguna = async (req, res) => {
   } catch (err) {
     console.error("Gagal padam pengguna:", err);
     if (err.statusCode === 404) return res.status(404).json({ error: err.message });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };

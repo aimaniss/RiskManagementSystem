@@ -139,7 +139,7 @@ export const tambahRisiko = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /risiko:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   } finally {
     client.release();
   }
@@ -269,7 +269,7 @@ export const senaraiRisiko = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /risiko:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -280,7 +280,7 @@ export const senaraiTahunRisiko = async (req, res) => {
     res.json(rows.map((r) => r.tahun));
   } catch (err) {
     console.error("Ralat GET /risiko/tahun:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -332,7 +332,7 @@ export const dapatkanRawatanRisiko = async (req, res) => {
     res.json(rawatan);
   } catch (err) {
     console.error("Ralat GET /risiko/:risiko_id/rawatan:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -428,7 +428,7 @@ export const kemaskiniRawatanRisiko = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /risiko/:risiko_id/rawatan:", err);
-    res.status(500).json({ error: "Gagal mengemaskini rawatan: " + err.message });
+    res.status(500).json({ error: "Gagal mengemaskini rawatan." });
   } finally {
     client.release();
   }
@@ -691,7 +691,7 @@ export const kemaskiniRisiko = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /risiko/:risiko_id:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   } finally {
     client.release();
   }
@@ -791,7 +791,7 @@ export const padamRisiko = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat DELETE /risiko/:risiko_id:", err);
-    res.status(500).json({ error: "Transaksi gagal: " + err.message });
+    res.status(500).json({ error: "Gagal memadam risiko." });
   } finally {
     client.release();
   }
@@ -814,7 +814,7 @@ export const semakNoRujukan = async (req, res) => {
     }
   } catch (err) {
     console.error("Ralat GET /risiko/check-no-rujukan:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -854,7 +854,7 @@ export const semakPenduaRisiko = async (req, res) => {
     res.json({ duplicates });
   } catch (err) {
     console.error("Ralat GET /risiko/check-duplicate:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 

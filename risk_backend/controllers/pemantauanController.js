@@ -100,7 +100,7 @@ export const senaraiPemantauan = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /pemantauan-risiko:", err);
-    res.status(500).json({ error: "Gagal memuatkan data pemantauan: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data pemantauan." });
   }
 };
 
@@ -243,7 +243,7 @@ export const semakPenduaLog = async (req, res) => {
     });
   } catch (err) {
     console.error("Ralat GET /check-duplicate:", err);
-    res.status(500).json({ error: "Gagal menyemak data duplicate: " + err.message });
+    res.status(500).json({ error: "Gagal menyemak data duplicate." });
   }
 };
 
@@ -324,7 +324,7 @@ export const tahapRujukan = async (req, res) => {
     });
   } catch (err) {
     console.error("Ralat GET /:risiko_id/tahap-rujukan:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -494,7 +494,7 @@ export const tambahLogPemantauan = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /pemantauan-risiko/log:", err);
-    res.status(500).json({ error: "Gagal menambah log pemantauan: " + err.message });
+    res.status(500).json({ error: "Gagal menambah log pemantauan." });
   } finally {
     client.release();
   }
@@ -553,7 +553,7 @@ export const padamLogPemantauan = async (req, res) => {
     // BARU: Rollback jika gagal
     await client.query("ROLLBACK");
     console.error("Ralat DELETE /log/:log_id:", err);
-    res.status(500).json({ error: "Gagal memadam log pemantauan: " + err.message });
+    res.status(500).json({ error: "Gagal memadam log pemantauan." });
   } finally {
     // BARU: Lepaskan client
     client.release();

@@ -141,9 +141,13 @@ bila `nama_peranan` termasuk Staff/Ketua Subsidiari, dan kini turut menapis
   `getAuthUser()` mengendalikan kedua-duanya.
 - Migration 022 menambah `pengguna.token_dikemaskini_at`; ia dikemas kini
   apabila kata laluan/role/staff/syarikat berubah dan dibandingkan dalam
-  `verifyToken`. Semakan hanya berlaku jika lajur bukan `NULL` — pengguna yang
-  belum pernah berubah (nilai `NULL`) kekal sah sehingga perubahan pertama;
-  selepas itu token tanpa claim atau dengan claim berbeza ditolak.
+  `verifyToken` (token tanpa claim atau claim berbeza → `401`). Migration 023
+  mengisi semua nilai `NULL` dan menetapkan lalai `NOW()`, jadi setiap pengguna
+  (termasuk yang baharu) boleh dicabut tokennya. `verifyToken` masih melangkau
+  semakan jika nilai `NULL` (pertahanan; tidak sepatutnya berlaku lagi).
+- Migration 023 juga menukar semua kata laluan legasi plain-text kepada bcrypt
+  (tanpa reset). Fallback plain-text dalam `sahkanKatalaluan` kekal tetapi tidak
+  lagi dicapai; spec `09-keselamatan` memastikan tiada plain-text dalam DB.
 - Peranan Title Case di server, UPPERCASE di klien (`ROLE_MAPPING`).
 - `pindaan:lihat` (Admin+Executive sahaja) wujud supaya senarai pindaan tidak
   bocor rentas-syarikat kepada Staff/Ketua Subsidiari.

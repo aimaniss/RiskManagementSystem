@@ -366,6 +366,6 @@ export const dapatkanDashboard = async (req, res) => {
     });
   } catch (err) {
     console.error("Ralat GET /api/dashboard:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };

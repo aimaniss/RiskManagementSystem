@@ -45,7 +45,7 @@ LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)`;
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /rawatan:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -97,7 +97,7 @@ LEFT JOIN LogPemantauan lp
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /rawatan/with-status:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -179,7 +179,7 @@ export const simpanPenilaian = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /rawatan/penilaian/:risiko_id:", err);
-    res.status(500).json({ error: "Gagal mengemaskini penilaian: " + err.message });
+    res.status(500).json({ error: "Gagal mengemaskini penilaian." });
   } finally {
     client.release();
   }
@@ -291,7 +291,7 @@ export const tambahRawatan = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /rawatan:", err);
-    res.status(500).json({ error: "Gagal menambah rawatan: " + err.message });
+    res.status(500).json({ error: "Gagal menambah rawatan." });
   } finally {
     client.release();
   }
@@ -385,7 +385,7 @@ export const kemaskiniRawatan = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /rawatan/:rawatan_id:", err);
-    res.status(500).json({ error: "Gagal mengemaskini rawatan: " + err.message });
+    res.status(500).json({ error: "Gagal mengemaskini rawatan." });
   } finally {
     client.release();
   }
@@ -440,7 +440,7 @@ export const padamRawatan = async (req, res) => {
     if (err.statusCode === 404) {
       return res.status(404).json({ error: err.message });
     }
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
 
@@ -485,6 +485,6 @@ export const rawatanIkutRisiko = async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error("Ralat GET /rawatan/:risiko_id:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };
