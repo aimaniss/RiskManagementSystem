@@ -176,7 +176,7 @@ RiskManagementSystem/
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
-│   │   ├── knex/                     # Migrasi Knex (14 fail)
+│   │   ├── knex/                     # Migrasi Knex (22 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
 │   ├── routes/
 │   │   ├── auth.js                   # Log masuk / JWT
@@ -334,9 +334,9 @@ RiskManagementSystem/
 | `pelantindakanpemantauan` | Tindakan pemantauan |
 | `kakitanganpemantauan` | Kakitangan pemantauan |
 | `permohonan_pindaan` | Permohonan pindaan dengan data sebelum/lepas (JSONB) |
-| `kebenaran` | Kebenaran individu (sedia ada, belum digunakan sepenuhnya) |
+| `kebenaran` | 17 kebenaran (`risiko:daftar`, `pengguna:urus`, …) — dikuatkuasa oleh `authorizeKebenaran` |
 | `peranan_kebenaran` | Peta peranan-kebenaran (junction table) |
-| `notifikasi` | Notifikasi pengguna (sedia ada, belum digunakan sepenuhnya) |
+| `notifikasi` | Notifikasi pengguna (pindaan, kelulusan, tugasan) |
 | `log_aktiviti` | Jejak audit untuk semua tindakan |
 
 ---
@@ -348,56 +348,77 @@ RiskManagementSystem/
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
 | `POST` | `/api/auth/login` | Log masuk dan terima JWT | Awam |
+| `POST` | `/api/auth/logout` | Log keluar (catat aktiviti) | Semua |
+| `PUT` | `/api/auth/tukar-katalaluan` | Tukar kata laluan (token lama dicabut) | Semua |
+| `GET` | `/health` | Semakan hayat server | Awam |
 
 ### Pengguna
 
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
-| `GET` | `/api/users/` | Senarai semua pengguna | Admin |
-| `GET` | `/api/users/me` | Dapatkan profil sendiri | Semua |
+| `GET` | `/api/users/` | Senarai semua pengguna | `pengguna:urus` |
+| `GET` | `/api/users/me` | Dapatkan profil sendiri + `kebenaran` terkini | Semua |
 | `PUT` | `/api/users/me` | Kemaskini profil sendiri | Semua |
-| `POST` | `/api/users/` | Cipta pengguna baru | Admin |
-| `PUT` | `/api/users/:id` | Kemaskini pengguna | Admin |
-| `DELETE` | `/api/users/:id` | Padam pengguna | Admin |
+| `POST` | `/api/users/` | Cipta pengguna baru | `pengguna:urus` |
+| `PUT` | `/api/users/:id` | Kemaskini pengguna | `pengguna:urus` |
+| `DELETE` | `/api/users/:id` | Padam pengguna (soft-delete) | `pengguna:urus` |
 
 ### Risiko
 
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
-| `GET` | `/api/risiko/` | Senarai risiko (ditapis mengikut peranan) | Semua |
-| `POST` | `/api/risiko/` | Daftar risiko baru | Admin, Staff, Ketua, Executive |
-| `PUT` | `/api/risiko/:risiko_id` | Kemaskini risiko | Admin, Staff, Ketua |
-| `DELETE` | `/api/risiko/:risiko_id` | Padam risiko | Admin sahaja |
+| `GET` | `/api/risiko/` | Senarai risiko (ditapis mengikut syarikat) | `risiko:lihat` |
+| `POST` | `/api/risiko/` | Daftar risiko baru | `risiko:daftar` |
+| `PUT` | `/api/risiko/:risiko_id` | Kemaskini risiko | `risiko:daftar` |
+| `DELETE` | `/api/risiko/:risiko_id` | Padam risiko (soft-delete) | `risiko:padam` |
+| `PUT` | `/api/risiko/:risiko_id/approve` | Luluskan risiko | `risiko:lulus` |
+| `PUT` | `/api/risiko/:risiko_id/reject` | Tolak risiko | `risiko:lulus` |
 | `GET` | `/api/risiko/tahun` | Dapatkan tahun tersedia | Semua |
 | `GET` | `/api/risiko/check-no-rujukan/:no` | Semak kewujudan no. rujukan | Semua |
+| `GET` | `/api/risiko/check-duplicate` | Semak risiko pendua | Semua |
 
 ### Rawatan & Pemantauan
 
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
 | `GET` | `/api/risiko/:id/rawatan` | Dapatkan rawatan risiko | Semua |
-| `PUT` | `/api/risiko/:id/rawatan` | Kemaskini rawatan | Admin, Staff, Ketua |
-| `PUT` | `/api/risiko/:id/pemantauan/log/:log_id` | Kemaskini log pemantauan | Admin, Staff, Ketua |
+| `PUT` | `/api/risiko/:id/rawatan` | Kemaskini rawatan | `rawatan:urus` |
+| `GET` | `/api/rawatan/`, `/api/rawatan/with-status`, `/api/rawatan/:risiko_id` | Senarai / butiran rawatan | Semua |
+| `PUT` | `/api/rawatan/penilaian/:risiko_id` | Simpan penilaian | `risiko:nilai` atau `rawatan:urus` |
+| `POST` / `PUT` / `DELETE` | `/api/rawatan/`, `/api/rawatan/:rawatan_id` | Urus rawatan (padam = soft-delete) | `rawatan:urus` |
+| `GET` | `/api/pemantauan-risiko/` | Senarai pemantauan | `risiko:lihat` |
+| `GET` | `/api/pemantauan-risiko/:risiko_id/{info,sejarah,sejarah-baru,tahap-rujukan}` | Butiran pemantauan | Semua |
+| `POST` / `PUT` / `DELETE` | `/api/pemantauan-risiko/log`, `/api/pemantauan-risiko/log/:log_id` | Urus log pemantauan | `pemantauan:urus` |
+| `PUT` | `/api/risiko/:id/pemantauan/log/:log_id` | Kemaskini log pemantauan | `pemantauan:urus` |
 
 ### Pindaan
 
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
-| `POST` | `/api/pindaan/:risk_id` | Mohon pindaan baru | Semua (Admin auto-lulus) |
-| `GET` | `/api/pindaan/` | Senarai permohonan pindaan | Admin, Executive |
-| `GET` | `/api/pindaan/stats` | Statistik pindaan | Admin |
-| `PUT` | `/api/pindaan/:id/approve` | Luluskan pindaan | Admin |
-| `PUT` | `/api/pindaan/:id/reject` | Tolak pindaan | Admin |
+| `GET` | `/api/pindaan/risks-for-amendment` | Risiko yang boleh dipinda | `pindaan:urus` |
+| `POST` | `/api/pindaan/:risk_id` | Mohon pindaan baru (Admin auto-lulus) | `pindaan:urus` |
+| `GET` | `/api/pindaan/` | Senarai permohonan pindaan | `pindaan:lihat` |
+| `GET` | `/api/pindaan/stats` | Statistik pindaan | `pindaan:lulus` |
+| `PUT` | `/api/pindaan/:id/approve` | Luluskan pindaan | `pindaan:lulus` |
+| `PUT` | `/api/pindaan/:id/reject` | Tolak pindaan | `pindaan:lulus` |
 
 ### Lain-lain
 
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
-| `GET` | `/api/dashboard` | Statistik dashboard | Semua |
-| `GET` | `/api/laporan` | Data laporan | Semua |
-| `GET` | `/api/log_aktiviti` | Log aktiviti jejak audit | Admin |
-| `GET` | `/api/syarikat` | Senarai syarikat | Semua |
-| `GET` | `/api/roles` | Senarai peranan | Semua |
+| `GET` | `/api/dashboard` | Statistik dashboard | `dashboard:lihat` |
+| `GET` | `/api/laporan`, `/api/laporan/:risiko_id/data-penuh` | Data laporan | `laporan:jana` |
+| `GET` | `/api/log_aktiviti` | Log aktiviti jejak audit | `log:baca` |
+| `DELETE` | `/api/log_aktiviti`, `/api/log_aktiviti/:id` | Padam log (soft-delete) | `log:padam` |
+| `GET` | `/api/syarikat` | Senarai syarikat (ditapis mengikut peranan) | Semua |
+| `GET` | `/api/tahun` | Senarai tahun | Semua |
+| `GET` | `/api/bahagian` | Senarai bahagian | Semua |
+| `POST` | `/api/bahagian` | Tambah bahagian | `rujukan:urus` |
+| `GET` | `/api/roles` | Senarai peranan | `pengguna:urus` |
+| `*` | `/api/notifikasi/*` | Notifikasi sendiri (senarai, baca, padam) | Semua |
+
+"Semua" = mana-mana pengguna log masuk (`verifyToken` sahaja). Matriks
+kebenaran per peranan: `docs/pipeline/01-auth-rbac.md`.
 
 ---
 
@@ -542,16 +563,20 @@ curl -X POST http://localhost:5001/api/auth/login \
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
-  "pengguna": {
-    "pengguna_id": 1,
-    "staff_id": "ADMIN001",
-    "nama_penuh": "Admin Utama",
+  "user": {
+    "nama": "Admin Utama",
+    "peranan": "Admin",
     "peranan_id": 1,
-    "nama_peranan": "Admin",
-    "syarikat_id": 1
+    "pengguna_id": 1,
+    "syarikat_id": 1,
+    "kebenaran": ["risiko:daftar", "risiko:lihat", "..."]
   }
 }
 ```
+
+JWT tidak membawa senarai `kebenaran`; klien mendapatkan kebenaran terkini
+melalui `GET /api/users/me`. Token lama dicabut (`401`) apabila kata laluan,
+peranan, ID staf atau syarikat pengguna berubah.
 
 ### Contoh Daftar Risiko
 

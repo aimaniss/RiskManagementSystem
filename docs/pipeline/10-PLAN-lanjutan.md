@@ -59,19 +59,18 @@ role terhad. **Skenario (P1)**: pastikan setiap endpoint pindaan berskala dengan
 kebenaran yang tepat — jangan sekali imbas memetakan `pindaan:urus` untuk GET
 senarai.
 
-### 1.4 Pembawa kebenaran dalam JWT — risiko staleness
+### 1.4 Pembawa kebenaran dalam JWT — risiko staleness — **Selesai (P1)**
 
-JWT membawa array `kebenaran` yang disahkan **pada masa log masuk**, manakala
-backend `dapatkanKebenaranPeranan` disambungkan semula setiap **60 saat**.
-Kes pelik: admin digugurkan dari `pengguna:urus` (API di backend sudah tolak
-selepas ≤60s), **tetapi UI klien masih tunjuk menu** sehinggalah token diluput/
-log masuk semula.
+Array `kebenaran` tidak lagi dibawa dalam payload JWT. Respons login masih
+mengembalikan `user.kebenaran` untuk keserasian, tetapi sumber kebenaran UI
+sekarang ialah `GET /api/users/me`, yang mengembalikan snapshot kebenaran terkini
+bersama profil pengguna. `AppLayout` memuat semula snapshot pada mount, apabila
+jendela menerima fokus, dan setiap 60 saat; `MATRIX_KEBENARAN` hanya fallback
+untuk token lama.
 
-**Penyelesaian yang dicadangkan (P1):**
-1. Jangan bawa kebenaran dalam JWT; fetch dari `GET /api/users/me` (sudah
-   wujud) dan simpan dalam memori/`context`.
-2. Atau TTL backend sepadan dengan `exp` JWT (mis. sama-sama 8 jam) dan sahkan
-   kebenaran semula pada setiap `users/me`/listing.
+Backend masih mengesahkan kebenaran daripada role matrix pada setiap request
+(dengan cache proses 60 saat), jadi penyingkiran array daripada JWT tidak
+mengurangkan penguatkuasaan API.
 
 ### 1.5 Cache kebenaran — invalidasi
 
@@ -109,13 +108,16 @@ kelulusan pindaan menunggu pelulus yang dipadam → notifikasi tiada. Cadang
 fallback ke Admin (atau penanda "pelulus tidak aktif") bila senarai kosong.
 **(P2 — tingkah laku semasa: senyap.)**
 
-### 2.3 JWT masih sah selepas ubah kata laluan/role (P1)
+### 2.3 JWT masih sah selepas ubah kata laluan/role — **Selesai (P1)**
 
-Menukar kata laluan (`PUT /api/auth/tukar-katalaluan`) atau menukar role tidak
-menyahkan token lama. Cadang:
-- Simpan `katalaluan_ditukar_at` dalam JWT dan bandingkan dengan `updated_at`
-  pengguna di `verifyToken` (atau skor tamat pendek 30 min).
-- Untuk role change: gabung dengan §1.4 (sumber kebenaran dari `users/me`).
+Migration 022 menambah `pengguna.token_dikemaskini_at`. Nilai ini dimasukkan ke
+payload JWT semasa login dan dibandingkan dengan DB dalam `verifyToken`. Update
+kata laluan, role, `staff_id` atau `syarikat_id` mengemas kini nilai tersebut;
+token lama menerima `401` dan pengguna perlu log masuk semula. `/users/me` juga
+memulihkan role, syarikat dan kebenaran terkini selepas login.
+
+Spes `e2e/tests/05-p1-auth-session.spec.mjs` mengesahkan kebenaran segar,
+penolakan token lama, dan login semula selepas perubahan role/password.
 
 ### 2.4 Penamaan jadual tidak normatif (had didokumenkan, P3)
 
@@ -155,10 +157,11 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 
 ## 4. Ringkasan langkah yang disyorkan (ikut keutamaan)
 
-1. **[P1] §1.4 + §2.3** — ubah sumber kebenaran UI dari JWT ke `users/me`;
-   takat token terhadap pertukaran kata laluan/role.
-2. **[P1] §2.6** — semak klien penggunaan `GET /api/roles` sebelum login.
-3. **[P1] §2.5** — piawai `{ error }` + `{ message }`.
-4. **[P2] §2.2** — fallback notifikasi pelulus dipadam → Admin.
-5. **[P2] §1.5 / §2.1** — flush-cache kebenaran & toolbar purge.
-6. **[P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.
+1. **[x] [P1] §1.4 + §2.3** — sumber kebenaran UI kini `users/me`; token
+   direvisi dan dicabut selepas perubahan kata laluan/role/staff/syarikat.
+2. **[x] [P1] §2.6** — audit klien `GET /api/roles` sebelum login selesai; tiada
+   penggunaan pra-login yang memerlukan endpoint awam.
+3. **[ ] [P1] §2.5** — piawai `{ error }` + `{ message }`.
+4. **[ ] [P2] §2.2** — fallback notifikasi pelulus dipadam → Admin.
+5. **[ ] [P2] §1.5 / §2.1** — flush-cache kebenaran & toolbar purge.
+6. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.

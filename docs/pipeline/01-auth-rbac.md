@@ -26,10 +26,13 @@ sequenceDiagram
   C->>D: SELECT pengguna JOIN peranan WHERE staff_id=$1 AND is_deleted=false
   D-->>C: user (sahkan katalaluan: bcrypt + fallback legasi + rehash-on-login)
   C->>K: kebenaran = dapatkanKebenaranPeranan(user.peranan_id)
-  C->>C: jwt.sign({ ..., kebenaran }, JWT_SECRET)
-  C-->>L: { token, pengguna: {...}, kebenaran }
+  C->>C: jwt.sign({ ..., token_dikemaskini_at }, JWT_SECRET)
+  C-->>L: { token, user: { ..., kebenaran } }
   L->>L: localStorage.setItem("token", token)
-  L->>L: useAuth()/getAuthUser() → decode & simpan peranan + kebenaran
+  L->>L: useAuth()/getAuthUser() → decode peranan
+  L->>A: GET /api/users/me (snapshot kebenaran)
+  A->>C: verifyToken + profilSemasa
+  C-->>L: user + kebenaran terkini
   L->>L: Navigasi ke "/"
 ```
 
@@ -43,22 +46,26 @@ sequenceDiagram
 
 - `src/api/api.js` — satu instans axios `baseURL: VITE_API_URL || http://localhost:5001/api`;
   interceptor permintaan menambah `Authorization: Bearer <localStorage.token>`.
+  Interceptor respons: `401` → padam `localStorage.token` dan redirect ke `/login`
+  (kecuali sudah di `/login`, supaya ralat log masuk tidak menyebabkan redirect).
 - `src/hooks/useAuth.js` —
-  - `getAuthUser()` decode JWT (jwt-decode), semak `exp`, padam token jika luput;
-    kini membaca **array `kebenaran`** dari token (`decoded.kebenaran`).
-  - **Matrix kebenaran tunggal**: `MATRIX_KEBENARAN` (fallback untuk token lama)
-    laluan bagi helper `hasKebenaran(...)` / `getKebenaran()`:
-    - `isAdmin()` = `hasKebenaran("pengguna:urus")`
-    - `canEditPenilaian()` = `hasKebenaran("risiko:nilai")`
-    - `canEdit()` = `hasKebenaran("risiko:daftar")`
-    - `canViewTindakan()` & `isRestrictedRole()` kekal berasaskan peranan
-      (semantik skop tindakan & isolasi syarikat).
-- `src/utils/auth.js` — re-export penuh (termasuk `hasKebenaran`/`getKebenaran`)
-  untuk keserasian import lama.
+  - `getAuthUser()` decode JWT (jwt-decode), semak `exp`, dan menyimpan snapshot
+    auth semasa; `refreshAuthSession()` memuat `GET /api/users/me` untuk peranan,
+    syarikat, dan **array `kebenaran` terkini**.
+  - `getKebenaran()`/`hasKebenaran()` membaca snapshot `users/me`; fallback
+    `MATRIX_KEBENARAN` hanya untuk token lama sebelum P1.
+  - `isAdmin()` = `hasKebenaran("pengguna:urus")`
+  - `canEditPenilaian()` = `hasKebenaran("risiko:nilai")`
+  - `canEdit()` = `hasKebenaran("risiko:daftar")`
+  - `canViewTindakan()` & `isRestrictedRole()` kekal berasaskan peranan
+    (semantik skop tindakan & isolasi syarikat).
+- `src/utils/auth.js` — re-export penuh (termasuk `hasKebenaran`/`getKebenaran`/
+  `refreshAuthSession`) untuk keserasian import lama.
 - `components/ProtectedRoute.jsx` — bungkus semua laluan kecuali `/login`
   dan `/unauthorized`; periksa `allowedRoles`.
 - `components/AppLayout.jsx` — sidebar/navbar mengikut peranan & kebenaran;
-  navbar memuatkan profil (`/users/me`) dan notifikasi (`/notifikasi/*`).
+  memuat `/users/me` pada mount, focus semula, dan setiap 60 saat. Navbar memuatkan
+  notifikasi (`/notifikasi/*`).
 
 ## Validasi di Backend (`middleware/authMiddleware.js`)
 
@@ -69,14 +76,16 @@ flowchart LR
   B -->|verify gagal/luput| Y["403"]
   B -->|verify ok| C["Query ulang pengguna JOIN peranan<br/>(is_deleted = false)"]
   C -->|pengguna padam/tiada| Z["404"]
-  C -->|ok| D["req.user = { pengguna_id, peranan_id, nama_peranan, syarikat_id }"]
+  C -->|token_dikemaskini_at tidak sepadan| Z2["401"]
+  C -->|ok| D["req.user + token_dikemaskini_at"]
   D --> E["authorizeKebenaran('risiko:daftar', ...) atau ('risiko:nilai','rawatan:urus')"]
   E -->|kebenaran tak mencukupi| W["403"]
   E -->|ok| F["Handler route"]
 ```
 
-- `verifyToken` kini **menapis pengguna `is_deleted=true`** (pengguna dipadam
-  tidak boleh kekal beraksi walaupun token sah).
+- `verifyToken` kini **menapis pengguna `is_deleted=true`** dan membandingkan
+  claim `token_dikemaskini_at` dengan nilai semasa DB; perubahan kata laluan,
+  role, ID staf atau syarikat mencabut token lama dengan `401`.
 - `dapatkanKebenaranPeranan(perananId)` — query join `peranan_kebenaran`,
   **cache dalam proses selama 60 saat** (elak query setiap permintaan).
 - `authorizeKebenaran(...namaKebenaran)` — LULUS jika pengguna memiliki **sekurang-
@@ -85,7 +94,7 @@ flowchart LR
 - `authorizeRoles(...)` **kekal dieksport** (fallback) tetapi **tidak lagi digunakan**
   pada mana-mana route aplikasi.
 
-## Matriks Kebenaran (17) — nyahtetapkan semasa log masuk
+## Matriks Kebenaran (17) — sumber kebenaran semasa
 
 | Kebenaran | Admin | Executive | KT. Subsidiari | Staff | Viewer |
 |-----------|:---:|:---:|:---:|:---:|:---:|
@@ -123,10 +132,16 @@ bila `nama_peranan` termasuk Staff/Ketua Subsidiari, dan kini turut menapis
 - Kata laluan kini **bcrypt** (`utils/katalaluan.js`): `sahkanKatalaluan`
   menyokong bcrypt + fallback plain-text legasi serta **rehash-on-login**
   (kata laluan legasi ditukar ke bcrypt pada log masuk berikut).
-- `kebenaran` dibawa dalam JWT (token >616 aksara). Token lama tanpa `kebenaran`
-  → frontend jatuh ke `MATRIX_KEBENARAN` mengikut peranan.
+- P1: `kebenaran` tidak lagi dibawa dalam JWT; respons login tetap mengembalikan
+  `user.kebenaran`, kemudian `GET /api/users/me` menjadi sumber kebenaran UI.
+  Token lama tanpa snapshot menggunakan `MATRIX_KEBENARAN` sebagai fallback.
 - `pengguna_id` dalam token mungkin `decoded.id` atau `decoded.pengguna_id`;
   `getAuthUser()` mengendalikan kedua-duanya.
+- Migration 022 menambah `pengguna.token_dikemaskini_at`; ia dikemas kini
+  apabila kata laluan/role/staff/syarikat berubah dan dibandingkan dalam
+  `verifyToken`. Semakan hanya berlaku jika lajur bukan `NULL` — pengguna yang
+  belum pernah berubah (nilai `NULL`) kekal sah sehingga perubahan pertama;
+  selepas itu token tanpa claim atau dengan claim berbeza ditolak.
 - Peranan Title Case di server, UPPERCASE di klien (`ROLE_MAPPING`).
 - `pindaan:lihat` (Admin+Executive sahaja) wujud supaya senarai pindaan tidak
   bocor rentas-syarikat kepada Staff/Ketua Subsidiari.

@@ -50,16 +50,16 @@ sequenceDiagram
   participant FE as React SPA (5175)
   participant P as Vite Proxy /api
   participant BE as Express (5001)
-  participant MW as verifyToken/authorizeRoles
+  participant MW as verifyToken/authorizeKebenaran
   participant DB as PostgreSQL
 
   U->>FE: Klik/borang
-  FE->>FE: useAuth() → pastikan token sah (jwt-decode)
+  FE->>FE: useAuth() → pastikan token sah (jwt-decode) + snapshot /users/me
   FE->>P: api.get/post (Authorization: Bearer <JWT>)
   P->>BE: forward /api/...
   BE->>MW: verifyToken → req.user {pengguna_id, nama_peranan, syarikat_id}
-  MW-->>BE: 401/403 jika gagal
-  BE->>BE: authorizeRoles(...) mengikut endpoint
+  MW-->>BE: 401/403 jika gagal (401 → klien padam token & ke /login)
+  BE->>BE: authorizeKebenaran(...) mengikut endpoint
   BE->>DB: pool.query("... $1 ...", [nilai]) — parameterized
   DB-->>BE: rows
   BE->>BE: catatAktiviti(...) / hantarNotifikasi(...) (bila perlu)
@@ -86,9 +86,13 @@ sequenceDiagram
 ### Autentikasi & RBAC
 
 - **Backend**: `verifyToken` (baca JWT → semak semula pengguna + peranan di DB,
-  set `req.user`) kemudian `authorizeRoles("Admin", ...)` (Title Case).
+  tolak `is_deleted=true` dan token lama melalui `token_dikemaskini_at`, set
+  `req.user`) kemudian `authorizeKebenaran("risiko:daftar", ...)` (17 kebenaran,
+  OR). `authorizeRoles` masih dieksport tetapi tidak digunakan pada route.
 - **Frontend**: `ProtectedRoute` (laluan terlindung), `useAuth()` →
-  `isAdmin()`, `canEdit()`, `isRestrictedRole()`, `hasRole(...)`.
+  `hasKebenaran(...)`, `isAdmin()`, `canEdit()`, `isRestrictedRole()`,
+  `hasRole(...)`. Kebenaran UI daripada `GET /api/users/me` (disegarkan oleh
+  `AppLayout`). Butiran: `01-auth-rbac.md`.
 - Setiap query risiko **wajib** menghormati isolasi data:
   Admin/Executive = semua syarikat; Staff/Ketua Subsidiari = `WHERE syarikat_id = req.user.syarikat_id`.
 
@@ -111,13 +115,13 @@ sequenceDiagram
 
 ## Anomali & Nota Am (Gotcha)
 
-- Hanya `auth` menggunakan `controllers/`; 13 modul lain meletakkan logik terus
-  dalam `routes/*.js`.
+- Hanya `auth`, `users` dan `bahagian` menggunakan `controllers/`; modul lain
+  meletakkan logik terus dalam `routes/*.js`.
 - Prefix pemantauan ialah `/api/pemantauan-risiko` (dash); log aktiviti ialah
   `/api/log_aktiviti` (underscore).
-- `authController.js` membanding kata laluan **plain text** walaupun `bcrypt`
-  dipasang — calon pembetulan keselamatan.
-- Panggilan `catatAktiviti({...})` dalam `authController.js` tidak selari dengan
-  tanda tangan posisi utiliti.
+- `GET /health` (luar prefix `/api`, tanpa auth) untuk semakan hayat server/E2E.
+- Operasi tulis berbilang jadual dibalut `dalamTransaksi` (`utils/transaksi.js`);
+  "padam" = soft-delete (`is_deleted = true`), tiada `DELETE FROM`.
+- Kata laluan bcrypt (`utils/katalaluan.js`) dengan rehash-on-login bagi legasi.
 - Migrasi `bahagian` & jadual lain dicipta melalui SQL mentah (`knex.raw`),
   bukan `createTable` — diperlukan perhatian semasa membuat migration baru.

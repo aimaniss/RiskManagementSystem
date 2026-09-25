@@ -16,9 +16,10 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
+| Ujian E2E Playwright | ✅ 21/21 lulus |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
-| Work lanjutan P1–P3 | 📋 Dirancang — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
+| Work lanjutan P1–P3 | ✅ P1 auth selesai; §2.5/P2–P3 berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
 
 📄 Pelan revamp: `docs/pipeline/09-PLAN-revamp.md` (status pelaksanaan di atas).
 📄 Cadangan lanjutan: `docs/pipeline/10-PLAN-lanjutan.md`.
@@ -78,9 +79,9 @@
 - [x] Spec kebenaran (dibenarkan / ditolak) — `e2e/tests/02-kebenaran.spec.mjs`
 - [x] Spec rollback transaksi — `e2e/tests/03-rollback-transaksi.spec.mjs`
 - [x] Spec soft-delete — `e2e/tests/04-soft-delete.spec.mjs`
+- [x] Spec P1 auth/session — `e2e/tests/05-p1-auth-session.spec.mjs`
 - [x] Config + README + root `package.json` scripts (`npm run test:e2e`)
-- [ ] **Jalankan** suite end-to-end penuh sebelum deploy (perlu
-      `npm install -D @playwright/test` + `npx playwright install chromium`)
+- [x] **Jalankan** suite end-to-end penuh — 21/21 lulus pada 2026-09-25
 
 ### Fasa 7 — Dokumentasi
 - [x] Kemas kini `docs/pipeline/09-PLAN-revamp.md` (status + kriteria selesai)
@@ -91,6 +92,17 @@
 
 ---
 
+### P1 Auth/Session (selesai)
+- [x] Migration 022: tambah `pengguna.token_dikemaskini_at`
+- [x] `verifyToken` membandingkan claim token dengan DB dan menolak token lama
+- [x] `GET /api/users/me` mengembalikan `kebenaran` terkini
+- [x] Frontend refresh session pada mount, focus, dan setiap 60 saat
+- [x] Password change memaksa log masuk semula; role/staff/syarikat change
+      mencabut token
+- [x] Spec P1 E2E: `e2e/tests/05-p1-auth-session.spec.mjs`
+
+---
+
 ## Log Kemajuan
 
 | Tarikh | Fasa | Apa yang dilakukan |
@@ -98,12 +110,15 @@
 | 2026-09-25 | — | Siapkan MCP `rms-boost`, agent `rms-architect`, dokumentasi pipeline 00–09, audit revamp v2, daftar Playwright MCP |
 | 2026-09-25 | — | Bina fail ini (`PROGRESS.md`) + ikat dalam `opencode.json` instructions + konvensyen commit English |
 | 2026-09-25 | 1–7 | **Revamp v2 selesai**: `utils/transaksi.js`; bcrypt (`utils/katalaluan.js`); `authorizeKebenaran` + cache 60s; migrasi 019/020/021; soft-delete menyeluruh (grep `DELETE FROM` = 0); `controllers/` untuk users/bahagian/auth; pindaan:lihat; reflektor `useAuth.js`; smoke test semua endpoint lulus; suite E2E `e2e/` disediakan; docs dikemas kini |
+| 2026-09-25 | 6 | Jalankan suite E2E penuh: **21/21 lulus**; tambah `/health`, betulkan kontrak respons login, env transaksi, lifecycle pool DB, dan fixture FK log aktiviti |
+| 2026-09-25 | P1 | Tambah migration 022 `token_dikemaskini_at`; `/users/me` kini sumber kebenaran UI; session refresh pada mount/focus/60s; token lama dicabut selepas role/password/staff/syarikat berubah; spec P1 E2E — suite **21/21 lulus** |
+| 2026-09-25 | 7 | Audit docs selepas revamp/P1: kemas kini `00-general.md` (authorizeKebenaran, `/health`, controllers), `08-pengguna-notifikasi-log.md` (kebenaran per route, soft-delete, `/users/me` + pencabutan token), `01-auth-rbac.md` (interceptor 401, nota `NULL` revision), `09` (migrasi 022), root `README.md` (respons login, endpoint auth, 22 migrasi) |
 
 ---
 
 ## Rekod / Nota
 
-- **Migrasi sedia**: 001–021 (21 migrasi, semuanya applied; `migrate:status` = 0 pending).
+- **Migrasi sedia**: 001–022 (22 migrasi, semuanya applied; `migrate:status` = 0 pending).
 - Jadual `is_deleted` + `deleted_at`: 11 jadual (migration 015) + `pengguna`,
   `notifikasi` (migration 019). Semua query pembacaan menapis `is_deleted = false`.
 - `kebenaran` / `peranan_kebenaran` (migration 014 seed dalam 020/021) kini
@@ -112,10 +127,13 @@
   Ketua Subsidiari 11, Staff 9, Viewer 5.
 - Kata laluan: legasi plain-text ditukar ke bcrypt secara rehash-on-login;
   pengguna teras ujian (UKMH001, UKMDG1237, UKMH112, UKMSC007) sudah bcrypt.
-- `verifyToken` menolak pengguna `is_deleted=true`.
+- `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
+  `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Dikenal pasti & difailkan untuk lanjutan: kebenaran JWT stale (§1.4),
-  invalidasi cache kebenaran (§1.5), takat token selepas ubah kata laluan/role
-  (§2.3), purging soft-delete (§2.1), notifikasi pelulus dipadam (§2.2),
-  piawai `{error}` vs `{message}` (§2.5), penamaan jadual (§2.4) — rujuk
+- Suite E2E Playwright: **21/21 lulus** pada 2026-09-25.
+- `npm run build` frontend lulus; `npm run lint` masih melaporkan 49 error
+  dan 9 warning sedia ada pada fail frontend yang tidak disentuh.
+- Dikenal pasti & difailkan untuk lanjutan: invalidasi cache kebenaran (§1.5),
+  purging soft-delete (§2.1), notifikasi pelulus dipadam (§2.2), piawai
+  `{error}` vs `{message}` (§2.5), penamaan jadual (§2.4) — rujuk
   `docs/pipeline/10-PLAN-lanjutan.md`.

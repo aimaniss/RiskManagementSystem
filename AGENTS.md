@@ -114,7 +114,7 @@ npm run migrate:status
 - Migrasi knex dalam `risk_backend/migrations/knex/` (config: `knexfile.js`).
 - Mesej ralat API & respons pengguna dalam **Bahasa Melayu**, format JSON
   `{ error: "..." }`.
-- Tiada suite ujian dikonfig; E2E via Playwright — lihat root `e2e/README.md`
+- Tiada suite unit dikonfig; E2E melalui Playwright — lihat root `e2e/README.md`
   (`npm run test:e2e` dari root khas `e2e/`).
 
 ## Konvensyen Frontend (`risk_frontend`)
@@ -124,9 +124,10 @@ npm run migrate:status
   dengan `baseURL: VITE_API_URL || http://localhost:5001/api`.
 - Auth/RBAC di klien: `src/hooks/useAuth.js` — role uppercase (`ADMIN`,
   `EXECUTIVE`, `KETUA SUBSIDIARI`, `STAFF`, `VIEWER`), helper `isAdmin()`,
-  `canEdit()`, `isRestrictedRole()`, `hasRole()`. Selepas revamp v2: helper
-  `hasKebenaran(...)`, `getKebenaran()` membaca array `kebenaran` dari token JWT
-  (`MATRIX_KEBENARAN` fallback untuk token lama). `isAdmin()` =
+  `canEdit()`, `isRestrictedRole()`, `hasRole()`. Selepas P1: helper
+  `hasKebenaran(...)`, `getKebenaran()` menggunakan snapshot `kebenaran` daripada
+  `GET /api/users/me`; token JWT tidak lagi membawa array kebenaran
+  (`MATRIX_KEBENARAN` hanya fallback token lama). `isAdmin()` =
   `hasKebenaran("pengguna:urus")`; `canEditPenilaian()` =
   `hasKebenaran("risiko:nilai")`; `canEdit()` = `hasKebenaran("risiko:daftar")`.
   Re-export lengkap di `src/utils/auth.js`.
@@ -163,8 +164,9 @@ ini (klausa `WHERE syarikat_id` untuk peranan terhad).
   `/api/laporan`, `/api/dashboard`, `/api/notifikasi`) — daftarkan route baharu
   di sana.
 - Jangan ganggu `verifyToken`/auth flow tanpa ujian penuh — ia teras keselamatan.
-- Kebenaran JWT lihat `docs/pipeline/10-PLAN-lanjutan.md` §1.4 (staleness) —
-  UI pakai kebenaran token semasa; backend cache 60s.
+- Kebenaran UI diambil daripada `GET /api/users/me` dan disegarkan oleh
+  `AppLayout`; backend mengesahkan `token_dikemaskini_at` untuk mencabut token
+  selepas perubahan kata laluan/role/syarikat.
 - Skor risiko: `skor_risiko` bersifat derived (R/S/T/ST) dari
   kebarangkalian × impak — jangan ubah pengiraan tanpa menyemak
   `src/constants/riskMatrix.js` dan sisi backend.
