@@ -4,6 +4,7 @@ import api from "../../api/api";
 import { formatSeparuhTahun } from "../../utils/formatters";
 import PanelKelulusan from "@/components/risiko/PanelKelulusan";
 import Toast from "@/components/ui/toast";
+import { useRisikoBerubah } from "@/hooks/useBukaRisiko";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmptyState from "@/components/ui/empty-state";
 import PageHeader from "@/components/ui/page-header";
@@ -25,6 +26,7 @@ function SenaraiTugasan() {
   useEffect(() => {
     fetchData();
   }, []);
+  useRisikoBerubah(() => fetchData());
 
   const fetchData = async () => {
     setLoading(true);

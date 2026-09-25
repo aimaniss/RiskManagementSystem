@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import api from "../../api/api";
 import { FilePenLine, ShieldAlert, ShieldCheck, Archive, Eye } from "lucide-react";
 
@@ -20,6 +20,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { hasKebenaran } from "../../utils/auth";
 import { formatDate } from "../../utils/formatters";
 import { cn } from "@/lib/utils";
+import { stateLatar, useRisikoBerubah } from "@/hooks/useBukaRisiko";
 
 /**
  * Halaman Pindaan (pindaan:lihat): permohonan menunggu kelulusan & sejarah
@@ -86,6 +87,12 @@ function PindaanRisiko() {
   useEffect(() => {
     if (canViewPage) fetchAmendments();
   }, [canViewPage, fetchAmendments]);
+
+  // Pindaan dibuat dalam modal butiran risiko di atas halaman ini
+  useRisikoBerubah(() => {
+    fetchAmendments();
+    fetchAmendmentStats();
+  });
 
   const selepasProses = (mesej) => {
     setDipilih(null);
@@ -229,6 +236,7 @@ function AmendmentsListSection({
   amendments,
   handleViewDetails,
 }) {
+  const lokasi = useLocation();
   const tab = STATUS_SEJARAH.includes(filterStatus) ? "sejarah" : "menunggu";
   const columnCount = tab === "sejarah" ? 7 : 6;
   const tabs = [
@@ -337,6 +345,7 @@ function AmendmentsListSection({
                   <TableCell className="max-w-[300px]">
                     <Link
                       to={`/risiko/${amend.risiko_id}?tab=pindaan`}
+                      state={stateLatar(lokasi)}
                       className="font-mono text-xs font-semibold text-primary hover:underline"
                     >
                       {amend.no_rujukan}

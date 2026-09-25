@@ -45,10 +45,12 @@ sequenceDiagram
 
 | Halaman/Komponen | API |
 |------------------|-----|
-| `SenaraiRisiko.jsx` | GET `/risiko` (hook `useRisks`), DELETE `/risiko/:id`; klik baris → `/risiko/:id` |
-| `ButiranRisiko/ButiranRisiko.jsx` (`/risiko/:id?tab=&sunting=1`) | GET `/risiko/:risiko_id`, GET `/pemantauan-risiko/:id/sejarah`, GET `/log_aktiviti?carian=<no_rujukan>` (tab Sejarah) |
+| `SenaraiRisiko.jsx` | GET `/risiko` (hook `useRisks`), DELETE `/risiko/:id`; klik baris → modal `/risiko/:id` |
+| `ButiranRisiko/ModalButiranRisiko.jsx` + `ButiranRisiko.jsx` (`/risiko/:id?tab=&sunting=1`) | GET `/risiko/:risiko_id`, GET `/pemantauan-risiko/:id/sejarah`, GET `/pindaan/risiko/:id`, GET `/log_aktiviti?carian=<no_rujukan>` (tab Sejarah → `TabSejarah.jsx`, garis masa ikut tarikh) |
+
+**Butiran sebagai modal**: `/risiko/:id` tiada halaman sendiri. `App.jsx` (`LaluanAplikasi`) memaparkan halaman latar daripada `location.state.latar` (atau Senarai Risiko bagi pautan terus/muat semula) dan `ModalButiranRisiko` di atasnya. Buka risiko melalui `useBukaRisiko()` / `stateLatar()` (`hooks/useBukaRisiko.js`); tukar tab mengekalkan `state`. Selepas simpan, `maklumkanRisikoBerubah()` memuat semula senarai latar (`useRisikoBerubah`). Klik di luar tidak menutup modal (elak kehilangan borang); tutup = X / Escape / Back.
 | `components/risiko/BorangPengenalpastian.jsx` | PUT `/risiko/:risiko_id` (payload penuh `payloadKemaskiniRisiko`) |
-| `components/risiko/BorangPenilaian.jsx` | Pertama: PUT `/rawatan/penilaian/:id`; pinda: PUT `/risiko/:id` |
+| `components/risiko/BorangPenilaian.jsx` | Penilaian pertama sahaja: PUT `/rawatan/penilaian/:id` (pindaan melalui `BorangPindaan`, lihat 05-pindaan) |
 
 ### Halaman butiran risiko (revamp UI, `11-PLAN-ui-revamp.md`)
 
@@ -86,10 +88,11 @@ syarikat lain. Daftar risiko (`POST`) menyemak `syarikatId` dalam controller.
 
 - `SenaraiTugasan.jsx` memanggil `GET /risiko?tugasan=true` (dan
   `GET /pindaan?tugasan=true`).
-- `SenaraiTugasanDetailModal.jsx` → `PUT /risiko/:id/approve` (hantar body
-  {sebab}/{komen} bila reject) — butang hanya untuk ADMIN/EXECUTIVE
-  (`canEditPenilaian`).
-- Reject: `PUT /risiko/:id/reject` dengan `{ sebab: adminComment }`.
+- `components/risiko/PanelKelulusan.jsx` (drawer) → `PUT /risiko/:id/approve`;
+  reject `PUT /risiko/:id/reject` dengan `{ sebab }` (wajib). Butang hanya bagi
+  pemegang `risiko:lulus`.
+- Tab Ringkasan memaparkan Didaftarkan oleh/Tarikh daftar dan Diluluskan (atau
+  Ditolak) oleh/pada daripada `diluluskan_oleh` & `tarikh_kelulusan`.
 
 ## Jadual DB Disentuh
 

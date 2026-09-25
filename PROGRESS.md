@@ -16,7 +16,7 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
-| Ujian E2E Playwright | ✅ 98/98 lulus (DB kosong + seed, dan salinan DB sebenar; juga dalam CI) |
+| Ujian E2E Playwright | ✅ 99/99 lulus (DB kosong + seed, dan salinan DB sebenar; juga dalam CI) |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
 | Revamp UI (penilaian/rawatan/pemantauan) | ✅ Selesai — halaman `/risiko/:id` (lih. `docs/pipeline/11-PLAN-ui-revamp.md` §8) |
@@ -192,6 +192,7 @@ Aksesibiliti & telefon:
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
+| 2026-09-26 | UI butiran | **Butiran risiko sebagai modal** di atas halaman asal (URL `/risiko/:id` kekal; pautan terus/muat semula guna Senarai Risiko sebagai latar; `hooks/useBukaRisiko.js`; senarai latar dimuat semula selepas simpan; klik luar tidak menutup). **Ringkasan** disusun semula: baris label:nilai sejajar dua lajur, huraian risiko, Punca/Kesan bernombor, Diluluskan/Ditolak oleh & pada. **Sejarah** jadi garis masa ikut tarikh dengan ikon jenis aktiviti (no. rujukan berulang dibuang). **Panduan**: kekal reka bentuk asal, warna ikut token tema (cerah & gelap), matriks & tahap ikut `riskMatrix.js`, butang `Button`; butang Panduan outline. Dialog: butang tutup seragam ("Tutup"). Spec 15 +2 ujian modal — E2E **99/99** pada DB kosong & salinan DB sebenar |
 | 2026-09-26 | Pindaan & aliran | **Sejarah pindaan**: tab Pindaan di `/risiko/:id` (`GET /pindaan/risiko/:id`, +spec 12) & halaman Pindaan bertab "Menunggu Kelulusan / Sejarah" (`?status=Sejarah`, lajur diproses oleh/tarikh). **No. rujukan `PIN-YYYY-NNNN`** (migrasi 029: nombor rekod lama + indeks unik; dijana dalam transaksi dengan kunci advisori; dalam notifikasi). **Revamp UI pindaan**: satu `BorangPindaan` (penilaian + keberkesanan, justifikasi, ringkasan) di tab Pindaan; dialog `PilihRisikoPindaan`; `PanelKelulusan` (drawer) untuk Senarai Tugasan & Pindaan; 15 fail modal lama dibuang. **Penilaian & Rawatan / Pemantauan**: jalur aliran bersama `AliranKerjaRisiko` (1 Perlu Dinilai → 2 Perlu Rawatan → 3 Dalam Pemantauan → 4 Selesai, berkiraan & boleh diklik), jadual padat + kad telefon + paging; Pemantauan tahap awal → terkini + trend. **Drawer seragam** (`SheetHeader`/`SheetBody`/`SheetFooter`, penuh lebar telefon, bar simpan melekat). Pepijat: `/rawatan/with-status`, `/pemantauan-risiko` & `/pindaan/risks-for-amendment` tidak menapis risiko dipadam/belum lulus. `UKMH_RMS` dimigrasi ke 029 (backup `UKMH_RMS_backup_20260926b`) — E2E **98/98** pada DB kosong & salinan DB sebenar |
 | 2026-09-26 | UX | **Pembaikan UX dari walkthrough**: Staff/Ketua Subsidiari mohon pindaan dari tab Penilaian (butang "Mohon Pindaan"); "Pinda" oleh pelulus kini melalui `POST /pindaan` (justifikasi wajib, direkodkan); `GET /risiko/:id` + `pindaan_terkini` (banner menunggu/ditolak); permohonan kedua semasa menunggu → `409`; pindaan diluluskan mengemas kini `status_risiko`; `GET /notifikasi` + `risiko_id`, klik notifikasi membuka rekod, `**tebal**` lama dipapar, "diluluskan oleh <nama>"; daftar risiko terus ke `/risiko/:id` (respons + `no_rujukan`); modal Senarai Tugasan: "Sebab Penolakan", nama syarikat, pautan butiran, `role=dialog`/Escape; label & `*` borang Daftar/Log Masuk; loceng `<button>`; pengepala nama pengguna; menu Laporan untuk Executive; kad statistik telefon dibalut. `UKMH_RMS` dimigrasi ke 028 (backup `UKMH_RMS_backup_20260926`). Spec 17 → 9 ujian; spec 02/13/15 dikemas kini — E2E **94/94** pada DB kosong & salinan DB sebenar |
 | 2026-09-26 | UI E2E | Branch cloud `claude/boleh-edit-terus-ke-vrrcbj` di-merge (fast-forward); migrasi 025–027 diuji pada salinan `UKMH_RMS` (data kekal). **Spec 17** `17-ui-aliran-penuh` (7 ujian): Staff log masuk & daftar dari borang → Executive lulus/tolak dari Senarai Tugasan → penilaian → pindaan Staff lulus (Executive) / tolak (Admin) → Executive mohon dari halaman Pindaan (lulus terus). Pepijat dibetulkan: borang Daftar Risiko menghantar `syarikat` bukan `syarikatId` (daftar melalui UI gagal `403` untuk Staff sejak refactor controller); migration 028 `risiko.status_risiko` boleh NULL (pemasangan baharu gagal `500` semasa daftar). To-Do UX ditambah — E2E **92/92** pada DB kosong & salinan DB sebenar |
@@ -242,7 +243,7 @@ Aksesibiliti & telefon:
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **98/98 lulus** pada 2026-09-26 (spec 01–17).
+- Suite E2E Playwright: **99/99 lulus** pada 2026-09-26 (spec 01–17).
 - `npm audit`: **0 kerentanan** di backend & frontend (2026-09-25).
 - `npm run build` frontend lulus (termasuk Linux, selepas betulkan import
   huruf besar/kecil); `npm run lint` 0 error, 9 warning sedia ada.

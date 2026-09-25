@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ChevronRight, FilePenLine, Search } from "lucide-react";
 import api from "@/api/api";
 import {
@@ -14,13 +13,14 @@ import EmptyState from "@/components/ui/empty-state";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { LencanaTahap } from "@/components/risiko/umum";
 import { formatSeparuhTahun } from "@/utils/formatters";
+import { useBukaRisiko } from "@/hooks/useBukaRisiko";
 
 /**
  * Dialog memilih risiko untuk dipinda. Borang pindaan sebenar berada di tab
  * Pindaan halaman butiran risiko supaya hanya ada satu borang.
  */
 export default function PilihRisikoPindaan({ buka, onTutup }) {
-  const navigate = useNavigate();
+  const bukaRisiko = useBukaRisiko();
   const [senarai, setSenarai] = useState(null);
   const [carian, setCarian] = useState("");
   const [ralat, setRalat] = useState(null);
@@ -42,7 +42,7 @@ export default function PilihRisikoPindaan({ buka, onTutup }) {
 
   const pilih = (r) => {
     onTutup();
-    navigate(`/risiko/${r.id}?tab=pindaan&sunting=1`);
+    bukaRisiko(r.id, "?tab=pindaan&sunting=1");
   };
 
   return (

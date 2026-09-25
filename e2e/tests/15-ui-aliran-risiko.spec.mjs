@@ -103,7 +103,8 @@ test("Executive: nilai → rawat → pantau melalui tab halaman butiran", async 
   await page.getByRole("button", { name: "Simpan Penilaian" }).click();
   await expect(page.getByText("Penilaian risiko disimpan.")).toBeVisible();
   await expect(peringkatSemasa(page)).toContainText("Rawatan");
-  await expect(page.locator('[role="dialog"]')).toHaveCount(0);
+  // Borang dalam tab, bukan modal bersarang: hanya dialog butiran risiko
+  await expect(page.locator('[role="dialog"]')).toHaveCount(1);
 
   // 2. Rawatan
   await page.getByRole("button", { name: "Mula" }).click();
@@ -223,8 +224,10 @@ test("Staff: tiada pinda terus; sunting log terkini dengan medan terhad", async 
   // Log lama: tiada butang sunting (hanya log terkini)
   await garisMasa.last().click();
   await expect(page.getByRole("dialog").getByRole("button", { name: "Sunting" })).toHaveCount(0);
+  // Escape menutup panel log sahaja; modal butiran risiko kekal terbuka
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   await garisMasa.first().click();
   await expect(page.getByRole("dialog").getByRole("button", { name: "Padam" })).toHaveCount(0);
@@ -233,18 +236,35 @@ test("Staff: tiada pinda terus; sunting log terkini dengan medan terhad", async 
   await expect(page.getByRole("dialog").getByLabel("Status Pemantauan *")).toBeEnabled();
 });
 
-test("Paparan telefon: tiada skrol mendatar pada halaman butiran", async ({ page }) => {
+test("Paparan telefon: modal butiran penuh skrin tanpa skrol mendatar", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const sesi = await apiLogin(page.request, CREDENTIALS.executive);
   await sealSession(page, sesi.token);
-  for (const tab of ["ringkasan", "penilaian", "rawatan", "pemantauan"]) {
+  for (const tab of ["ringkasan", "penilaian", "rawatan", "pemantauan", "pindaan", "sejarah"]) {
     await page.goto(`/risiko/${ctx.risikoId}?tab=${tab}`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const lebih = await page
-      .locator("main")
-      .evaluate((el) => el.scrollWidth - el.clientWidth);
-    expect(lebih, `tab ${tab}`).toBeLessThanOrEqual(1);
+    const ukuran = await page.getByRole("dialog").evaluate((el) => {
+      const isi = el.querySelector(".overflow-y-auto");
+      return { lebar: el.getBoundingClientRect().width, lebih: isi.scrollWidth - isi.clientWidth };
+    });
+    expect(ukuran.lebar, `tab ${tab}`).toBeGreaterThanOrEqual(389);
+    expect(ukuran.lebih, `tab ${tab}`).toBeLessThanOrEqual(1);
   }
+});
+
+test("Modal butiran: tutup kembali ke senarai asal dengan tapisan kekal", async ({ page }) => {
+  const sesi = await apiLogin(page.request, CREDENTIALS.executive);
+  await sealSession(page, sesi.token);
+  await page.goto("/SenaraiRisiko");
+  await page.getByPlaceholder(/Cari/).first().fill(TANDA);
+  await page.getByText(`${TANDA} Gangguan rangkaian utama`).first().click();
+  await expect(page).toHaveURL(new RegExp(`/risiko/${ctx.risikoId}`));
+  await expect(page.getByRole("dialog").getByRole("heading", { level: 1 })).toBeVisible();
+
+  await page.getByRole("dialog").getByRole("button", { name: "Tutup" }).last().click();
+  await expect(page).toHaveURL(/\/SenaraiRisiko$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByPlaceholder(/Cari/).first()).toHaveValue(TANDA);
 });
 
 test("Senarai Risiko membuka halaman butiran (boleh dipautkan)", async ({ page }) => {

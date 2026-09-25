@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { UserCircle, X, Eye, EyeOff, Bell, CheckCheck, Trash2, Sun, Moon } from "lucide-react";
 import api from "../api/api.js";
 import { katalaluanMematuhiPolisi } from "../constants/katalaluan";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
 import { hasKebenaran } from "@/utils/auth";
+import { stateLatar } from "@/hooks/useBukaRisiko";
 import "./navbar.css";
 
 // Mesej lama mungkin mengandungi **tebal** gaya markdown
@@ -26,6 +27,7 @@ function laluanNotifikasi(notif) {
 
 function Navbar() {
   const navigate = useNavigate();
+  const lokasi = useLocation();
   const [user, setUser] = useState({
     role: "",
     syarikat: "",
@@ -170,7 +172,7 @@ function Navbar() {
     const laluan = laluanNotifikasi(notif);
     if (laluan) {
       setNotifOpen(false);
-      navigate(laluan);
+      navigate(laluan, laluan.startsWith("/risiko/") ? { state: stateLatar(lokasi) } : undefined);
     }
   };
 

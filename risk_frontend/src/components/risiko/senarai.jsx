@@ -1,11 +1,12 @@
 // Blok binaan halaman senarai kerja risiko (Penilaian & Rawatan, Pemantauan):
 // tab berkiraan, penapis sesi, paging dan baris/kad yang membuka /risiko/:id.
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SAIZ_HALAMAN } from "./data";
+import { stateLatar } from "@/hooks/useBukaRisiko";
 
 /** Tab dengan kiraan; `tab` ialah id aktif. */
 export function TabBerkiraan({ tabs, tab, onTukar }) {
@@ -94,10 +95,12 @@ export function Paging({ halaman, jumlah, onTukar }) {
 
 /** No. rujukan (pautan ke butiran) + huraian risiko dua baris */
 export function SelRisiko({ id, noRujukan, risiko, tab }) {
+  const lokasi = useLocation();
   return (
     <div className="min-w-0">
       <Link
         to={`/risiko/${id}${tab ? `?tab=${tab}` : ""}`}
+        state={stateLatar(lokasi)}
         className="font-mono text-xs font-semibold text-primary hover:underline"
       >
         {noRujukan}

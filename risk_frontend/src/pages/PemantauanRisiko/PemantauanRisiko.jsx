@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Minus } from "lucide-react";
 import api from "../../api/api";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { getRiskMatrix } from "@/constants/riskMatrix";
+import { useBukaRisiko, useRisikoBerubah } from "@/hooks/useBukaRisiko";
 import { formatSeparuhTahun } from "@/utils/formatters";
 import { LencanaTahap } from "@/components/risiko/umum";
 import { KotakCarian, Paging, SelRisiko, TabBerkiraan } from "@/components/risiko/senarai";
@@ -134,7 +135,7 @@ const sesiPantau = (d) =>
  * diluluskan. Log pemantauan diurus dalam tab Pemantauan halaman butiran.
  */
 function PemantauanRisiko() {
-  const navigate = useNavigate();
+  const bukaRisiko = useBukaRisiko();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ralat, setRalat] = useState(null);
@@ -150,7 +151,7 @@ function PemantauanRisiko() {
   const [tahap, setTahap] = useState("");
   const [halaman, setHalaman] = useState(1);
 
-  useEffect(() => {
+  const muat = () =>
     api
       .get("/pemantauan-risiko")
       .then(({ data: d }) =>
@@ -158,7 +159,11 @@ function PemantauanRisiko() {
       )
       .catch((err) => setRalat(err.response?.data?.error || "Gagal memuatkan data pemantauan."))
       .finally(() => setLoading(false));
+
+  useEffect(() => {
+    muat();
   }, []);
+  useRisikoBerubah(muat);
 
   const senaraiSyarikat = useMemo(
     () => [...new Set(data.map((d) => d.nama_syarikat).filter(Boolean))].sort(),
@@ -193,7 +198,7 @@ function PemantauanRisiko() {
   useEffect(() => setHalaman(1), [kumpulan, carian, syarikat, kategori, sesi, tahap]);
   const paparan = ditapis.slice((halaman - 1) * SAIZ_HALAMAN, halaman * SAIZ_HALAMAN);
   const adaPenapis = carian || syarikat || kategori || sesi || tahap;
-  const buka = (d) => navigate(`/risiko/${d.id}?tab=pemantauan`);
+  const buka = (d) => bukaRisiko(d.id, "?tab=pemantauan");
 
   const Kosong = () => (
     <EmptyState

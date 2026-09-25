@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Trash2, Search, Eye, X, Filter, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { getAuthUser } from "../../utils/auth";
 import { getRiskAbbreviation, getRiskColor } from "../../constants/riskMatrix";
 import { formatSeparuhTahun } from "../../utils/formatters";
 import { useRisks } from "../../hooks/useRisks";
+import { useBukaRisiko, useRisikoBerubah } from "@/hooks/useBukaRisiko";
 import { useSyarikats } from "../../hooks/useSyarikats";
 import api from "../../api/api";
 import PageHeader from "@/components/ui/page-header";
@@ -67,7 +68,8 @@ function SenaraiRisiko() {
   const [sortKey, setSortKey] = useState("no_rujukan");
   const [sortDir, setSortDir] = useState("asc");
 
-  const navigate = useNavigate();
+  const bukaRisiko = useBukaRisiko();
+  useRisikoBerubah(refetch);
   const [confirmAction, setConfirmAction] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -112,8 +114,8 @@ function SenaraiRisiko() {
     });
   };
 
-  // Butiran dibuka sebagai halaman penuh (boleh dipautkan): /risiko/:id
-  const handleViewRisk = (risk) => navigate(`/risiko/${risk.id}`);
+  // Butiran dibuka sebagai modal di atas senarai (URL /risiko/:id kekal boleh dipautkan)
+  const handleViewRisk = (risk) => bukaRisiko(risk.id);
 
   const clearFilters = () => {
     setSearch("");

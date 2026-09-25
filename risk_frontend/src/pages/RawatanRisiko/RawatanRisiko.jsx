@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { ClipboardCheck, Stethoscope } from "lucide-react";
 import api from "../../api/api";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { hasKebenaran } from "@/utils/auth";
+import { useBukaRisiko, useRisikoBerubah } from "@/hooks/useBukaRisiko";
 import { formatSeparuhTahun } from "@/utils/formatters";
 import { LencanaTahap } from "@/components/risiko/umum";
 import { KotakCarian, Paging, SelRisiko } from "@/components/risiko/senarai";
@@ -54,7 +55,7 @@ const TAB = {
  * butiran risiko; halaman ini hanya menyusun apa yang perlu dibuat.
  */
 function PenilaianDanRawatan() {
-  const navigate = useNavigate();
+  const bukaRisiko = useBukaRisiko();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ralat, setRalat] = useState(null);
@@ -70,13 +71,18 @@ function PenilaianDanRawatan() {
   const bolehNilai = hasKebenaran("risiko:nilai", "rawatan:urus");
   const bolehRawat = hasKebenaran("rawatan:urus");
 
-  useEffect(() => {
+  const muat = () =>
     api
       .get("/rawatan/with-status")
       .then(({ data: d }) => setData(Array.isArray(d) ? d : []))
       .catch((err) => setRalat(err.response?.data?.error || "Gagal memuatkan senarai risiko."))
       .finally(() => setLoading(false));
+
+  useEffect(() => {
+    muat();
   }, []);
+  // Senarai di belakang modal butiran dikemas kini selepas simpan
+  useRisikoBerubah(muat);
 
   const kiraan = useMemo(
     () => ({
@@ -115,7 +121,7 @@ function PenilaianDanRawatan() {
   const boleh = tab === "penilaian" ? bolehNilai : bolehRawat;
   const labelTindakan = boleh ? (tab === "penilaian" ? "Nilai" : "Rawat") : "Lihat";
   const buka = (d) =>
-    navigate(`/risiko/${d.risiko_id}?tab=${tab}${boleh ? "&sunting=1" : ""}`);
+    bukaRisiko(d.risiko_id, `?tab=${tab}${boleh ? "&sunting=1" : ""}`);
 
   const Kosong = () => (
     <EmptyState

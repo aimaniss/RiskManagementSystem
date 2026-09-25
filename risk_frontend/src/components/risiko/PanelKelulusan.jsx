@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { CheckCircle, ExternalLink, XCircle } from "lucide-react";
 import api from "@/api/api";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { hasKebenaran } from "@/utils/auth";
+import { stateLatar } from "@/hooks/useBukaRisiko";
 import { formatDate, formatSeparuhTahun } from "@/utils/formatters";
 import { keSenarai } from "./data";
 import { Medan, SenaraiCip } from "./umum";
@@ -57,6 +58,7 @@ export default function PanelKelulusan({ item, onTutup, onSelesai }) {
   const [sebab, setSebab] = useState("");
   const [ralat, setRalat] = useState("");
   const [memproses, setMemproses] = useState(false);
+  const lokasi = useLocation();
 
   const buka = Boolean(item);
   const risikoBaharu = item?.jenis === "risiko";
@@ -134,6 +136,8 @@ export default function PanelKelulusan({ item, onTutup, onSelesai }) {
                   {risikoId && (
                     <Link
                       to={`/risiko/${risikoId}${risikoBaharu ? "" : "?tab=pindaan"}`}
+                      state={stateLatar(lokasi)}
+                      onClick={tutup}
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     >
                       Lihat butiran risiko <ExternalLink size={12} />

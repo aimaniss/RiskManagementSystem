@@ -1,14 +1,17 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import './Panduan.css'; 
+import './Panduan.css';
 import { useSenaraiRujukan } from '@/hooks/useSenaraiRujukan';
+import { getRiskMatrix } from '@/constants/riskMatrix';
+import { Button } from '@/components/ui/button';
 
-// --- Warna dan Label Risiko (Kekal) ---
-const WARNA_RISIKO = {
-    'SANGAT TINGGI': '#ef4444', 
-    'TINGGI': '#f97316',        
-    'SEDERHANA': '#eab308',     
-    'RENDAH': '#22c55e',        
+// Warna tahap diambil daripada constants/riskMatrix.js supaya sama dengan
+// lencana tahap di seluruh aplikasi (termasuk warna teks yang kontras)
+const WARNA_TAHAP = {
+    'SANGAT TINGGI': getRiskMatrix(5, 5),
+    'TINGGI': getRiskMatrix(4, 4),
+    'SEDERHANA': getRiskMatrix(3, 3),
+    'RENDAH': getRiskMatrix(1, 1),
 };
 
 // Data Rujukan (Kekal)
@@ -31,51 +34,11 @@ const skorImpakData = [
     { skor: 1, label: 'Tidak Ketara', penerangan: 'Jika berlaku risiko, tidak akan memberi kesan yang ketara atau tiada kesan ke atas pencapaian objektif yang ditetapkan' },
 ];
 
-// Data Matriks (Kekal)
-const risikoMatrix = {
-    // Skor Impak (1: Tidak Ketara, 2: Boleh Diukur, 3: Ketara, 4: Besar, 5: Sangat Besar)
-    5: { // Kebarangkalian 5: Hampir Pasti
-        1: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        2: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-        3: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-        4: { label: 'SANGAT TINGGI', warna: WARNA_RISIKO['SANGAT TINGGI'] },
-        5: { label: 'SANGAT TINGGI', warna: WARNA_RISIKO['SANGAT TINGGI'] },
-    },
-    4: { // Kebarangkalian 4: Kemungkinan Tinggi
-        1: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        2: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        3: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-        4: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-        5: { label: 'SANGAT TINGGI', warna: WARNA_RISIKO['SANGAT TINGGI'] },
-    },
-    3: { // Kebarangkalian 3: Berpeluang Untuk Berlaku
-        1: { label: 'RENDAH', warna: WARNA_RISIKO['RENDAH'] },
-        2: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        3: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        4: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-        5: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-    },
-    2: { // Kebarangkalian 2: Kemungkinan Rendah
-        1: { label: 'RENDAH', warna: WARNA_RISIKO['RENDAH'] },
-        2: { label: 'RENDAH', warna: WARNA_RISIKO['RENDAH'] },
-        3: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        4: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        5: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-    },
-    1: { // Kebarangkalian 1: Hampir Tiada Kemungkinan
-        1: { label: 'RENDAH', warna: WARNA_RISIKO['RENDAH'] },
-        2: { label: 'RENDAH', warna: WARNA_RISIKO['RENDAH'] },
-        3: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        4: { label: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'] },
-        5: { label: 'TINGGI', warna: WARNA_RISIKO['TINGGI'] },
-    },
-};
-
 const tahapRisikoData = [
-    { tahap: 'SANGAT TINGGI', warna: WARNA_RISIKO['SANGAT TINGGI'], penerangan: 'Very Significant Risk: Tindakan segera diperlukan untuk mengurangkan risiko' },
-    { tahap: 'TINGGI', warna: WARNA_RISIKO['TINGGI'], penerangan: 'High Risk: Tindakan perlu diambil untuk mengimbangi risiko' },
-    { tahap: 'SEDERHANA', warna: WARNA_RISIKO['SEDERHANA'], penerangan: 'Moderate Risk: Tindakan perlu diambil berhati-hati dengan risiko & memantau risiko' },
-    { tahap: 'RENDAH', warna: WARNA_RISIKO['RENDAH'], penerangan: 'Low Risk: Penerimaan rutin risiko' },
+    { tahap: 'SANGAT TINGGI', penerangan: 'Very Significant Risk: Tindakan segera diperlukan untuk mengurangkan risiko' },
+    { tahap: 'TINGGI', penerangan: 'High Risk: Tindakan perlu diambil untuk mengimbangi risiko' },
+    { tahap: 'SEDERHANA', penerangan: 'Moderate Risk: Tindakan perlu diambil berhati-hati dengan risiko & memantau risiko' },
+    { tahap: 'RENDAH', penerangan: 'Low Risk: Penerimaan rutin risiko' },
 ];
 
 const jenisKawalanData = [
@@ -101,25 +64,25 @@ export default function Panduan({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     // Susunan Baris Matriks (Y-Axis): Mula dari 5 (Atas) ke 1 (Bawah)
-    const kebarangkalianUntukMatriks = skorKebarangkalianData; 
+    const kebarangkalianUntukMatriks = skorKebarangkalianData;
 
     // Susunan Lajur Matriks (X-Axis): Mula dari 1 (Kiri) ke 5 (Kanan)
     const impakLabelsInOrder = skorImpakData.slice().sort((a, b) => a.skor - b.skor);
 
     return (
         // zIndex diset tinggi dalam CSS (rawatan-modal-overlay)
-        <div className="rawatan-modal-overlay"> 
-            <div className="panduan-container"> 
-                
+        <div className="rawatan-modal-overlay">
+            <div className="panduan-container">
+
                 <div className="panduan-header">
                     <h2 className="panduan-title">Panduan Pengisian & Penilaian Risiko</h2>
-                    <button className="panduan-close-btn" onClick={onClose}>
+                    <button className="panduan-close-btn" onClick={onClose} aria-label="Tutup panduan">
                         <X size={20} />
                     </button>
                 </div>
-                
-                <div className="panduan-content"> 
-                    
+
+                <div className="panduan-content">
+
                     {/* Jadual 1: Kategori Risiko */}
                     <section className="panduan-section">
                         <h3 className="panduan-section-title">Jadual 1: Kategori Risiko</h3>
@@ -141,8 +104,8 @@ export default function Panduan({ isOpen, onClose }) {
                     {/* Jadual 2 & 3: Skor Kebarangkalian dan Skor Impak */}
                     <section className="panduan-section">
                         <h3 className="panduan-section-title">Jadual 2 & 3: Skor Kebarangkalian dan Skor Impak</h3>
-                        <div className="panduan-grid-2"> 
-                            
+                        <div className="panduan-grid-2">
+
                             {/* Jadual 2: Kebarangkalian */}
                             <div>
                                 <h4 className="panduan-subtitle">Jadual 2: Skor Kebarangkalian</h4>
@@ -161,7 +124,7 @@ export default function Panduan({ isOpen, onClose }) {
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             {/* Jadual 3: Impak */}
                             <div>
                                 <h4 className="panduan-subtitle">Jadual 3: Skor Impak</h4>
@@ -192,7 +155,7 @@ export default function Panduan({ isOpen, onClose }) {
                                 <thead>
                                     <tr>
                                         {/* Sudut kiri atas */}
-                                        <th rowSpan="2" className="matrix-header-kiri">KEBARANGKALIAN</th> 
+                                        <th rowSpan="2" className="matrix-header-kiri">KEBARANGKALIAN</th>
                                         {/* Baris Impak (Tajuk Utama) */}
                                         <th colSpan="5" className="matrix-x-axis">IMPAK</th>
                                     </tr>
@@ -225,21 +188,20 @@ export default function Panduan({ isOpen, onClose }) {
                                                 </div>
                                                 <div className="matrix-skor-label">{kItem.skor}</div>
                                             </th>
-                                            
+
                                             {/* Sel Matriks (Tahap Risiko & Warna) */}
                                             {impakLabelsInOrder.map(iItem => {
-                                                const risiko = risikoMatrix[kItem.skor][iItem.skor];
-                                                const textColor = risiko.warna === WARNA_RISIKO['RENDAH'] ? '#1f2937' : '#ffffff';
-                                                
+                                                const risiko = getRiskMatrix(kItem.skor, iItem.skor);
+
                                                 return (
-                                                <td 
+                                                <td
                                                     key={`${kItem.skor}-${iItem.skor}`}
-                                                    style={{ 
-                                                        backgroundColor: risiko.warna,
-                                                        color: textColor,
+                                                    style={{
+                                                        backgroundColor: risiko.color,
+                                                        color: risiko.textColor,
                                                     }}
                                                 >
-                                                    {risiko.label}
+                                                    {risiko.label.toUpperCase()}
                                                 </td>
                                             );})}
                                         </tr>
@@ -248,7 +210,7 @@ export default function Panduan({ isOpen, onClose }) {
                             </table>
                         </div>
                     </section>
-                    
+
                     {/* Jadual 5: Tahap Risiko dan Kod Warna */}
                     <section className="panduan-section">
                         <h3 className="panduan-section-title">Jadual 5: Tahap Risiko dan Kod Warna</h3>
@@ -262,13 +224,13 @@ export default function Panduan({ isOpen, onClose }) {
                             </thead>
                             <tbody>
                                 {tahapRisikoData.map((item) => {
-                                    const textColor = item.warna === WARNA_RISIKO['RENDAH'] ? '#1f2937' : 'white';
+                                    const warna = WARNA_TAHAP[item.tahap];
                                     return (
                                     <tr key={item.tahap}>
-                                        <td className="panduan-table-key" 
-                                            style={{ 
-                                                backgroundColor: item.warna, 
-                                                color: textColor, 
+                                        <td className="panduan-table-key"
+                                            style={{
+                                                backgroundColor: warna.color,
+                                                color: warna.textColor,
                                                 textAlign: 'center',
                                                 fontWeight: 'bold'
                                             }}
@@ -276,9 +238,9 @@ export default function Panduan({ isOpen, onClose }) {
                                             {item.tahap}
                                         </td>
                                         <td>
-                                            <span 
-                                                className="panduan-color-box" 
-                                                style={{ backgroundColor: item.warna, border: `1px solid ${item.warna === WARNA_RISIKO['RENDAH'] ? WARNA_RISIKO['RENDAH'] : '#ccc'}` }}
+                                            <span
+                                                className="panduan-color-box"
+                                                style={{ backgroundColor: warna.color }}
                                             ></span>
                                         </td>
                                         <td>{item.penerangan}</td>
@@ -287,7 +249,7 @@ export default function Panduan({ isOpen, onClose }) {
                             </tbody>
                         </table>
                     </section>
-                    
+
                     {/* Jadual 6: Rawatan Atas Risiko: Jenis Kawalan (Input Borang) */}
                     <section className="panduan-section">
                         <h3 className="panduan-section-title">Jadual 6: Rawatan Atas Risiko: Jenis Kawalan (Input Borang)</h3>
@@ -326,11 +288,11 @@ export default function Panduan({ isOpen, onClose }) {
                             </tbody>
                         </table>
                     </section>
-                    
+
                 </div>
 
                 <div className="panduan-footer">
-                    <button className="rawatan-save-btn" onClick={onClose}>Tutup Panduan</button>
+                    <Button size="sm" onClick={onClose}>Tutup Panduan</Button>
                 </div>
             </div>
         </div>

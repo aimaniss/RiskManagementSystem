@@ -36,6 +36,40 @@ export function Medan({ label, children, className }) {
   );
 }
 
+/** Satu baris "label : nilai" dengan label berlebar tetap (senarai butiran) */
+export function BarisMedan({ label, children }) {
+  return (
+    <div className="grid grid-cols-[130px_1fr] gap-3 border-b py-2.5 last:border-b-0 sm:grid-cols-[150px_1fr]">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 break-words text-sm text-foreground">{children || "-"}</dd>
+    </div>
+  );
+}
+
+/** Senarai bernombor (punca, kesan) dengan tajuk kecil */
+export function SenaraiBernombor({ tajuk, items }) {
+  const bersih = (items || []).filter((t) => t && String(t).trim() && t !== "-");
+  return (
+    <div className="min-w-0">
+      <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{tajuk}</h3>
+      {bersih.length === 0 ? (
+        <p className="text-sm text-muted-foreground">-</p>
+      ) : (
+        <ol className="grid gap-1.5">
+          {bersih.map((t, i) => (
+            <li key={i} className="flex gap-2.5 text-sm text-foreground">
+              <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
+                {i + 1}
+              </span>
+              <span className="min-w-0 break-words">{t}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
 /** Senarai cip teks (punca, kesan, pelan tindakan, kakitangan) */
 export function SenaraiCip({ items }) {
   const bersih = (items || []).filter((t) => t && String(t).trim() && t !== "-");

@@ -159,7 +159,9 @@ function DaftarRisiko() {
       const { data } = await api.post("/risiko", finalData);
       // Buka rekod baharu supaya pendaftar nampak status kelulusan & langkah seterusnya
       navigate(`/risiko/${data.risiko_id}`, {
-        state: { mesej: `Risiko ${data.no_rujukan || ""} berjaya didaftarkan dan menunggu kelulusan.` },
+        state: {
+          latar: { pathname: "/SenaraiRisiko", search: "" },
+          mesej: `Risiko ${data.no_rujukan || ""} berjaya didaftarkan dan menunggu kelulusan.` },
       });
     } catch (err) {
       console.error("Error:", err.response?.data || err.message);
@@ -204,7 +206,7 @@ function DaftarRisiko() {
         title="Daftar Risiko"
         description="Daftarkan risiko baharu mengikut tahun, syarikat dan kategori."
         actions={
-          <Button variant="outline" size="sm" onClick={openPanduan} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => openPanduan()} className="gap-1.5">
             <BookOpen size={14} />
             Panduan
           </Button>
@@ -427,7 +429,7 @@ function DaftarRisiko() {
                     </p>
                     <button
                       type="button"
-                      onClick={openPanduan}
+                      onClick={() => openPanduan()}
                       className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                     >
                       Baca panduan penuh

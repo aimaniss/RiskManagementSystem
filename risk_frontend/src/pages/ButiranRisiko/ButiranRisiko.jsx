@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
   BookOpen,
   ClipboardCheck,
   FilePenLine,
@@ -24,6 +23,7 @@ import { hasKebenaran } from "@/utils/auth";
 import { formatDate, formatSeparuhTahun } from "@/utils/formatters";
 import { calculateRisk } from "@/constants/riskMatrix";
 import { usePanduan } from "@/hooks/usePanduan";
+import { maklumkanRisikoBerubah } from "@/hooks/useBukaRisiko";
 import { cn } from "@/lib/utils";
 import BorangPengenalpastian from "@/components/risiko/BorangPengenalpastian";
 import BorangPenilaian from "@/components/risiko/BorangPenilaian";
@@ -38,9 +38,10 @@ import {
   kiraPeringkat,
   tindakanSeterusnya,
 } from "@/components/risiko/data";
-import { LencanaTahap, Medan, SenaraiCip } from "@/components/risiko/umum";
+import { BarisMedan, LencanaTahap, Medan, SenaraiBernombor, SenaraiCip } from "@/components/risiko/umum";
 import TabPemantauan from "./TabPemantauan";
 import TabPindaan from "./TabPindaan";
+import TabSejarah from "./TabSejarah";
 
 const TAB = [
   { id: "ringkasan", label: "Ringkasan", icon: FileSearch },
@@ -50,6 +51,9 @@ const TAB = [
   { id: "pindaan", label: "Pindaan", icon: FilePenLine },
   { id: "sejarah", label: "Sejarah", icon: History },
 ];
+
+// Data lama menyimpan "—" / "-" bagi nilai kosong
+const tiadaSempang = (v) => (v && v !== "—" && v !== "-" ? v : null);
 
 const susunLog = (logs) =>
   [...logs].sort(
@@ -79,10 +83,9 @@ function ButangSunting({ onClick, children = "Sunting" }) {
   );
 }
 
-/** Halaman butiran risiko: /risiko/:id?tab=penilaian&sunting=1 */
-export default function ButiranRisiko() {
+/** Butiran risiko (dipapar dalam modal): /risiko/:id?tab=penilaian&sunting=1 */
+export default function ButiranRisiko({ onTutup }) {
   const { id } = useParams();
-  const navigate = useNavigate();
   const lokasi = useLocation();
   const [params, setParams] = useSearchParams();
   const tab = TAB.some((t) => t.id === params.get("tab")) ? params.get("tab") : "ringkasan";
@@ -102,7 +105,8 @@ export default function ButiranRisiko() {
   const pergi = (tabBaru, suntingBaru = false) => {
     const p = { tab: tabBaru };
     if (suntingBaru) p.sunting = "1";
-    setParams(p, { replace: true });
+    // state (halaman latar modal) dikekalkan semasa bertukar tab
+    setParams(p, { replace: true, state: lokasi.state });
   };
 
   const muat = useCallback(async () => {
@@ -146,15 +150,19 @@ export default function ButiranRisiko() {
     setSejarah(null);
     pergi(tab);
     muat();
+    maklumkanRisikoBerubah();
   };
 
   if (ralatMuat) {
     return (
       <div className="grid gap-4">
-        <Button variant="ghost" className="w-fit" onClick={() => navigate(-1)}>
-          <ArrowLeft size={16} /> Kembali
-        </Button>
-        <EmptyState icon={FileSearch} title="Risiko tidak dapat dipaparkan" description={ralatMuat} />
+        <EmptyState
+          icon={FileSearch}
+          title="Risiko tidak dapat dipaparkan"
+          description={ralatMuat}
+          actionLabel="Tutup"
+          onAction={onTutup}
+        />
       </div>
     );
   }
@@ -163,6 +171,7 @@ export default function ButiranRisiko() {
   const peringkat = kiraPeringkat(risiko, logs);
   const seterusnya = tindakanSeterusnya(risiko, peringkat);
   const diluluskan = !risiko.status_kelulusan || risiko.status_kelulusan === "Diluluskan";
+  const ditolak = risiko.status_kelulusan === "Ditolak";
   const dinilai = adaPenilaian(risiko);
   const dirawat = adaRawatan(risiko);
   const penuh = bolehPindaTerus();
@@ -181,13 +190,6 @@ export default function ButiranRisiko() {
       <div className="grid gap-4 rounded-xl border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mb-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft size={13} /> Kembali
-            </button>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold text-foreground">{risiko.no_rujukan}</h1>
               <LencanaTahap k={tahapSemasa[0]} i={tahapSemasa[1]} />
@@ -209,7 +211,8 @@ export default function ButiranRisiko() {
                 .join(" · ")}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={openPanduan}>
+          {/* mr-8: ruang untuk butang tutup modal di bucu kanan */}
+          <Button variant="outline" size="sm" className="mr-8" onClick={() => openPanduan()}>
             <BookOpen size={15} /> Panduan
           </Button>
         </div>
@@ -266,36 +269,59 @@ export default function ButiranRisiko() {
           {sunting && penuh ? (
             <BorangPengenalpastian risiko={risiko} onSelesai={selepasSimpan} onBatal={() => pergi("ringkasan")} />
           ) : (
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Medan label="No. Rujukan">{risiko.no_rujukan}</Medan>
-              <Medan label="Syarikat">{risiko.syarikat}</Medan>
-              <Medan label="Tahun / Separuh">
-                {risiko.tahun} · {formatSeparuhTahun(risiko.separuh_tahun)}
-              </Medan>
-              <Medan label="Didaftarkan oleh">{risiko.didaftarkan_oleh}</Medan>
-              <Medan label="Kategori">{risiko.kategori}</Medan>
-              <Medan label="Bahagian / Unit">{risiko.bahagian}</Medan>
-              <Medan label="Tarikh daftar">{risiko.created_at ? formatDate(risiko.created_at) : "-"}</Medan>
-              <Medan label="Status kelulusan">
-                {risiko.status_kelulusan || "Diluluskan"}
-                {risiko.diluluskan_oleh && ` · ${risiko.diluluskan_oleh}`}
-                {risiko.tarikh_kelulusan && ` · ${formatDate(risiko.tarikh_kelulusan)}`}
-              </Medan>
+            <div className="grid gap-6">
+              <div className="grid gap-x-10 md:grid-cols-2">
+                <dl>
+                  <BarisMedan label="No. Rujukan">{risiko.no_rujukan}</BarisMedan>
+                  <BarisMedan label="Syarikat">{risiko.syarikat}</BarisMedan>
+                  <BarisMedan label="Kategori">{risiko.kategori}</BarisMedan>
+                  <BarisMedan label="Bahagian / Unit">{risiko.bahagian}</BarisMedan>
+                  <BarisMedan label="Sesi">
+                    {risiko.tahun} · {formatSeparuhTahun(risiko.separuh_tahun)}
+                  </BarisMedan>
+                </dl>
+                <dl>
+                  <BarisMedan label="Didaftarkan oleh">{tiadaSempang(risiko.didaftarkan_oleh)}</BarisMedan>
+                  <BarisMedan label="Tarikh daftar">
+                    {risiko.created_at && formatDate(risiko.created_at)}
+                  </BarisMedan>
+                  <BarisMedan label="Status kelulusan">{risiko.status_kelulusan || "Diluluskan"}</BarisMedan>
+                  {/* Menunggu kelulusan: belum diproses, jadi tiada pelulus/tarikh */}
+                  {risiko.status_kelulusan !== "Menunggu Kelulusan" && (
+                    <>
+                      <BarisMedan label={ditolak ? "Ditolak oleh" : "Diluluskan oleh"}>
+                        {tiadaSempang(risiko.diluluskan_oleh)}
+                      </BarisMedan>
+                      <BarisMedan label={ditolak ? "Ditolak pada" : "Diluluskan pada"}>
+                        {risiko.tarikh_kelulusan && formatDate(risiko.tarikh_kelulusan)}
+                      </BarisMedan>
+                    </>
+                  )}
+                </dl>
+              </div>
+
               {risiko.status_kelulusan === "Ditolak" && (
-                <Medan label="Sebab ditolak" className="sm:col-span-2 lg:col-span-4">
-                  {risiko.sebab_ditolak_risiko}
-                </Medan>
+                <AlertBanner
+                  variant="error"
+                  title="Risiko ditolak"
+                  description={risiko.sebab_ditolak_risiko ? `Sebab: ${risiko.sebab_ditolak_risiko}` : undefined}
+                />
               )}
-              <Medan label="Risiko" className="sm:col-span-2 lg:col-span-4">
-                <span className="whitespace-pre-wrap">{risiko.risiko}</span>
-              </Medan>
-              <Medan label="Punca" className="sm:col-span-2">
-                <SenaraiCip items={keSenarai(risiko.punca)} />
-              </Medan>
-              <Medan label="Kesan" className="sm:col-span-2">
-                <SenaraiCip items={keSenarai(risiko.kesan)} />
-              </Medan>
-            </dl>
+
+              <div>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Huraian risiko
+                </h3>
+                <p className="whitespace-pre-wrap rounded-lg bg-muted/40 px-4 py-3 text-sm text-foreground">
+                  {risiko.risiko}
+                </p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <SenaraiBernombor tajuk="Punca" items={keSenarai(risiko.punca)} />
+                <SenaraiBernombor tajuk="Kesan" items={keSenarai(risiko.kesan)} />
+              </div>
+            </div>
           )}
         </Kad>
       )}
@@ -443,22 +469,8 @@ export default function ButiranRisiko() {
         <Kad tajuk="Sejarah Aktiviti">
           {!hasKebenaran("log:baca") ? (
             <p className="text-sm text-muted-foreground">Anda tiada akses kepada log aktiviti.</p>
-          ) : sejarah === null ? (
-            <LoadingSpinner text="Memuatkan sejarah..." />
-          ) : sejarah.length === 0 ? (
-            <EmptyState icon={History} title="Tiada aktiviti direkodkan" />
           ) : (
-            <ol className="grid gap-3">
-              {sejarah.map((l) => (
-                <li key={l.log_id} className="grid gap-0.5 border-l-2 border-border pl-3">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(l.tarikh_masa)} · {l.nama_pengguna} ({l.peranan_pengguna})
-                  </span>
-                  <span className="text-sm font-medium text-foreground">{l.aktiviti}</span>
-                  <span className="text-sm text-muted-foreground">{l.ringkasan}</span>
-                </li>
-              ))}
-            </ol>
+            <TabSejarah senarai={sejarah} noRujukan={risiko.no_rujukan} />
           )}
         </Kad>
       )}
