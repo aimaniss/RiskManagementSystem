@@ -13,7 +13,7 @@ sequenceDiagram
   participant U as Pengguna
   participant R as RawatanRisiko.jsx / EditRawatan.jsx
   participant P as PenilaianModal.jsx
-  participant B as routes/rawatan.js
+  participant B as routes/rawatan.js → rawatanController
   participant DB as DB (rawatan_risiko, pelan_tindakan_rawatan, kakitangan_rawatan)
 
   U->>R: Pilih risiko dari senarai with-status
@@ -27,7 +27,7 @@ sequenceDiagram
   B->>DB: UPDATE risiko (skor sisa dsb.) + catatAktiviti
 ```
 
-## Endpoint (`routes/rawatan.js`, semua `verifyToken`)
+## Endpoint (`routes/rawatan.js` → `controllers/rawatanController.js`, semua `verifyToken`)
 
 | Kaedah | Laluan | Guna |
 |--------|--------|------|
@@ -75,5 +75,5 @@ sisa / penilaian), `log_aktiviti`.
 ## Nota / Gotcha
 
 - Penilaian semula dikira kesan kepada skor risiko — pastikan pengiraan skor
-  kekal konsisten dengan `riskMatrix`.
+  kekal konsisten dengan `riskMatrix` (klien) / `utils/matriksRisiko.js` (server).
 - Data isolation dikenakan untuk Staff/Ketua Subsidiari pada query `rawatan_risiko`.

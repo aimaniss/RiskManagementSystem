@@ -127,13 +127,20 @@ manifest SaaS. **Sengaja tidak dinamakan semula** (kos tinggi, risiko besar).
 Cadang satu migrasi penamaan lengkap + spec E2E regresi membaca jadual dengan
 nama baharu. **Jangan sentuh sehingga semua query dikemas kini serentak.**
 
-### 2.5 Mesej kesilapan dan `authorizeKebenaran` pesanan (P2)
+### 2.5 Mesej kesilapan dan `authorizeKebenaran` pesanan — **Selesai**
 
 Semasa menukar route ke `authorizeKebenaran`, mesej ralat diseragamkan BM
 (`{ error: "..." }`). Arahkan audit sisa: beberapa route masih pulang
 `{ message: ... }` (bukan `{ error }`); klien `api.js` interceptor mungkin
 bergantung pada `error.response.data.message`. Cadang piawai **`error` utama +
 `message` maklumat**, atau sepakat satu medan sahaja.
+
+**Pelaksanaan (2026-09-25)**: semua respons 4xx/5xx kini `{ error: "..." }`
+(±80 respons dalam risiko/rawatan/pemantauan/pindaan/notifikasi/laporan/
+dashboard/tahun). Respons yang dahulu `{ message, error: err.message }` kini
+hanya `{ error: <mesej BM> }` (butiran teknikal di `console.error`).
+`{ message }` dikekalkan untuk respons berjaya. 7 halaman frontend yang membaca
+`data.message` semasa ralat ditukar ke `data.error`.
 
 ### 2.6 `roles.js` kini dikekang `pengguna:urus` — senarai peranan untuk log masuk
 
@@ -148,8 +155,8 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 
 | Item | Kesan | Potensi langkah awal |
 |------|-------|----------------------|
-| Pindah logik `notifikasi`, `log_aktiviti`, `rawatan`, `risiko`, `pemantauan`, `pindaan` ke `controllers/` | Konvensyen AGENTS.md; `routes/` hanya daftar | Satukan fasa di luar revamp kritikal; risiko refactor tinggi, nilai dok besar |
-| Piawai `{ error }` vs `{ message }` | Konsistensi API & klien | §2.5 |
+| ~~Pindah logik ke `controllers/`~~ | **Selesai 2026-09-25** — 48 handler dipindah (salinan AST); 180/180 respons GET (5 peranan) identik dengan versi sebelum; E2E 21/21 | — |
+| ~~Piawai `{ error }` vs `{ message }`~~ | **Selesai** | §2.5 |
 | Skrip migrasi pukal bcrypt | Pengguna tidak bertindak hilang | §1.2 |
 | Polisi purge `is_deleted` | Saiz DB | §2.1 |
 
@@ -161,7 +168,7 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
    direvisi dan dicabut selepas perubahan kata laluan/role/staff/syarikat.
 2. **[x] [P1] §2.6** — audit klien `GET /api/roles` sebelum login selesai; tiada
    penggunaan pra-login yang memerlukan endpoint awam.
-3. **[ ] [P1] §2.5** — piawai `{ error }` + `{ message }`.
+3. **[x] [P1] §2.5** — ralat `{ error }`, berjaya `{ message }`.
 4. **[ ] [P2] §2.2** — fallback notifikasi pelulus dipadam → Admin.
 5. **[ ] [P2] §1.5 / §2.1** — flush-cache kebenaran & toolbar purge.
 6. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.

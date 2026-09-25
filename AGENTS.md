@@ -78,11 +78,19 @@ npm run migrate:status
 ## Konvensyen Backend (`risk_backend`)
 
 - **ES Modules** (`"type": "module"`, import/export, bukan require).
+- **Format**: Prettier (`risk_backend/.prettierrc.json` — petikan berganda,
+  semicolon, inden 2, lebar 100). Jalankan `npm run format` selepas ubah kod;
+  `npm run format:check` mesti lulus.
+- **Tiada emoji/ikon** dalam kod, komen, log atau mesej API. Komen terangkan
+  *kenapa*, bukan sejarah perubahan (jangan tulis "DIKEMASKINI", "Kekal Sama",
+  "PERUBAHAN DI SINI"); sejarah ada dalam git.
 - Senarai jadual/routes utama: `auth, users, roles, syarikat, bahagian,
   risiko, tahun, rawatan, pemantauan-risiko, pindaan, log_aktiviti, laporan,
   dashboard, notifikasi` (didaftarkan dalam `server.js`).
 - Gaya fail: `routes/<nama>.js` sahaja daftar endpoint + panggil controller;
-  `controllers/` untuk logik; `utils/` untuk utiliti dikongsi.
+  `controllers/<nama>Controller.js` untuk logik (handler dieksport bernama BM,
+  cth. `senaraiRisiko`, `luluskanPindaan`); `utils/` untuk utiliti dikongsi.
+  JANGAN tulis handler inline dalam `routes/`.
 - **SQL parameterized** sentiasa: `pool.query("... $1 ...", [nilai])`. Jangan
   interpolate string SQL secara langsung.
 - **Transaksi**: operasi tulis berbilang-jadual WAJIB balut dengan
@@ -112,8 +120,9 @@ npm run migrate:status
   `dapatkanPenggunaIdByPeranan` dari `utils/notifikasi.js` (menapis pengguna
   `is_deleted=false`).
 - Migrasi knex dalam `risk_backend/migrations/knex/` (config: `knexfile.js`).
-- Mesej ralat API & respons pengguna dalam **Bahasa Melayu**, format JSON
-  `{ error: "..." }`.
+- Mesej ralat API & respons pengguna dalam **Bahasa Melayu**. Ralat (4xx/5xx)
+  SENTIASA `{ error: "..." }`; `{ message }` hanya untuk respons berjaya.
+  Klien baca `err.response?.data?.error`.
 - Tiada suite unit dikonfig; E2E melalui Playwright — lihat root `e2e/README.md`
   (`npm run test:e2e` dari root khas `e2e/`).
 
@@ -169,7 +178,8 @@ ini (klausa `WHERE syarikat_id` untuk peranan terhad).
   selepas perubahan kata laluan/role/syarikat.
 - Skor risiko: `skor_risiko` bersifat derived (R/S/T/ST) dari
   kebarangkalian × impak — jangan ubah pengiraan tanpa menyemak
-  `src/constants/riskMatrix.js` dan sisi backend.
+  `src/constants/riskMatrix.js` dan `risk_backend/utils/matriksRisiko.js`
+  (`kiraTahapRisiko` — satu-satunya matriks di server).
 - Hanya opencode/agent yang dibenarkan commit apabila **diminta eksplisit**.
 
 ## Konvensyen Commit

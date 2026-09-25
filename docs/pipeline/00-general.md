@@ -29,8 +29,8 @@ flowchart TD
     G["middleware/authMiddleware.js"]
     E --> F
     F --> G
-    F --> H["controllers/ (auth sahaja)"]
-    F --> I["utils/ — catatAktiviti, notifikasi"]
+    F --> H["controllers/*Controller.js (semua logik)"]
+    H --> I["utils/ — catatAktiviti, notifikasi, transaksi, katalaluan, matriksRisiko"]
   end
   P --> E
 
@@ -110,13 +110,15 @@ sequenceDiagram
 ### Skor Risiko (R/S/T/ST)
 
 - Derived dari `skor_kebarangkalian × skor_impak` (1–5) semasa penilaian.
-- Matriks 5×5 di klien: `src/constants/riskMatrix.js`; kamiran `calculateRisk` juga
-  wujud di sisi backend (`routes/risiko.js`).
+- Matriks 5×5 di klien: `src/constants/riskMatrix.js`; di server satu sumber sahaja:
+  `utils/matriksRisiko.js` (`kiraTahapRisiko`). Kedua-duanya mesti sepadan.
 
 ## Anomali & Nota Am (Gotcha)
 
-- Hanya `auth`, `users` dan `bahagian` menggunakan `controllers/`; modul lain
-  meletakkan logik terus dalam `routes/*.js`.
+- Semua 14 modul: `routes/<modul>.js` hanya daftar endpoint + middleware;
+  logik dalam `controllers/<modul>Controller.js` (roles → `perananController`,
+  log_aktiviti → `logAktivitiController`).
+- Respons ralat sentiasa `{ error: "..." }`; `{ message }` hanya untuk respons berjaya.
 - Prefix pemantauan ialah `/api/pemantauan-risiko` (dash); log aktiviti ialah
   `/api/log_aktiviti` (underscore).
 - `GET /health` (luar prefix `/api`, tanpa auth) untuk semakan hayat server/E2E.

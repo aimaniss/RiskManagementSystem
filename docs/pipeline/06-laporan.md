@@ -14,7 +14,7 @@ sequenceDiagram
   participant L as Laporan.jsx
   participant O as ReportOptionsModal.jsx
   participant A as api.js
-  participant B as routes/laporan.js
+  participant B as routes/laporan.js → laporanController
   participant DB as DB (risiko + punca/kesan/rawatan/log)
 
   U->>L: Buka halaman Laporan
@@ -30,7 +30,7 @@ sequenceDiagram
   L->>L: jsPDF + jspdf-autotable + html2canvas → muat turun .pdf
 ```
 
-## Endpoint (`routes/laporan.js`, semua `verifyToken`)
+## Endpoint (`routes/laporan.js` → `controllers/laporanController.js`, semua `verifyToken`)
 
 | Kaedah | Laluan | Guna |
 |--------|--------|------|

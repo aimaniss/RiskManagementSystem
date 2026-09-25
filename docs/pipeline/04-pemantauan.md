@@ -12,7 +12,7 @@ sequenceDiagram
   autonumber
   participant U as Pengguna
   participant P as TambahLogModal.jsx
-  participant B as routes/pemantauan.js
+  participant B as routes/pemantauan.js → pemantauanController
   participant DB as DB (log_pemantauan, pelan_tindakan_pemantauan, kakitangan_pemantauan)
 
   U->>P: Bukak Tambah Log untuk risiko
@@ -26,7 +26,7 @@ sequenceDiagram
   P->>U: Toast → refresh halaman
 ```
 
-## Endpoint (`routes/pemantauan.js`, semua `verifyToken`)
+## Endpoint (`routes/pemantauan.js` → `controllers/pemantauanController.js`, semua `verifyToken`)
 
 | Kaedah | Laluan | Guna |
 |--------|--------|------|
@@ -76,5 +76,5 @@ sequenceDiagram
   `pelantindakanpemantauan`, `kakitanganpemantauan` (bersambung) — setara dengan
   `log_pemantauan`, `pelan_tindakan_pemantauan`, `kakitangan_pemantauan` dalam
   dokumentasi README.
-- `PUT /risiko/:risiko_id/pemantauan/log/:log_id` (routes/risiko.js) digunakan
+- `PUT /risiko/:risiko_id/pemantauan/log/:log_id` (`risikoController.kemaskiniLogPemantauanRisiko`) digunakan
   oleh KemaskiniPemantauan untuk update log dari dalam Senarai Risiko.

@@ -14,7 +14,7 @@ sequenceDiagram
   participant D as PaparanUtama.jsx
   participant C as Carta (TahapRisiko/Kategori/JenisKawalan)
   participant A as api.js
-  participant B as routes/dashboard.js
+  participant B as routes/dashboard.js → dashboardController
   participant DB as DB
 
   U->>D: Buka Paparan Utama

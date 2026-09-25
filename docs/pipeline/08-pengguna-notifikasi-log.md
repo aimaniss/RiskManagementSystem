@@ -12,7 +12,7 @@ sequenceDiagram
   autonumber
   participant A as Admin
   participant U as UrusPengguna.jsx
-  participant B as routes/users.js & roles.js & syarikat.js
+  participant B as routes/users,roles,syarikat → user/peranan/syarikatController
   participant DB as DB (pengguna, peranan, syarikat)
 
   A->>U: Buka Urus Pengguna

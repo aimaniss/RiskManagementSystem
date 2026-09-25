@@ -12,7 +12,7 @@
 | 2 — Soft-delete | ✅ | Migrasi 019 (`pengguna`/`notifikasi` `is_deleted`+`deleted_at`; `deleted_at` pada 11 jadual 015). Tiada `DELETE FROM` dalam `routes/*` (grep = 0, kecuali migration). Spec E2E `04`. |
 | 3 — Role matrix | ✅ | Migrasi 020 (16 kebenaran) + 021 (`pindaan:lihat`). `authorizeKebenaran` + cache 60s. Semua route sensitif ditukar. Spec E2E `01`/`02`. |
 | 4 — Reflektor frontend | ✅ | `useAuth.js` `hasKebenaran`/`getKebenaran`, `MATRIX_KEBENARAN` fallback; `utils/auth.js` re-export lengkap. |
-| 5 — Clean-up | ⚠️ | Selesai: `tahun.js`, bcrypt, mesej BM teras, `controllers/` untuk users/bahagian/auth. **Belum**: pindah penuh logik `notifikasi`/`log_aktiviti`/`rawatan`/`risiko`/`pemantauan`/`pindaan` ke `controllers/` (mekanikal, nilai rendah — cadangan 10-PLAN), penamaan jadual (didokumenkan sebagai had). |
+| 5 — Clean-up | ✅ | Selesai: `tahun.js`, bcrypt, mesej BM teras, **semua 14 modul** kini `routes/` → `controllers/` (lanjutan 2026-09-25), matriks risiko server disatukan dalam `utils/matriksRisiko.js`, ralat `{ error }` seragam. **Had**: penamaan jadual (10-PLAN §2.4). |
 | 6 — E2E | ✅ (spec sedia) | Suite `e2e/` Playwright lengkap; jalankan dengan `npm run test:e2e` (prasyarat install lihat `e2e/README.md`). |
 | 7 — Documentation | ✅ | `01-auth-rbac.md` (ditulis semula), fail ini, `10-PLAN-lanjutan.md`, `AGENTS.md`, `PROGRESS.md`. |
 

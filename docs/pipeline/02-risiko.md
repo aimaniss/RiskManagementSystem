@@ -12,7 +12,7 @@ sequenceDiagram
   autonumber
   participant U as Pengguna
   participant D as DaftarRisiko.jsx
-  participant B as routes/risiko.js
+  participant B as routes/risiko.js → risikoController
   participant DB as DB (risiko, punca_risiko, kesan_risiko, syarikat)
 
   U->>D: Isi form (tahun, separuh tahun, syarikat, kategori, bahagian, risiko, skor K×I, punca[], kesan[])
@@ -56,7 +56,8 @@ sequenceDiagram
 
 - `skor_kebarangkalian` (1–5) × `skor_impak` (1–5) → `skor_risiko` =
   **R**endah /*S**ederhana / **T**inggi / **ST**inggi (sangat tinggi).
-  Matriks: `src/constants/riskMatrix.js` (klien) & `routes/risiko.js` (server).
+  Matriks: `src/constants/riskMatrix.js` (klien) & `utils/matriksRisiko.js`
+  (`kiraTahapRisiko`, server — dikongsi risiko/pemantauan/pindaan).
 - `status_risiko` (string) digunakan dalam aliran kelulusan & SENARAI TUGASAN
   (`?tugasan=true`).
 

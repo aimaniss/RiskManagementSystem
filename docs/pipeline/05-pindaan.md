@@ -13,7 +13,7 @@ sequenceDiagram
   autonumber
   participant U as Pengguna (Staff/Ketua/Executive)
   participant P as Pindaan.jsx / MohonPindaanModal.jsx
-  participant B as routes/pindaan.js
+  participant B as routes/pindaan.js → pindaanController
   participant A as Admin
   participant D as DB (permohonan_pindaan, risiko)
 
@@ -37,7 +37,7 @@ sequenceDiagram
   B-->>P: 200 { status }
 ```
 
-## Endpoint (`routes/pindaan.js`)
+## Endpoint (`routes/pindaan.js` → `controllers/pindaanController.js`)
 
 | Kaedah | Laluan | Middleware | Guna |
 |--------|--------|------------|------|

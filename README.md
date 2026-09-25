@@ -171,14 +171,17 @@ RiskManagementSystem/
 ├── risk_backend/                     # REST API (Express.js)
 │   ├── config/
 │   │   └── db.js                     # Sambungan PostgreSQL Pool
-│   ├── controllers/
-│   │   └── authController.js         # Logik pengesahan
+│   ├── controllers/                  # Logik setiap modul (<modul>Controller.js)
+│   │   ├── authController.js         # Log masuk / tukar kata laluan
+│   │   ├── risikoController.js       # CRUD & kelulusan risiko
+│   │   ├── pindaanController.js      # Aliran kerja pindaan
+│   │   └── ...                       # 14 controller (satu per route)
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
 │   │   ├── knex/                     # Migrasi Knex (22 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
-│   ├── routes/
+│   ├── routes/                       # Daftar endpoint + middleware sahaja
 │   │   ├── auth.js                   # Log masuk / JWT
 │   │   ├── dashboard.js              # Statistik dashboard
 │   │   ├── laporan.js                # Data laporan PDF
@@ -192,7 +195,11 @@ RiskManagementSystem/
 │   │   ├── tahun.js                  # Tahun tersedia
 │   │   └── users.js                  # CRUD pengguna
 │   ├── utils/
-│   │   └── catatAktiviti.js          # Utiliti log aktiviti
+│   │   ├── catatAktiviti.js          # Utiliti log aktiviti
+│   │   ├── katalaluan.js             # bcrypt + rehash legasi
+│   │   ├── matriksRisiko.js          # kiraTahapRisiko (R/S/T/ST)
+│   │   ├── notifikasi.js             # Hantar notifikasi
+│   │   └── transaksi.js              # dalamTransaksi (BEGIN/COMMIT/ROLLBACK)
 │   ├── knexfile.js                   # Konfigurasi Knex
 │   └── server.js                     # Titik masuk Express
 │
@@ -532,6 +539,15 @@ cd risk_backend
 npm run migrate          # Jalankan migrasi terkini
 npm run migrate:rollback  # Undur migrasi terakhir
 npm run migrate:status    # Semak status migrasi
+```
+
+### Format Kod (Backend)
+
+```bash
+cd risk_backend
+
+npm run format         # Format semua fail .js dengan Prettier
+npm run format:check   # Semak format (tanpa ubah fail)
 ```
 
 ---

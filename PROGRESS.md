@@ -19,7 +19,7 @@
 | Ujian E2E Playwright | ✅ 21/21 lulus |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
-| Work lanjutan P1–P3 | ✅ P1 auth selesai; §2.5/P2–P3 berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
+| Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5) + Fasa 5 controllers; P2–P3 berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
 
 📄 Pelan revamp: `docs/pipeline/09-PLAN-revamp.md` (status pelaksanaan di atas).
 📄 Cadangan lanjutan: `docs/pipeline/10-PLAN-lanjutan.md`.
@@ -68,9 +68,12 @@
       rehash-on-login untuk legasi plain-text)
 - [x] Mesej ralat BM ditingkatkan (`risiko.js`, `auth`, `users`, `tahun`)
 - [x] LOGIK → `controllers/` untuk `users`, `bahagian`, `auth`
-- [⚠️] Pindah penuh logik `notifikasi`/`log_aktiviti`/`rawatan`/`risiko`/
-      `pemantauan`/`pindaan` ke `controllers/` — **belum** (nilai rendah, risiko
-      tinggi; difailkan sebagai cadangan 10-PLAN §3)
+- [x] Pindah penuh logik semua modul ke `controllers/` (11 controller baharu,
+      48 handler; `routes/` hanya daftar) — 2026-09-25
+- [x] Satukan matriks risiko server → `utils/matriksRisiko.js` (`kiraTahapRisiko`)
+- [x] Ralat API seragam `{ error }` (10-PLAN §2.5)
+- [x] Buang emoji/ikon & nota perubahan gaya AI dalam kod backend
+- [x] Prettier untuk backend (`npm run format` / `format:check`)
 - [⚠️] Normalkan nama jadual (`LogPemantauan`, dsb.) — **sengaja tidak dibuat**
       (had didokumenkan; 10-PLAN §2.4)
 
@@ -112,6 +115,8 @@
 | 2026-09-25 | 1–7 | **Revamp v2 selesai**: `utils/transaksi.js`; bcrypt (`utils/katalaluan.js`); `authorizeKebenaran` + cache 60s; migrasi 019/020/021; soft-delete menyeluruh (grep `DELETE FROM` = 0); `controllers/` untuk users/bahagian/auth; pindaan:lihat; reflektor `useAuth.js`; smoke test semua endpoint lulus; suite E2E `e2e/` disediakan; docs dikemas kini |
 | 2026-09-25 | 6 | Jalankan suite E2E penuh: **21/21 lulus**; tambah `/health`, betulkan kontrak respons login, env transaksi, lifecycle pool DB, dan fixture FK log aktiviti |
 | 2026-09-25 | P1 | Tambah migration 022 `token_dikemaskini_at`; `/users/me` kini sumber kebenaran UI; session refresh pada mount/focus/60s; token lama dicabut selepas role/password/staff/syarikat berubah; spec P1 E2E — suite **21/21 lulus** |
+| 2026-09-25 | 5 / §2.5 | **Ralat seragam** `{ error }` (±80 respons BE + 7 halaman FE). **Refactor BE**: 48 handler dari 11 `routes/*.js` dipindah ke `controllers/*Controller.js` (salinan AST), matriks risiko 4 salinan → `utils/matriksRisiko.js`, buang kod mati. Pengesahan: 180/180 respons GET identik vs HEAD (5 peranan), lint `no-undef` bersih, E2E 21/21, build FE lulus |
+| 2026-09-25 | 5 | **Kemas kod BE**: buang semua emoji (±110 baris) & nota "DIKEMASKINI/Kekal Sama", buang SQL mati dikomen di dashboard; pasang Prettier 3 + `.prettierrc.json` + skrip `format`/`format:check`, format semua fail `.js`. Pengesahan: 180/180 respons GET identik vs HEAD, E2E 21/21 |
 | 2026-09-25 | 7 | Audit docs selepas revamp/P1: kemas kini `00-general.md` (authorizeKebenaran, `/health`, controllers), `08-pengguna-notifikasi-log.md` (kebenaran per route, soft-delete, `/users/me` + pencabutan token), `01-auth-rbac.md` (interceptor 401, nota `NULL` revision), `09` (migrasi 022), root `README.md` (respons login, endpoint auth, 22 migrasi) |
 
 ---
@@ -134,6 +139,6 @@
 - `npm run build` frontend lulus; `npm run lint` masih melaporkan 49 error
   dan 9 warning sedia ada pada fail frontend yang tidak disentuh.
 - Dikenal pasti & difailkan untuk lanjutan: invalidasi cache kebenaran (§1.5),
-  purging soft-delete (§2.1), notifikasi pelulus dipadam (§2.2), piawai
-  `{error}` vs `{message}` (§2.5), penamaan jadual (§2.4) — rujuk
+  purging soft-delete (§2.1), notifikasi pelulus dipadam (§2.2), penamaan
+  jadual (§2.4) — rujuk
   `docs/pipeline/10-PLAN-lanjutan.md`.
