@@ -191,6 +191,11 @@ npm run migrate:status
 | 4 | Staff | Syarikat sendiri sahaja |
 | 5 | Viewer | Semua (baca sahaja) |
 
+**`peranan_id` BERBEZA antara pangkalan data** (seed migrasi 001: 3 = Staff,
+4 = Ketua Subsidiari; jadual di atas ikut DB asal). JANGAN banding nombor ID
+peranan dalam kod — guna `nama_peranan` atau kebenaran. Menu sidebar ditapis
+ikut kebenaran (`MENU` dalam `components/sidebar.jsx`).
+
 Ketua subsidiari & Staff hanya lihat/sunting rekod `syarikat_id` mereka sendiri;
 Admin & Executive lihat semua. Pastikan setiap query risiko menghormati kawalan
 ini (klausa `WHERE syarikat_id` untuk peranan terhad).

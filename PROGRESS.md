@@ -134,6 +134,10 @@
 - [x] Spec E2E `14-tetapan-sistem` (6 ujian); spec 01/04/10/12 dikemas kini
 - [ ] Pilihan: jenis senarai rujukan lain (cth. kekerapan pemantauan) bila diperlukan
 
+### Kestabilan & Deploy (sedang berjalan)
+- [x] Peranan dikenal pasti ikut `nama_peranan`, bukan `peranan_id` (FE salah label Staff/Ketua pada DB baharu)
+- [x] Sidebar ditapis ikut kebenaran (ganti 17 semakan nama peranan)
+
 ### Skema (selesai)
 - [x] Migration 026: `logpemantauan.tarikh_pemantauan` boleh NULL (pemasangan baharu gagal lulus risiko)
 

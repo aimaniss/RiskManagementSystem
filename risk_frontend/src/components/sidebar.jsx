@@ -19,6 +19,39 @@ import LogoLight from "../assets/images/Light Background/UKMH_light.png";
 import LogoDark from "../assets/images/Dark Background/UKMH_dark.png";
 import { getAuthUser, hasKebenaran } from "../utils/auth";
 
+// Menu dipapar ikut kebenaran (lulus jika ada salah satu), bukan nama peranan,
+// supaya ia mengikut matriks `peranan_kebenaran`. Laporan & Log Aktiviti
+// sengaja dihadkan kepada pentadbir dalam menu walaupun API membenarkan
+// `laporan:jana` / `log:baca` untuk semua peranan.
+const MENU = [
+  { ke: "/", label: "Paparan Utama", icon: LayoutDashboard },
+  { ke: "/SenaraiRisiko", label: "Senarai Risiko", icon: ListChecks, kebenaran: ["risiko:lihat"] },
+  {
+    ke: "/SenaraiTugasan",
+    label: "Senarai Tugasan",
+    icon: ClipboardList,
+    kebenaran: ["risiko:lulus", "pindaan:lulus"],
+  },
+  { ke: "/DaftarRisiko", label: "Daftar Risiko", icon: FilePlus2, kebenaran: ["risiko:daftar"] },
+  {
+    ke: "/RawatanRisiko",
+    label: "Penilaian & Rawatan",
+    icon: Stethoscope,
+    kebenaran: ["risiko:lihat"],
+  },
+  {
+    ke: "/PemantauanRisiko",
+    label: "Pemantauan Risiko",
+    icon: Activity,
+    kebenaran: ["risiko:lihat"],
+  },
+  { ke: "/Pindaan", label: "Pindaan", icon: FileEdit, kebenaran: ["pindaan:lihat"] },
+  { ke: "/Laporan", label: "Laporan", icon: BarChart3, kebenaran: ["pengguna:urus"] },
+  { ke: "/UrusPengguna", label: "Urus Pengguna", icon: Users, kebenaran: ["pengguna:urus"] },
+  { ke: "/LogAktiviti", label: "Log Aktiviti", icon: ClipboardList, kebenaran: ["pengguna:urus"] },
+  { ke: "/TetapanSistem", label: "Tetapan Sistem", icon: Settings, kebenaran: ["tetapan:urus"] },
+];
+
 function Sidebar() {
   const location = useLocation();
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -32,9 +65,9 @@ function Sidebar() {
   }, []);
 
   const authUser = getAuthUser();
-  const role = authUser?.roleTitle || null;
+  if (!authUser?.roleTitle) return null;
 
-  if (!role) return null;
+  const menu = MENU.filter((m) => !m.kebenaran || hasKebenaran(...m.kebenaran));
 
   return (
     <div className="sidebar">
@@ -47,186 +80,17 @@ function Sidebar() {
       {/* Menu */}
       <div className="sidebar-menu">
         <ul>
-          <li>
-            <Link
-              to="/"
-              className={`sidebar-link ${location.pathname === "/" ? "active" : ""}`}
-            >
-              <>
-                <LayoutDashboard className="sidebar-icon" />
-                Paparan Utama
-              </>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/SenaraiRisiko"
-              className={`sidebar-link ${
-                location.pathname === "/SenaraiRisiko" ? "active" : ""
-              }`}
-            >
-              <>
-                <ListChecks className="sidebar-icon" />
-                Senarai Risiko
-              </>
-            </Link>
-          </li>
-
-          {/* Senarai Tugasan: Admin & Executive only */}
-          {(role === "Admin" || role === "Executive") && (
-            <li>
+          {menu.map((m) => (
+            <li key={m.ke}>
               <Link
-                to="/SenaraiTugasan"
-                className={`sidebar-link ${
-                  location.pathname === "/SenaraiTugasan" ? "active" : ""
-                }`}
+                to={m.ke}
+                className={`sidebar-link ${location.pathname === m.ke ? "active" : ""}`}
               >
-                <>
-                  <ClipboardList className="sidebar-icon" />
-                  Senarai Tugasan
-                </>
+                <m.icon className="sidebar-icon" />
+                {m.label}
               </Link>
             </li>
-          )}
-
-          {/* Daftar Risiko: Tiada Viewer */}
-          {(role === "Admin" ||
-            role === "Executive" ||
-            role === "Ketua Subsidiari" ||
-            role === "Staff") && (
-            <li>
-              <Link
-                to="/DaftarRisiko"
-                className={`sidebar-link ${
-                  location.pathname === "/DaftarRisiko" ? "active" : ""
-                }`}
-              >
-                <>
-                  <FilePlus2 className="sidebar-icon" />
-                  Daftar Risiko
-                </>
-              </Link>
-            </li>
-          )}
-
-          {/* === PERUBAHAN DI SINI: 'Viewer' ditambah === */}
-          {(role === "Admin" ||
-            role === "Executive" ||
-            role === "Ketua Subsidiari" ||
-            role === "Staff" ||
-            role === "Viewer") && (
-            <li>
-              <Link
-                to="/RawatanRisiko"
-                className={`sidebar-link ${
-                  location.pathname === "/RawatanRisiko" ? "active" : ""
-                }`}
-              >
-                <>
-                  <Stethoscope className="sidebar-icon" />
-                  Penilaian & Rawatan
-                </>
-              </Link>
-            </li>
-          )}
-
-          {/* Pemantauan Risiko: Ada Viewer */}
-          {(role === "Admin" ||
-            role === "Executive" ||
-            role === "Ketua Subsidiari" ||
-            role === "Staff" ||
-            role === "Viewer") && (
-            <li>
-              <Link
-                to="/PemantauanRisiko"
-                className={`sidebar-link ${
-                  location.pathname === "/PemantauanRisiko" ? "active" : ""
-                }`}
-              >
-                <>
-                  <Activity className="sidebar-icon" />
-                  Pemantauan Risiko
-                </>
-              </Link>
-            </li>
-          )}
-
-          {/* Pindaan: Hanya Admin dan Executive */}
-          {(role === "Admin" || role === "Executive") && (
-            <li>
-              <Link
-                to="/Pindaan"
-                className={`sidebar-link ${
-                  location.pathname === "/Pindaan" ? "active" : ""
-                }`}
-              >
-                <>
-                  <FileEdit className="sidebar-icon" />
-                  Pindaan
-                </>
-              </Link>
-            </li>
-          )}
-
-          {/* Laporan, Urus Pengguna, Log Aktiviti: Hanya Admin */}
-          {role === "Admin" && (
-            <>
-              <li>
-                <Link
-                  to="/Laporan"
-                  className={`sidebar-link ${
-                    location.pathname === "/Laporan" ? "active" : ""
-                  }`}
-                >
-                  <>
-                    <BarChart3 className="sidebar-icon" />
-                    Laporan
-                  </>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/UrusPengguna"
-                  className={`sidebar-link ${
-                    location.pathname === "/UrusPengguna" ? "active" : ""
-                  }`}
-                >
-                  <>
-                    <Users className="sidebar-icon" />
-                    Urus Pengguna
-                  </>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/LogAktiviti"
-                  className={`sidebar-link ${
-                    location.pathname === "/LogAktiviti" ? "active" : ""
-                  }`}
-                >
-                  <>
-                    <ClipboardList className="sidebar-icon" />
-                    Log Aktiviti
-                  </>
-                </Link>
-              </li>
-              {hasKebenaran("tetapan:urus") && (
-                <li>
-                  <Link
-                    to="/TetapanSistem"
-                    className={`sidebar-link ${
-                      location.pathname === "/TetapanSistem" ? "active" : ""
-                    }`}
-                  >
-                    <>
-                      <Settings className="sidebar-icon" />
-                      Tetapan Sistem
-                    </>
-                  </Link>
-                </li>
-              )}
-            </>
-          )}
+          ))}
         </ul>
       </div>
 

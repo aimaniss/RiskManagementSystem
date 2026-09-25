@@ -11,12 +11,14 @@ import FilterModal from "./FilterModal.jsx";
 import DashboardKeseluruhan from "./DashboardKeseluruhan.jsx";
 import DashboardSyarikat from "./DashboardSyarikat.jsx";
 
+// Peranan yang melihat semua syarikat di papan pemuka (ikut nama, bukan ID)
+const PERANAN_SEMUA_SYARIKAT = ["Admin", "Executive"];
+
 // ================================
 // Pemilih Dashboard (All/Syarikat)
 // ================================
 const DashboardRenderer = ({ filterValues, data, currentUser }) => {
-  const adminRoles = [1, 2];
-  const isAdmin = adminRoles.includes(currentUser?.peranan_id);
+  const isAdmin = PERANAN_SEMUA_SYARIKAT.includes(currentUser?.nama_peranan);
 
   if (filterValues.syarikat === "Semua Syarikat" && isAdmin) {
     return <DashboardKeseluruhan data={data} />;
@@ -89,9 +91,7 @@ export default function PaparanUtama() {
     if (isUserLoading || syarikatLoading || !currentUser || syarikatOptions.length === 0) {
       return;
     }
-
-    const adminRoles = [1, 2];
-    const isAdmin = adminRoles.includes(currentUser.peranan_id);
+    const isAdmin = PERANAN_SEMUA_SYARIKAT.includes(currentUser.nama_peranan);
 
     if (isAdmin) {
       setFilterValues({
@@ -126,9 +126,7 @@ export default function PaparanUtama() {
       try {
         setIsLoading(true);
         setError(null);
-
-        const adminRoles = [1, 2];
-        const isAdmin = adminRoles.includes(currentUser?.peranan_id);
+        const isAdmin = PERANAN_SEMUA_SYARIKAT.includes(currentUser?.nama_peranan);
 
         let finalSyarikatId = filterValues.syarikatId;
 

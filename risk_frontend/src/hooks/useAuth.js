@@ -31,8 +31,10 @@ const binaAuthUser = (decoded, data = {}) => {
     userId: sumber.id || sumber.pengguna_id || null,
     syarikatId: sumber.syarikat_id || null,
     perananId,
-    role: ROLE_MAPPING[perananId] || sumber.nama_peranan || "",
-    roleTitle: ROLE_MAPPING_TITLE[perananId] || sumber.nama_peranan || "",
+    // Nama peranan ialah sumber utama: peranan_id berbeza antara pangkalan data
+    // (seed migrasi: 3 = Staff, 4 = Ketua Subsidiari). Peta ID hanya fallback.
+    role: sumber.nama_peranan ? sumber.nama_peranan.toUpperCase() : ROLE_MAPPING[perananId] || "",
+    roleTitle: sumber.nama_peranan || ROLE_MAPPING_TITLE[perananId] || "",
     namaPeranan: sumber.nama_peranan || "",
     namaPenuh: sumber.nama_penuh || "",
     kebenaran,
@@ -62,7 +64,7 @@ const MATRIX_KEBENARAN = {
   "pemantauan:urus": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF"],
   "pindaan:urus": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF"],
   "pindaan:lihat": ["ADMIN", "EXECUTIVE"],
-  "pindaan:lulus": ["ADMIN"],
+  "pindaan:lulus": ["ADMIN", "EXECUTIVE"],
   "pengguna:urus": ["ADMIN"],
   "log:baca": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
   "log:padam": ["ADMIN"],

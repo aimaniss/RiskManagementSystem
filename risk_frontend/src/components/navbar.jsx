@@ -67,13 +67,9 @@ function Navbar() {
       try {
         const res = await api.get("/users/me");
 
-        const roleMapping = {
-          1: "ADMIN", 2: "EXECUTIVE", 3: "KETUA SUBSIDIARI", 4: "STAFF", 5: "VIEWER",
-        };
-
         const u = res.data;
         setUser({
-          role: roleMapping[u.peranan_id] || "",
+          role: (u.nama_peranan || "").toUpperCase(),
           syarikat: u.singkatan_syarikat || "",
           syarikatPenuh: u.nama_syarikat || "",
           staffId: u.staff_id || "",

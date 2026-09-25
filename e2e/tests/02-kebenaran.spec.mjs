@@ -71,6 +71,21 @@ test.describe("Kebenaran — UI (menu per peranan)", () => {
       await expect(page.getByText("Pindaan", { exact: true })).toHaveCount(0);
     }
   });
+
+  // Menu ikut kebenaran & peranan dikenal pasti ikut nama (bukan peranan_id,
+  // yang berbeza antara pangkalan data)
+  test("Staff nampak Daftar Risiko & label STAFF; Viewer tiada Daftar Risiko", async ({ page }) => {
+    const staff = await apiLogin(page.request, CREDENTIALS.staff);
+    await sealSession(page, staff.token);
+    await expect(page.locator(".sidebar").getByText("Daftar Risiko", { exact: true })).toBeVisible();
+    await expect(page.getByText("Senarai Tugasan", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("STAFF", { exact: true })).toBeVisible();
+
+    const viewer = await apiLogin(page.request, CREDENTIALS.viewer);
+    await sealSession(page, viewer.token);
+    await expect(page.locator(".sidebar").getByText("Daftar Risiko", { exact: true })).toHaveCount(0);
+    await expect(page.locator(".sidebar").getByText("Pemantauan Risiko", { exact: true })).toBeVisible();
+  });
 });
 
 test.afterAll(async () => {

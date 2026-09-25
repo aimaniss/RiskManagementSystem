@@ -3,6 +3,9 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectItem } from "@/components/ui/select";
 
+// Peranan yang melihat semua syarikat di papan pemuka (ikut nama, bukan ID)
+const PERANAN_SEMUA_SYARIKAT = ["Admin", "Executive"];
+
 export default function FilterModal({
   filterValues,
   setFilterValues,
@@ -14,8 +17,7 @@ export default function FilterModal({
   const [tempId, setTempId] = useState(initialId);
 
   // Tentukan peranan pengguna
-  const adminRoles = [1, 2]; // 1: ADMIN, 2: EXECUTIVE
-  const isAdmin = adminRoles.includes(currentUser?.peranan_id);
+  const isAdmin = PERANAN_SEMUA_SYARIKAT.includes(currentUser?.nama_peranan);
 
   // Bina senarai pilihan (options) secara dinamik
   const baseOptions = Array.isArray(syarikatOptions) ? syarikatOptions : [];
