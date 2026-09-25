@@ -32,6 +32,10 @@ sequenceDiagram
 
 ## Endpoint (`routes/laporan.js` → `controllers/laporanController.js`, semua `verifyToken`)
 
+> **Pengasingan syarikat**: senarai ditapis dalam controller; `data-penuh`
+> dilindungi `hadSyarikat` (Staff/Ketua Subsidiari `403` untuk risiko syarikat lain).
+
+
 | Kaedah | Laluan | Guna |
 |--------|--------|------|
 | GET | `/api/laporan/` | Senarai laporan ringkas dengan penapis (`params`: tahun, syarikat, kategori, dll.) |

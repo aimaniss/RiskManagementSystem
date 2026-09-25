@@ -17,7 +17,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `09-keselamatan.spec.mjs` | Pengawal regresi: tiada kata laluan plain-text dalam DB, setiap pengguna ada `token_dikemaskini_at`, tiada respons 5xx yang memulangkan `err.message` (semakan statik controllers) |
 | `10-executive.spec.mjs` | Dasar Executive = Admin: tapis pindaan ikut syarikat sama seperti Admin; `pengguna:urus` & `log:padam` masih `403`. `rujukan:urus`: Executive, Ketua Subsidiari & Staff boleh tambah bahagian, Viewer `403` |
 | `11-aliran-tulis.spec.mjs` | Aliran tulis penuh melalui API: daftar/kemaskini/lulus risiko, rawatan & log pemantauan (tambah/kemaskini/padam, anak soft-delete), pindaan (mohon/lulus/tolak/lulus terus + notifikasi Executive), padam risiko berlata. Semua data & kesan sampingan dibuang kekal selepas ujian |
-| `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 7 bacaan ikut ID untuk risiko syarikat lain -> `403`, data kekal; Executive/Viewer masih boleh baca |
+| `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 7 bacaan ikut ID untuk risiko syarikat lain -> `403`, data kekal; laporan penuh syarikat lain `403`; log aktiviti hanya syarikat sendiri; `check-no-rujukan` tanpa rekod; Executive/Viewer masih boleh baca |
 
 ## Prasyarat
 
@@ -46,7 +46,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **58/58 ujian lulus**.
+- Suite semasa: **61/61 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

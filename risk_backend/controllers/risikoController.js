@@ -802,16 +802,13 @@ export const semakNoRujukan = async (req, res) => {
   try {
     const { noRujukan } = req.params;
 
+    // Hanya pulangkan kewujudan — jangan dedahkan rekod (mungkin milik syarikat lain)
     const { rows } = await pool.query(
-      `SELECT * FROM risiko WHERE no_rujukan=$1 AND is_deleted = false`,
+      `SELECT 1 FROM risiko WHERE no_rujukan = $1 AND is_deleted = false`,
       [noRujukan]
     );
 
-    if (rows.length > 0) {
-      return res.json({ exists: true, data: rows[0] });
-    } else {
-      return res.json({ exists: false });
-    }
+    res.json({ exists: rows.length > 0 });
   } catch (err) {
     console.error("Ralat GET /risiko/check-no-rujukan:", err);
     res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });

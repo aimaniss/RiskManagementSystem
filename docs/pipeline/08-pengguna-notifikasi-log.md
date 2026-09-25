@@ -56,7 +56,7 @@ sequenceDiagram
 | GET | `/api/syarikat/` | `verifyToken` (RBAC-filtered) | Rujukan |
 | GET | `/api/bahagian/` | `verifyToken` | Rujukan |
 | POST | `/api/bahagian/` | `verifyToken, rujukan:urus` | Rujukan (DaftarRisiko tambah bahagian) |
-| GET | `/api/log_aktiviti/` | `verifyToken, log:baca` | Jejak audit |
+| GET | `/api/log_aktiviti/` | `verifyToken, log:baca` | Jejak audit (Staff/Ketua Subsidiari: syarikat sendiri sahaja) |
 | DELETE | `/api/log_aktiviti/:id` | `verifyToken, log:padam` | Jejak audit (soft-delete) |
 | DELETE | `/api/log_aktiviti/` | `verifyToken, log:padam` | Jejak audit (soft-delete) |
 | GET | `/api/notifikasi/` | `verifyToken` | Notifikasi |

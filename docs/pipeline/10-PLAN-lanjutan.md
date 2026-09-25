@@ -207,6 +207,24 @@ Ketua Subsidiari). ID kosong/tidak wujud/UUID rosak dilepaskan kepada handler
 tidak berubah, Executive/Viewer masih boleh baca) + spec `11-aliran-tulis`
 (aliran sah syarikat sendiri).
 
+**Audit bacaan lanjutan (2026-09-25)** — tiga kebocoran lagi, disahkan secara
+empirik sebelum dibaiki:
+- `GET /api/laporan/:risiko_id/data-penuh`: semakan dalam controller bergantung
+  pada `req.user.nama_syarikat` yang **tidak wujud**, jadi tidak pernah berjalan —
+  Staff boleh membaca laporan penuh risiko syarikat lain. Kini `hadSyarikat` pada
+  route; semakan rosak dibuang.
+- `GET /api/log_aktiviti`: Staff/Ketua Subsidiari melihat log **semua syarikat**
+  (nama pengguna, No. Rujukan, butiran risiko). Kini ditapis `p.syarikat_id`
+  untuk peranan terhad; Viewer/Executive/Admin kekal semua.
+- `GET /api/risiko/check-no-rujukan/:no`: memulangkan seluruh baris risiko
+  (tidak digunakan frontend). Kini hanya `{ exists }`.
+- Disemak & selamat: dashboard, senarai laporan/risiko/rawatan/pemantauan/
+  pindaan (tapisan syarikat dalam controller), notifikasi (terikat
+  `pengguna_id`), bahagian/syarikat/tahun (rujukan).
+- Diketahui & dibiarkan (reka bentuk): `GET /api/risiko/check-duplicate`
+  memaparkan risiko bertajuk sama di syarikat lain (tajuk sudah diketik
+  pengguna; tujuan amaran pendua merentas kumpulan).
+
 ## 3. Kerja sisa Fasa 5 (didokumenkan, bukan keperluan kritikal)
 
 | Item | Kesan | Potensi langkah awal |

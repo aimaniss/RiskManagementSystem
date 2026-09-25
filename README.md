@@ -415,7 +415,7 @@ RiskManagementSystem/
 |--------|----------|-----------|-------|
 | `GET` | `/api/dashboard` | Statistik dashboard | `dashboard:lihat` |
 | `GET` | `/api/laporan`, `/api/laporan/:risiko_id/data-penuh` | Data laporan | `laporan:jana` |
-| `GET` | `/api/log_aktiviti` | Log aktiviti jejak audit | `log:baca` |
+| `GET` | `/api/log_aktiviti` | Log aktiviti jejak audit (Staff/Ketua Subsidiari: syarikat sendiri) | `log:baca` |
 | `DELETE` | `/api/log_aktiviti`, `/api/log_aktiviti/:id` | Padam log (soft-delete) | `log:padam` |
 | `GET` | `/api/syarikat` | Senarai syarikat (ditapis mengikut peranan) | Semua |
 | `GET` | `/api/tahun` | Senarai tahun | Semua |

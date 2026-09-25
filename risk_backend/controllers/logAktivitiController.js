@@ -13,7 +13,12 @@ export const senaraiLogAktiviti = async (req, res) => {
   // Dasar: jangan papar log yang di-soft-delete
   whereClauses.push(`la.is_deleted = false`);
 
-  // ... (Logik filter anda kekal sama) ...
+  // Staff & Ketua Subsidiari hanya melihat log pengguna syarikat sendiri
+  if (["Staff", "Ketua Subsidiari"].includes(req.user.nama_peranan)) {
+    whereClauses.push(`p.syarikat_id = $${paramIndex++}`);
+    queryParams.push(req.user.syarikat_id);
+  }
+
   if (tarikhMula) {
     whereClauses.push(`la.tarikh_masa >= $${paramIndex++}`);
     queryParams.push(tarikhMula);

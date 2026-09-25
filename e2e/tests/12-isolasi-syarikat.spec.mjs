@@ -126,6 +126,39 @@ test("Executive & Viewer masih boleh membaca semua syarikat", async ({ request }
   expect(gagal).toEqual([]);
 });
 
+test("Laporan penuh risiko syarikat lain -> 403 bagi Staff, 200 bagi Executive", async ({
+  request,
+}) => {
+  const laluan = `${API}/laporan/${fx.risikoId}/data-penuh`;
+  expect((await request.get(laluan, { headers: staff.auth })).status()).toBe(403);
+  const exec = await apiLogin(request, CREDENTIALS.executive);
+  expect((await request.get(laluan, { headers: exec.auth })).status()).toBe(200);
+});
+
+test("Log aktiviti: Staff hanya nampak syarikat sendiri; Viewer nampak semua", async ({
+  request,
+}) => {
+  const { nama_syarikat: syarikatStaff } = await satu(
+    `SELECT s.nama_syarikat FROM pengguna u JOIN syarikat s ON s.syarikat_id = u.syarikat_id
+      WHERE u.staff_id = $1`,
+    [CREDENTIALS.staff.staff_id]
+  );
+  const logStaff = await (await request.get(`${API}/log_aktiviti`, { headers: staff.auth })).json();
+  expect(logStaff.length).toBeGreaterThan(0);
+  expect([...new Set(logStaff.map((l) => l.syarikat))]).toEqual([syarikatStaff]);
+
+  const viewer = await apiLogin(request, CREDENTIALS.viewer);
+  const logViewer = await (await request.get(`${API}/log_aktiviti`, { headers: viewer.auth })).json();
+  expect(new Set(logViewer.map((l) => l.syarikat)).size).toBeGreaterThan(1);
+});
+
+test("check-no-rujukan hanya memulangkan kewujudan, bukan rekod", async ({ request }) => {
+  const res = await request.get(`${API}/risiko/check-no-rujukan/${encodeURIComponent(TANDA)}`, {
+    headers: staff.auth,
+  });
+  expect(await res.json()).toEqual({ exists: true });
+});
+
 test("Data syarikat lain kekal tidak berubah", async () => {
   const r = await satu("SELECT is_deleted, skor_kebarangkalian, skor_impak FROM risiko WHERE risiko_id = $1", [fx.risikoId]);
   expect(r).toEqual({ is_deleted: false, skor_kebarangkalian: 2, skor_impak: 2 });

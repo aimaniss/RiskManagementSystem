@@ -128,7 +128,6 @@ export const senaraiLaporan = async (req, res) => {
 // =======================================================
 export const dataPenuhLaporan = async (req, res) => {
   const { risiko_id } = req.params;
-  const user = req.user;
 
   try {
     const query = `
@@ -291,18 +290,8 @@ export const dataPenuhLaporan = async (req, res) => {
       return res.status(404).json({ error: "Risiko tidak dijumpai." });
     }
 
-    const riskData = rows[0];
-
-    // Semakan keselamatan
-    if (
-      user.nama_syarikat &&
-      ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan) &&
-      riskData.subsidiary !== user.nama_syarikat
-    ) {
-      return res.status(403).json({ error: "Akses tidak dibenarkan." });
-    }
-
-    res.json(riskData);
+    // Pengasingan syarikat dikuatkuasakan oleh hadSyarikat pada route
+    res.json(rows[0]);
   } catch (err) {
     console.error(`Ralat GET /laporan/${risiko_id}/data-penuh:`, err);
     res.status(500).json({ error: "Gagal memuatkan data laporan penuh." });
