@@ -217,6 +217,9 @@ const QUERY_RISIKO = `
     r.skor_risiko,
     r.status_risiko,
   r.status_kelulusan,
+  r.sebab_ditolak_risiko,
+  r.tarikh_kelulusan,
+  pelulus.nama_penuh AS diluluskan_oleh,
     r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
     raw.rawatan_id,
     raw.pelan_tindakan,
@@ -243,6 +246,7 @@ const QUERY_RISIKO = `
   FROM risiko r
   LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
   LEFT JOIN pengguna u ON u.pengguna_id = r.created_by
+  LEFT JOIN pengguna pelulus ON pelulus.pengguna_id = r.diluluskan_oleh_id
   LEFT JOIN RawatanAgregat raw ON raw.risiko_id = r.risiko_id
   LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
   LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id

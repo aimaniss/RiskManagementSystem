@@ -31,7 +31,7 @@ export default function StatusStepper({ steps = [], className }) {
                 </div>
                 <span
                   className={cn(
-                    "mt-1.5 text-[11.5px] whitespace-nowrap",
+                    "mt-1.5 max-w-[64px] text-center text-[11px] leading-tight sm:max-w-none sm:whitespace-nowrap sm:text-[11.5px]",
                     isCompleted && "text-foreground",
                     isActive && "text-foreground",
                     isPending && "text-muted-foreground"

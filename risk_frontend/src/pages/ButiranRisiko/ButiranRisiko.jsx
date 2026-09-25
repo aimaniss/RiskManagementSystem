@@ -258,7 +258,16 @@ export default function ButiranRisiko() {
               <Medan label="Kategori">{risiko.kategori}</Medan>
               <Medan label="Bahagian / Unit">{risiko.bahagian}</Medan>
               <Medan label="Tarikh daftar">{risiko.created_at ? formatDate(risiko.created_at) : "-"}</Medan>
-              <Medan label="Status kelulusan">{risiko.status_kelulusan || "Diluluskan"}</Medan>
+              <Medan label="Status kelulusan">
+                {risiko.status_kelulusan || "Diluluskan"}
+                {risiko.diluluskan_oleh && ` · ${risiko.diluluskan_oleh}`}
+                {risiko.tarikh_kelulusan && ` · ${formatDate(risiko.tarikh_kelulusan)}`}
+              </Medan>
+              {risiko.status_kelulusan === "Ditolak" && (
+                <Medan label="Sebab ditolak" className="sm:col-span-2 lg:col-span-4">
+                  {risiko.sebab_ditolak_risiko}
+                </Medan>
+              )}
               <Medan label="Risiko" className="sm:col-span-2 lg:col-span-4">
                 <span className="whitespace-pre-wrap">{risiko.risiko}</span>
               </Medan>
