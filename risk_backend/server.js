@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
@@ -16,9 +17,20 @@ import laporanRoutes from "./routes/laporan.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import notifikasiRoutes from "./routes/notifikasi.js";
 import rujukanRoutes from "./routes/rujukan.js";
+import { hadApi } from "./middleware/hadKadar.js";
 
 dotenv.config();
 const app = express();
+
+// Di belakang reverse proxy (nginx/Docker), IP klien sebenar datang dari
+// X-Forwarded-For; tanpa ini had kadar mengira semua pengguna sebagai satu IP.
+if (process.env.TRUST_PROXY) {
+  const nilai = process.env.TRUST_PROXY;
+  app.set("trust proxy", /^\d+$/.test(nilai) ? parseInt(nilai, 10) : nilai);
+}
+
+app.use(helmet());
+app.disable("x-powered-by");
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
@@ -38,6 +50,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use("/api", hadApi);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

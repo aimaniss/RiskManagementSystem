@@ -134,6 +134,11 @@ npm run migrate:status
   `janaKatalaluanSementara`). `verifyToken` menolak akaun `is_aktif=false` dan,
   semasa `perlu_tukar_katalaluan`, hanya membenarkan `GET /api/users/me`,
   `PUT /api/auth/tukar-katalaluan`, `POST /api/auth/logout`.
+- **Keselamatan HTTP**: `helmet` + had kadar per IP (`middleware/hadKadar.js`:
+  `hadLogMasuk` pada `/api/auth/login` mengira percubaan gagal sahaja; `hadApi`
+  pada `/api`). Had dilaras melalui `HAD_LOG_MASUK_IP` / `HAD_API_IP`; tetapkan
+  `TRUST_PROXY` di belakang reverse proxy. JANGAN guna `console.log` dalam
+  controller (dikawal spec 09) — guna `console.error` untuk ralat sahaja.
 - Log tindakan: `catatAktiviti(pengguna_id, aktiviti, ringkasan, perincian)`
   dari `utils/catatAktiviti.js` — **parameter posisi**, bukan objek.
 - Notifikasi: `hantarNotifikasi`, `hantarNotifikasiBulk`,

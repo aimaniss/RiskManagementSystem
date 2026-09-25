@@ -18,8 +18,6 @@ export const dapatkanDashboard = async (req, res) => {
     const { syarikat_id } = req.query;
     const user = req.user;
 
-    console.log("Dashboard Request:", { syarikat_id, user_role: user.nama_peranan });
-
     // === 1. WHERE clause ===
     // 'whereClause' ini HANYA menapis syarikat, BUKAN status
     let whereConditions = [];
@@ -97,15 +95,7 @@ export const dapatkanDashboard = async (req, res) => {
     `;
 
     const { rows: risikoData } = await pool.query(mainQuery, params);
-
-    console.log(`Total risiko (SEMUA STATUS): ${risikoData.length}`);
-
-    // Debug
     const risikoTanpaLog = risikoData.filter((r) => r.tiada_log);
-    if (risikoTanpaLog.length > 0) {
-      console.log(`Risiko tanpa log: ${risikoTanpaLog.length}`);
-      console.log("   ID:", risikoTanpaLog.map((r) => r.risiko_id).join(", "));
-    }
 
     // === 3. Inisialisasi pengira ===
     const skor = {
@@ -202,8 +192,6 @@ export const dapatkanDashboard = async (req, res) => {
     }
 
     // === 5. Log debugging ===
-    console.log("Skor Status (Semua Status):", skor);
-    console.log("Tahap Risiko (Semua Status):", tahapRisikoCount);
 
     // === 6. Format data carta dengan label penuh ===
     const tahapRisikoData = Object.entries(tahapRisikoCount)

@@ -574,10 +574,6 @@ export const luluskanPindaan = async (req, res) => {
         values.push(risiko_id);
         const updateQuery = `UPDATE "risiko" SET ${setClause} WHERE risiko_id = $${values.length};`;
         await client.query(updateQuery, values);
-      } else {
-        console.log(
-          `Tiada medan risiko spesifik untuk dikemaskini bagi risiko ID ${risiko_id} semasa kelulusan.`
-        );
       }
     }
 
@@ -625,10 +621,6 @@ export const luluskanPindaan = async (req, res) => {
 
           const updateLogQuery = `UPDATE logpemantauan SET ${setClause} WHERE log_id = $${values.length}`;
           await client.query(updateLogQuery, values);
-        } else {
-          console.log(
-            `Tiada medan log spesifik untuk dikemaskini bagi log ID ${log_id_terkini} semasa kelulusan.`
-          );
         }
       } else {
         console.warn(

@@ -604,7 +604,6 @@ export const kemaskiniLogPemantauan = async (req, res) => {
   }
 
   try {
-    console.log("PUT /log/:log_id diterima:", { log_id, risiko_id });
     await client.query("BEGIN");
 
     const logUpdateQuery = `

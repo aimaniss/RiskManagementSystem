@@ -2,6 +2,7 @@
 // - Tiada kata laluan plain-text dalam DB (migration 023).
 // - Setiap pengguna ada token_dikemaskini_at supaya token boleh dicabut.
 // - Respons 5xx tidak mendedahkan err.message kepada klien.
+// - Header helmet, had kadar log masuk per IP, tiada console.log nyahpepijat.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -38,4 +39,30 @@ test("Respons 5xx dalam controllers tidak memulangkan err.message", async () => 
     }
   }
   expect(bocor).toEqual([]);
+});
+
+test("Header keselamatan HTTP (helmet) dipasang & Express tidak didedahkan", async ({
+  request,
+}) => {
+  const res = await request.get("http://localhost:5001/health");
+  const h = res.headers();
+  expect(h["x-powered-by"]).toBeUndefined();
+  expect(h["x-content-type-options"]).toBe("nosniff");
+  expect(h["x-frame-options"]).toBe("SAMEORIGIN");
+  expect(h["content-security-policy"]).toBeTruthy();
+});
+
+test("Had kadar log masuk per IP dikonfigurasi (header RateLimit)", async ({ request }) => {
+  const res = await request.post("http://localhost:5001/api/auth/login", {
+    data: { staff_id: "E2E_TIADA_HAD", katalaluan: "x" },
+  });
+  expect(res.status()).toBe(401);
+  expect(res.headers()["ratelimit-policy"] || res.headers()["ratelimit"]).toBeTruthy();
+});
+
+test("Tiada console.log nyahpepijat dalam controllers", async () => {
+  const ada = fs
+    .readdirSync(CONTROLLERS)
+    .filter((f) => /console\.log\(/.test(fs.readFileSync(path.join(CONTROLLERS, f), "utf8")));
+  expect(ada).toEqual([]);
 });

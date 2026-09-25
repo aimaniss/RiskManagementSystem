@@ -18,7 +18,6 @@ const catatAktiviti = async (pengguna_id, aktiviti, ringkasan, perincian) => {
 
   try {
     await pool.query(sql, values);
-    // console.log(`Aktiviti dicatat: ${aktiviti} oleh ID ${pengguna_id}`);
   } catch (error) {
     // Penting: Kegagalan log tidak sepatutnya mengganggu operasi utama.
     console.error("Ralat semasa mencatat aktiviti:", error);

@@ -290,7 +290,6 @@ export const senaraiTahunRisiko = async (req, res) => {
 export const dapatkanRawatanRisiko = async (req, res) => {
   try {
     const { risiko_id } = req.params;
-    console.log("GET /risiko/:risiko_id/rawatan called with:", risiko_id);
 
     const rawatanQuery = `
       SELECT
@@ -306,7 +305,6 @@ export const dapatkanRawatanRisiko = async (req, res) => {
     const { rows: rawatanRows } = await pool.query(rawatanQuery, [risiko_id]);
 
     if (rawatanRows.length === 0) {
-      console.log("Rawatan tidak dijumpai untuk risiko_id:", risiko_id);
       return res.status(404).json({ error: "Rawatan tidak dijumpai untuk risiko ini" });
     }
 
@@ -328,7 +326,6 @@ export const dapatkanRawatanRisiko = async (req, res) => {
     const { rows: kakitanganRows } = await pool.query(kakitanganQuery, [rawatan.rawatan_id]);
     rawatan.kakitangan_bertanggungjawab = kakitanganRows.map((r) => r.nama_kakitangan);
 
-    console.log("Rawatan data fetched successfully:", rawatan);
     res.json(rawatan);
   } catch (err) {
     console.error("Ralat GET /risiko/:risiko_id/rawatan:", err);
@@ -347,8 +344,6 @@ export const kemaskiniRawatanRisiko = async (req, res) => {
     req.body;
 
   try {
-    console.log("PUT /risiko/:risiko_id/rawatan called");
-
     await client.query("BEGIN");
 
     const checkQuery = `
@@ -423,7 +418,6 @@ export const kemaskiniRawatanRisiko = async (req, res) => {
       console.error("Gagal mencatat log:", logErr);
     }
 
-    console.log("Rawatan updated successfully");
     res.json({ message: "Rawatan risiko berjaya dikemaskini" });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -459,8 +453,6 @@ export const kemaskiniLogPemantauanRisiko = async (req, res) => {
       pelan_tindakan_list,
       kakitangan_list,
     } = req.body;
-
-    console.log("PUT /risiko/:risiko_id/pemantauan/log/:log_id called");
 
     if (!tahun_pemantauan || !status_pemantauan) {
       client.release();
@@ -567,7 +559,6 @@ export const kemaskiniLogPemantauanRisiko = async (req, res) => {
       console.error("Gagal mencatat log aktiviti:", logErr);
     }
 
-    console.log("Log pemantauan updated successfully");
     res.json({ message: "Log pemantauan berjaya dikemaskini" });
   } catch (err) {
     await client.query("ROLLBACK");
