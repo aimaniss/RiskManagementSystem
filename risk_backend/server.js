@@ -12,28 +12,29 @@ import rawatanRoutes from "./routes/rawatan.js";
 import pemantauanRoutes from "./routes/pemantauan.js";
 import pindaanRoutes from "./routes/pindaan.js";
 import logAktivitiRoutes from "./routes/log_aktiviti.js";
-import laporanRoutes from './routes/laporan.js';
-import dashboardRoutes from './routes/dashboard.js';
-import notifikasiRoutes from './routes/notifikasi.js';
+import laporanRoutes from "./routes/laporan.js";
+import dashboardRoutes from "./routes/dashboard.js";
+import notifikasiRoutes from "./routes/notifikasi.js";
 
 dotenv.config();
 const app = express();
 
 const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5175'];
+  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+  : ["http://localhost:5175"];
 
-app.use(cors({
+app.use(
+  cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
     },
-    credentials: true
-}));
-
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -50,7 +51,7 @@ app.use("/api/bahagian", bahagianRoutes);
 app.use("/api/risiko", risikoRoutes);
 app.use("/api/tahun", tahunRoutes);
 app.use("/api/rawatan", rawatanRoutes);
-app.use('/api/pemantauan-risiko', pemantauanRoutes);
+app.use("/api/pemantauan-risiko", pemantauanRoutes);
 app.use("/api/pindaan", pindaanRoutes);
 app.use("/api/log_aktiviti", logAktivitiRoutes);
 app.use("/api/laporan", laporanRoutes);
@@ -58,5 +59,3 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifikasi", notifikasiRoutes);
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-

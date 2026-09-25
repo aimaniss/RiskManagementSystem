@@ -1,5 +1,5 @@
 // =======================================================
-// 📁 routes/log_aktiviti.js
+// routes/log_aktiviti.js
 // =======================================================
 import express from "express";
 import pool from "../config/db.js";
@@ -8,16 +8,10 @@ import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js
 const router = express.Router();
 
 // =======================================================
-// 🟢 GET /api/log_aktiviti - (Kekal Sama)
+// GET /api/log_aktiviti -
 // =======================================================
 router.get("/", verifyToken, authorizeKebenaran("log:baca"), async (req, res) => {
-  const {
-    tarikhMula,
-    tarikhAkhir,
-    peranan,
-    syarikat,
-    aktiviti_teks,
-  } = req.query;
+  const { tarikhMula, tarikhAkhir, peranan, syarikat, aktiviti_teks } = req.query;
 
   const queryParams = [];
   const whereClauses = [];
@@ -50,7 +44,7 @@ router.get("/", verifyToken, authorizeKebenaran("log:baca"), async (req, res) =>
     queryParams.push(`%${aktiviti_teks}%`);
   }
 
-  // Query (Kekal Sama - pastikan 'ringkasan' ada)
+  // Query
   let sqlQuery = `
     SELECT
       la.id AS log_id,
@@ -78,13 +72,13 @@ router.get("/", verifyToken, authorizeKebenaran("log:baca"), async (req, res) =>
     const { rows } = await pool.query(sqlQuery, queryParams);
     res.status(200).json(rows);
   } catch (err) {
-    console.error("❌ Ralat semasa mengambil log aktiviti:", err);
+    console.error("Ralat semasa mengambil log aktiviti:", err);
     res.status(500).json({ error: "Gagal mengambil data log dari server." });
   }
 });
 
 // =======================================================
-// 🔴 DELETE /api/log_aktiviti/:id - (⭐️ Soft-delete ⭐️)
+// DELETE /api/log_aktiviti/:id - (Soft-delete )
 // =======================================================
 // Kebenaran 'log:padam' (Admin sahaja dalam matriks)
 router.delete("/:id", verifyToken, authorizeKebenaran("log:padam"), async (req, res) => {
@@ -101,16 +95,14 @@ router.delete("/:id", verifyToken, authorizeKebenaran("log:padam"), async (req, 
     }
 
     res.status(200).json({ message: "Log berjaya dipadam." });
-
   } catch (err) {
-    console.error("❌ Ralat semasa memadam log:", err);
+    console.error("Ralat semasa memadam log:", err);
     res.status(500).json({ error: "Gagal memadam log dari server." });
   }
 });
 
-
 // =======================================================
-// 🔴 DELETE /api/log_aktiviti/ (⭐️ Soft-delete Julat Tarikh ⭐️)
+// DELETE /api/log_aktiviti/ (Soft-delete Julat Tarikh )
 // =======================================================
 router.delete("/", verifyToken, authorizeKebenaran("log:padam"), async (req, res) => {
   // Ambil dari 'query parameters'
@@ -131,12 +123,10 @@ router.delete("/", verifyToken, authorizeKebenaran("log:padam"), async (req, res
     );
 
     res.status(200).json({ message: `Padam berjaya. ${rowCount} rekod log telah dipadam.` });
-
   } catch (err) {
-    console.error("❌ Ralat semasa memadam log mengikut julat:", err);
+    console.error("Ralat semasa memadam log mengikut julat:", err);
     res.status(500).json({ error: "Gagal memadam log dari server." });
   }
 });
-
 
 export default router;

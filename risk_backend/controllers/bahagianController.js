@@ -5,9 +5,7 @@ import { dalamTransaksi } from "../utils/transaksi.js";
 // ---------------- GET /api/bahagian -----------------
 export const senaraiBahagian = async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      "SELECT * FROM bahagian ORDER BY nama_bahagian ASC"
-    );
+    const { rows } = await pool.query("SELECT * FROM bahagian ORDER BY nama_bahagian ASC");
     res.json(rows);
   } catch (err) {
     console.error(err);

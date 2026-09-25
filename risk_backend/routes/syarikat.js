@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const userRole = req.user.nama_peranan;  // ambil nama peranan dari JWT
+    const userRole = req.user.nama_peranan; // ambil nama peranan dari JWT
     const userSyarikat = req.user.syarikat_id;
 
     let query = "SELECT * FROM syarikat";

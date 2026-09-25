@@ -13,7 +13,7 @@ export const login = async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan, 
+      `SELECT u.pengguna_id, u.staff_id, u.nama_penuh, u.katalaluan,
               u.peranan_id, u.syarikat_id, u.token_dikemaskini_at, p.nama_peranan
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
@@ -32,10 +32,10 @@ export const login = async (req, res) => {
 
     // Rehash-on-login: naik taraf pengguna plain-text kepada bcrypt secara automatik
     if (hashBaru) {
-      await pool.query(
-        "UPDATE pengguna SET katalaluan = $1 WHERE pengguna_id = $2",
-        [hashBaru, user.pengguna_id]
-      );
+      await pool.query("UPDATE pengguna SET katalaluan = $1 WHERE pengguna_id = $2", [
+        hashBaru,
+        user.pengguna_id,
+      ]);
     }
 
     // Muat kebenaran peranan untuk respons login
@@ -65,7 +65,7 @@ export const login = async (req, res) => {
         user.pengguna_id,
         "Log Masuk",
         `${user.nama_penuh} telah log masuk ke sistem.`,
-        `${user.nama_penuh} (ID Staf: ${user.staff_id}, Peranan: ${user.nama_peranan}) telah berjaya log masuk pada ${new Date().toLocaleString('ms-MY')}.`
+        `${user.nama_penuh} (ID Staf: ${user.staff_id}, Peranan: ${user.nama_peranan}) telah berjaya log masuk pada ${new Date().toLocaleString("ms-MY")}.`
       );
     } catch (logErr) {
       console.error("Gagal mencatat log masuk:", logErr);
@@ -84,7 +84,9 @@ export const login = async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err.message);
-    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi.", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Ralat pelayan. Sila cuba sebentar lagi.", details: err.message });
   }
 };
 
@@ -95,7 +97,7 @@ export const logout = async (req, res) => {
         req.user.pengguna_id,
         "Log Keluar",
         `${req.user.nama_penuh} telah log keluar dari sistem.`,
-        `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah log keluar pada ${new Date().toLocaleString('ms-MY')}.`
+        `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah log keluar pada ${new Date().toLocaleString("ms-MY")}.`
       );
     }
     res.json({ message: "Log keluar berjaya." });

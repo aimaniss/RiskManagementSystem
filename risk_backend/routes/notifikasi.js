@@ -24,7 +24,7 @@ router.get("/", verifyToken, async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("❌ Ralat GET /notifikasi:", err);
+    console.error("Ralat GET /notifikasi:", err);
     res.status(500).json({ message: "Gagal memuatkan notifikasi." });
   }
 });
@@ -42,7 +42,7 @@ router.get("/unread-count", verifyToken, async (req, res) => {
     );
     res.json({ count: parseInt(rows[0].count) || 0 });
   } catch (err) {
-    console.error("❌ Ralat GET /notifikasi/unread-count:", err);
+    console.error("Ralat GET /notifikasi/unread-count:", err);
     res.status(500).json({ message: "Gagal memuatkan bilangan notifikasi." });
   }
 });
@@ -63,7 +63,7 @@ router.put("/:notifikasi_id/baca", verifyToken, async (req, res) => {
 
     res.json({ message: "Notifikasi ditanda sebagai dibaca." });
   } catch (err) {
-    console.error("❌ Ralat PUT /notifikasi/:id/baca:", err);
+    console.error("Ralat PUT /notifikasi/:id/baca:", err);
     res.status(500).json({ message: "Gagal mengemaskini notifikasi." });
   }
 });
@@ -83,7 +83,7 @@ router.put("/baca-semua", verifyToken, async (req, res) => {
 
     res.json({ message: "Semua notifikasi ditanda sebagai dibaca." });
   } catch (err) {
-    console.error("❌ Ralat PUT /notifikasi/baca-semua:", err);
+    console.error("Ralat PUT /notifikasi/baca-semua:", err);
     res.status(500).json({ message: "Gagal mengemaskini notifikasi." });
   }
 });
@@ -108,7 +108,7 @@ router.delete("/:notifikasi_id", verifyToken, async (req, res) => {
 
     res.json({ message: "Notifikasi berjaya dipadam." });
   } catch (err) {
-    console.error("❌ Ralat DELETE /notifikasi/:id:", err);
+    console.error("Ralat DELETE /notifikasi/:id:", err);
     res.status(500).json({ message: "Gagal memadam notifikasi." });
   }
 });

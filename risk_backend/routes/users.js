@@ -23,10 +23,22 @@ router.get("/me", verifyToken, profilSemasa);
 router.put("/me", verifyToken, upload.single("gambar_profil"), kemaskiniProfilSendiri);
 
 // POST add new user (Admin sahaja)
-router.post("/", verifyToken, authorizeKebenaran("pengguna:urus"), upload.single("gambar_profil"), tambahPengguna);
+router.post(
+  "/",
+  verifyToken,
+  authorizeKebenaran("pengguna:urus"),
+  upload.single("gambar_profil"),
+  tambahPengguna
+);
 
 // PUT update user (Admin sahaja)
-router.put("/:id", verifyToken, authorizeKebenaran("pengguna:urus"), upload.single("gambar_profil"), kemaskiniPengguna);
+router.put(
+  "/:id",
+  verifyToken,
+  authorizeKebenaran("pengguna:urus"),
+  upload.single("gambar_profil"),
+  kemaskiniPengguna
+);
 
 // DELETE user (Admin sahaja — soft-delete)
 router.delete("/:id", verifyToken, authorizeKebenaran("pengguna:urus"), padamPengguna);

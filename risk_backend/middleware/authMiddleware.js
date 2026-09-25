@@ -7,8 +7,8 @@ import pool from "../config/db.js";
  * Pengguna yang ditanda is_deleted = true tidak dibenarkan log masuk.
  */
 const verifyToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ error: "Akses ditolak. Tiada token disediakan." });
@@ -18,12 +18,12 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const { rows } = await pool.query(
-      `SELECT 
-         u.pengguna_id, 
-         u.staff_id, 
-         u.nama_penuh,   
-         u.peranan_id, 
-         p.nama_peranan, 
+      `SELECT
+         u.pengguna_id,
+         u.staff_id,
+         u.nama_penuh,
+         u.peranan_id,
+         p.nama_peranan,
          u.syarikat_id,
          u.token_dikemaskini_at
        FROM pengguna u
@@ -49,7 +49,6 @@ const verifyToken = async (req, res, next) => {
 
     req.user = user;
     next();
-
   } catch (err) {
     console.error("Ralat token:", err);
     return res.status(403).json({ error: "Token tidak sah atau telah tamat tempoh." });
@@ -68,7 +67,9 @@ const authorizeRoles = (...allowedRoles) => {
 
     const hasRole = allowedRoles.includes(req.user.nama_peranan);
     if (!hasRole) {
-      return res.status(403).json({ error: `Akses ditolak. Anda memerlukan peranan: ${allowedRoles.join(" atau ")}` });
+      return res
+        .status(403)
+        .json({ error: `Akses ditolak. Anda memerlukan peranan: ${allowedRoles.join(" atau ")}` });
     }
 
     next();

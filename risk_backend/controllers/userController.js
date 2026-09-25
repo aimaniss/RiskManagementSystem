@@ -89,7 +89,7 @@ export const kemaskiniProfilSendiri = async (req, res) => {
     }
 
     if (changes.length > 0) {
-      logPerincian += " Perubahan: " + changes.join(', ') + ".";
+      logPerincian += " Perubahan: " + changes.join(", ") + ".";
     }
 
     await dalamTransaksi(async (client) => {
@@ -108,10 +108,9 @@ export const kemaskiniProfilSendiri = async (req, res) => {
 
     await catatAktiviti(pelaku.pengguna_id, "Kemaskini Profil", logRingkasan, logPerincian);
 
-    const { rows: updatedUser } = await pool.query(
-      `${USER_SELECT} WHERE u.pengguna_id = $1`,
-      [pengguna_id]
-    );
+    const { rows: updatedUser } = await pool.query(`${USER_SELECT} WHERE u.pengguna_id = $1`, [
+      pengguna_id,
+    ]);
 
     res.json(updatedUser[0]);
   } catch (err) {
@@ -128,17 +127,18 @@ export const tambahPengguna = async (req, res) => {
     const pelaku = req.user;
 
     if (!staff_id || !nama_penuh || !katalaluan || !peranan_id) {
-      return res.status(400).json({ error: "Semua medan wajib (ID Staf, Nama, Kata Laluan, Peranan) diperlukan." });
+      return res
+        .status(400)
+        .json({ error: "Semua medan wajib (ID Staf, Nama, Kata Laluan, Peranan) diperlukan." });
     }
 
     const katalaluanHash = await hashKatalaluan(katalaluan);
 
     const newUserId = await dalamTransaksi(async (client) => {
       // Semak duplikasi staff_id FIZIKAL (soft-deleted juga) supaya ID tidak diguna semula
-      const semak = await client.query(
-        "SELECT pengguna_id FROM pengguna WHERE staff_id = $1",
-        [staff_id]
-      );
+      const semak = await client.query("SELECT pengguna_id FROM pengguna WHERE staff_id = $1", [
+        staff_id,
+      ]);
       if (semak.rows.length > 0) {
         const err = new Error("ID Staf ini sudah digunakan.");
         err.statusCode = 409;
@@ -153,10 +153,9 @@ export const tambahPengguna = async (req, res) => {
       return result.rows[0].pengguna_id;
     });
 
-    const { rows: userWithJoin } = await pool.query(
-      `${USER_SELECT} WHERE u.pengguna_id = $1`,
-      [newUserId]
-    );
+    const { rows: userWithJoin } = await pool.query(`${USER_SELECT} WHERE u.pengguna_id = $1`, [
+      newUserId,
+    ]);
 
     try {
       const logRingkasan = `Menambah pengguna baru: ${nama_penuh}.`;
@@ -170,7 +169,8 @@ export const tambahPengguna = async (req, res) => {
   } catch (err) {
     console.error("Gagal tambah pengguna:", err);
     if (err.statusCode === 409) return res.status(409).json({ error: err.message });
-    if (err.code === "23505") return res.status(409).json({ error: "ID Staf ini sudah digunakan." });
+    if (err.code === "23505")
+      return res.status(409).json({ error: "ID Staf ini sudah digunakan." });
     res.status(500).json({ error: err.message });
   }
 };
@@ -208,7 +208,8 @@ export const kemaskiniPengguna = async (req, res) => {
       newPassword = await hashKatalaluan(katalaluan);
     }
     const passwordAkhir = newPassword || originalUser.katalaluan;
-    const tokenRevisionChanged = Boolean(newPassword) ||
+    const tokenRevisionChanged =
+      Boolean(newPassword) ||
       String(staff_id) !== String(originalUser.staff_id) ||
       String(peranan_id) !== String(originalUser.peranan_id) ||
       String(syarikat_id) !== String(originalUser.syarikat_id);
@@ -229,7 +230,16 @@ export const kemaskiniPengguna = async (req, res) => {
               END
           WHERE pengguna_id = $7 AND is_deleted = false
           RETURNING pengguna_id`,
-        [staff_id, nama_penuh, passwordAkhir, peranan_id, syarikat_id, newProfile, id, tokenRevisionChanged]
+        [
+          staff_id,
+          nama_penuh,
+          passwordAkhir,
+          peranan_id,
+          syarikat_id,
+          newProfile,
+          id,
+          tokenRevisionChanged,
+        ]
       );
       if (result.rowCount === 0) {
         const err = new Error("Pengguna tidak ditemui.");
@@ -238,10 +248,9 @@ export const kemaskiniPengguna = async (req, res) => {
       }
     });
 
-    const { rows: updatedUserRows } = await pool.query(
-      `${USER_SELECT} WHERE u.pengguna_id = $1`,
-      [id]
-    );
+    const { rows: updatedUserRows } = await pool.query(`${USER_SELECT} WHERE u.pengguna_id = $1`, [
+      id,
+    ]);
     const updatedUser = updatedUserRows[0];
 
     // Bina log
@@ -266,13 +275,15 @@ export const kemaskiniPengguna = async (req, res) => {
       if (staff_id !== originalUser.staff_id) changes.push(`ID Staf (kepada ${staff_id})`);
       if (nama_penuh !== originalUser.nama_penuh) changes.push(`Nama Penuh (kepada ${nama_penuh})`);
       if (newPassword) changes.push("kata laluan");
-      if (peranan_id != originalUser.peranan_id) changes.push(`peranan (kepada ${updatedUser.nama_peranan})`);
-      if (syarikat_id != originalUser.syarikat_id) changes.push(`syarikat (kepada ${updatedUser.nama_syarikat || 'N/A'})`);
+      if (peranan_id != originalUser.peranan_id)
+        changes.push(`peranan (kepada ${updatedUser.nama_peranan})`);
+      if (syarikat_id != originalUser.syarikat_id)
+        changes.push(`syarikat (kepada ${updatedUser.nama_syarikat || "N/A"})`);
       if (newProfile !== originalUser.gambar_profil) changes.push("gambar profil");
     }
 
     if (changes.length > 0) {
-      logPerincian += " Perubahan: " + changes.join(', ') + ".";
+      logPerincian += " Perubahan: " + changes.join(", ") + ".";
     } else {
       logPerincian += " Tiada perubahan data direkodkan.";
     }
@@ -287,7 +298,8 @@ export const kemaskiniPengguna = async (req, res) => {
   } catch (err) {
     console.error("Error updating user:", err);
     if (err.statusCode === 404) return res.status(404).json({ error: err.message });
-    if (err.code === "23505") return res.status(409).json({ error: "ID Staf ini sudah digunakan." });
+    if (err.code === "23505")
+      return res.status(409).json({ error: "ID Staf ini sudah digunakan." });
     res.status(500).json({ error: "Gagal kemaskini pengguna." });
   }
 };

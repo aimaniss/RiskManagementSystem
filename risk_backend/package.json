@@ -11,7 +11,9 @@
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "migrate:status": "knex migrate:status",
-    "migrate:make": "knex migrate:make"
+    "migrate:make": "knex migrate:make",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\""
   },
   "keywords": [],
   "author": "",
@@ -27,6 +29,7 @@
     "pg": "^8.16.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prettier": "^3.9.9"
   }
 }

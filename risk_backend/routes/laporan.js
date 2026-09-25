@@ -1,5 +1,5 @@
 // =======================================================
-// 📁 routes/laporan.js
+// routes/laporan.js
 // Modul: Laporan Risiko & Data Sokongan
 // =======================================================
 
@@ -10,14 +10,44 @@ import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js
 const router = express.Router();
 
 // =======================================================
-// ⭐️ LOGIK RISK MATRIX
+// LOGIK RISK MATRIX
 // =======================================================
 const riskMatrix = {
-  1: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
-  2: {1:{label:"R"}, 2:{label:"R"}, 3:{label:"S"}, 4:{label:"S"}, 5:{label:"T"}},
-  3: {1:{label:"R"}, 2:{label:"S"}, 3:{label:"S"}, 4:{label:"T"}, 5:{label:"T"}},
-  4: {1:{label:"S"}, 2:{label:"S"}, 3:{label:"T"}, 4:{label:"T"}, 5:{label:"ST"}},
-  5: {1:{label:"S"}, 2:{label:"T"}, 3:{label:"T"}, 4:{label:"ST"}, 5:{label:"ST"}},
+  1: {
+    1: { label: "R" },
+    2: { label: "R" },
+    3: { label: "S" },
+    4: { label: "S" },
+    5: { label: "T" },
+  },
+  2: {
+    1: { label: "R" },
+    2: { label: "R" },
+    3: { label: "S" },
+    4: { label: "S" },
+    5: { label: "T" },
+  },
+  3: {
+    1: { label: "R" },
+    2: { label: "S" },
+    3: { label: "S" },
+    4: { label: "T" },
+    5: { label: "T" },
+  },
+  4: {
+    1: { label: "S" },
+    2: { label: "S" },
+    3: { label: "T" },
+    4: { label: "T" },
+    5: { label: "ST" },
+  },
+  5: {
+    1: { label: "S" },
+    2: { label: "T" },
+    3: { label: "T" },
+    4: { label: "ST" },
+    5: { label: "ST" },
+  },
 };
 
 const getRiskLevel = (k, i) => {
@@ -26,11 +56,11 @@ const getRiskLevel = (k, i) => {
   if (kk >= 1 && kk <= 5 && ii >= 1 && ii <= 5) {
     return riskMatrix[kk][ii].label;
   }
-  return null; 
+  return null;
 };
 
 // =======================================================
-// ⭐️ 1. GET: Senarai Risiko untuk Jadual Utama (LaporanRisiko.jsx)
+// 1. GET: Senarai Risiko untuk Jadual Utama (LaporanRisiko.jsx)
 // ENDPOINT: /api/laporan/
 // =======================================================
 router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res) => {
@@ -68,7 +98,7 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
           pm.no_bil_kelulusan,
           pm.justifikasi_pindaan_pemantauan,
           ROW_NUMBER() OVER (
-            PARTITION BY pm.risiko_id 
+            PARTITION BY pm.risiko_id
             ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
           ) AS rn
         FROM LogPemantauan pm
@@ -76,7 +106,7 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
         WHERE pm.is_deleted = false
       ),
       ButiranTerkini AS (
-        SELECT 
+        SELECT
           pt.log_id,
           ARRAY_AGG(DISTINCT pt.butiran_aktiviti) AS pelan_tindakan_terkini,
           ARRAY_AGG(DISTINCT kp.butiran_kakitangan) AS kakitangan_terkini
@@ -85,35 +115,35 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
         WHERE pt.is_deleted = false
         GROUP BY pt.log_id
       )
-      SELECT 
+      SELECT
         r.risiko_id AS id,
         r.no_rujukan,
-        r.tahun, 
+        r.tahun,
         r.separuh_tahun,
         s.nama_syarikat,
         r.kategori AS kategori_risiko,
         r.risiko AS risiko,
         r.justifikasi_pindaan_penilaian,
-        
+
         COALESCE(pt.skor_kebarangkalian_sebelum, r.skor_kebarangkalian) AS skor_kebarangkalian_sebelum,
         COALESCE(pt.skor_impak_sebelum, r.skor_impak) AS skor_impak_sebelum,
         pt.tahun_pemantauan,
         pt.separuh_tahun_pemantauan,
         bt.pelan_tindakan_terkini,
         bt.kakitangan_terkini,
-        
+
         pt.status_pemantauan AS status_pemantauan_terkini,
         pt.catatan,
         pt.no_bil_kelulusan,
         pt.justifikasi_pindaan_pemantauan,
-        
+
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_kebarangkalian_selepas ELSE NULL END AS skor_kebarangkalian_terkini,
         CASE WHEN pt.log_id IS NOT NULL THEN pt.skor_impak_selepas ELSE NULL END AS skor_impak_terkini,
-        
+
         COALESCE(pt.skor_risiko_pemantauan, r.skor_risiko) AS skor_risiko_terkini
 
       FROM Risiko r
-      JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id   
+      JOIN RisikoAdaRawatan raw ON raw.risiko_id = r.risiko_id
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
       LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
@@ -125,16 +155,15 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       params.push(user.syarikat_id);
       whereClause.push(`CAST(r.syarikat_id AS INTEGER) = $${params.length}`);
-    } 
-    else if (subsidiary && subsidiary !== 'all') {
-      params.push(subsidiary); 
+    } else if (subsidiary && subsidiary !== "all") {
+      params.push(subsidiary);
       whereClause.push(`CAST(r.syarikat_id AS INTEGER) = $${params.length}`);
     }
-    if (tahun && tahun !== 'all') {
+    if (tahun && tahun !== "all") {
       params.push(parseInt(tahun, 10));
       whereClause.push(`r.tahun = $${params.length}`);
     }
-    if (separuhTahun && separuhTahun !== 'all') {
+    if (separuhTahun && separuhTahun !== "all") {
       params.push(parseInt(separuhTahun, 10));
       whereClause.push(`r.separuh_tahun = $${params.length}`);
     }
@@ -146,57 +175,61 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error("❌ Ralat GET /laporan:", err);
+    console.error("Ralat GET /laporan:", err);
     res.status(500).json({ message: "Gagal memuatkan data laporan: " + err.message });
   }
 });
 
 // =======================================================
-// ⭐️ 2. GET: Data Penuh untuk Modal PDF
+// 2. GET: Data Penuh untuk Modal PDF
 // ENDPOINT: /api/laporan/:risiko_id/data-penuh
-// (⭐️ INI YANG DIKEMASKINI ⭐️)
+// (INI YANG DIKEMASKINI )
 // =======================================================
-router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res) => {
-  const { risiko_id } = req.params;
-  const user = req.user;
+router.get(
+  "/:risiko_id/data-penuh",
+  verifyToken,
+  authorizeKebenaran("laporan:jana"),
+  async (req, res) => {
+    const { risiko_id } = req.params;
+    const user = req.user;
 
-  try {
-    const query = `
-      WITH 
-      
+    try {
+      const query = `
+      WITH
+
       -- 1. Dapatkan Pelan Tindakan (Rawatan) Asal
       RawatanAsal AS (
-        SELECT 
+        SELECT
           rr.risiko_id,
           json_agg(
             json_build_object(
-              
+
               -- 'tindakan' kini adalah ARRAY (dari pelan_tindakan_rawatan)
               'tindakan', (
                 -- =================================================================
-                -- ⭐️ PERUBAHAN DI SINI: Membuang "ORDER BY"
+                -- PERUBAHAN DI SINI: Membuang "ORDER BY"
                 -- =================================================================
-                SELECT ARRAY_AGG(ptr.pelan_tindakan) 
+                SELECT ARRAY_AGG(ptr.pelan_tindakan)
                 FROM pelan_tindakan_rawatan ptr
                 WHERE ptr.rawatan_id = rr.rawatan_id AND ptr.is_deleted = false
-              ), 
-              
+              ),
+
               'jenis_kawalan', rr.jenis_kawalan,
               'tempoh_jangkaan', rr.tempoh_siap,
-              
+
               -- 'kakitangan_bertanggungjawab' kini adalah ARRAY (dari kakitangan_rawatan)
               'kakitangan_bertanggungjawab', (
                 -- =================================================================
-                -- ⭐️ PERUBAHAN DI SINI: Membuang "ORDER BY"
+                -- PERUBAHAN DI SINI: Membuang "ORDER BY"
                 -- =================================================================
-                SELECT ARRAY_AGG(krr.nama_kakitangan) 
+                SELECT ARRAY_AGG(krr.nama_kakitangan)
                 FROM kakitangan_rawatan krr
                 WHERE krr.rawatan_id = rr.rawatan_id AND krr.is_deleted = false
               )
             )
-            ORDER BY rr.rawatan_id ASC 
+            ORDER BY rr.rawatan_id ASC
           ) AS pelan_tindakan
-          
+
         FROM rawatan_risiko rr
         WHERE rr.risiko_id = $1 AND rr.is_deleted = false
         GROUP BY rr.risiko_id
@@ -210,7 +243,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:ja
             json_build_object(
               'tahun', lp.tahun_pemantauan,
               'separuh_tahun', lp.separuh_tahun_pemantauan,
-              'label', 
+              'label',
                 CASE lp.separuh_tahun_pemantauan
                   WHEN 1 THEN 'SEPARUH TAHUN PERTAMA (JAN - JUN) '
                   WHEN 2 THEN 'SEPARUH TAHUN KEDUA (JUL - DIS) '
@@ -218,27 +251,27 @@ router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:ja
                 END || lp.tahun_pemantauan,
               'kelulusan_log', lp.no_bil_kelulusan,
               'pindaan_keberkesanan', lp.justifikasi_pindaan_pemantauan,
-              
+
               'pelan_tindakan', (
                 -- =================================================================
-                -- ⭐️ DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
+                -- DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
                 -- =================================================================
-                SELECT ARRAY_AGG(ptp.butiran_aktiviti) 
-                FROM PelanTindakanPemantauan ptp 
+                SELECT ARRAY_AGG(ptp.butiran_aktiviti)
+                FROM PelanTindakanPemantauan ptp
                 WHERE ptp.log_id = lp.log_id AND ptp.is_deleted = false
               ),
-              
+
               'kekerapan', lp.kekerapan_pemantauan,
-              
+
               'kakitangan_bertanggungjawab', (
                 -- =================================================================
-                -- ⭐️ DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
+                -- DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
                 -- =================================================================
-                SELECT ARRAY_AGG(kp.butiran_kakitangan) 
-                FROM KakitanganPemantauan kp 
+                SELECT ARRAY_AGG(kp.butiran_kakitangan)
+                FROM KakitanganPemantauan kp
                 WHERE kp.log_id = lp.log_id AND kp.is_deleted = false
               ),
-              
+
               'keberkesanan_tindakan', json_build_object(
                 'skor_kebarangkalian', lp.skor_kebarangkalian_selepas,
                 'kebarangkalian', CASE lp.skor_kebarangkalian_selepas
@@ -271,18 +304,18 @@ router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:ja
       )
 
       -- 3. Gabungkan Semua Data (Jadual Utama Risiko)
-      SELECT 
+      SELECT
         r.risiko_id,
         s.nama_syarikat AS subsidiary,
         r.tahun AS tahun_daftar,
         r.separuh_tahun AS separuh_tahun_daftar,
-        r.bahagian AS bahagian_unit, 
+        r.bahagian AS bahagian_unit,
         r.no_rujukan,
         r.kategori AS kategori_risiko,
         r.risiko AS title,
         ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS punca,
         ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS kesan,
-        
+
         r.skor_kebarangkalian AS skor_kebarangkalian_n,
         CASE r.skor_kebarangkalian
           WHEN 1 THEN 'Hampir Tiada Kemungkinan'
@@ -291,8 +324,8 @@ router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:ja
           WHEN 4 THEN 'Kemungkinan Tinggi'
           WHEN 5 THEN 'Hampir Pasti'
           ELSE 'N/A'
-        END AS kebarangkalian_lian, 
-        
+        END AS kebarangkalian_lian,
+
         r.skor_impak AS skor_impak_risiko,
         CASE r.skor_impak
           WHEN 1 THEN 'Tidak Ketara'
@@ -301,48 +334,47 @@ router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:ja
           WHEN 4 THEN 'Besar'
           WHEN 5 THEN 'Sangat Besar'
           ELSE 'N/A'
-        END AS impak, 
-        
-        r.skor_risiko, 
-        r.status_risiko, 
+        END AS impak,
+
+        r.skor_risiko,
+        r.status_risiko,
         r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
-        
+
         COALESCE(ra.pelan_tindakan, '[]'::json) AS pelan_tindakan,
         COALESCE(lt.logs, '[]'::json) AS logs
-        
+
       FROM Risiko r
-      
+
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN RawatanAsal ra ON ra.risiko_id = r.risiko_id
       LEFT JOIN LogsTerkumpul lt ON lt.risiko_id = r.risiko_id
-      
+
       WHERE r.risiko_id = $1 AND r.is_deleted = false
     `;
 
-    const { rows } = await pool.query(query, [risiko_id]);
+      const { rows } = await pool.query(query, [risiko_id]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "Risiko tidak dijumpai." });
+      }
+
+      const riskData = rows[0];
+
+      // Semakan keselamatan
+      if (
+        user.nama_syarikat &&
+        ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan) &&
+        riskData.subsidiary !== user.nama_syarikat
+      ) {
+        return res.status(403).json({ message: "Akses tidak dibenarkan." });
+      }
+
+      res.json(riskData);
+    } catch (err) {
+      console.error(`Ralat GET /laporan/${risiko_id}/data-penuh:`, err);
+      res.status(500).json({ message: "Gagal memuatkan data laporan penuh: " + err.message });
     }
-
-    const riskData = rows[0];
-
-    // Semakan keselamatan
-    if (
-      user.nama_syarikat && 
-      ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan) &&
-      riskData.subsidiary !== user.nama_syarikat
-    ) {
-      return res.status(403).json({ message: "Akses tidak dibenarkan." });
-    }
-
-    res.json(riskData);
-  } catch (err) {
-    console.error(`❌ Ralat GET /laporan/${risiko_id}/data-penuh:`, err);
-    res
-      .status(500)
-      .json({ message: "Gagal memuatkan data laporan penuh: " + err.message });
   }
-});
+);
 
 export default router;

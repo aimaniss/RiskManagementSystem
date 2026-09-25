@@ -11,20 +11,28 @@ const hantarNotifikasi = async (pengguna_id, tajuk, mesej, jenis_notifikasi, ent
       [pengguna_id, tajuk, mesej, jenis_notifikasi, entiti_id]
     );
   } catch (error) {
-    console.error("❌ Ralat hantar notifikasi:", error);
+    console.error("Ralat hantar notifikasi:", error);
   }
 };
 
 /**
  * Hantar notifikasi kepada ramai pengguna sekaligus.
  */
-const hantarNotifikasiBulk = async (pengguna_ids, tajuk, mesej, jenis_notifikasi, entiti_id = null) => {
+const hantarNotifikasiBulk = async (
+  pengguna_ids,
+  tajuk,
+  mesej,
+  jenis_notifikasi,
+  entiti_id = null
+) => {
   if (!Array.isArray(pengguna_ids) || pengguna_ids.length === 0) return;
   try {
     const values = [];
     const placeholders = [];
     pengguna_ids.forEach((id, index) => {
-      placeholders.push(`($${index * 5 + 1}, $${index * 5 + 2}, $${index * 5 + 3}, $${index * 5 + 4}, $${index * 5 + 5}, false, NOW())`);
+      placeholders.push(
+        `($${index * 5 + 1}, $${index * 5 + 2}, $${index * 5 + 3}, $${index * 5 + 4}, $${index * 5 + 5}, false, NOW())`
+      );
       values.push(id, tajuk, mesej, jenis_notifikasi, entiti_id);
     });
     await pool.query(
@@ -33,7 +41,7 @@ const hantarNotifikasiBulk = async (pengguna_ids, tajuk, mesej, jenis_notifikasi
       values
     );
   } catch (error) {
-    console.error("❌ Ralat hantar notifikasi bulk:", error);
+    console.error("Ralat hantar notifikasi bulk:", error);
   }
 };
 
@@ -50,7 +58,7 @@ const dapatkanPenggunaIdByPeranan = async (...nama_peranan) => {
     );
     return rows.map((r) => r.pengguna_id);
   } catch (error) {
-    console.error("❌ Ralat dapatkan pengguna by peranan:", error);
+    console.error("Ralat dapatkan pengguna by peranan:", error);
     return [];
   }
 };

@@ -16,7 +16,7 @@ export async function up(knex) {
   );
 
   // Admin + Executive sahaja
-  for (const peranan of ['Admin', 'Executive']) {
+  for (const peranan of ["Admin", "Executive"]) {
     await knex.raw(
       `INSERT INTO peranan_kebenaran (peranan_id, kebenaran_id)
        SELECT p.peranan_id, k.kebenaran_id

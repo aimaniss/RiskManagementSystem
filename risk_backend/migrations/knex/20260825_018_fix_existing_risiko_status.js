@@ -4,10 +4,10 @@
  */
 
 export async function up(knex) {
-  await knex('risiko')
-    .where('status_kelulusan', 'Menunggu Kelulusan')
-    .whereNull('diluluskan_oleh_id')
-    .update({ status_kelulusan: 'Diluluskan' });
+  await knex("risiko")
+    .where("status_kelulusan", "Menunggu Kelulusan")
+    .whereNull("diluluskan_oleh_id")
+    .update({ status_kelulusan: "Diluluskan" });
 }
 
 export async function down(knex) {

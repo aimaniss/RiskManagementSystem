@@ -7,11 +7,11 @@ const router = express.Router();
 // === HELPER: Mapping skor_risiko (ST/T/S/R) ke label penuh ===
 const getSkorRisikoLabel = (shortCode) => {
   const mapping = {
-    'ST': 'Sangat Tinggi',
-    'T': 'Tinggi',
-    'S': 'Sederhana',
-    'R': 'Rendah',
-    'N/A': 'Belum Dinilai' // Untuk risiko null
+    ST: "Sangat Tinggi",
+    T: "Tinggi",
+    S: "Sederhana",
+    R: "Rendah",
+    "N/A": "Belum Dinilai", // Untuk risiko null
   };
   return mapping[shortCode] || shortCode;
 };
@@ -22,11 +22,11 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
     const { syarikat_id } = req.query;
     const user = req.user;
 
-    console.log("📊 Dashboard Request:", { syarikat_id, user_role: user.nama_peranan });
+    console.log("Dashboard Request:", { syarikat_id, user_role: user.nama_peranan });
 
     // === 1. WHERE clause ===
     // 'whereClause' ini HANYA menapis syarikat, BUKAN status
-    let whereConditions = []; 
+    let whereConditions = [];
     let params = [];
     let paramIndex = 1;
 
@@ -56,7 +56,7 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
           pm.skor_risiko_pemantauan,
           ROW_NUMBER() OVER (
             PARTITION BY pm.risiko_id
-            ORDER BY pm.tahun_pemantauan DESC, 
+            ORDER BY pm.tahun_pemantauan DESC,
                      pm.separuh_tahun_pemantauan DESC,
                      pm.tarikh_pemantauan DESC NULLS LAST
           ) AS rn
@@ -81,13 +81,13 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
         r.syarikat_id::integer AS syarikat_id,
         r.kategori,
         r.bahagian,
-        
+
         r.skor_risiko AS skor_risiko_asal,
         r.skor_kebarangkalian,
         r.skor_impak,
         r.tahun,
         r.separuh_tahun,
-        
+
         COALESCE(lt.status_pemantauan, 'Buka') AS status_pemantauan,
         COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) AS skor_risiko_terkini,
         rt.jenis_kawalan,
@@ -96,19 +96,19 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
       LEFT JOIN RawatanTerkini rt ON rt.risiko_id = r.risiko_id AND rt.rn = 1
-      ${whereClause} 
+      ${whereClause}
       ORDER BY r.risiko_id
     `;
 
     const { rows: risikoData } = await pool.query(mainQuery, params);
 
-    console.log(`✅ Total risiko (SEMUA STATUS): ${risikoData.length}`);
-    
+    console.log(`Total risiko (SEMUA STATUS): ${risikoData.length}`);
+
     // Debug
-    const risikoTanpaLog = risikoData.filter(r => r.tiada_log);
+    const risikoTanpaLog = risikoData.filter((r) => r.tiada_log);
     if (risikoTanpaLog.length > 0) {
-      console.log(`⚠️ Risiko tanpa log: ${risikoTanpaLog.length}`);
-      console.log("   ID:", risikoTanpaLog.map(r => r.risiko_id).join(", "));
+      console.log(`Risiko tanpa log: ${risikoTanpaLog.length}`);
+      console.log("   ID:", risikoTanpaLog.map((r) => r.risiko_id).join(", "));
     }
 
     // === 3. Inisialisasi pengira ===
@@ -122,42 +122,63 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
 
     // 'tahapRisikoCount' dan 'kategoriRisikoCount' kini mengira SEMUA STATUS
     const tahapRisikoCount = {
-      "ST": 0, "T": 0, "S": 0, "R": 0, "N/A": 0
+      ST: 0,
+      T: 0,
+      S: 0,
+      R: 0,
+      "N/A": 0,
     };
 
     const kategoriRisikoCount = {
-      "Strategik": 0, "Operasi": 0, "Pematuhan / Perundangan": 0, "Kewangan": 0, "Lain-lain / Tiada": 0
+      Strategik: 0,
+      Operasi: 0,
+      "Pematuhan / Perundangan": 0,
+      Kewangan: 0,
+      "Lain-lain / Tiada": 0,
     };
 
     const jenisKawalanCount = {
-      "Terima": 0, "Kurang": 0, "Elak": 0, "Pindah": 0, "Tiada Rawatan": 0
+      Terima: 0,
+      Kurang: 0,
+      Elak: 0,
+      Pindah: 0,
+      "Tiada Rawatan": 0,
     };
 
     // === 4. Loop pengiraan ===
     // 'risikoData' kini mengandungi SEMUA risiko
     for (const row of risikoData) {
-      
       // 4a. Kira semua status (termasuk 'Tutup')
       const status = row.status_pemantauan;
       switch (status) {
-        case "Buka": skor.jumlahBuka++; break;
-        case "Sedang Dilaksanakan": skor.jumlahLaksana++; break;
-        case "Pemantauan": skor.jumlahPantau++; break;
-        case "Selesai": skor.jumlahSelesai++; break;
-        case "Tutup": skor.jumlahTutup++; break; // <-- Risiko 'Rendah' anda akan dikira di sini
+        case "Buka":
+          skor.jumlahBuka++;
+          break;
+        case "Sedang Dilaksanakan":
+          skor.jumlahLaksana++;
+          break;
+        case "Pemantauan":
+          skor.jumlahPantau++;
+          break;
+        case "Selesai":
+          skor.jumlahSelesai++;
+          break;
+        case "Tutup":
+          skor.jumlahTutup++;
+          break; // <-- Risiko 'Rendah' anda akan dikira di sini
         default:
-          console.warn(`⚠️ Status tidak dikenali: "${status}" (risiko ${row.risiko_id})`);
+          console.warn(`Status tidak dikenali: "${status}" (risiko ${row.risiko_id})`);
           skor.jumlahBuka++;
       }
 
       // 4b. Tahap Risiko (Kira semua status)
       const skorRisiko = row.skor_risiko_terkini;
       if (!skorRisiko || skorRisiko === "null") {
-        tahapRisikoCount["N/A"]++; 
+        tahapRisikoCount["N/A"]++;
       } else if (tahapRisikoCount[skorRisiko] !== undefined) {
         tahapRisikoCount[skorRisiko]++; // <-- Risiko 'Rendah' anda akan dikira di sini
       } else {
-        console.warn(`⚠️ Kod skor tidak dikenali: "${skorRisiko}" (risiko ${row.risiko_id})`);
+        console.warn(`Kod skor tidak dikenali: "${skorRisiko}" (risiko ${row.risiko_id})`);
       }
 
       // 4c. Kategori (Kira semua status)
@@ -167,7 +188,9 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
       } else {
         kategoriRisikoCount["Lain-lain / Tiada"]++;
         if (kategori) {
-          console.warn(`⚠️ Kategori tidak dikenali: "${kategori}" (risiko ${row.risiko_id}). Dikira sebagai 'Lain-lain / Tiada'.`);
+          console.warn(
+            `Kategori tidak dikenali: "${kategori}" (risiko ${row.risiko_id}). Dikira sebagai 'Lain-lain / Tiada'.`
+          );
         }
       }
 
@@ -181,15 +204,15 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
     }
 
     // === 5. Log debugging ===
-    console.log("📊 Skor Status (Semua Status):", skor);
-    console.log("📊 Tahap Risiko (Semua Status):", tahapRisikoCount);
+    console.log("Skor Status (Semua Status):", skor);
+    console.log("Tahap Risiko (Semua Status):", tahapRisikoCount);
 
     // === 6. Format data carta dengan label penuh ===
     const tahapRisikoData = Object.entries(tahapRisikoCount)
       .filter(([_, value]) => value > 0)
       .map(([shortCode, value]) => ({
         name: getSkorRisikoLabel(shortCode),
-        value
+        value,
       }));
 
     const kategoriRisikoData = Object.entries(kategoriRisikoCount)
@@ -211,15 +234,17 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
       .map(([tahun, jumlah]) => ({ name: tahun, value: jumlah }));
 
     // === 6c. Risiko aktif yang perlu perhatian (skor T/ST, belum Tutup) ===
-    const risikoPerhatian = risikoData.filter(r =>
-      ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
-      ["T", "ST"].includes(String(r.skor_risiko_terkini))
+    const risikoPerhatian = risikoData.filter(
+      (r) =>
+        ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
+        ["T", "ST"].includes(String(r.skor_risiko_terkini))
     ).length;
 
     // === 6d. Belum dinilai (aktif sahaja) ===
-    const belumDinilaiAktif = risikoData.filter(r =>
-      ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
-      (!r.skor_risiko_terkini || r.skor_risiko_terkini === "null")
+    const belumDinilaiAktif = risikoData.filter(
+      (r) =>
+        ["Buka", "Sedang Dilaksanakan", "Pemantauan"].includes(r.status_pemantauan) &&
+        (!r.skor_risiko_terkini || r.skor_risiko_terkini === "null")
     ).length;
 
     // === 7. Top Risks (Untuk Jadual) ===
@@ -248,34 +273,27 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
         COALESCE(lt.status_pemantauan, 'Buka') AS status_pemantauan
       FROM risiko r
       LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
-      ${whereClause} -- <-- Guna 'whereClause' (yang kini tiada tapisan status 'Buka')
-      
-      -- <-- DIUBAH: Baris 'IN ('T', 'ST')' dibuang (dijadikan komen)
-      -- AND COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko) IN ('T', 'ST')
-      
-      -- <-- DIUBAH: Baris 'status_pemantauan = Buka' dibuang (dijadikan komen)
-      -- AND COALESCE(lt.status_pemantauan, 'Buka') = 'Buka' 
-      
-      ORDER BY 
+      ${whereClause}
+
+      ORDER BY
         CASE COALESCE(lt.skor_risiko_pemantauan, r.skor_risiko)
           WHEN 'ST' THEN 1
           WHEN 'T' THEN 2
           WHEN 'S' THEN 3
           WHEN 'R' THEN 4
-          ELSE 5 
+          ELSE 5
         END,
         r.risiko_id DESC
       LIMIT 6
-    `; 
+    `;
 
     const { rows: topRisks } = await pool.query(topRisksQuery, params);
 
     // Format skor sebelum hantar ke frontend
-    const formattedTopRisks = topRisks.map(risk => ({
+    const formattedTopRisks = topRisks.map((risk) => ({
       ...risk,
-      skor_risiko_terkini: getSkorRisikoLabel(risk.skor_risiko_terkini)
+      skor_risiko_terkini: getSkorRisikoLabel(risk.skor_risiko_terkini),
     }));
-
 
     // === 7b. Perbandingan risiko antara syarikat (untuk admin, paparan "Semua") ===
     let risikoSyarikat = null;
@@ -348,11 +366,10 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
       debug: {
         totalRisiko: risikoData.length,
         risikoTanpaLog: risikoTanpaLog.length,
-      }
+      },
     });
-
   } catch (err) {
-    console.error("❌ Ralat GET /api/dashboard:", err);
+    console.error("Ralat GET /api/dashboard:", err);
     res.status(500).json({ message: err.message });
   }
 });
