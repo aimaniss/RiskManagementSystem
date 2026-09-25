@@ -95,6 +95,9 @@ sequenceDiagram
   `AppLayout`). Butiran: `01-auth-rbac.md`.
 - Setiap query risiko **wajib** menghormati isolasi data:
   Admin/Executive = semua syarikat; Staff/Ketua Subsidiari = `WHERE syarikat_id = req.user.syarikat_id`.
+- Endpoint ikut ID dilindungi middleware `hadSyarikat(...)`
+  (`middleware/aksesSyarikat.js`): semak syarikat pemilik risiko/rawatan/log
+  sebelum handler; `403` untuk syarikat lain.
 
 ### Jejak Audit
 

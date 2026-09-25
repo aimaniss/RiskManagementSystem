@@ -52,6 +52,13 @@ sequenceDiagram
 | `kemaskinirawatan.jsx` | GET `/risiko/:risiko_id/rawatan`, PUT (url dinamik) |
 | `KemaskiniPemantauan.jsx` | GET `/pemantauan-risiko/:id/info`, `/tahap-rujukan`, PUT |
 
+## Pengasingan Syarikat
+
+`PUT/DELETE /api/risiko/:risiko_id`, `GET/PUT /:risiko_id/rawatan` dan
+`PUT /:risiko_id/pemantauan/log/:log_id` dilindungi `hadSyarikat(...)`
+(`middleware/aksesSyarikat.js`): Staff & Ketua Subsidiari `403` untuk risiko
+syarikat lain. Daftar risiko (`POST`) menyemak `syarikatId` dalam controller.
+
 ## Skor & Status Risiko
 
 - `skor_kebarangkalian` (1–5) × `skor_impak` (1–5) → `skor_risiko` =

@@ -39,6 +39,11 @@ sequenceDiagram
 
 ## Endpoint (`routes/pindaan.js` → `controllers/pindaanController.js`)
 
+> **Pengasingan syarikat**: endpoint ikut ID (risiko/rawatan/log) dilindungi
+> `hadSyarikat(...)` (`middleware/aksesSyarikat.js`) — Staff & Ketua Subsidiari
+> menerima `403` untuk rekod syarikat lain. Dikawal oleh spec E2E `12-isolasi-syarikat`.
+
+
 | Kaedah | Laluan | Middleware | Guna |
 |--------|--------|------------|------|
 | GET | `/api/pindaan/risks-for-amendment` | `verifyToken` | Senarai risiko layak dipinda |

@@ -180,6 +180,14 @@ Ketua subsidiari & Staff hanya lihat/sunting rekod `syarikat_id` mereka sendiri;
 Admin & Executive lihat semua. Pastikan setiap query risiko menghormati kawalan
 ini (klausa `WHERE syarikat_id` untuk peranan terhad).
 
+- **Senarai** (GET tanpa ID): tapis dalam controller (`WHERE syarikat_id`).
+- **Rekod ikut ID** (GET/POST/PUT/DELETE yang merujuk risiko, rawatan atau log
+  pemantauan): WAJIB pasang `hadSyarikat(["risiko"|"rawatan"|"log", (req) => id])`
+  dari `middleware/aksesSyarikat.js` selepas `authorizeKebenaran` — termasuk ID
+  dalam `req.body` (cth. `risiko_id` semasa tambah rawatan/log). Kebenaran
+  (`authorizeKebenaran`) sahaja TIDAK mengasingkan syarikat.
+- Setiap route baharu seperti ini perlu ditambah ke spec E2E `12-isolasi-syarikat`.
+
 ## Gotchas / Amaran
 
 - `.env` dalam `risk_backend/` adalah **gitignored**. Jangan commit kredensial.

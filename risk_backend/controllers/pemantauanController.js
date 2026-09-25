@@ -2,6 +2,10 @@ import pool from "../config/db.js";
 import { kiraTahapRisiko } from "../utils/matriksRisiko.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 
+// Item senarai pelan/kakitangan boleh jadi string atau objek { [kunci]: "..." }
+const ambilButiran = (item, kunci) =>
+  (typeof item === "string" ? item : item?.[kunci] || "").trim();
+
 /* =======================================================
   GET: Semua Risiko + Pemantauan Terkini
   ENDPOINT: /pemantauan-risiko
@@ -454,20 +458,24 @@ export const tambahLogPemantauan = async (req, res) => {
     const newLog = logResult.rows[0];
     const new_log_id = newLog.log_id;
 
-    if (pelan_tindakan_list?.length) {
+    if (Array.isArray(pelan_tindakan_list)) {
       for (const item of pelan_tindakan_list) {
+        const butiran = ambilButiran(item, "butiran_aktiviti");
+        if (!butiran) continue;
         await client.query(
           `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti) VALUES ($1, $2)`,
-          [new_log_id, item.butiran_aktiviti]
+          [new_log_id, butiran]
         );
       }
     }
 
-    if (kakitangan_list?.length) {
+    if (Array.isArray(kakitangan_list)) {
       for (const item of kakitangan_list) {
+        const butiran = ambilButiran(item, "butiran_kakitangan");
+        if (!butiran) continue;
         await client.query(
           `INSERT INTO KakitanganPemantauan (log_id, butiran_kakitangan) VALUES ($1, $2)`,
-          [new_log_id, item.butiran_kakitangan]
+          [new_log_id, butiran]
         );
       }
     }
@@ -505,23 +513,26 @@ export const tambahLogPemantauan = async (req, res) => {
   ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
 export const padamLogPemantauan = async (req, res) => {
-  // BARU: Guna 'client' untuk transaksi
   const client = await pool.connect();
   const { log_id } = req.params;
 
   try {
     const check = await client.query(
-      "SELECT log_id FROM LogPemantauan WHERE log_id = $1 AND is_deleted = false",
+      `SELECT lp.log_id, r.no_rujukan
+         FROM LogPemantauan lp
+         JOIN risiko r ON r.risiko_id = lp.risiko_id
+        WHERE lp.log_id = $1 AND lp.is_deleted = false`,
       [log_id]
     );
     if (check.rowCount === 0) {
       return res.status(404).json({ error: "Rekod pemantauan tidak dijumpai." });
     }
 
-    // BARU: Mula transaksi
+    const noRujukan = check.rows[0].no_rujukan;
+
     await client.query("BEGIN");
 
-    // BARU: 1. Padam 'children' dahulu (SOFT DELETE)
+    // Anak dahulu, kemudian log induk (soft-delete)
     await client.query(
       "UPDATE PelanTindakanPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false",
       [log_id]
@@ -531,18 +542,16 @@ export const padamLogPemantauan = async (req, res) => {
       [log_id]
     );
 
-    // BARU: 2. Padam 'parent' (SOFT DELETE)
     await client.query(
       "UPDATE LogPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false",
       [log_id]
     );
 
-    // BARU: Tamat transaksi
     await client.query("COMMIT");
 
     try {
-      const logRingkasan = `Memadam log pemantauan (Log ID: ${log_id}).`;
-      const logPerincian = `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah memadam log pemantauan untuk Risiko ID: ${req.params.log_id}.`;
+      const logRingkasan = `Memadam log pemantauan untuk risiko: ${noRujukan}.`;
+      const logPerincian = `${req.user.nama_penuh} (ID Staf: ${req.user.staff_id}) telah memadam log pemantauan (Log ID: ${log_id}) untuk risiko No. Rujukan: ${noRujukan}.`;
       await catatAktiviti(req.user.pengguna_id, "Padam Log Pemantauan", logRingkasan, logPerincian);
     } catch (logErr) {
       console.error("Gagal mencatat log selepas PADAM log pemantauan:", logErr);
@@ -550,12 +559,10 @@ export const padamLogPemantauan = async (req, res) => {
 
     res.json({ message: "Log pemantauan berjaya dipadam." });
   } catch (err) {
-    // BARU: Rollback jika gagal
     await client.query("ROLLBACK");
     console.error("Ralat DELETE /log/:log_id:", err);
     res.status(500).json({ error: "Gagal memadam log pemantauan." });
   } finally {
-    // BARU: Lepaskan client
     client.release();
   }
 };
@@ -652,8 +659,7 @@ export const kemaskiniLogPemantauan = async (req, res) => {
 
     if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
       for (const item of finalPelanList) {
-        const butiran =
-          typeof item === "string" ? item.trim() : (item?.butiran_aktiviti || "").trim();
+        const butiran = ambilButiran(item, "butiran_aktiviti");
         if (!butiran) continue;
         await client.query(
           `INSERT INTO PelanTindakanPemantauan (log_id, butiran_aktiviti)
@@ -664,8 +670,7 @@ export const kemaskiniLogPemantauan = async (req, res) => {
     }
     if (Array.isArray(finalKakitanganList) && finalKakitanganList.length > 0) {
       for (const item of finalKakitanganList) {
-        const butiran =
-          typeof item === "string" ? item.trim() : (item?.butiran_kakitangan || "").trim();
+        const butiran = ambilButiran(item, "butiran_kakitangan");
         if (!butiran) continue;
         await client.query(
           `INSERT INTO KakitanganPemantauan (log_id, butiran_kakitangan)

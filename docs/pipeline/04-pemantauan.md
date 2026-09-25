@@ -28,6 +28,11 @@ sequenceDiagram
 
 ## Endpoint (`routes/pemantauan.js` → `controllers/pemantauanController.js`, semua `verifyToken`)
 
+> **Pengasingan syarikat**: endpoint ikut ID (risiko/rawatan/log) dilindungi
+> `hadSyarikat(...)` (`middleware/aksesSyarikat.js`) — Staff & Ketua Subsidiari
+> menerima `403` untuk rekod syarikat lain. Dikawal oleh spec E2E `12-isolasi-syarikat`.
+
+
 | Kaedah | Laluan | Guna |
 |--------|--------|------|
 | GET | `/api/pemantauan-risiko/` | Senarai pemantauan (ringkasan) |

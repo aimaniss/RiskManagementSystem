@@ -191,6 +191,22 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 
 ---
 
+### 2.7 Pengasingan syarikat pada endpoint ikut ID (IDOR) — **Selesai**
+
+Ditemui semasa menulis ujian aliran tulis (2026-09-25): 11 endpoint tulis &
+7 endpoint bacaan ikut ID hanya menyemak kebenaran, bukan syarikat. Contoh
+disahkan: Ketua Subsidiari syarikat 3 berjaya **memadam risiko syarikat 1**;
+Staff boleh tambah/ubah rawatan, log pemantauan, penilaian dan memohon pindaan
+untuk risiko syarikat lain.
+
+**Pembetulan**: middleware `hadSyarikat([...])` (`middleware/aksesSyarikat.js`)
+dipasang pada route selepas `authorizeKebenaran`; memetakan risiko/rawatan/log
+kepada `syarikat_id` induk dan memulangkan `403` untuk peranan terhad (Staff,
+Ketua Subsidiari). ID kosong/tidak wujud/UUID rosak dilepaskan kepada handler
+(400/404 biasa). Spec `12-isolasi-syarikat` (18 cubaan -> 403, data kekal
+tidak berubah, Executive/Viewer masih boleh baca) + spec `11-aliran-tulis`
+(aliran sah syarikat sendiri).
+
 ## 3. Kerja sisa Fasa 5 (didokumenkan, bukan keperluan kritikal)
 
 | Item | Kesan | Potensi langkah awal |

@@ -1,5 +1,6 @@
 import express from "express";
 import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
+import { hadSyarikat } from "../middleware/aksesSyarikat.js";
 import {
   senaraiRisikoUntukPindaan,
   mohonPindaan,
@@ -17,7 +18,14 @@ router.get(
   authorizeKebenaran("pindaan:urus"),
   senaraiRisikoUntukPindaan
 );
-router.post("/:risk_id", verifyToken, authorizeKebenaran("pindaan:urus"), mohonPindaan);
+// Staff & Ketua Subsidiari hanya boleh memohon pindaan untuk risiko syarikat sendiri
+router.post(
+  "/:risk_id",
+  verifyToken,
+  authorizeKebenaran("pindaan:urus"),
+  hadSyarikat(["risiko", (req) => req.params.risk_id]),
+  mohonPindaan
+);
 router.get("/stats", verifyToken, authorizeKebenaran("pindaan:lulus"), statistikPindaan);
 router.get("/", verifyToken, authorizeKebenaran("pindaan:lihat"), senaraiPindaan);
 router.put(
