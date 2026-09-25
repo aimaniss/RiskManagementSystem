@@ -15,6 +15,7 @@ import logAktivitiRoutes from "./routes/log_aktiviti.js";
 import laporanRoutes from "./routes/laporan.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import notifikasiRoutes from "./routes/notifikasi.js";
+import rujukanRoutes from "./routes/rujukan.js";
 
 dotenv.config();
 const app = express();
@@ -57,5 +58,6 @@ app.use("/api/log_aktiviti", logAktivitiRoutes);
 app.use("/api/laporan", laporanRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifikasi", notifikasiRoutes);
+app.use("/api/rujukan", rujukanRoutes);
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

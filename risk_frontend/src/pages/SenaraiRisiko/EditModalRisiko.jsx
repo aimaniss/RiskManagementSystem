@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useSenaraiRujukan, pilihanDenganNilaiSemasa } from "@/hooks/useSenaraiRujukan";
 
 export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...risk });
+  const { senarai: senaraiKategori } = useSenaraiRujukan("kategori_risiko");
   const [puncaList, setPuncaList] = useState(risk.punca || [""]);
   const [kesanList, setKesanList] = useState(risk.kesan || [""]);
   const [riskColor, setRiskColor] = useState(risk.risk_color || "#f1f5f9");
@@ -103,10 +105,9 @@ export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, 
                   <Label className="text-xs font-medium">Kategori Risiko:</Label>
                   <Select name="kategori" value={formData.kategori} onChange={handleChange}>
                     <option value="">-- Pilih --</option>
-                    <option>Operasi</option>
-                    <option>Kewangan</option>
-                    <option>Strategik</option>
-                    <option>Pematuhan/Perundangan</option>
+                    {pilihanDenganNilaiSemasa(senaraiKategori, formData.kategori).map((k) => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
                   </Select>
                 </div>
                 <div className="space-y-1.5">

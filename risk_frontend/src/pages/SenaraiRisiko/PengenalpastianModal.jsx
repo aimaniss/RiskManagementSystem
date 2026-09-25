@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useSenaraiRujukan, pilihanDenganNilaiSemasa } from "@/hooks/useSenaraiRujukan";
 
 function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
 
@@ -24,6 +25,7 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
     });
 
     const [syarikatList, setSyarikatList] = useState([]);
+    const { senarai: senaraiKategori } = useSenaraiRujukan("kategori_risiko");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
     
@@ -151,10 +153,9 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
                                         disabled={!canEditPengenalpastian}
                                     >
                                         <option value="">-- Pilih --</option>
-                                        <option>Operasi</option>
-                                        <option>Kewangan</option>
-                                        <option>Strategik</option>
-                                        <option>Pematuhan / Perundangan</option>
+                                        {pilihanDenganNilaiSemasa(senaraiKategori, formData.kategori).map((k) => (
+                                            <option key={k} value={k}>{k}</option>
+                                        ))}
                                     </Select>
                                 </div>
                                 <div className="space-y-1.5">

@@ -9,16 +9,17 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `01-login-peranan.spec.mjs` | Login kelima-lima peranan (Admin/Executive/Ketua Subsidiari/Staff/Viewer), respons login mengembalikan array `kebenaran` dengan jumlah betul (17/15/12/10/5) |
 | `02-kebenaran.spec.mjs` | Kebenaran dikuatkuasakan: API pulang `403` untuk yang tiada kebenaran; menu UI sembunyi/tunjuk per peranan |
 | `03-rollback-transaksi.spec.mjs` | `dalamTransaksi` (utils/transaksi.js): ROLLBACK bila gagal / kena kekangan, COMMIT bila berjaya |
-| `04-soft-delete.spec.mjs` | DELETE pengguna & log_aktiviti = soft-delete (baris kekal `is_deleted=true`, hilang dari API, pengguna padam gagal log masuk) |
+| `04-soft-delete.spec.mjs` | DELETE pengguna = soft-delete (baris kekal `is_deleted=true`, hilang dari API, pengguna padam gagal log masuk); log aktiviti tiada endpoint padam (`404`, baris kekal) |
 | `05-p1-auth-session.spec.mjs` | `/users/me` memulangkan kebenaran segar; token lama ditolak selepas perubahan role/password; login semula mendapat snapshot baru |
 | `06-penerima-notifikasi.spec.mjs` | `dapatkanPenerimaIkutKebenaran`: penerima ikut kebenaran (Executive termasuk untuk `pindaan:lulus`), pelaku dikecualikan, fallback pentadbir, `[]` tanpa ralat |
 | `07-flush-cache-kebenaran.spec.mjs` | Perubahan `peranan_kebenaran` hanya berkuat kuasa selepas `POST /api/roles/flush-cache`; Staff ditolak `403`; matriks dipulihkan selepas ujian |
 | `08-purge-soft-delete.spec.mjs` | `scripts/purge.js`: pratonton tanpa ubah data; tolak bukan pentadbir; buang hanya baris soft-delete melepasi tempoh (langkau `deleted_at NULL` & baris aktif); jejak audit dicatat |
 | `09-keselamatan.spec.mjs` | Pengawal regresi: tiada kata laluan plain-text dalam DB, setiap pengguna ada `token_dikemaskini_at`, tiada respons 5xx yang memulangkan `err.message` (semakan statik controllers) |
-| `10-executive.spec.mjs` | Dasar Executive = Admin: tapis pindaan ikut syarikat sama seperti Admin; `pengguna:urus` & `log:padam` masih `403`. `rujukan:urus`: Executive, Ketua Subsidiari & Staff boleh tambah bahagian, Viewer `403` |
+| `10-executive.spec.mjs` | Dasar Executive = Admin: tapis pindaan ikut syarikat sama seperti Admin; `pengguna:urus` & `tetapan:urus` masih `403`. `rujukan:urus`: Executive, Ketua Subsidiari & Staff boleh tambah bahagian, Viewer `403` |
 | `11-aliran-tulis.spec.mjs` | Aliran tulis penuh melalui API: daftar/kemaskini/lulus risiko, rawatan & log pemantauan (tambah/kemaskini/padam, anak soft-delete), pindaan (mohon/lulus/tolak/lulus terus + notifikasi Executive), padam risiko berlata. Semua data & kesan sampingan dibuang kekal selepas ujian |
 | `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 7 bacaan ikut ID untuk risiko syarikat lain -> `403`, data kekal; laporan penuh syarikat lain `403`; log aktiviti hanya syarikat sendiri; `check-no-rujukan` tanpa rekod; Executive/Viewer masih boleh baca |
 | `13-pengurusan-pengguna.spec.mjs` | Kitaran hayat akaun: kata laluan sementara dijana + wajib tukar pada log masuk pertama (backend `403 PERLU_TUKAR_KATALALUAN`), polisi kata laluan, kunci selepas 5 gagal (`423`), reset pentadbir membuka kunci & mencabut sesi, nyahaktif/aktifkan, perlindungan akaun sendiri, `pengguna:urus` sahaja; UI log masuk → `/tukar-katalaluan` → papan pemuka |
+| `14-tetapan-sistem.spec.mjs` | Tetapan Sistem (`tetapan:urus` Admin sahaja): kategori risiko tambah/duplikasi/tukar nama dikaskad ke risiko/nyahaktif (dashboard masih kira); syarikat tambah/sahkan warna/nyahaktif disekat jika ada pengguna aktif; bahagian tukar nama dikaskad & tidak aktif disembunyi. Log aktiviti berhalaman, tapisan, jenis, eksport CSV; Staff hanya syarikat sendiri |
 
 ## Prasyarat
 
@@ -47,7 +48,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **68/68 ujian lulus**.
+- Suite semasa: **74/74 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

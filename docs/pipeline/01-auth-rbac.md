@@ -105,7 +105,7 @@ flowchart LR
 - `authorizeRoles(...)` **kekal dieksport** (fallback) tetapi **tidak lagi digunakan**
   pada mana-mana route aplikasi.
 
-## Matriks Kebenaran (17) — sumber kebenaran semasa
+## Matriks Kebenaran (18) — sumber kebenaran semasa
 
 | Kebenaran | Admin | Executive | KT. Subsidiari | Staff | Viewer |
 |-----------|:---:|:---:|:---:|:---:|:---:|
@@ -121,13 +121,14 @@ flowchart LR
 | `pindaan:lulus` | ✔ | ✔ | — | — | — |
 | `pengguna:urus` | ✔ | — | — | — | — |
 | `log:baca` | ✔ | ✔ | ✔ | ✔ | ✔ |
-| `log:padam` | ✔ | — | — | — | — |
+| `log:padam` (tidak digunakan — log audit tidak boleh dipadam) | ✔ | — | — | — | — |
 | `notifikasi:urus` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `laporan:jana` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `dashboard:lihat` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `rujukan:urus` | ✔ | ✔ | ✔ | ✔ | — |
+| `tetapan:urus` | ✔ | — | — | — | — |
 \* Skop terhad `syarikat_id` sendiri — kekalkan klausa `WHERE syarikat_id`.
-Jumlah kebenaran disahkan dalam spec E2E `01` (Admin 17, Executive 15,
+Jumlah kebenaran disahkan dalam spec E2E `01` (Admin 18, Executive 15,
 Ketua Subsidiari 12, Staff 10, Viewer 5). Jadual dijana dari DB (2026-09-25).
 
 ## Isolasi Data (kekal)

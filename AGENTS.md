@@ -102,14 +102,23 @@ npm run migrate:status
   `verifyToken` menapis pengguna `is_deleted=true`; `authorizeKebenaran` LULUS
   jika pengguna miliki ≥1 daripada senarai (OR). `authorizeRoles(...)` MASIH
   dieksport tetapi JANGAN guna pada route baharu.
-- **Kebenaran (17)**: `risiko:daftar`, `risiko:lihat`, `risiko:nilai`,
+- **Kebenaran (18)**: `risiko:daftar`, `risiko:lihat`, `risiko:nilai`,
   `risiko:lulus`, `risiko:padam`, `rawatan:urus`, `pemantauan:urus`,
   `pindaan:urus`, `pindaan:lihat`, `pindaan:lulus`, `pengguna:urus`,
   `log:baca`, `log:padam`, `notifikasi:urus`, `laporan:jana`,
-  `dashboard:lihat`, `rujukan:urus`. Jumlah per peranan: Admin 17, Executive 15,
-  Ketua Subsidiari 12, Staff 10, Viewer 5. **Dasar: Executive = Admin untuk
-  kerja risiko/pindaan** (termasuk lulus-terus pindaan sendiri & tapisan
-  syarikat); hanya `pengguna:urus` & `log:padam` kekal Admin sahaja.
+  `dashboard:lihat`, `rujukan:urus`, `tetapan:urus`. Jumlah per peranan: Admin 18,
+  Executive 15, Ketua Subsidiari 12, Staff 10, Viewer 5. **Dasar: Executive = Admin
+  untuk kerja risiko/pindaan** (termasuk lulus-terus pindaan sendiri & tapisan
+  syarikat); hanya `pengguna:urus`, `log:padam` & `tetapan:urus` kekal Admin sahaja.
+  `log:padam` kini tidak digunakan: log aktiviti ialah jejak audit (tiada endpoint
+  padam). `tetapan:urus` = Tetapan Sistem (syarikat, bahagian, `senarai_rujukan`).
+- **Senarai rujukan**: pilihan dropdown yang boleh diurus (kini `kategori_risiko`)
+  disimpan dalam `senarai_rujukan` dan dibaca FE melalui `useSenaraiRujukan(jenis)`
+  — JANGAN tulis semula senarai kategori dalam kod. Jenis baharu didaftar dalam
+  `JENIS_RUJUKAN` (`controllers/rujukanController.js`). Status aliran kerja
+  (Buka/Tutup, Diluluskan, dsb.) & jenis kawalan kekal tetap dalam kod kerana
+  logik bergantung padanya. `GET /syarikat`, `/bahagian`, `/rujukan` pulang yang
+  aktif sahaja; `?semua=true` untuk Tetapan Sistem.
   Semakan "boleh lulus" guna kebenaran (`pindaan:lulus`), bukan nama peranan.
 - **Soft-delete**: TIADA `DELETE FROM` dalam kod aplikasi. Semua "padam" =
   `UPDATE <jadual> SET is_deleted = true, deleted_at = NOW()`. Semua query
@@ -201,7 +210,7 @@ ini (klausa `WHERE syarikat_id` untuk peranan terhad).
 - Semua prefix route didaftarkan di `server.js` (`/api/auth`, `/api/users`,
   `/api/roles`, `/api/syarikat`, `/api/bahagian`, `/api/risiko`, `/api/tahun`,
   `/api/rawatan`, `/api/pemantauan-risiko`, `/api/pindaan`, `/api/log_aktiviti`,
-  `/api/laporan`, `/api/dashboard`, `/api/notifikasi`) — daftarkan route baharu
+  `/api/laporan`, `/api/dashboard`, `/api/notifikasi`, `/api/rujukan`) — daftarkan route baharu
   di sana.
 - Jangan ganggu `verifyToken`/auth flow tanpa ujian penuh — ia teras keselamatan.
 - Selepas ubah `peranan_kebenaran` terus di DB/migrasi, panggil

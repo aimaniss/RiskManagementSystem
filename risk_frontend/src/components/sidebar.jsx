@@ -11,12 +11,13 @@ import {
   FileEdit,
   BarChart3,
   Users,
+  Settings,
   LogOut,
 } from "lucide-react";
 import "./sidebar.css";
 import LogoLight from "../assets/images/Light Background/UKMH_light.png";
 import LogoDark from "../assets/images/Dark Background/UKMH_dark.png";
-import { getAuthUser } from "../utils/auth";
+import { getAuthUser, hasKebenaran } from "../utils/auth";
 
 function Sidebar() {
   const location = useLocation();
@@ -209,6 +210,21 @@ function Sidebar() {
                   </>
                 </Link>
               </li>
+              {hasKebenaran("tetapan:urus") && (
+                <li>
+                  <Link
+                    to="/TetapanSistem"
+                    className={`sidebar-link ${
+                      location.pathname === "/TetapanSistem" ? "active" : ""
+                    }`}
+                  >
+                    <>
+                      <Settings className="sidebar-icon" />
+                      Tetapan Sistem
+                    </>
+                  </Link>
+                </li>
+              )}
             </>
           )}
         </ul>

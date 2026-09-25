@@ -87,7 +87,7 @@ sequenceDiagram
 
 - **Backend**: `verifyToken` (baca JWT → semak semula pengguna + peranan di DB,
   tolak `is_deleted=true` dan token lama melalui `token_dikemaskini_at`, set
-  `req.user`) kemudian `authorizeKebenaran("risiko:daftar", ...)` (17 kebenaran,
+  `req.user`) kemudian `authorizeKebenaran("risiko:daftar", ...)` (18 kebenaran,
   OR). `authorizeRoles` masih dieksport tetapi tidak digunakan pada route.
 - **Frontend**: `ProtectedRoute` (laluan terlindung), `useAuth()` →
   `hasKebenaran(...)`, `isAdmin()`, `canEdit()`, `isRestrictedRole()`,

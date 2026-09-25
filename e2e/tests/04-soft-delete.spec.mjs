@@ -1,7 +1,7 @@
 // 04-soft-delete.spec.mjs — Fasa 6: Spec soft-delete.
-// Tujuan: sahkan operasi DELETE pada pengguna & log_aktiviti adalah soft-delete:
-// baris kekal dalam DB dengan is_deleted=true, hilang dari senarai API, dan
-// pengguna yang dipadam tidak boleh log masuk lagi.
+// Tujuan: sahkan DELETE pengguna ialah soft-delete (baris kekal is_deleted=true,
+// hilang dari senarai API, tidak boleh log masuk) dan log aktiviti tidak boleh
+// dipadam langsung melalui API (jejak audit).
 
 import { test, expect } from "@playwright/test";
 import { DB, tutupDB } from "../db.helper.mjs";
@@ -58,33 +58,39 @@ test.describe("Soft-delete pengguna", () => {
   });
 });
 
-test.describe("Soft-delete log_aktiviti", () => {
-  test("DELETE /api/log_aktiviti/:id mengikat (bukan memadam) baris", async ({ request }) => {
+test.describe("Log aktiviti ialah jejak audit", () => {
+  test("Tiada endpoint padam: DELETE /api/log_aktiviti/:id -> 404, baris kekal", async ({
+    request,
+  }) => {
     const admin = await apiLogin(request, CREDENTIALS.admin);
 
     // 1. Cipta baris log aktiviti ujian (langsung ke DB)
     const insert = await DB.query(
       `INSERT INTO log_aktiviti (pengguna_id, aktiviti, perincian, ringkasan)
-       VALUES ($1, 'E2E', 'Ujian soft-delete', 'Log ujian E2E') RETURNING id`,
+       VALUES ($1, 'E2E', 'Ujian audit', 'Log ujian E2E') RETURNING id`,
       [admin.user.pengguna_id]
     );
     idLog = insert.rows[0].id;
 
-    // 2. Kelihatan dalam senarai API
-    const senarai = await request.get(`${API}/log_aktiviti`, { headers: admin.auth });
-    const body = await senarai.json();
-    const dijumpai = Array.isArray(body) ? body.find((l) => l.log_id === idLog) : null;
-    expect(dijumpai || body.rows?.some((l) => l.log_id === idLog)).toBeTruthy();
+    // 2. Kelihatan dalam senarai API (berhalaman)
+    const senarai = await request.get(`${API}/log_aktiviti?aktiviti=E2E`, { headers: admin.auth });
+    expect((await senarai.json()).data.some((l) => l.log_id === idLog)).toBeTruthy();
 
-    // 3. Padam melalui API
-    const padam = await request.delete(`${API}/log_aktiviti/${idLog}`, { headers: admin.auth });
-    expect(padam.ok()).toBeTruthy();
+    // 3. Padam tunggal & pukal tidak lagi wujud, walaupun untuk Admin
+    expect(
+      (await request.delete(`${API}/log_aktiviti/${idLog}`, { headers: admin.auth })).status()
+    ).toBe(404);
+    expect(
+      (
+        await request.delete(`${API}/log_aktiviti?tarikhMula=2000-01-01&tarikhAkhir=2100-01-01`, {
+          headers: admin.auth,
+        })
+      ).status()
+    ).toBe(404);
 
-    // 4. Baris kekal dalam DB sebagai is_deleted
-    const { rows } = await DB.query(`SELECT is_deleted, deleted_at FROM log_aktiviti WHERE id = $1`, [idLog]);
-    expect(rows.length).toBe(1);
-    expect(rows[0].is_deleted).toBe(true);
-    expect(rows[0].deleted_at).toBeTruthy();
+    // 4. Baris kekal tanpa ditanda padam
+    const { rows } = await DB.query(`SELECT is_deleted FROM log_aktiviti WHERE id = $1`, [idLog]);
+    expect(rows[0].is_deleted).toBe(false);
   });
 });
 

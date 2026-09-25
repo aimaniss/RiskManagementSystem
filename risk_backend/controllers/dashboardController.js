@@ -125,13 +125,15 @@ export const dapatkanDashboard = async (req, res) => {
       "N/A": 0,
     };
 
-    const kategoriRisikoCount = {
-      Strategik: 0,
-      Operasi: 0,
-      "Pematuhan / Perundangan": 0,
-      Kewangan: 0,
-      "Lain-lain / Tiada": 0,
-    };
+    // Kategori diurus dalam Tetapan Sistem; termasuk yang tidak aktif supaya
+    // risiko lama masih dikira dalam kategori asalnya.
+    const { rows: senaraiKategori } = await pool.query(
+      `SELECT nilai FROM senarai_rujukan
+        WHERE jenis = 'kategori_risiko' AND is_deleted = false
+        ORDER BY susunan, nilai`
+    );
+    const kategoriRisikoCount = Object.fromEntries(senaraiKategori.map((k) => [k.nilai, 0]));
+    kategoriRisikoCount["Lain-lain / Tiada"] = 0;
 
     const jenisKawalanCount = {
       Terima: 0,

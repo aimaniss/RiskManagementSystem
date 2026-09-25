@@ -143,12 +143,16 @@ test("Log aktiviti: Staff hanya nampak syarikat sendiri; Viewer nampak semua", a
       WHERE u.staff_id = $1`,
     [CREDENTIALS.staff.staff_id]
   );
-  const logStaff = await (await request.get(`${API}/log_aktiviti`, { headers: staff.auth })).json();
+  const logStaff = (
+    await (await request.get(`${API}/log_aktiviti?had=200`, { headers: staff.auth })).json()
+  ).data;
   expect(logStaff.length).toBeGreaterThan(0);
   expect([...new Set(logStaff.map((l) => l.syarikat))]).toEqual([syarikatStaff]);
 
   const viewer = await apiLogin(request, CREDENTIALS.viewer);
-  const logViewer = await (await request.get(`${API}/log_aktiviti`, { headers: viewer.auth })).json();
+  const logViewer = (
+    await (await request.get(`${API}/log_aktiviti?had=200`, { headers: viewer.auth })).json()
+  ).data;
   expect(new Set(logViewer.map((l) => l.syarikat)).size).toBeGreaterThan(1);
 });
 

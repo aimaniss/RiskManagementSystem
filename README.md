@@ -179,7 +179,7 @@ RiskManagementSystem/
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
-│   │   ├── knex/                     # Migrasi Knex (26 fail)
+│   │   ├── knex/                     # Migrasi Knex (27 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
 │   ├── routes/                       # Daftar endpoint + middleware sahaja
 │   │   ├── auth.js                   # Log masuk / JWT
@@ -341,7 +341,7 @@ RiskManagementSystem/
 | `pelantindakanpemantauan` | Tindakan pemantauan |
 | `kakitanganpemantauan` | Kakitangan pemantauan |
 | `permohonan_pindaan` | Permohonan pindaan dengan data sebelum/lepas (JSONB) |
-| `kebenaran` | 17 kebenaran (`risiko:daftar`, `pengguna:urus`, …) — dikuatkuasa oleh `authorizeKebenaran` |
+| `kebenaran` | 18 kebenaran (`risiko:daftar`, `pengguna:urus`, …) — dikuatkuasa oleh `authorizeKebenaran` |
 | `peranan_kebenaran` | Peta peranan-kebenaran (junction table) |
 | `notifikasi` | Notifikasi pengguna (pindaan, kelulusan, tugasan) |
 | `log_aktiviti` | Jejak audit untuk semua tindakan |
@@ -417,12 +417,20 @@ RiskManagementSystem/
 |--------|----------|-----------|-------|
 | `GET` | `/api/dashboard` | Statistik dashboard | `dashboard:lihat` |
 | `GET` | `/api/laporan`, `/api/laporan/:risiko_id/data-penuh` | Data laporan | `laporan:jana` |
-| `GET` | `/api/log_aktiviti` | Log aktiviti jejak audit (Staff/Ketua Subsidiari: syarikat sendiri) | `log:baca` |
-| `DELETE` | `/api/log_aktiviti`, `/api/log_aktiviti/:id` | Padam log (soft-delete) | `log:padam` |
-| `GET` | `/api/syarikat` | Senarai syarikat (ditapis mengikut peranan) | Semua |
+| `GET` | `/api/log_aktiviti` | Log aktiviti berhalaman (`halaman`, `had`, `tarikhMula`, `tarikhAkhir`, `aktiviti`, `peranan_id`, `syarikat_id`, `carian`); Staff/Ketua Subsidiari: syarikat sendiri | `log:baca` |
+| `GET` | `/api/log_aktiviti/jenis` | Jenis aktiviti sebenar + bilangan (untuk tapisan) | `log:baca` |
+| `GET` | `/api/log_aktiviti/eksport` | Eksport CSV ikut tapisan (maks. 10,000 rekod) | `log:baca` |
+| `GET` | `/api/syarikat` | Senarai syarikat aktif (ditapis mengikut peranan; `?semua=true` termasuk tidak aktif) | Semua |
+| `POST`/`PUT` | `/api/syarikat`, `/api/syarikat/:id` | Tambah / sunting syarikat | `tetapan:urus` |
+| `PATCH` | `/api/syarikat/:id/status` | Aktif / nyahaktif (disekat jika ada pengguna aktif) | `tetapan:urus` |
 | `GET` | `/api/tahun` | Senarai tahun | Semua |
 | `GET` | `/api/bahagian` | Senarai bahagian | Semua |
 | `POST` | `/api/bahagian` | Tambah bahagian | `rujukan:urus` (Admin, Executive, Ketua Subsidiari, Staff) |
+| `PUT` | `/api/bahagian/:id` | Tukar nama (dikaskad ke `risiko.bahagian`) | `tetapan:urus` |
+| `PATCH` | `/api/bahagian/:id/status` | Aktif / nyahaktif | `tetapan:urus` |
+| `GET` | `/api/rujukan?jenis=kategori_risiko` | Senarai rujukan aktif (`?semua=true` termasuk tidak aktif) | Semua |
+| `POST`/`PUT` | `/api/rujukan`, `/api/rujukan/:id` | Tambah / sunting (tukar nama dikaskad ke `risiko`) | `tetapan:urus` |
+| `PATCH` | `/api/rujukan/:id/status` | Aktif / nyahaktif | `tetapan:urus` |
 | `GET` | `/api/roles` | Senarai peranan | `pengguna:urus` |
 | `POST` | `/api/roles/flush-cache` | Kosongkan cache kebenaran (selepas ubah `peranan_kebenaran`) | `pengguna:urus` |
 | `*` | `/api/notifikasi/*` | Notifikasi sendiri (senarai, baca, padam) | Semua |

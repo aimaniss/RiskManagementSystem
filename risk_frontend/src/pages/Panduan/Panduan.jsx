@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import './Panduan.css'; 
+import { useSenaraiRujukan } from '@/hooks/useSenaraiRujukan';
 
 // --- Warna dan Label Risiko (Kekal) ---
 const WARNA_RISIKO = {
@@ -11,12 +12,6 @@ const WARNA_RISIKO = {
 };
 
 // Data Rujukan (Kekal)
-const kategoriRisikoData = [
-    { kategori: 'Strategik', penerangan: 'Potensi halangan atau isu secara material yang mempengaruhi pencapaian objektif strategik' },
-    { kategori: 'Kewangan', penerangan: 'Potensi risiko yang mungkin menjejaskan kewangan organisasi seperti belanjawan, pendapatan dan kos' },
-    { kategori: 'Operasi', penerangan: 'Risiko timbul daripada kegagalan proses organisasi, polisi, sistem dan/atau peristiwa yang mengganggu operasi perniagaan' },
-    { kategori: 'Pematuhan/Perundangan', penerangan: 'Potensi pendedahan kepada keperluan undang-undang dan pematuhan peraturan' },
-];
 
 // Data Kebarangkalian (Mula dari 5 ke 1)
 const skorKebarangkalianData = [
@@ -101,6 +96,8 @@ const statusPemantauanData = [
 
 
 export default function Panduan({ isOpen, onClose }) {
+    // Kategori & penerangan diurus dalam Tetapan Sistem
+    const { senarai: kategoriRisikoData } = useSenaraiRujukan("kategori_risiko");
     if (!isOpen) return null;
 
     // Susunan Baris Matriks (Y-Axis): Mula dari 5 (Atas) ke 1 (Bawah)
@@ -132,8 +129,8 @@ export default function Panduan({ isOpen, onClose }) {
                             </thead>
                             <tbody>
                                 {kategoriRisikoData.map((item) => (
-                                    <tr key={item.kategori}>
-                                        <td className="panduan-table-key">{item.kategori}</td>
+                                    <tr key={item.rujukan_id}>
+                                        <td className="panduan-table-key">{item.nilai}</td>
                                         <td>{item.penerangan}</td>
                                     </tr>
                                 ))}

@@ -23,6 +23,7 @@ import { getAuthUser } from "../../utils/auth";
 import { useSyarikats } from "../../hooks/useSyarikats";
 import { useBahagians } from "../../hooks/useBahagians";
 import { usePanduan } from "../../hooks/usePanduan";
+import { useSenaraiRujukan, pilihanDenganNilaiSemasa } from "@/hooks/useSenaraiRujukan";
 
 function DaftarRisiko() {
   const now = new Date();
@@ -48,6 +49,7 @@ function DaftarRisiko() {
   const debounceRef = useRef(null);
   const { syarikatList } = useSyarikats();
   const { bahagianList, refetch: refetchBahagian } = useBahagians();
+  const { senarai: senaraiKategori } = useSenaraiRujukan("kategori_risiko");
   const { openPanduan, PanduanRenderer } = usePanduan();
   const [showTambahBahagian, setShowTambahBahagian] = useState(false);
   const [namaBahagianBaru, setNamaBahagianBaru] = useState("");
@@ -256,10 +258,9 @@ function DaftarRisiko() {
                     <Label>Kategori Risiko</Label>
                     <Select name="kategori" value={formData.kategori} onChange={handleChange} className="h-9">
                       <option value="">-- Pilih --</option>
-                      <option>Operasi</option>
-                      <option>Kewangan</option>
-                      <option>Strategik</option>
-                      <option>Pematuhan / Perundangan</option>
+                      {pilihanDenganNilaiSemasa(senaraiKategori, formData.kategori).map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
                     </Select>
                   </div>
                   <div className="space-y-1.5">

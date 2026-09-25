@@ -101,8 +101,16 @@ stateDiagram-v2
 | GET | `/api/bahagian/` | `verifyToken` | Rujukan |
 | POST | `/api/bahagian/` | `verifyToken, rujukan:urus` | Rujukan (DaftarRisiko tambah bahagian) |
 | GET | `/api/log_aktiviti/` | `verifyToken, log:baca` | Jejak audit (Staff/Ketua Subsidiari: syarikat sendiri sahaja) |
-| DELETE | `/api/log_aktiviti/:id` | `verifyToken, log:padam` | Jejak audit (soft-delete) |
-| DELETE | `/api/log_aktiviti/` | `verifyToken, log:padam` | Jejak audit (soft-delete) |
+| GET | `/api/log_aktiviti/jenis` | `verifyToken, log:baca` | Jenis aktiviti sebenar (tapisan) |
+| GET | `/api/log_aktiviti/eksport` | `verifyToken, log:baca` | Eksport CSV ikut tapisan (maks. 10,000; dicatat dalam log) |
+| PUT | `/api/bahagian/:id` | `verifyToken, tetapan:urus` | Tetapan Sistem (tukar nama, kaskad ke risiko) |
+| PATCH | `/api/bahagian/:id/status` | `verifyToken, tetapan:urus` | Tetapan Sistem |
+| POST / PUT | `/api/syarikat/`, `/api/syarikat/:id` | `verifyToken, tetapan:urus` | Tetapan Sistem |
+| PATCH | `/api/syarikat/:id/status` | `verifyToken, tetapan:urus` | Tetapan Sistem (409 jika ada pengguna aktif) |
+| GET | `/api/rujukan?jenis=` | `verifyToken` | Senarai rujukan aktif (`?semua=true` semua) |
+| GET | `/api/rujukan/jenis` | `verifyToken, tetapan:urus` | Jenis senarai yang boleh diurus |
+| POST / PUT | `/api/rujukan/`, `/api/rujukan/:id` | `verifyToken, tetapan:urus` | Tetapan Sistem (tukar nama, kaskad ke risiko) |
+| PATCH | `/api/rujukan/:id/status` | `verifyToken, tetapan:urus` | Tetapan Sistem |
 | GET | `/api/notifikasi/` | `verifyToken` | Notifikasi |
 | GET | `/api/notifikasi/unread-count` | `verifyToken` | Notifikasi |
 | PUT | `/api/notifikasi/:notifikasi_id/baca` | `verifyToken` | Notifikasi |
@@ -126,13 +134,38 @@ stateDiagram-v2
 - **Utiliti**: `utils/catatAktiviti.js` →
   `catatAktiviti(pengguna_id, aktiviti, ringkasan, perincian)` — parameter
   **posisi**, menulis ke `log_aktiviti`, ralat ditekan (hanya log).
-- **UI**: `LogAktiviti/LogAktiviti.jsx` — GET `/log_aktiviti` (params tapisan,
-  guna role & syarikat filter), GET `/roles`/`/syarikat` untuk penapis, DELETE
-  `/log_aktiviti/:id` & DELETE `/log_aktiviti` (Admin).
+- **Jejak audit — tiada padam**: endpoint DELETE dibuang; `log:padam` tidak
+  digunakan. Pembersihan hanya melalui `npm run purge` (baris soft-delete lama).
+- **API**: `GET /log_aktiviti` berhalaman → `{ data, jumlah, halaman, had,
+  jumlah_halaman }` (had lalai 25, maks. 200). Tapisan: `tarikhMula`/`tarikhAkhir`
+  (YYYY-MM-DD, zon Asia/Kuala_Lumpur, akhir termasuk sepanjang hari), `aktiviti`
+  (padanan tepat), `peranan_id`, `syarikat_id`, `carian` (nama, ID staf,
+  ringkasan, perincian). Staff/Ketua Subsidiari sentiasa dihadkan kepada syarikat
+  sendiri (tapisan `syarikat_id` diabaikan) — termasuk `/jenis` & `/eksport`.
+  Eksport CSV: BOM UTF-8, sel bermula `= + - @` dilindungi (suntikan formula).
+- **UI**: `LogAktiviti/LogAktiviti.jsx` — tapisan (carian bertangguh 400ms,
+  julat pantas Hari ini/7/30 hari), paging, panel perincian (`Sheet`), butang
+  Eksport CSV. Penapis peranan hanya dipapar jika `/roles` boleh dibaca (Admin).
+
+## Tetapan Sistem (`tetapan:urus`, Admin)
+
+`pages/TetapanSistem/` — tab **Syarikat** (nama, singkatan, warna; nyahaktif
+disekat selagi ada pengguna aktif), **Bahagian / Unit** dan **Kategori Risiko**
+(`senarai_rujukan`, jenis `kategori_risiko`, dengan penerangan untuk Panduan).
+
+- Nyahaktif = sembunyi daripada borang baharu sahaja; rekod sedia ada kekal.
+  Borang sunting mengekalkan nilai semasa walaupun tidak aktif
+  (`pilihanDenganNilaiSemasa`).
+- `risiko.kategori` & `risiko.bahagian` menyimpan **nama** (teks), jadi tukar
+  nama dikaskadkan dalam transaksi yang sama (`risiko_dikemaskini` dalam respons).
+  Syarikat dirujuk melalui ID — tiada kaskad.
+- Dashboard membina baldi kategori daripada `senarai_rujukan` (termasuk tidak
+  aktif) + "Lain-lain / Tiada".
+- Setiap perubahan dicatat sebagai aktiviti `Tetapan Sistem`.
 
 ## Jadual DB Disentuh
 
-`pengguna`, `peranan`, `syarikat`, `bahagian`, `notifikasi`, `log_aktiviti`.
+`pengguna`, `peranan`, `syarikat`, `bahagian`, `senarai_rujukan`, `notifikasi`, `log_aktiviti`, `risiko` (kaskad tukar nama kategori/bahagian).
 
 ## RBAC
 
@@ -140,14 +173,14 @@ stateDiagram-v2
 |----------|-------|-----------|------------------|-------|--------|
 | Urus pengguna | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Lihat/profil sendiri | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Padam / lihat log aktiviti | ✔ | ✔ (lihat) | ✔ (lihat) | ✔ (lihat) | ✔ (lihat) |
+| Lihat / eksport log aktiviti | ✔ | ✔ | ✔ (syarikat sendiri) | ✔ (syarikat sendiri) | ✔ |
+| Padam log aktiviti | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Tetapan Sistem | ✔ | ✘ | ✘ | ✘ | ✘ |
 | Tandai notifikasi | ✔ | ✔ | ✔ | ✔ | ✔ |
 
 ## Nota / Gotcha
 
 - **Multer**: muat naik gambar profil guna `upload.single("gambar_profil")` —
   endpoint users memerlukan `multipart/form-data`.
-- `DELETE /log_aktiviti/` (tanpa id) soft-delete pukal dengan `params` penapis;
-  perlu `log:padam` (Admin).
 - Roles/syarikat dipakai sebagai penapis di LogAktiviti — pastikan senarai
   sentiasa dimuat sebelum paparan.

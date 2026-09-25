@@ -41,11 +41,16 @@ test("Staff & Ketua Subsidiari boleh tambah bahagian; Viewer tidak (rujukan:urus
   }
 });
 
-test("Executive masih tiada pengguna:urus & log:padam -> 403", async ({ request }) => {
+test("Executive masih tiada pengguna:urus & tetapan:urus -> 403", async ({ request }) => {
   const exec = await apiLogin(request, CREDENTIALS.executive);
   expect((await request.get(`${API}/users`, { headers: exec.auth })).status()).toBe(403);
   expect(
-    (await request.delete(`${API}/log_aktiviti/0`, { headers: exec.auth })).status()
+    (
+      await request.post(`${API}/syarikat`, {
+        headers: exec.auth,
+        data: { nama_syarikat: "E2E Executive Tidak Boleh" },
+      })
+    ).status()
   ).toBe(403);
 });
 

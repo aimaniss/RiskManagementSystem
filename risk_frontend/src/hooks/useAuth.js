@@ -70,6 +70,7 @@ const MATRIX_KEBENARAN = {
   "laporan:jana": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
   "dashboard:lihat": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF", "VIEWER"],
   "rujukan:urus": ["ADMIN", "EXECUTIVE", "KETUA SUBSIDIARI", "STAFF"],
+  "tetapan:urus": ["ADMIN"],
 };
 
 /**
