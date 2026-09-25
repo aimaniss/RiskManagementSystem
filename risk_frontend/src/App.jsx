@@ -14,6 +14,7 @@ import Laporan from "./pages/Laporan/Laporan";
 import UrusPengguna from "./pages/UrusPengguna/UrusPengguna";
 import LogAktiviti from "./pages/LogAktiviti/LogAktiviti";
 import TetapanSistem from "./pages/TetapanSistem/TetapanSistem";
+import ButiranRisiko from "./pages/ButiranRisiko/ButiranRisiko";
 import LogKeluar from "./pages/LogKeluar/LogKeluar";
 import SenaraiTugasan from "./pages/SenaraiTugasan/SenaraiTugasan";
 
@@ -61,6 +62,7 @@ function App() {
                   <Route path="UrusPengguna" element={<UrusPengguna />} />
                   <Route path="LogAktiviti" element={<LogAktiviti />} />
                   <Route path="TetapanSistem" element={<TetapanSistem />} />
+                  <Route path="risiko/:id" element={<ButiranRisiko />} />
                   <Route path="LogKeluar" element={<LogKeluar />} />
                 </Routes>
               </AppLayout>

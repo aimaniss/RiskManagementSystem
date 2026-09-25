@@ -377,6 +377,7 @@ RiskManagementSystem/
 | Kaedah | Endpoint | Penerangan | Akses |
 |--------|----------|-----------|-------|
 | `GET` | `/api/risiko/` | Senarai risiko (ditapis mengikut syarikat) | `risiko:lihat` |
+| `GET` | `/api/risiko/:risiko_id` | Satu risiko untuk halaman butiran `/risiko/:id` (isolasi syarikat) | `risiko:lihat` |
 | `POST` | `/api/risiko/` | Daftar risiko baru | `risiko:daftar` |
 | `PUT` | `/api/risiko/:risiko_id` | Kemaskini risiko | `risiko:daftar` |
 | `DELETE` | `/api/risiko/:risiko_id` | Padam risiko (soft-delete) | `risiko:padam` |

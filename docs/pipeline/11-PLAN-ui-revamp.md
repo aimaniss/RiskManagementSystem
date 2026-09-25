@@ -1,9 +1,7 @@
 # 11 — PLAN Revamp UI: Penilaian, Rawatan & Pemantauan
 
-> **Status: 📋 Dirancang (2026-09-25)** — belum dimulakan. Keputusan reka bentuk
-> (§4) perlu dipersetujui sebelum Fasa U1. Permintaan pengguna: UI perlu
-> mengikut aliran kerja sebenar; tumpuan pada **penilaian, rawatan dan
-> pemantauan**, terutamanya **modal butiran risiko yang terlalu sesak**.
+> **Status: Selesai (2026-09-25)** — U0–U6 dilaksanakan mengikut cadangan §4
+> (dipersetujui pengguna: "buat je semua"). Lihat §8 untuk ringkasan hasil.
 
 ---
 
@@ -68,7 +66,7 @@ Urus Pengguna.
 
 ## 4. Keputusan reka bentuk (perlu dipersetujui)
 
-| # | Soalan | Pilihan | Cadangan |
+| # | Soalan | Pilihan | Keputusan (dilaksanakan) |
 |---|--------|---------|----------|
 | D1 | Bentuk paparan butiran | (a) Modal bertab, (b) Drawer/Sheet sisi kanan bertab, (c) Halaman penuh `/risiko/:id` | **(c) Halaman penuh** — ruang cukup, boleh dipautkan (URL), tiada modal bersarang; atau (b) jika mahu kekal dalam senarai |
 | D2 | Susunan maklumat | Tab: Ringkasan · Penilaian · Rawatan · Pemantauan · Sejarah | Tab + **pengepala ringkasan tetap** (No. Rujukan, syarikat, tahap risiko semasa, status kelulusan, peringkat aliran) |
@@ -101,3 +99,27 @@ Urus Pengguna.
 - Aliran backend: `02-risiko.md`, `03-rawatan.md`, `04-pemantauan.md`
 - Pengasingan syarikat & ujian aliran tulis: `10-PLAN-lanjutan.md` §2.7,
   `e2e/tests/11-aliran-tulis.spec.mjs`, `12-isolasi-syarikat.spec.mjs`
+
+## 8. Hasil pelaksanaan (2026-09-25)
+
+| Fasa | Hasil |
+|------|-------|
+| U0 | D1 **halaman penuh** `/risiko/:id` (`?tab=` & `?sunting=1` boleh dipautkan); D2 tab + pengepala ringkasan; D3 stepper + "Tindakan seterusnya"; D4 garis masa + panel sisi; D5 sunting dalam tab |
+| U1 | `src/components/risiko/`: `BorangPengenalpastian`, `BorangPenilaian`, `BorangRawatan`, `BorangLogPemantauan` + `data.js` (logik), `umum.jsx`, `StepperAliran`. 10 fail lama dibuang (−4,755 baris, +≈1,600) |
+| U2–U4 | `pages/ButiranRisiko/` (tab Ringkasan · Penilaian · Rawatan · Pemantauan · Sejarah). Tiada modal bersarang |
+| U5 | Senarai Risiko, Penilaian & Rawatan, Pemantauan Risiko membuka halaman butiran (satu cara menyunting) |
+| U6 | Spec `15-ui-aliran-risiko` (5 ujian): aliran nilai → rawat → pantau melalui UI, pinda, kebenaran Staff, telefon 390px tanpa skrol mendatar. Susun atur aplikasi kini responsif (sidebar menu luncur < 1024px) |
+
+**Pepijat sedia ada yang dibetulkan semasa penyatuan:**
+
+- Sunting pengenalpastian & pinda penilaian dari modal lama sentiasa gagal:
+  borang menghantar `syarikat` (backend baca `syarikatId`, lajur NOT NULL) dan
+  punca/kesan sebagai objek.
+- Penguncian medan log ikut nama peranan tajuk ("Executive"/"Staff") tetapi
+  modal butiran menghantar huruf besar — penguncian tidak pernah berkuat kuasa
+  dari situ. Kini ikut kebenaran (`risiko:nilai`).
+- Executive dikunci daripada menukar skor log walaupun dasar Executive = Admin.
+
+**API baharu:** `GET /api/risiko/:risiko_id` (`risiko:lihat` + `hadSyarikat`,
+spec 12) — halaman butiran tidak lagi memuat seluruh senarai risiko; respons
+senarai & butiran kini termasuk `status_kelulusan`.

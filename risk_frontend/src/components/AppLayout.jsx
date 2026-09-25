@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { Menu } from "lucide-react";
 import Sidebar from "./sidebar.jsx";
 import Navbar from "./navbar.jsx";
 import { refreshAuthSession } from "../utils/auth";
 
-const SIDEBAR_WIDTH = 220;
 const NAVBAR_HEIGHT = 56;
 const AUTH_REFRESH_INTERVAL_MS = 60_000;
 
 export default function AppLayout({ children }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [menuBuka, setMenuBuka] = useState(false);
+  const location = useLocation();
+
+  // Tutup menu luncur (skrin kecil) selepas navigasi
+  useEffect(() => {
+    setMenuBuka(false);
+  }, [location.pathname]);
   const [, setAuthVersion] = useState(0);
 
   useEffect(() => {
@@ -52,12 +60,28 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div style={{ marginLeft: `${SIDEBAR_WIDTH}px` }}>
+      <Sidebar terbuka={menuBuka} />
+      <button
+        type="button"
+        onClick={() => setMenuBuka((b) => !b)}
+        className="fixed left-3 top-2.5 z-50 flex h-9 w-9 items-center justify-center rounded-md border bg-card text-foreground lg:hidden"
+        aria-label="Menu"
+        aria-expanded={menuBuka}
+      >
+        <Menu size={18} />
+      </button>
+      {menuBuka && (
+        <div
+          className="fixed inset-0 z-[55] bg-black/40 lg:hidden"
+          onClick={() => setMenuBuka(false)}
+          aria-hidden="true"
+        />
+      )}
+      <div className="lg:ml-[220px]">
         <Navbar />
         <main
           style={{ paddingTop: `${NAVBAR_HEIGHT + 20}px` }}
-          className="px-6 pb-10"
+          className="px-3 pb-10 sm:px-6"
         >
           <div className="mx-auto w-full max-w-[1440px]">
             {React.Children.map(children, (child) =>

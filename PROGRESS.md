@@ -16,11 +16,13 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
-| Ujian E2E Playwright | ✅ 61/61 lulus |
+| Ujian E2E Playwright | ✅ 83/83 lulus (DB kosong + seed; juga dalam CI) |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
-| Revamp UI (penilaian/rawatan/pemantauan) | 📋 Dirancang — lih. `docs/pipeline/11-PLAN-ui-revamp.md` (tunggu keputusan reka bentuk U0) |
-| Lint frontend | ✅ 0 ralat (dahulu 49); 9 amaran `exhaustive-deps` berbaki |
+| Revamp UI (penilaian/rawatan/pemantauan) | ✅ Selesai — halaman `/risiko/:id` (lih. `docs/pipeline/11-PLAN-ui-revamp.md` §8) |
+| Pengurusan pengguna, Tetapan Sistem, Log Aktiviti | ✅ Selesai (migrasi 025–027) |
+| CI (GitHub Actions) & Docker Compose | ✅ Selesai (`.github/workflows/ci.yml`, `docker-compose.yml`) |
+| Lint | ✅ Frontend 0 ralat (5 amaran `exhaustive-deps`); backend ESLint 0 ralat |
 | Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5), §2.2, §1.5 & §2.1 selesai, Fasa 5 controllers; §2.4 (P3) berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
 
 📄 Pelan revamp: `docs/pipeline/09-PLAN-revamp.md` (status pelaksanaan di atas).
@@ -134,7 +136,7 @@
 - [x] Spec E2E `14-tetapan-sistem` (6 ujian); spec 01/04/10/12 dikemas kini
 - [ ] Pilihan: jenis senarai rujukan lain (cth. kekerapan pemantauan) bila diperlukan
 
-### Kestabilan & Deploy (sedang berjalan)
+### Kestabilan & Deploy (selesai)
 - [x] Peranan dikenal pasti ikut `nama_peranan`, bukan `peranan_id` (FE salah label Staff/Ketua pada DB baharu)
 - [x] Sidebar ditapis ikut kebenaran (ganti 17 semakan nama peranan)
 - [x] CI GitHub Actions: backend (format, lint, audit), frontend (lint, build, audit), E2E penuh pada Postgres kosong (`e2e/seed-ci.mjs`); ESLint backend ditambah
@@ -147,15 +149,15 @@
 
 ---
 
-## To-Do Revamp UI (📋 dirancang — `docs/pipeline/11-PLAN-ui-revamp.md`)
+## Revamp UI (selesai — `docs/pipeline/11-PLAN-ui-revamp.md`)
 
-- [ ] U0 — Setuju keputusan reka bentuk D1–D5 (bentuk paparan butiran, tab, stepper aliran, garis masa pemantauan, sunting dalam tab)
-- [ ] U1 — Satukan borang penilaian / rawatan / log pemantauan (7 fail → 3 komponen)
-- [ ] U2 — Paparan butiran risiko bertab + pengepala ringkasan (ganti skrol panjang)
-- [ ] U3 — Stepper aliran + tindakan seterusnya
-- [ ] U4 — Garis masa pemantauan + sunting dalam tab (tiada modal bersarang)
-- [ ] U5 — Halaman Rawatan & Pemantauan guna paparan butiran yang sama
-- [ ] U6 — Ujian UI Playwright aliran nilai → rawat → pantau + semakan telefon
+- [x] U0 — Setuju keputusan reka bentuk D1–D5 (bentuk paparan butiran, tab, stepper aliran, garis masa pemantauan, sunting dalam tab)
+- [x] U1 — Satukan borang penilaian / rawatan / log pemantauan (7 fail → 3 komponen)
+- [x] U2 — Paparan butiran risiko bertab + pengepala ringkasan (ganti skrol panjang)
+- [x] U3 — Stepper aliran + tindakan seterusnya
+- [x] U4 — Garis masa pemantauan + sunting dalam tab (tiada modal bersarang)
+- [x] U5 — Halaman Rawatan & Pemantauan guna paparan butiran yang sama
+- [x] U6 — Ujian UI Playwright aliran nilai → rawat → pantau + semakan telefon
 
 ---
 
@@ -163,6 +165,8 @@
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
+| 2026-09-25 | UI U0–U6 | **Revamp UI butiran risiko**: halaman penuh `/risiko/:id` (pengepala ringkasan, stepper Daftar→Kelulusan→Penilaian→Rawatan→Pemantauan + tindakan seterusnya, tab Ringkasan/Penilaian/Rawatan/Pemantauan/Sejarah, sunting dalam tab, garis masa log + panel sisi); 4 borang bersatu `src/components/risiko/` ganti 10 fail modal (−4,755 baris); Senarai Risiko/Rawatan/Pemantauan buka halaman ini; `GET /api/risiko/:id` (+spec 12) & `status_kelulusan` dalam respons; susun atur responsif (menu luncur < 1024px). Pepijat dibetulkan: sunting pengenalpastian & pinda penilaian sentiasa gagal (`syarikat` vs `syarikatId`), penguncian medan log ikut kebenaran. Spec 15 (5 ujian UI) — E2E **83/83** pada DB kosong |
+| 2026-09-25 | Kestabilan | Peranan ikut nama (bukan `peranan_id`), sidebar ikut kebenaran; `helmet` + had kadar IP + buang `console.log`; CI GitHub Actions (lint/build/audit/Docker/E2E pada Postgres kosong, `e2e/seed-ci.mjs`); Docker Compose + `npm run cipta-pentadbir` — E2E **78/78** |
 | 2026-09-25 | Tetapan | **Tetapan Sistem + revamp Log Aktiviti**: migration 027 (`tetapan:urus` Admin sahaja → Admin 18 kebenaran; `is_aktif` syarikat/bahagian; `senarai_rujukan` + seed 4 kategori; betulkan ejaan "Pematuhan/Perundangan" yang dikira "Lain-lain" di dashboard). API: syarikat POST/PUT/PATCH status (409 jika ada pengguna aktif), bahagian PUT (tukar nama dikaskad ke `risiko.bahagian`)/PATCH status, `/api/rujukan` (tukar nama dikaskad ke `risiko.kategori`); GET senarai pulang aktif sahaja, `?semua=true` untuk tetapan. Kategori di 4 skrin FE + dashboard kini dari DB (`useSenaraiRujukan`). Log aktiviti: **endpoint padam dibuang** (jejak audit), paging `{data, jumlah}`, tapisan jenis sebenar (`/jenis`, ganti senarai mock), carian, julat tarikh zon MY, **eksport CSV** (dilindungi suntikan formula, dicatat dalam log); `LEFT JOIN syarikat` (pengguna tanpa syarikat dahulu hilang). FE: halaman `/TetapanSistem` (3 tab), `LogAktiviti.jsx` ditulis semula. Spec 14 (6) + 01/04/10/12 dikemas kini — E2E **74/74** |
 | 2026-09-25 | Skema | Migration 026: buang `NOT NULL` pada `logpemantauan.tarikh_pemantauan` — migrasi 010 tidak sepadan dengan DB sebenar; pada DB baharu, lulus risiko (log pemantauan awal) & tambah log gagal `500`. Tiada nilai lalai (elak ubah susunan "log terkini"). Suite E2E penuh pada DB baharu dari migrasi: **68/68 lulus** |
 | 2026-09-25 | Pengguna | **Kitaran hayat akaun**: migration 025; akaun baharu/reset guna kata laluan sementara (jana crypto, dipapar sekali) + **wajib tukar** pada log masuk (`verifyToken` hadkan kepada `/users/me`, `/auth/tukar-katalaluan`, `/auth/logout`; `403 PERLU_TUKAR_KATALALUAN`); `tukar-katalaluan` pulang token baharu; polisi kata laluan (8+, huruf+nombor); kunci 15 min selepas 5 gagal (`423`); aktif/nyahaktif (login `403` hanya selepas kata laluan sah; token `401`); pentadbir tak boleh reset/nyahaktif/tukar peranan sendiri; Staff/Ketua Subsidiari wajib syarikat. FE: halaman `/tukar-katalaluan`, `UrusPengguna` diolah semula (lajur "Kata Laluan" dibuang; status/log masuk terakhir/ringkasan/reset/nyahaktif), Login papar mesej pelayan + panduan lupa kata laluan. Betulkan import `./Navbar.css` & `./KemaskiniRawatan` (huruf besar/kecil — build gagal di Linux). Spec 13 **7/7**; spec 04 guna kata laluan patuh polisi. Suite tempatan 48 lulus / 2 gagal sedia ada (`logpemantauan.tarikh_pemantauan NOT NULL` — dibetulkan migration 026) |
@@ -205,7 +209,7 @@
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **74/74 lulus** pada 2026-09-25 (DB baharu dari migrasi 001–027).
+- Suite E2E Playwright: **83/83 lulus** pada 2026-09-25 (DB baharu dari migrasi 001–027 + `e2e/seed-ci.mjs`).
 - `npm audit`: **0 kerentanan** di backend & frontend (2026-09-25).
 - `npm run build` frontend lulus (termasuk Linux, selepas betulkan import
   huruf besar/kecil); `npm run lint` 0 error, 9 warning sedia ada.

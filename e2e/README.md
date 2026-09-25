@@ -20,6 +20,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `12-isolasi-syarikat.spec.mjs` | Staff/Ketua Subsidiari: 11 endpoint tulis & 7 bacaan ikut ID untuk risiko syarikat lain -> `403`, data kekal; laporan penuh syarikat lain `403`; log aktiviti hanya syarikat sendiri; `check-no-rujukan` tanpa rekod; Executive/Viewer masih boleh baca |
 | `13-pengurusan-pengguna.spec.mjs` | Kitaran hayat akaun: kata laluan sementara dijana + wajib tukar pada log masuk pertama (backend `403 PERLU_TUKAR_KATALALUAN`), polisi kata laluan, kunci selepas 5 gagal (`423`), reset pentadbir membuka kunci & mencabut sesi, nyahaktif/aktifkan, perlindungan akaun sendiri, `pengguna:urus` sahaja; UI log masuk → `/tukar-katalaluan` → papan pemuka |
 | `14-tetapan-sistem.spec.mjs` | Tetapan Sistem (`tetapan:urus` Admin sahaja): kategori risiko tambah/duplikasi/tukar nama dikaskad ke risiko/nyahaktif (dashboard masih kira); syarikat tambah/sahkan warna/nyahaktif disekat jika ada pengguna aktif; bahagian tukar nama dikaskad & tidak aktif disembunyi. Log aktiviti berhalaman, tapisan, jenis, eksport CSV; Staff hanya syarikat sendiri |
+| `15-ui-aliran-risiko.spec.mjs` | UI halaman butiran `/risiko/:id`: stepper & tindakan seterusnya; penilaian → rawatan → log pemantauan disunting dalam tab (tiada modal bersarang), pelan tindakan tersimpan; pinda pengenalpastian/penilaian kekalkan syarikat & punca; Staff tiada pinda & medan log terhad; telefon 390px tanpa skrol mendatar; Senarai Risiko membuka halaman butiran |
 
 ## Prasyarat
 
@@ -48,7 +49,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **78/78 ujian lulus**.
+- Suite semasa: **83/83 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

@@ -45,12 +45,26 @@ sequenceDiagram
 
 | Halaman/Komponen | API |
 |------------------|-----|
-| `SenaraiRisiko.jsx` | GET `/risiko` (hook `useRisks`), DELETE `/risiko/:id` |
-| `PengenalpastianModal.jsx` | GET `/syarikat`, PUT `/risiko/:risiko_id` |
-| `PenilaianRisikoModal.jsx` | PUT `/risiko/:risiko_id` (skor K×I → R/S/T/ST) |
-| `ViewRisikoModal.jsx` | GET `/risiko`, GET `/pemantauan-risiko/:id/sejarah`, DELETE `/pemantauan-risiko/log/:log_id` |
-| `kemaskinirawatan.jsx` | GET `/risiko/:risiko_id/rawatan`, PUT (url dinamik) |
-| `KemaskiniPemantauan.jsx` | GET `/pemantauan-risiko/:id/info`, `/tahap-rujukan`, PUT |
+| `SenaraiRisiko.jsx` | GET `/risiko` (hook `useRisks`), DELETE `/risiko/:id`; klik baris → `/risiko/:id` |
+| `ButiranRisiko/ButiranRisiko.jsx` (`/risiko/:id?tab=&sunting=1`) | GET `/risiko/:risiko_id`, GET `/pemantauan-risiko/:id/sejarah`, GET `/log_aktiviti?carian=<no_rujukan>` (tab Sejarah) |
+| `components/risiko/BorangPengenalpastian.jsx` | PUT `/risiko/:risiko_id` (payload penuh `payloadKemaskiniRisiko`) |
+| `components/risiko/BorangPenilaian.jsx` | Pertama: PUT `/rawatan/penilaian/:id`; pinda: PUT `/risiko/:id` |
+
+### Halaman butiran risiko (revamp UI, `11-PLAN-ui-revamp.md`)
+
+- Pengepala ringkasan (No. rujukan, tahap semasa, status kelulusan) +
+  **stepper** Daftar → Kelulusan → Penilaian → Rawatan → Pemantauan
+  (`kiraPeringkat` dalam `components/risiko/data.js`) + "Tindakan seterusnya".
+- Tab Ringkasan · Penilaian · Rawatan · Pemantauan · Sejarah; sunting dalam tab
+  (`?sunting=1`), log pemantauan sebagai garis masa + panel sisi.
+- Pinda terus (pengenalpastian, penilaian, rawatan sedia ada, semua log) =
+  `pindaan:lulus` (Admin/Executive). Penilaian pertama = `risiko:nilai` atau
+  `rawatan:urus`; rawatan pertama = `rawatan:urus`; log = `pemantauan:urus`
+  (bukan Admin/Executive: log terkini sahaja; tanpa `risiko:nilai`: status &
+  catatan sahaja). Padam log = Admin/Executive.
+- `PUT /risiko/:id` menulis semula semua medan — sentiasa guna
+  `payloadKemaskiniRisiko` (borang lama menghantar `syarikat` bukan
+  `syarikatId` dan gagal).
 
 ## Pengasingan Syarikat
 

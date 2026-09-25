@@ -52,7 +52,7 @@ const MENU = [
   { ke: "/TetapanSistem", label: "Tetapan Sistem", icon: Settings, kebenaran: ["tetapan:urus"] },
 ];
 
-function Sidebar() {
+function Sidebar({ terbuka = false }) {
   const location = useLocation();
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
@@ -70,7 +70,7 @@ function Sidebar() {
   const menu = MENU.filter((m) => !m.kebenaran || hasKebenaran(...m.kebenaran));
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${terbuka ? "terbuka" : ""}`}>
       {/* Header */}
       <div className="sidebar-header">
         <img src={isDark ? LogoDark : LogoLight} alt="Logo" className="sidebar-logo" />

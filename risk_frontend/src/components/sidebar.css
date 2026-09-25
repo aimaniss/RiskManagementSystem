@@ -127,3 +127,16 @@
   background: var(--color-sidebar);
   border-bottom-color: var(--color-border);
 }
+
+/* Skrin kecil: sidebar menjadi menu luncur (dibuka melalui butang menu) */
+@media (max-width: 1023px) {
+  .sidebar {
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.terbuka {
+    transform: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  }
+}

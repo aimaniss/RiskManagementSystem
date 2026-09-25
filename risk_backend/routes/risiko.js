@@ -4,6 +4,7 @@ import { hadSyarikat } from "../middleware/aksesSyarikat.js";
 import {
   tambahRisiko,
   senaraiRisiko,
+  dapatkanRisiko,
   senaraiTahunRisiko,
   dapatkanRawatanRisiko,
   kemaskiniRawatanRisiko,
@@ -57,5 +58,13 @@ router.get("/check-no-rujukan/:noRujukan", verifyToken, semakNoRujukan);
 router.get("/check-duplicate", verifyToken, semakPenduaRisiko);
 router.put("/:risiko_id/approve", verifyToken, authorizeKebenaran("risiko:lulus"), luluskanRisiko);
 router.put("/:risiko_id/reject", verifyToken, authorizeKebenaran("risiko:lulus"), tolakRisiko);
+// Didaftar terakhir supaya laluan statik (/tahun, /check-duplicate) tidak ditangkap
+router.get(
+  "/:risiko_id",
+  verifyToken,
+  authorizeKebenaran("risiko:lihat"),
+  risikoParam,
+  dapatkanRisiko
+);
 
 export default router;

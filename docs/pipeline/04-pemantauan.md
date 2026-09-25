@@ -11,7 +11,7 @@ pemantauan**, perbandingan tahap risiko, dan sejarah pemantauan.
 sequenceDiagram
   autonumber
   participant U as Pengguna
-  participant P as TambahLogModal.jsx
+  participant P as ButiranRisiko (tab Pemantauan) / BorangLogPemantauan
   participant B as routes/pemantauan.js → pemantauanController
   participant DB as DB (log_pemantauan, pelan_tindakan_pemantauan, kakitangan_pemantauan)
 
@@ -50,10 +50,10 @@ sequenceDiagram
 | Halaman/Komponen | API |
 |------------------|-----|
 | `PemantauanRisiko.jsx` | GET `/pemantauan-risiko`, GET `/syarikat`, GET `/rawatan/:risiko_id` |
-| `TambahLogModal.jsx` | GET `/:id/info`, `/:id/tahap-rujukan`, `/check-duplicate`, POST `/log` |
-| `EditPemantauan.jsx` | GET `/:id/sejarah`, DELETE `/log/:log_id` |
-| `SenaraiRisiko/KemaskiniPemantauan.jsx` | GET `/:id/info`, `/:id/tahap-rujukan`, PUT `/risiko/:risiko_id/pemantauan/log/:log_id` |
-| `SenaraiRisiko/ViewRisikoModal.jsx` | GET `/:id/sejarah`, DELETE `/log/:log_id` |
+| `components/risiko/BorangLogPemantauan.jsx` | GET `/:id/tahap-rujukan`, `/:id/info`, `/check-duplicate`; POST `/log` / PUT `/log/:log_id` (hantar `pelan_tindakan_list` & `kakitangan_list` — POST tidak membaca `*_log`) |
+| `ButiranRisiko/TabPemantauan.jsx` | GET `/:id/sejarah` (melalui halaman), DELETE `/log/:log_id` |
+
+Kad di `PemantauanRisiko.jsx` membuka `/risiko/:id?tab=pemantauan`.
 
 ## Konsep Utama
 
@@ -86,5 +86,5 @@ sequenceDiagram
   `pelantindakanpemantauan`, `kakitanganpemantauan` (bersambung) — setara dengan
   `log_pemantauan`, `pelan_tindakan_pemantauan`, `kakitangan_pemantauan` dalam
   dokumentasi README.
-- `PUT /risiko/:risiko_id/pemantauan/log/:log_id` (`risikoController.kemaskiniLogPemantauanRisiko`) digunakan
-  oleh KemaskiniPemantauan untuk update log dari dalam Senarai Risiko.
+- `PUT /risiko/:risiko_id/pemantauan/log/:log_id` (`risikoController.kemaskiniLogPemantauanRisiko`)
+  kekal untuk keserasian API tetapi UI kini guna `PUT /pemantauan-risiko/log/:log_id`.

@@ -11,8 +11,8 @@ tindakan dan kakitangan yang ditugaskan, serta penilaian semula keberkesanan.
 sequenceDiagram
   autonumber
   participant U as Pengguna
-  participant R as RawatanRisiko.jsx / EditRawatan.jsx
-  participant P as PenilaianModal.jsx
+  participant R as RawatanRisiko.jsx → ButiranRisiko (tab)
+  participant P as BorangPenilaian / BorangRawatan
   participant B as routes/rawatan.js → rawatanController
   participant DB as DB (rawatan_risiko, pelan_tindakan_rawatan, kakitangan_rawatan)
 
@@ -49,9 +49,10 @@ sequenceDiagram
 | Halaman/Komponen | API |
 |------------------|-----|
 | `RawatanRisiko.jsx` | GET `/syarikat`, GET `/rawatan/with-status` |
-| `EditRawatan.jsx` | POST/PUT `/rawatan` (edit pelan & kakitangan) |
-| `PenilaianModal.jsx` | PUT `/rawatan/penilaian/:risiko_id` |
-| `SenaraiRisiko/kemaskinirawatan.jsx` | GET `/risiko/:risiko_id/rawatan`, PUT `/risiko/:risiko_id` (URL dinamik) |
+| `components/risiko/BorangRawatan.jsx` | GET `/rawatan/:risiko_id`; tiada rekod → POST `/rawatan`, ada → PUT `/rawatan/:rawatan_id` |
+| `components/risiko/BorangPenilaian.jsx` | PUT `/rawatan/penilaian/:risiko_id` (penilaian pertama; set status pemantauan sesi "Sedang Dilaksanakan") |
+
+Butang tindakan di `RawatanRisiko.jsx` membuka `/risiko/:id?tab=penilaian|rawatan&sunting=1`.
 | `PemantauanRisiko.jsx` | GET `/rawatan/:risiko_id` (paparan rawatan dalam pemantauan) |
 
 ## Jenis Rawatan

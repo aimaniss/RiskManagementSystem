@@ -146,108 +146,113 @@ export const tambahRisiko = async (req, res) => {
 };
 
 // ------------------- GET: Semua Risiko -------------------
+// Pandangan risiko lengkap (rawatan agregat + log pemantauan terkini) dikongsi
+// oleh senarai dan paparan satu risiko supaya bentuk data sama.
+const QUERY_RISIKO = `
+  WITH PemantauanTerkini AS (
+    SELECT
+      pm.log_id,
+      pm.risiko_id,
+      pm.tarikh_pemantauan,
+      pm.tahun_pemantauan,
+      pm.separuh_tahun_pemantauan,
+      pm.skor_kebarangkalian_selepas,
+      pm.skor_impak_selepas,
+      pm.skor_risiko_pemantauan,
+      pm.status_pemantauan,
+      pm.catatan,
+      pm.keberkesanan,
+      pm.no_bil_kelulusan,
+      pm.justifikasi_pindaan_pemantauan,
+      pm.kekerapan_pemantauan,
+      ROW_NUMBER() OVER (
+        PARTITION BY pm.risiko_id
+        ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
+      ) AS rn
+    FROM LogPemantauan pm
+    WHERE pm.is_deleted = false
+  ),
+
+  ButiranTerkini AS (
+    SELECT
+      pt.log_id,
+      STRING_AGG(DISTINCT pt.butiran_aktiviti, '; ') AS pemantauan_pelan_tindakan,
+      STRING_AGG(DISTINCT kp.butiran_kakitangan, '; ') AS pemantauan_kakitangan
+    FROM PelanTindakanPemantauan pt
+    LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id AND kp.is_deleted = false
+    WHERE pt.is_deleted = false
+    GROUP BY pt.log_id
+  ),
+
+  RawatanAgregat AS (
+    SELECT
+      rr.risiko_id,
+      rr.rawatan_id,
+      STRING_AGG(DISTINCT ptr.pelan_tindakan, '; ') AS pelan_tindakan,
+      rr.jenis_kawalan,
+      rr.tempoh_siap AS tempoh_jangkaan_siap_tindakan,
+      STRING_AGG(DISTINCT kr.nama_kakitangan, '; ') AS kakitangan_bertanggungjawab
+    FROM rawatan_risiko rr
+    LEFT JOIN pelan_tindakan_rawatan ptr ON ptr.rawatan_id = rr.rawatan_id AND ptr.is_deleted = false
+    LEFT JOIN kakitangan_rawatan kr ON kr.rawatan_id = rr.rawatan_id AND kr.is_deleted = false
+    WHERE rr.is_deleted = false
+    GROUP BY rr.risiko_id, rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap
+  )
+
+  SELECT
+    r.risiko_id AS id,
+    r.no_rujukan,
+    r.tahun,
+    r.separuh_tahun,
+    s.nama_syarikat AS syarikat,
+    s.singkatan AS singkatan_syarikat,
+    r.syarikat_id AS syarikat_id,
+    r.created_at,
+    COALESCE(u.nama_penuh, '—') AS didaftarkan_oleh,
+    r.bahagian,
+    r.kategori,
+    r.risiko,
+    r.skor_kebarangkalian,
+    r.skor_impak,
+    r.skor_risiko,
+    r.status_risiko,
+  r.status_kelulusan,
+    r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
+    raw.rawatan_id,
+    raw.pelan_tindakan,
+    raw.jenis_kawalan,
+    raw.tempoh_jangkaan_siap_tindakan,
+    raw.kakitangan_bertanggungjawab,
+    CASE
+      WHEN pt.tahun_pemantauan IS NOT NULL THEN pt.tahun_pemantauan || ' - ' || pt.separuh_tahun_pemantauan
+      ELSE NULL
+    END AS pemantauan_tahun_separuh,
+    bt.pemantauan_pelan_tindakan,
+    pt.kekerapan_pemantauan AS pemantauan_kekerapan,
+    bt.pemantauan_kakitangan,
+    pt.skor_kebarangkalian_selepas AS semasa_skor_kebarangkalian,
+    pt.skor_impak_selepas AS semasa_skor_impak,
+    pt.skor_risiko_pemantauan,
+    pt.keberkesanan,
+    pt.status_pemantauan,
+    pt.justifikasi_pindaan_pemantauan AS pindaan_keberkesanan,
+    pt.catatan,
+    ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS punca,
+    ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS kesan
+
+  FROM risiko r
+  LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
+  LEFT JOIN pengguna u ON u.pengguna_id = r.created_by
+  LEFT JOIN RawatanAgregat raw ON raw.risiko_id = r.risiko_id
+  LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
+  LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
+  WHERE r.is_deleted = false
+`;
+
 export const senaraiRisiko = async (req, res) => {
   try {
     const user = req.user;
-    let query = `
-      WITH PemantauanTerkini AS (
-        SELECT
-          pm.log_id,
-          pm.risiko_id,
-          pm.tarikh_pemantauan,
-          pm.tahun_pemantauan,
-          pm.separuh_tahun_pemantauan,
-          pm.skor_kebarangkalian_selepas,
-          pm.skor_impak_selepas,
-          pm.skor_risiko_pemantauan,
-          pm.status_pemantauan,
-          pm.catatan,
-          pm.keberkesanan,
-          pm.no_bil_kelulusan,
-          pm.justifikasi_pindaan_pemantauan,
-          pm.kekerapan_pemantauan,
-          ROW_NUMBER() OVER (
-            PARTITION BY pm.risiko_id
-            ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
-          ) AS rn
-        FROM LogPemantauan pm
-        WHERE pm.is_deleted = false
-      ),
-
-      ButiranTerkini AS (
-        SELECT
-          pt.log_id,
-          STRING_AGG(DISTINCT pt.butiran_aktiviti, '; ') AS pemantauan_pelan_tindakan,
-          STRING_AGG(DISTINCT kp.butiran_kakitangan, '; ') AS pemantauan_kakitangan
-        FROM PelanTindakanPemantauan pt
-        LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id AND kp.is_deleted = false
-        WHERE pt.is_deleted = false
-        GROUP BY pt.log_id
-      ),
-
-      RawatanAgregat AS (
-        SELECT
-          rr.risiko_id,
-          rr.rawatan_id,
-          STRING_AGG(DISTINCT ptr.pelan_tindakan, '; ') AS pelan_tindakan,
-          rr.jenis_kawalan,
-          rr.tempoh_siap AS tempoh_jangkaan_siap_tindakan,
-          STRING_AGG(DISTINCT kr.nama_kakitangan, '; ') AS kakitangan_bertanggungjawab
-        FROM rawatan_risiko rr
-        LEFT JOIN pelan_tindakan_rawatan ptr ON ptr.rawatan_id = rr.rawatan_id AND ptr.is_deleted = false
-        LEFT JOIN kakitangan_rawatan kr ON kr.rawatan_id = rr.rawatan_id AND kr.is_deleted = false
-        WHERE rr.is_deleted = false
-        GROUP BY rr.risiko_id, rr.rawatan_id, rr.jenis_kawalan, rr.tempoh_siap
-      )
-
-      SELECT
-        r.risiko_id AS id,
-        r.no_rujukan,
-        r.tahun,
-        r.separuh_tahun,
-        s.nama_syarikat AS syarikat,
-        s.singkatan AS singkatan_syarikat,
-        r.syarikat_id AS syarikat_id,
-        r.created_at,
-        COALESCE(u.nama_penuh, '—') AS didaftarkan_oleh,
-        r.bahagian,
-        r.kategori,
-        r.risiko,
-        r.skor_kebarangkalian,
-        r.skor_impak,
-        r.skor_risiko,
-        r.status_risiko,
-        r.justifikasi_pindaan_penilaian AS pindaan_penilaian,
-        raw.rawatan_id,
-        raw.pelan_tindakan,
-        raw.jenis_kawalan,
-        raw.tempoh_jangkaan_siap_tindakan,
-        raw.kakitangan_bertanggungjawab,
-        CASE
-          WHEN pt.tahun_pemantauan IS NOT NULL THEN pt.tahun_pemantauan || ' - ' || pt.separuh_tahun_pemantauan
-          ELSE NULL
-        END AS pemantauan_tahun_separuh,
-        bt.pemantauan_pelan_tindakan,
-        pt.kekerapan_pemantauan AS pemantauan_kekerapan,
-        bt.pemantauan_kakitangan,
-        pt.skor_kebarangkalian_selepas AS semasa_skor_kebarangkalian,
-        pt.skor_impak_selepas AS semasa_skor_impak,
-        pt.skor_risiko_pemantauan,
-        pt.keberkesanan,
-        pt.status_pemantauan,
-        pt.justifikasi_pindaan_pemantauan AS pindaan_keberkesanan,
-        pt.catatan,
-        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS punca,
-        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS kesan
-
-      FROM risiko r
-      LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
-      LEFT JOIN pengguna u ON u.pengguna_id = r.created_by
-      LEFT JOIN RawatanAgregat raw ON raw.risiko_id = r.risiko_id
-      LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
-      LEFT JOIN ButiranTerkini bt ON bt.log_id = pt.log_id
-      WHERE r.is_deleted = false
-    `;
+    let query = QUERY_RISIKO;
 
     const params = [];
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
@@ -269,6 +274,24 @@ export const senaraiRisiko = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /risiko:", err);
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
+  }
+};
+
+// ------------------- GET: Satu risiko (halaman butiran) -------------------
+// Isolasi syarikat dikuatkuasakan oleh hadSyarikat pada route. Tidak menapis
+// status kelulusan supaya risiko yang menunggu kelulusan juga boleh dipaparkan.
+export const dapatkanRisiko = async (req, res) => {
+  try {
+    const { risiko_id } = req.params;
+    if (!/^\d+$/.test(String(risiko_id))) {
+      return res.status(404).json({ error: "Risiko tidak ditemui." });
+    }
+    const { rows } = await pool.query(`${QUERY_RISIKO} AND r.risiko_id = $1`, [risiko_id]);
+    if (!rows[0]) return res.status(404).json({ error: "Risiko tidak ditemui." });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Ralat GET /risiko/:risiko_id:", err);
     res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 };

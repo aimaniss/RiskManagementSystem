@@ -73,9 +73,9 @@ sequenceDiagram
 |-------|----------------------|-------------------|------------|
 | Autentikasi | Login, LogKeluar, Unauthorized | `auth.js` → `controllers/authController.js` | `/api/auth` |
 | Paparan Utama | PaparanUtama/* | `dashboard.js` | `/api/dashboard` |
-| Risiko | SenaraiRisiko/*, DaftarRisiko/* | `risiko.js` (+ `tahun.js`) | `/api/risiko`, `/api/tahun` |
-| Rawatan | RawatanRisiko/*, SenaraiRisiko/kemaskinirawatan | `rawatan.js` | `/api/rawatan` |
-| Pemantauan | PemantauanRisiko/*, SenaraiRisiko/KemaskiniPemantauan | `pemantauan.js` | `/api/pemantauan-risiko` |
+| Risiko | SenaraiRisiko/*, DaftarRisiko/*, **ButiranRisiko/*** (`/risiko/:id`) | `risiko.js` (+ `tahun.js`) | `/api/risiko`, `/api/tahun` |
+| Rawatan | RawatanRisiko/* → ButiranRisiko (tab Penilaian/Rawatan) | `rawatan.js` | `/api/rawatan` |
+| Pemantauan | PemantauanRisiko/* → ButiranRisiko (tab Pemantauan) | `pemantauan.js` | `/api/pemantauan-risiko` |
 | Pindaan | Pindaan/*, SenaraiTugasan/* | `pindaan.js` | `/api/pindaan` |
 | Laporan | Laporan/* | `laporan.js` | `/api/laporan` |
 | Pengguna | UrusPengguna, LogAktiviti | `users.js`, `roles.js`, `syarikat.js`, `bahagian.js`, `log_aktiviti.js` | `/api/users`, `/api/roles`, `/api/syarikat`, `/api/bahagian`, `/api/log_aktiviti` |
