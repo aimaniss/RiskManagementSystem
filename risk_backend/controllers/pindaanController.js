@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { kiraTahapRisiko } from "../utils/matriksRisiko.js";
+import { kiraTahapRisiko, statusRawatan } from "../utils/matriksRisiko.js";
 import {
   hantarNotifikasi,
   hantarNotifikasiBulk,
@@ -138,6 +138,21 @@ export const mohonPindaan = async (req, res) => {
     // Pemohon yang boleh meluluskan pindaan (Admin, Executive) diluluskan terus
     const lulusTerus = (await dapatkanKebenaranPeranan(peranan_id)).has("pindaan:lulus");
 
+    // Satu permohonan terbuka setiap risiko supaya pelulus tidak menerima
+    // cadangan yang bercanggah untuk skor yang sama
+    if (!lulusTerus) {
+      const { rowCount } = await client.query(
+        `SELECT 1 FROM permohonan_pindaan
+          WHERE risiko_id = $1 AND status_permohonan = 'Menunggu Kelulusan' AND is_deleted = false`,
+        [risk_id]
+      );
+      if (rowCount > 0) {
+        return res
+          .status(409)
+          .json({ error: "Permohonan pindaan untuk risiko ini masih menunggu kelulusan." });
+      }
+    }
+
     await client.query("BEGIN");
     let status_permohonan = "Menunggu Kelulusan";
     let pengguna_id_pelulus = null;
@@ -240,6 +255,7 @@ export const mohonPindaan = async (req, res) => {
         if ("skor_risiko_penilaian" in data_selepas) {
           risikoUpdates.skor_risiko =
             data_selepas.skor_risiko_penilaian !== "-" ? data_selepas.skor_risiko_penilaian : null;
+          risikoUpdates.status_risiko = statusRawatan(risikoUpdates.skor_risiko);
         }
       }
       if (penilaian) {
@@ -563,6 +579,7 @@ export const luluskanPindaan = async (req, res) => {
       if ("skor_risiko_penilaian" in data_selepas) {
         const calculatedRiskScore = data_selepas.skor_risiko_penilaian;
         risikoUpdates.skor_risiko = calculatedRiskScore !== "-" ? calculatedRiskScore : null;
+        risikoUpdates.status_risiko = statusRawatan(risikoUpdates.skor_risiko);
       }
       if (justifikasi_penilaian)
         risikoUpdates.justifikasi_pindaan_penilaian = justifikasi_penilaian;
@@ -650,7 +667,7 @@ export const luluskanPindaan = async (req, res) => {
       );
       const noRujukan = risikoRow[0]?.no_rujukan || `ID ${risiko_id}`;
       const tajuk = "Pindaan Diluluskan";
-      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah diluluskan oleh Admin.`;
+      const mesej = `Pindaan anda untuk risiko ${noRujukan} telah diluluskan oleh ${req.user.nama_penuh}.`;
       await hantarNotifikasi(
         pengguna_id_pemohon,
         tajuk,

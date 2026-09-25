@@ -18,3 +18,10 @@ export const kiraTahapRisiko = (kebarangkalian, impak) => {
   if (k >= 1 && k <= 5 && i >= 1 && i <= 5) return MATRIKS_RISIKO[k][i];
   return null;
 };
+
+/**
+ * "Perlu rawatan" (risiko.status_risiko) daripada tahap risiko: Rendah tidak
+ * memerlukan rawatan. Sepadan dengan calculateRisk() di klien.
+ * @returns {"Ya"|"Tidak"|null}
+ */
+export const statusRawatan = (tahap) => (tahap ? (tahap === "R" ? "Tidak" : "Ya") : null);

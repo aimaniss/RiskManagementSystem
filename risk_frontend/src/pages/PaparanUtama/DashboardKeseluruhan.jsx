@@ -210,7 +210,7 @@ export default function DashboardKeseluruhan({ data }) {
                   <div className="text-2xl font-bold leading-tight tabular-nums">
                     {item.value}
                   </div>
-                  <div className="mt-1 truncate text-xs text-muted-foreground">
+                  <div className="mt-1 text-xs leading-snug text-muted-foreground">
                     {item.label}
                   </div>
                 </div>

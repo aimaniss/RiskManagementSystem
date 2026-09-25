@@ -323,3 +323,23 @@
 .stmd-btn-danger:hover {
   background: #b91c1c;
 }
+
+.stmd-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.stmd-link:hover {
+  text-decoration: underline;
+}
+label.stmd-box-header {
+  display: block;
+}

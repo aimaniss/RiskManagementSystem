@@ -65,6 +65,11 @@ test.afterAll(async () => {
       ctx.maxNotifikasi,
       id,
     ]);
+    await DB.query(
+      "DELETE FROM notifikasi WHERE notifikasi_id > $1 AND entiti_id IN (SELECT pindaan_id FROM permohonan_pindaan WHERE risiko_id = $2)",
+      [ctx.maxNotifikasi, id]
+    );
+    await DB.query("DELETE FROM permohonan_pindaan WHERE risiko_id = $1", [id]);
     await DB.query("DELETE FROM logpemantauan WHERE risiko_id = $1", [id]);
     await DB.query("DELETE FROM rawatan_risiko WHERE risiko_id = $1", [id]);
     await DB.query("DELETE FROM punca_risiko WHERE risiko_id = $1", [id]);
@@ -166,10 +171,23 @@ test("Executive: sunting pengenalpastian & pinda penilaian menyimpan syarikat as
   await expect(page.getByText("Maklumat pengenalpastian dikemaskini.")).toBeVisible();
 
   await page.getByRole("tab", { name: /Penilaian/ }).click();
-  await page.getByRole("button", { name: "Pinda" }).click();
+  await page.getByRole("button", { name: "Pinda", exact: true }).click();
   await page.getByLabel("Skor Impak *").selectOption("3");
-  await page.getByRole("button", { name: "Simpan Penilaian" }).click();
+  await page.getByRole("button", { name: "Simpan Pindaan" }).click();
+  await expect(page.getByText("Sila nyatakan justifikasi pindaan.")).toBeVisible();
+  await page.getByLabel("Justifikasi Pindaan *").fill(`${TANDA} impak disemak semula`);
+  await page.getByRole("button", { name: "Simpan Pindaan" }).click();
   await expect(page.getByText("Penilaian risiko dipinda.")).toBeVisible();
+
+  // Pinda terus oleh pelulus tetap direkodkan sebagai permohonan diluluskan
+  const p = await satu(
+    "SELECT status_permohonan, justifikasi_penilaian FROM permohonan_pindaan WHERE risiko_id = $1 ORDER BY pindaan_id DESC LIMIT 1",
+    [ctx.risikoId]
+  );
+  expect(p).toEqual({
+    status_permohonan: "Diluluskan",
+    justifikasi_penilaian: `${TANDA} impak disemak semula`,
+  });
 
   const r = await satu(
     "SELECT risiko, syarikat_id, skor_kebarangkalian, skor_impak FROM risiko WHERE risiko_id = $1",
@@ -193,7 +211,8 @@ test("Staff: tiada pinda terus; sunting log terkini dengan medan terhad", async 
   await sealSession(page, sesi.token);
   await page.goto(`/risiko/${ctx.risikoId}?tab=penilaian`);
   await expect(page.getByText("Skor Kebarangkalian")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pinda" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pinda", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Mohon Pindaan" })).toBeVisible();
 
   await page.getByRole("tab", { name: /Ringkasan/ }).click();
   await expect(page.getByRole("button", { name: "Sunting" })).toHaveCount(0);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Trash2,
@@ -26,6 +27,7 @@ import { usePanduan } from "../../hooks/usePanduan";
 import { useSenaraiRujukan, pilihanDenganNilaiSemasa } from "@/hooks/useSenaraiRujukan";
 
 function DaftarRisiko() {
+  const navigate = useNavigate();
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -147,47 +149,47 @@ function DaftarRisiko() {
       ...formData,
       tahun: tahunInt,
       separuhTahun: formData.separuhTahun !== "" ? parseInt(formData.separuhTahun) : null,
-      syarikat: finalSyarikat,
+      syarikatId: finalSyarikat,
       punca: puncaList.filter(p => p.trim() !== ""),
       kesan: kesanList.filter(k => k.trim() !== ""),
     };
 
     setIsSubmitting(true);
     try {
-      await api.post("/risiko", finalData);
-      setToast({ variant: "success", title: "Berjaya", message: "Risiko berjaya didaftarkan!" });
-      setFormData({
-        tahun: String(currentYear),
-        separuhTahun: currentHalf,
-        syarikat: (["STAFF", "KETUA SUBSIDIARI"].includes(userRole)) ? syarikatId : "",
-        kategori: "", bahagian: "", risiko: ""
+      const { data } = await api.post("/risiko", finalData);
+      // Buka rekod baharu supaya pendaftar nampak status kelulusan & langkah seterusnya
+      navigate(`/risiko/${data.risiko_id}`, {
+        state: { mesej: `Risiko ${data.no_rujukan || ""} berjaya didaftarkan dan menunggu kelulusan.` },
       });
-      setPuncaList([""]);
-      setKesanList([""]);
-      setDuplicates([]);
     } catch (err) {
       console.error("Error:", err.response?.data || err.message);
-      setToast({ variant: "error", title: "Ralat", message: "Gagal mendaftar risiko." });
+      setToast({
+        variant: "error",
+        title: "Ralat",
+        message: err.response?.data?.error || "Gagal mendaftar risiko.",
+      });
     } finally { setIsSubmitting(false); }
   };
 
-  const renderDynamicList = (list, updateFn, removeFn, addFn, placeholder) => (
+  const renderDynamicList = (list, updateFn, removeFn, addFn, label, contoh) => (
     <div className="space-y-2">
       {list.map((val, idx) => (
         <div key={idx} className="flex items-center gap-2">
           <Input
+            id={idx === 0 ? `medan-${label.toLowerCase()}` : undefined}
+            aria-label={`${label} ${idx + 1}`}
             value={val}
             onChange={e => updateFn(idx, e.target.value)}
-            placeholder={`${placeholder} ${idx + 1}`}
+            placeholder={idx === 0 ? contoh : ""}
             className="h-9"
           />
           {idx !== 0 && (
-            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeFn(idx)}>
+            <Button type="button" variant="ghost" size="icon" aria-label={`Buang ${label.toLowerCase()} ${idx + 1}`} className="h-9 w-9 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeFn(idx)}>
               <Trash2 size={15} />
             </Button>
           )}
           {idx === list.length - 1 && (
-            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-primary hover:text-primary hover:bg-primary/10" onClick={addFn}>
+            <Button type="button" variant="ghost" size="icon" aria-label={`Tambah ${label.toLowerCase()}`} className="h-9 w-9 shrink-0 text-primary hover:text-primary hover:bg-primary/10" onClick={addFn}>
               <Plus size={15} />
             </Button>
           )}
@@ -226,19 +228,20 @@ function DaftarRisiko() {
               <CardContent className="pt-5 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Tahun</Label>
-                    <Input value={formData.tahun} readOnly className="bg-muted cursor-not-allowed h-9" />
+                    <Label htmlFor="medan-tahun">Tahun</Label>
+                    <Input id="medan-tahun" value={formData.tahun} readOnly className="bg-muted cursor-not-allowed h-9" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Separuh Tahun</Label>
-                    <Select name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} disabled className="h-9">
+                    <Label htmlFor="medan-separuh">Separuh Tahun</Label>
+                    <Select id="medan-separuh" name="separuhTahun" value={formData.separuhTahun} onChange={handleChange} disabled className="h-9">
                       <option value="1">Pertama (Jan-Jun)</option>
                       <option value="2">Kedua (Jul-Dis)</option>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Syarikat</Label>
+                    <Label htmlFor="medan-syarikat">Syarikat *</Label>
                     <Select
+                      id="medan-syarikat"
                       name="syarikat"
                       value={formData.syarikat}
                       onChange={handleChange}
@@ -255,8 +258,8 @@ function DaftarRisiko() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Kategori Risiko</Label>
-                    <Select name="kategori" value={formData.kategori} onChange={handleChange} className="h-9">
+                    <Label htmlFor="medan-kategori">Kategori Risiko *</Label>
+                    <Select id="medan-kategori" name="kategori" value={formData.kategori} onChange={handleChange} className="h-9">
                       <option value="">-- Pilih --</option>
                       {pilihanDenganNilaiSemasa(senaraiKategori, formData.kategori).map((k) => (
                         <option key={k} value={k}>{k}</option>
@@ -265,7 +268,7 @@ function DaftarRisiko() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label>Bahagian / Unit</Label>
+                      <Label htmlFor="medan-bahagian">Bahagian / Unit *</Label>
                       <button
                         type="button"
                         onClick={() => setShowTambahBahagian(v => !v)}
@@ -274,7 +277,7 @@ function DaftarRisiko() {
                         <Plus size={12} /> Tambah Bahagian
                       </button>
                     </div>
-                    <Select name="bahagian" value={formData.bahagian} onChange={handleChange} className="h-9">
+                    <Select id="medan-bahagian" name="bahagian" value={formData.bahagian} onChange={handleChange} className="h-9">
                       <option value="">-- Pilih --</option>
                       {bahagianList.length > 0
                         ? bahagianList.map(b => <option key={b.bahagian_id} value={b.nama_bahagian}>{b.nama_bahagian}</option>)
@@ -305,8 +308,9 @@ function DaftarRisiko() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>Risiko</Label>
+                  <Label htmlFor="medan-risiko">Risiko *</Label>
                   <Textarea
+                    id="medan-risiko"
                     name="risiko"
                     value={formData.risiko}
                     onChange={handleChange}
@@ -360,12 +364,12 @@ function DaftarRisiko() {
               <CardContent className="pt-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
-                    <Label>Punca</Label>
-                    {renderDynamicList(puncaList, updatePunca, removePunca, addPunca, "Punca")}
+                    <Label htmlFor="medan-punca">Punca *</Label>
+                    {renderDynamicList(puncaList, updatePunca, removePunca, addPunca, "Punca", "Contoh: Perkakasan pelayan usang")}
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Kesan</Label>
-                    {renderDynamicList(kesanList, updateKesan, removeKesan, addKesan, "Kesan")}
+                    <Label htmlFor="medan-kesan">Kesan *</Label>
+                    {renderDynamicList(kesanList, updateKesan, removeKesan, addKesan, "Kesan", "Contoh: Gangguan perkhidmatan kepada pelanggan")}
                   </div>
                 </div>
               </CardContent>
@@ -373,7 +377,7 @@ function DaftarRisiko() {
 
             <div className="flex items-center justify-end gap-2 rounded-xl border bg-card px-5 py-3.5 shadow-sm">
               <p className="mr-auto text-xs text-muted-foreground hidden sm:block">
-                Pastikan semua medan wajib telah dilengkapkan sebelum menghantar.
+                Medan bertanda * wajib diisi.
               </p>
               <Button type="submit" disabled={isSubmitting} className="px-6 gap-1.5">
                 <ClipboardPenLine size={15} />

@@ -1,12 +1,31 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserCircle, X, Eye, EyeOff, Bell, CheckCheck, Trash2, Sun, Moon } from "lucide-react";
 import api from "../api/api.js";
 import { katalaluanMematuhiPolisi } from "../constants/katalaluan";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
+import { hasKebenaran } from "@/utils/auth";
 import "./navbar.css";
 
+// Mesej lama mungkin mengandungi **tebal** gaya markdown
+function MesejNotifikasi({ teks }) {
+  return String(teks || "")
+    .split(/\*\*(.+?)\*\*/g)
+    .map((bahagian, i) => (i % 2 ? <strong key={i}>{bahagian}</strong> : bahagian));
+}
+
+// Laluan rekod bagi notifikasi; pelulus dibawa ke Senarai Tugasan untuk item baharu
+function laluanNotifikasi(notif) {
+  const baharu = ["risiko_baru", "pindaan_baru"].includes(notif.jenis_notifikasi);
+  if (baharu && hasKebenaran("risiko:lulus", "pindaan:lulus")) return "/SenaraiTugasan";
+  if (!notif.risiko_id) return null;
+  const tab = String(notif.jenis_notifikasi || "").startsWith("pindaan") ? "?tab=penilaian" : "";
+  return `/risiko/${notif.risiko_id}${tab}`;
+}
+
 function Navbar() {
+  const navigate = useNavigate();
   const [user, setUser] = useState({
     role: "",
     syarikat: "",
@@ -147,6 +166,11 @@ function Navbar() {
       } catch (err) {
         console.error("Gagal tanda baca:", err);
       }
+    }
+    const laluan = laluanNotifikasi(notif);
+    if (laluan) {
+      setNotifOpen(false);
+      navigate(laluan);
     }
   };
 
@@ -298,12 +322,18 @@ function Navbar() {
           </button>
 
           <div className="navbar-notification-wrapper" ref={notifDropdownRef}>
-          <div className="navbar-notification" onClick={handleNotifToggle}>
+          <button
+            type="button"
+            className="navbar-notification"
+            onClick={handleNotifToggle}
+            aria-label={unreadCount > 0 ? `Notifikasi (${unreadCount} belum dibaca)` : "Notifikasi"}
+            aria-expanded={notifOpen}
+          >
             <Bell size={22} className="text-foreground" />
             {unreadCount > 0 && (
               <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
             )}
-          </div>
+          </button>
 
           {notifOpen && (
             <div className="notification-dropdown">
@@ -343,7 +373,7 @@ function Navbar() {
                           {getNotifIcon(notif.jenis_notifikasi)}
                         </span>
                         <div style={{ flex: 1 }}>
-                          <p className="notification-message">{notif.mesej}</p>
+                          <p className="notification-message"><MesejNotifikasi teks={notif.mesej} /></p>
                           <span className="notification-time">{formatTime(notif.created_at)}</span>
                         </div>
                         <button
@@ -368,8 +398,10 @@ function Navbar() {
 
         <div className="navbar-user" ref={dropdownRef}>
           <div className="navbar-user-info">
-            <div className="user-syarikat-bold">{user.syarikat}</div>
-            <div className="user-role-small">{getDisplayRoleName(user.role)}</div>
+            <div className="user-syarikat-bold">{user.fullName || user.syarikat}</div>
+            <div className="user-role-small">
+              {[getDisplayRoleName(user.role), user.syarikat].filter(Boolean).join(" · ")}
+            </div>
           </div>
 
           <div className="profile-wrapper" onClick={() => setOpen((prev) => !prev)}>

@@ -105,23 +105,27 @@ export default function Login() {
             </div>
           )}
 
-          <label className="login-label">ID Staf</label>
+          <label className="login-label" htmlFor="login-staff-id">ID Staf</label>
           <div className="login-input-group">
             <FaUser className="login-input-icon" />
             <input
+              id="login-staff-id"
               type="text"
-              placeholder="contoh: 12345"
+              autoComplete="username"
+              placeholder="contoh: UKMH001"
               value={staffId}
               onChange={(e) => setStaffId(e.target.value)}
               onKeyDown={handleKeyDown}
             />
           </div>
 
-          <label className="login-label">Kata laluan</label>
+          <label className="login-label" htmlFor="login-katalaluan">Kata laluan</label>
           <div className="login-input-group">
             <FaLock className="login-input-icon" />
             <input
+              id="login-katalaluan"
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               placeholder="Masukkan kata laluan"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -132,6 +136,7 @@ export default function Login() {
               onClick={() => setShowPassword(!showPassword)}
               role="button"
               tabIndex={0}
+              aria-label={showPassword ? "Sembunyi kata laluan" : "Papar kata laluan"}
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>

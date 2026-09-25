@@ -240,7 +240,7 @@ test.describe("Pengurusan pengguna", () => {
     const { katalaluan_sementara } = await res.json();
 
     await page.goto("/login");
-    await page.getByPlaceholder("contoh: 12345").fill(UNIK_UI);
+    await page.getByLabel("ID Staf").fill(UNIK_UI);
     await page.getByPlaceholder("Masukkan kata laluan").fill(katalaluan_sementara);
     await page.getByRole("button", { name: "Log masuk" }).click();
 
@@ -270,7 +270,7 @@ test.describe("Pengurusan pengguna", () => {
     });
 
     await page.goto("/login");
-    await page.getByPlaceholder("contoh: 12345").fill(UNIK);
+    await page.getByLabel("ID Staf").fill(UNIK);
     await page.getByPlaceholder("Masukkan kata laluan").fill(sementara);
     await page.getByRole("button", { name: "Log masuk" }).click();
     await expect(page.getByText(/dinyahaktifkan/)).toBeVisible();

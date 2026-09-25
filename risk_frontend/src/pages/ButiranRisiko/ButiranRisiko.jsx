@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   BookOpen,
@@ -15,6 +15,7 @@ import api from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EmptyState from "@/components/ui/empty-state";
+import AlertBanner from "@/components/ui/alert-banner";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
 import Toast from "@/components/ui/toast";
@@ -78,6 +79,7 @@ function ButangSunting({ onClick, children = "Sunting" }) {
 export default function ButiranRisiko() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const lokasi = useLocation();
   const [params, setParams] = useSearchParams();
   const tab = TAB.some((t) => t.id === params.get("tab")) ? params.get("tab") : "ringkasan";
   const sunting = params.get("sunting") === "1";
@@ -86,7 +88,10 @@ export default function ButiranRisiko() {
   const [logs, setLogs] = useState([]);
   const [sejarah, setSejarah] = useState(null);
   const [ralatMuat, setRalatMuat] = useState(null);
-  const [toast, setToast] = useState(null);
+  // Mesej daripada halaman sebelum (cth. selepas daftar risiko)
+  const [toast, setToast] = useState(() =>
+    lokasi.state?.mesej ? { variant: "success", title: lokasi.state.mesej } : null
+  );
   const { openPanduan, PanduanRenderer } = usePanduan();
 
   const pergi = (tabBaru, suntingBaru = false) => {
@@ -154,6 +159,9 @@ export default function ButiranRisiko() {
   const dinilai = adaPenilaian(risiko);
   const dirawat = adaRawatan(risiko);
   const penuh = bolehPindaTerus();
+  const pindaan = risiko.pindaan_terkini;
+  const pindaanMenunggu = pindaan?.status_permohonan === "Menunggu Kelulusan";
+  const bolehPinda = dinilai && diluluskan && hasKebenaran("pindaan:urus") && !pindaanMenunggu;
   const terkini = logs.find((l) => l.skor_kebarangkalian_selepas && l.skor_impak_selepas);
   const tahapSemasa = terkini
     ? [terkini.skor_kebarangkalian_selepas, terkini.skor_impak_selepas]
@@ -285,9 +293,32 @@ export default function ButiranRisiko() {
       {tab === "penilaian" && (
         <Kad
           tajuk="Penilaian Risiko"
-          tindakan={dinilai && penuh && !sunting && <ButangSunting onClick={() => pergi("penilaian", true)}>Pinda</ButangSunting>}
+          tindakan={
+            bolehPinda &&
+            !sunting && (
+              <ButangSunting onClick={() => pergi("penilaian", true)}>
+                {penuh ? "Pinda" : "Mohon Pindaan"}
+              </ButangSunting>
+            )
+          }
         >
-          {sunting && diluluskan && (dinilai ? penuh : hasKebenaran("risiko:nilai", "rawatan:urus")) ? (
+          {pindaanMenunggu && (
+            <AlertBanner
+              variant="warning"
+              className="mb-4"
+              title={`Permohonan pindaan ${pindaan.no_rujukan_pindaan || ""} sedang menunggu kelulusan`}
+              description="Skor di bawah kekal sehingga permohonan diluluskan."
+            />
+          )}
+          {pindaan?.status_permohonan === "Ditolak" && !sunting && (
+            <AlertBanner
+              variant="error"
+              className="mb-4"
+              title={`Permohonan pindaan ${pindaan.no_rujukan_pindaan || ""} ditolak`}
+              description={pindaan.sebab_ditolak ? `Sebab: ${pindaan.sebab_ditolak}` : undefined}
+            />
+          )}
+          {sunting && diluluskan && (dinilai ? bolehPinda : hasKebenaran("risiko:nilai", "rawatan:urus")) ? (
             <BorangPenilaian risiko={risiko} onSelesai={selepasSimpan} onBatal={() => pergi("penilaian")} />
           ) : dinilai ? (
             <div className="grid gap-5 lg:grid-cols-[1fr_auto]">

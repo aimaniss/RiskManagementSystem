@@ -79,7 +79,7 @@ test.describe("Kebenaran — UI (menu per peranan)", () => {
     await sealSession(page, staff.token);
     await expect(page.locator(".sidebar").getByText("Daftar Risiko", { exact: true })).toBeVisible();
     await expect(page.getByText("Senarai Tugasan", { exact: true })).toHaveCount(0);
-    await expect(page.getByText("STAFF", { exact: true })).toBeVisible();
+    await expect(page.locator(".user-role-small")).toHaveText(/^STAFF( · .+)?$/);
 
     const viewer = await apiLogin(page.request, CREDENTIALS.viewer);
     await sealSession(page, viewer.token);

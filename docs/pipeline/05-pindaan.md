@@ -46,12 +46,20 @@ sequenceDiagram
 
 | Kaedah | Laluan | Middleware | Guna |
 |--------|--------|------------|------|
-| GET | `/api/pindaan/risks-for-amendment` | `verifyToken` | Senarai risiko layak dipinda |
-| POST | `/api/pindaan/:risk_id` | `verifyToken, pindaan:urus` | Mohon pindaan (pemegang `pindaan:lulus` lulus terus) |
-| GET | `/api/pindaan/` | `verifyToken, authorizeRoles("Admin","Executive")` | Senarai permohonan |
-| GET | `/api/pindaan/stats` | `verifyToken, authorizeRoles("Admin")` | Statistik |
-| PUT | `/api/pindaan/:pindaan_id/approve` | `verifyToken, authorizeRoles("Admin")` | Lulus (apply ke risiko) |
-| PUT | `/api/pindaan/:pindaan_id/reject` | `verifyToken, authorizeRoles("Admin")` | Tolak |
+| GET | `/api/pindaan/risks-for-amendment` | `verifyToken, pindaan:urus` | Senarai risiko layak dipinda |
+| POST | `/api/pindaan/:risk_id` | `verifyToken, pindaan:urus, hadSyarikat` | Mohon pindaan (pemegang `pindaan:lulus` lulus terus; `409` jika permohonan lain masih menunggu) |
+| GET | `/api/pindaan/` | `verifyToken, pindaan:lihat` | Senarai permohonan |
+| GET | `/api/pindaan/stats` | `verifyToken, pindaan:lulus` | Statistik |
+| PUT | `/api/pindaan/:pindaan_id/approve` | `verifyToken, pindaan:lulus` | Lulus (apply ke risiko) |
+| PUT | `/api/pindaan/:pindaan_id/reject` | `verifyToken, pindaan:lulus` | Tolak (`{ komen_pelulus }` → `sebab_ditolak`) |
+
+**Titik masuk UI pemohon**: tab Penilaian di `/risiko/:id`
+(`components/risiko/BorangPenilaian.jsx`, mod pinda) — butang "Pinda" untuk
+pemegang `pindaan:lulus` (lulus terus) dan "Mohon Pindaan" untuk Staff/Ketua
+Subsidiari. Justifikasi wajib. `GET /api/risiko/:id` memulangkan
+`pindaan_terkini` (no. rujukan, status, sebab ditolak) supaya pemohon nampak
+banner "menunggu kelulusan" / "ditolak" tanpa akses `/pindaan`. Halaman
+`/Pindaan` (pindaan:lihat) kekal untuk pelulus, termasuk pindaan keberkesanan.
 
 **Fail frontend** (`Pindaan/*`):
 
@@ -93,6 +101,13 @@ timestamps + soft-delete), `risiko` (dikemas kini bila approve), `notifikasi`,
   jadi bandingan tidak bergantung pada perubahan semasa.
 - Approve/reject perlu `pindaan:lulus` (Admin & Executive); reject turut
   menerima body `{ komen_pelulus }`. Permohonan oleh Admin/Executive diluluskan terus.
+- Pindaan penilaian yang diluluskan turut mengemas kini `risiko.status_risiko`
+  ("Perlu rawatan": R → Tidak, lain → Ya) melalui `statusRawatan()` dalam
+  `utils/matriksRisiko.js`.
+- Satu permohonan terbuka setiap risiko: `POST` kedua semasa `Menunggu Kelulusan`
+  → `409`.
+- Notifikasi pindaan menyimpan `pindaan_id` dalam `entiti_id`; `GET /api/notifikasi`
+  menambah `risiko_id` supaya klik notifikasi membuka `/risiko/:id?tab=penilaian`.
 - UI `Pindaan.jsx`: Admin & Executive (`PERANAN_PELULUS`) melihat statistik,
   tapisan syarikat dan lajur Pemohon yang sama.
 - Notifikasi "Permohonan Pindaan Baru" dihantar kepada **semua pemegang

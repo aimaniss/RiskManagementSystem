@@ -22,6 +22,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `14-tetapan-sistem.spec.mjs` | Tetapan Sistem (`tetapan:urus` Admin sahaja): kategori risiko tambah/duplikasi/tukar nama dikaskad ke risiko/nyahaktif (dashboard masih kira); syarikat tambah/sahkan warna/nyahaktif disekat jika ada pengguna aktif; bahagian tukar nama dikaskad & tidak aktif disembunyi. Log aktiviti berhalaman, tapisan, jenis, eksport CSV; Staff hanya syarikat sendiri |
 | `15-ui-aliran-risiko.spec.mjs` | UI halaman butiran `/risiko/:id`: stepper & tindakan seterusnya; penilaian → rawatan → log pemantauan disunting dalam tab (tiada modal bersarang), pelan tindakan tersimpan; pinda pengenalpastian/penilaian kekalkan syarikat & punca; Staff tiada pinda & medan log terhad; telefon 390px tanpa skrol mendatar; Senarai Risiko membuka halaman butiran |
 | `16-laporan-analitik.spec.mjs` | Dashboard analitik Laporan: tahap risiko pada akhir separuh tahun (log terkini / penilaian awal), tapisan kategori/syarikat/julat, paparan jadual, skrin penuh, tab Jana Laporan PDF dengan lencana tahap |
+| `17-ui-aliran-penuh.spec.mjs` | Aliran pengguna penuh melalui UI: Staff log masuk & daftar risiko dari borang (terus ke halaman risiko, syarikat sendiri); Executive lulus/tolak dari Senarai Tugasan (sebab tolak wajib); penilaian; Staff mohon pindaan dari tab Penilaian (banner menunggu, permohonan kedua `409`); Executive lulus → Staff klik notifikasi ke tab Penilaian; Admin tolak → Staff nampak sebab; Executive mohon dari halaman Pindaan & pinda terus di butiran (direkodkan, `status_risiko` dikemas kini) |
 
 ## Prasyarat
 
@@ -50,7 +51,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **83/83 ujian lulus**.
+- Suite semasa: **94/94 ujian lulus**.
 - Spec `07` menambah kebenaran sementara kepada Viewer dan memadamnya semula
   dalam `afterAll` (termasuk flush cache).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,

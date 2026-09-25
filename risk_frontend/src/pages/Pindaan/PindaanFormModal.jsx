@@ -231,14 +231,12 @@ function PindaanFormModal({ isOpen, risk, userRole, onClose, onPindaanSubmitted 
         return originalData.skor_kebarangkalian != null || originalData.skor_impak != null;
     }, [originalData]);
 
-    // --- DIUBAH: Semak guna `_selepas` ---
-    // Fungsi untuk check jika ada data pemantauan (skor semasa ATAU tahun)
+    // Blok keberkesanan hanya bermakna jika log terkini sudah ada skor; log awal
+    // yang dicipta semasa kelulusan risiko tidak mempunyai skor untuk dipinda
     const hasMonitoringData = useMemo(() => {
-        return originalData.tahun_pemantauan != null ||
-               originalData.skor_kebarangkalian_selepas != null ||
+        return originalData.skor_kebarangkalian_selepas != null ||
                originalData.skor_impak_selepas != null;
     }, [originalData]);
-    // --- TAMAT PERUBAHAN ---
 
 
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });

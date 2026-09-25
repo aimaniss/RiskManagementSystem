@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { X, CheckCircle, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { formatSeparuhTahun } from "../../utils/formatters";
 import api from "../../api/api";
 import Toast from "@/components/ui/toast";
@@ -18,17 +19,27 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
   const [adminComment, setAdminComment] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setAdminComment("");
     setIsProcessing(false);
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const tutup = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", tutup);
+    return () => window.removeEventListener("keydown", tutup);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !item) return null;
 
   const isRisiko = item._type === "risiko";
   const isPindaan = item._type === "pindaan";
   const raw = item._raw;
+  const risikoId = isRisiko ? raw.risiko_id || raw.id : raw.risiko_id;
+  const ralatApi = (err, lalai) => err.response?.data?.error || lalai;
 
   const formatTime = (dateStr) => {
     if (!dateStr) return "\u2014";
@@ -49,8 +60,8 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
       }
       setToast({ variant: "success", title: "Berjaya", message: isRisiko ? "Risiko telah diluluskan." : "Pindaan telah diluluskan." });
       setTimeout(() => onActionComplete(), 800);
-    } catch {
-      setToast({ variant: "error", title: "Ralat", message: "Gagal meluluskan." });
+    } catch (err) {
+      setToast({ variant: "error", title: "Ralat", message: ralatApi(err, "Gagal meluluskan.") });
     } finally {
       setIsProcessing(false);
     }
@@ -70,8 +81,8 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
       }
       setToast({ variant: "success", title: "Berjaya", message: isRisiko ? "Risiko telah ditolak." : "Pindaan telah ditolak." });
       setTimeout(() => onActionComplete(), 800);
-    } catch {
-      setToast({ variant: "error", title: "Ralat", message: "Gagal menolak." });
+    } catch (err) {
+      setToast({ variant: "error", title: "Ralat", message: ralatApi(err, "Gagal menolak.") });
     } finally {
       setIsProcessing(false);
     }
@@ -80,12 +91,18 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
   return (
     <>
     <div className="stmd-overlay" onClick={onClose}>
-      <div className="stmd-container" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="stmd-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="stmd-tajuk"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="stmd-header">
-          <span className="stmd-header-title">
+          <span className="stmd-header-title" id="stmd-tajuk">
             {isRisiko ? "Kelulusan Risiko Baru" : "Kelulusan Pindaan"}
           </span>
-          <button className="stmd-close-btn" onClick={onClose}>
+          <button className="stmd-close-btn" onClick={onClose} aria-label="Tutup">
             <X size={18} />
           </button>
         </div>
@@ -98,11 +115,22 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
               <div className="stmd-flex-item">
                 <span className="stmd-label">No. Rujukan</span>
                 <span className="stmd-data" style={{ fontWeight: 700 }}>{item._rujukan}</span>
+                {risikoId && (
+                  <button
+                    type="button"
+                    className="stmd-link"
+                    onClick={() => navigate(`/risiko/${risikoId}`)}
+                  >
+                    Lihat butiran risiko <ExternalLink size={12} />
+                  </button>
+                )}
               </div>
               <div className="stmd-flex-item">
                 <span className="stmd-label">Syarikat</span>
                 <span className="stmd-data">
-                  {isRisiko ? (raw.singkatan_syarikat || raw.syarikat) : (raw.singkatan_syarikat || raw.nama_syarikat)}
+                  {isRisiko
+                    ? raw.syarikat || raw.singkatan_syarikat
+                    : raw.nama_syarikat || raw.singkatan_syarikat}
                 </span>
               </div>
             </div>
@@ -219,15 +247,18 @@ function SenaraiTugasanDetailModal({ isOpen, item, onClose, onActionComplete }) 
             </div>
           )}
 
-          {/* Ulasan / Sebab Penolakan */}
+          {/* Hanya digunakan semasa menolak; lulus tidak menyimpan ulasan */}
           <div className="stmd-box">
-            <div className="stmd-box-header">Ulasan Pelulus</div>
+            <label className="stmd-box-header" htmlFor="stmd-sebab-tolak">
+              Sebab Penolakan
+            </label>
             <div className="stmd-form-group">
               <textarea
+                id="stmd-sebab-tolak"
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 className="stmd-textarea"
-                placeholder="Berikan ulasan atau sebab penolakan..."
+                placeholder="Wajib diisi jika menolak. Tidak diperlukan untuk meluluskan."
                 rows={3}
               />
             </div>

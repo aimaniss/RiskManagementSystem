@@ -28,6 +28,10 @@
 }
 
 .navbar-notification {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
   cursor: pointer;
   transition: transform 0.2s ease;
   position: relative;
@@ -148,6 +152,10 @@
   line-height: 1.25;
 }
 .user-syarikat-bold {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13.5px;
   font-weight: 700;
   color: var(--color-foreground);
@@ -503,5 +511,8 @@
     left: 0;
     padding-left: 60px;
     padding-right: 12px;
+  }
+  .user-syarikat-bold {
+    max-width: 120px;
   }
 }

@@ -10,10 +10,17 @@ export const senaraiNotifikasi = async (req, res) => {
     const { limit = 20, offset = 0 } = req.query;
 
     const { rows } = await pool.query(
-      `SELECT notifikasi_id, tajuk, mesej, jenis_notifikasi, entiti_id, telah_dibaca, created_at
-       FROM notifikasi
-       WHERE pengguna_id = $1 AND is_deleted = false
-       ORDER BY created_at DESC
+      // risiko_id membolehkan klien membuka rekod berkaitan; notifikasi pindaan
+      // merujuk pindaan_id dalam entiti_id
+      `SELECT n.notifikasi_id, n.tajuk, n.mesej, n.jenis_notifikasi, n.entiti_id, n.telah_dibaca,
+              n.created_at,
+              CASE WHEN n.jenis_notifikasi LIKE 'pindaan%' THEN pp.risiko_id ELSE n.entiti_id END
+                AS risiko_id
+       FROM notifikasi n
+       LEFT JOIN permohonan_pindaan pp
+         ON n.jenis_notifikasi LIKE 'pindaan%' AND pp.pindaan_id = n.entiti_id
+       WHERE n.pengguna_id = $1 AND n.is_deleted = false
+       ORDER BY n.created_at DESC
        LIMIT $2 OFFSET $3`,
       [pengguna_id, parseInt(limit), parseInt(offset)]
     );

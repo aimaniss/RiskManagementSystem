@@ -135,6 +135,7 @@ export const tambahRisiko = async (req, res) => {
     res.status(201).json({
       message: "Risiko dan log pemantauan berjaya didaftarkan",
       risiko_id: risikoId,
+      no_rujukan: noRujukan,
     });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -293,7 +294,15 @@ export const dapatkanRisiko = async (req, res) => {
     }
     const { rows } = await pool.query(`${QUERY_RISIKO} AND r.risiko_id = $1`, [risiko_id]);
     if (!rows[0]) return res.status(404).json({ error: "Risiko tidak ditemui." });
-    res.json(rows[0]);
+    // Permohonan pindaan terkini supaya pemohon nampak status tanpa akses /pindaan
+    const { rows: pindaan } = await pool.query(
+      `SELECT no_rujukan_pindaan, status_permohonan, sebab_ditolak, created_at, tarikh_diproses
+         FROM permohonan_pindaan
+        WHERE risiko_id = $1 AND is_deleted = false
+        ORDER BY pindaan_id DESC LIMIT 1`,
+      [risiko_id]
+    );
+    res.json({ ...rows[0], pindaan_terkini: pindaan[0] || null });
   } catch (err) {
     console.error("Ralat GET /risiko/:risiko_id:", err);
     res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });

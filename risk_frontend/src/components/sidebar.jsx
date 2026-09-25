@@ -20,9 +20,9 @@ import LogoDark from "../assets/images/Dark Background/UKMH_dark.png";
 import { getAuthUser, hasKebenaran } from "../utils/auth";
 
 // Menu dipapar ikut kebenaran (lulus jika ada salah satu), bukan nama peranan,
-// supaya ia mengikut matriks `peranan_kebenaran`. Laporan & Log Aktiviti
-// sengaja dihadkan kepada pentadbir dalam menu walaupun API membenarkan
-// `laporan:jana` / `log:baca` untuk semua peranan.
+// supaya ia mengikut matriks `peranan_kebenaran`. Laporan (pentadbir & pelulus,
+// selaras dasar Executive = Admin) dan Log Aktiviti sengaja dihadkan dalam menu
+// walaupun API membenarkan `laporan:jana` / `log:baca` untuk semua peranan.
 const MENU = [
   { ke: "/", label: "Paparan Utama", icon: LayoutDashboard },
   { ke: "/SenaraiRisiko", label: "Senarai Risiko", icon: ListChecks, kebenaran: ["risiko:lihat"] },
@@ -46,7 +46,7 @@ const MENU = [
     kebenaran: ["risiko:lihat"],
   },
   { ke: "/Pindaan", label: "Pindaan", icon: FileEdit, kebenaran: ["pindaan:lihat"] },
-  { ke: "/Laporan", label: "Laporan", icon: BarChart3, kebenaran: ["pengguna:urus"] },
+  { ke: "/Laporan", label: "Laporan", icon: BarChart3, kebenaran: ["pengguna:urus", "pindaan:lulus"] },
   { ke: "/UrusPengguna", label: "Urus Pengguna", icon: Users, kebenaran: ["pengguna:urus"] },
   { ke: "/LogAktiviti", label: "Log Aktiviti", icon: ClipboardList, kebenaran: ["pengguna:urus"] },
   { ke: "/TetapanSistem", label: "Tetapan Sistem", icon: Settings, kebenaran: ["tetapan:urus"] },
