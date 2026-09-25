@@ -75,9 +75,13 @@ sequenceDiagram
 - **jsPDF** (`jspdf`) + **jspdf-autotable** + **html2canvas** dihasilkan
   sepenuhnya di browser (tiada endpoint PDF berasingan).
 - Semua data diperoleh dulu dari API kemudian di-render ke PDF.
-- Gaya rasmi: fon Times, rangka hitam-putih, pengepala & kaki muka surat
-  "SULIT". **Satu-satunya warna ialah sel tahap risiko** (warna sistem, teks
-  hitam, sentiasa berlabel "Tinggi (T)") dengan jadual petunjuk di hujung.
+- Gaya rasmi ikut format surat rasmi kerajaan: fon Helvetica (setara metrik
+  Arial; Arial tidak boleh dibundel tanpa lesen) dengan satu skala saiz
+  (`SAIZ`), rangka hitam-putih, pengepala & kaki muka surat "SULIT". Logo UKM
+  Holdings dengan "Unit Pematuhan dan Pengurusan Risiko" dua baris di bawahnya
+  (saiz fon dikira supaya selebar logo). **Satu-satunya warna ialah sel tahap
+  risiko** (warna sistem, sentiasa berlabel "Tinggi (T)"); tiada jadual petunjuk.
+  Sesi ditulis "Separuh Tahun Pertama/Kedua".
 - Setiap log pemantauan = satu jadual 7 lajur (`rowPageBreak: 'avoid'`);
   pindaan penilaian/keberkesanan menjadi baris dalam jadual. Lebar lajur mesti
   dalam mm (`lebar(peratus)`), rentetan peratus diabaikan jspdf-autotable.

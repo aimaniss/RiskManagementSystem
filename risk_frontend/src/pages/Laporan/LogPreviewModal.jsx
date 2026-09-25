@@ -22,7 +22,13 @@ const SHORT_TO_LABEL = { ST: "Sangat Tinggi", T: "Tinggi", S: "Sederhana", R: "R
 // Dokumen rasmi: rangka hitam-putih; satu-satunya warna ialah sel tahap risiko
 // (warna sama seperti sistem) yang sentiasa berlabel supaya kekal jelas bila
 // dicetak/difotostat hitam-putih.
-const FON = 'times';
+// Fon surat rasmi kerajaan ialah Arial; Helvetica ialah fon piawai PDF yang
+// setara metrik dengan Arial (Arial sendiri tidak boleh dibundel tanpa lesen).
+const FON = 'helvetica';
+// Satu skala saiz fon untuk seluruh dokumen
+const SAIZ = { tajuk: 14, teks: 10, jadual: 9, tajukJadual: 9.5, kecil: 8 };
+// Nama unit di bawah logo, dua baris selebar logo
+const UNIT = ['Unit Pematuhan dan', 'Pengurusan Risiko'];
 const HITAM = [0, 0, 0];
 const KELABU_CAIR = [242, 242, 242];
 const KLASIFIKASI = 'SULIT';
@@ -89,7 +95,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         // --- Gaya Global (rasmi, hitam-putih) ---
         const globalStyles = {
           font: FON,
-          fontSize: 9,
+          fontSize: SAIZ.jadual,
           cellPadding: 1.8,
           valign: 'middle',
           lineColor: HITAM,
@@ -102,7 +108,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           fillColor: KELABU_CAIR,
           textColor: HITAM,
           fontStyle: 'bold',
-          fontSize: 10,
+          fontSize: SAIZ.tajukJadual,
         };
         const subHeaderStyles = {
           fillColor: KELABU_CAIR,
@@ -110,7 +116,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           textColor: HITAM,
           halign: 'center',
           valign: 'middle',
-          fontSize: 8,
+          fontSize: SAIZ.kecil,
         };
         const labelStyles = {
           fillColor: KELABU_CAIR,
@@ -174,25 +180,36 @@ export default function LogPreviewModal({ risk, range, onClose }) {
 
           pdf.setTextColor(...HITAM);
           pdf.setFont(FON, 'bold');
-          pdf.setFontSize(9);
+          pdf.setFontSize(SAIZ.kecil);
           pdf.text(KLASIFIKASI, pageWidth - margin, currentY + 3, { align: 'right' });
 
-          const tajukY = currentY + logoHeight + 7;
-          pdf.setFont(FON, 'bold');
-          pdf.setFontSize(14);
-          pdf.text('LAPORAN PENGURUSAN RISIKO', pageWidth / 2, tajukY, { align: 'center' });
-          pdf.setFont(FON, 'normal');
+          // Saiz fon dikira supaya baris terpanjang tepat selebar logo
           pdf.setFontSize(10);
-          pdf.text('Pematuhan & Pengurusan Risiko', pageWidth / 2, tajukY + 5, { align: 'center' });
+          const lebarAsas = Math.max(...UNIT.map((baris) => pdf.getTextWidth(baris)));
+          const saizUnit = (10 * logoWidth) / lebarAsas;
+          pdf.setFontSize(saizUnit);
+          const tinggiBaris = saizUnit * 0.3528 * 1.15; // pt -> mm, dengan jarak baris
+          const tengahLogo = margin + logoWidth / 2;
+          let unitY = currentY + logoHeight + tinggiBaris + 1;
+          UNIT.forEach((baris) => {
+            pdf.text(baris, tengahLogo, unitY, { align: 'center' });
+            unitY += tinggiBaris;
+          });
 
-          const garisY = tajukY + 8.5;
+          const tajukY = unitY + 6;
+          pdf.setFont(FON, 'bold');
+          pdf.setFontSize(SAIZ.tajuk);
+          pdf.text('LAPORAN PENGURUSAN RISIKO', pageWidth / 2, tajukY, { align: 'center' });
+
+          const garisY = tajukY + 3.5;
           pdf.setDrawColor(...HITAM);
           pdf.setLineWidth(0.6);
           pdf.line(margin, garisY, pageWidth - margin, garisY);
           pdf.setLineWidth(0.2);
           pdf.line(margin, garisY + 0.9, pageWidth - margin, garisY + 0.9);
 
-          pdf.setFontSize(9);
+          pdf.setFont(FON, 'normal');
+          pdf.setFontSize(SAIZ.jadual);
           pdf.text(`No. Rujukan: ${risk.no_rujukan || '-'}`, margin, garisY + 6);
           pdf.text(`Tarikh Dijana: ${tarikhJana}`, pageWidth - margin, garisY + 6, { align: 'right' });
 
@@ -208,7 +225,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               { content: 'TAHUN', styles: labelStyles },
               risk.tahun_daftar ?? '-',
               { content: 'SEPARUH TAHUN', styles: labelStyles },
-              { content: `Separuh ${formatSeparuhTahun(risk.separuh_tahun_daftar)}` }
+              { content: `Separuh Tahun ${formatSeparuhTahun(risk.separuh_tahun_daftar)}` }
             ],
             [
               { content: 'BAHAGIAN / UNIT', styles: labelStyles },
@@ -441,26 +458,6 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           });
         }
 
-        // --- Petunjuk warna tahap risiko ---
-        ensureSpace(14);
-        autoTable(pdf, {
-          startY: currentY + 1,
-          body: [[
-            { content: 'PETUNJUK TAHAP RISIKO', styles: { ...labelStyles, fontSize: 8, valign: 'middle' } },
-            ...['R', 'S', 'T', 'ST'].map((kod) => ({
-              content: teksTahapRisiko(kod),
-              styles: { ...gayaTahapRisiko(kod), fontSize: 8 },
-            })),
-          ]],
-          theme: 'grid',
-          styles: globalStyles,
-          margin: { left: margin, right: margin },
-          columnStyles: {
-            0: { cellWidth: lebar(24) }, 1: { cellWidth: lebar(19) }, 2: { cellWidth: lebar(19) },
-            3: { cellWidth: lebar(19) }, 4: { cellWidth: lebar(19) }
-          }
-        });
-
         // --- 5. KAKI MUKA SURAT (semua halaman) ---
         const totalPages = pdf.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
@@ -471,7 +468,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           pdf.line(margin, kakiY - 4, pageWidth - margin, kakiY - 4);
           pdf.setTextColor(...HITAM);
           pdf.setFont(FON, 'bold');
-          pdf.setFontSize(8);
+          pdf.setFontSize(SAIZ.kecil);
           pdf.text(KLASIFIKASI, margin, kakiY);
           pdf.setFont(FON, 'normal');
           pdf.text(
