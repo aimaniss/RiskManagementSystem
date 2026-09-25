@@ -8,25 +8,27 @@ import AlertBanner from "@/components/ui/alert-banner";
 import { Button } from "@/components/ui/button";
 
 import Ukhmlogo from '../../assets/images/Light Background/UKMH_light.png';
-import { getRiskLevel, getRiskColor } from "../../constants/riskMatrix";
+import { getRiskLevel } from "../../constants/riskMatrix";
 
-// Kod pendek daripada label penuh (untuk warna PDF)
+// Kod pendek daripada label penuh
 const LABEL_TO_SHORT = {
   "Sangat Tinggi": "ST",
   "Tinggi": "T",
   "Sederhana": "S",
   "Rendah": "R",
 };
+const SHORT_TO_LABEL = { ST: "Sangat Tinggi", T: "Tinggi", S: "Sederhana", R: "Rendah" };
 
-// Gaya sel PDF untuk tahap risiko (guna palet sistem)
-const getRiskPdfStyles = (shortCode) => ({
-  halign: 'center',
-  fillColor: getRiskColor(
-    { ST: "Sangat Tinggi", T: "Tinggi", S: "Sederhana", R: "Rendah" }[shortCode] || ""
-  ) || "#94a3b8",
-  textColor: '#FFFFFF',
-  fontStyle: 'bold',
-});
+// Dokumen rasmi: hitam-putih sahaja supaya kekal jelas bila dicetak/difotostat.
+// Tahap risiko ditulis sebagai teks tebal (bukan blok warna).
+const FON = 'times';
+const HITAM = [0, 0, 0];
+const KELABU_CAIR = [242, 242, 242];
+const KLASIFIKASI = 'SULIT';
+
+const teksTahapRisiko = (shortCode) =>
+  SHORT_TO_LABEL[shortCode] ? `${SHORT_TO_LABEL[shortCode]} (${shortCode})` : shortCode || '-';
+const gayaTahapRisiko = { halign: 'center', fontStyle: 'bold' };
 
 // =================================================================
 // KOMPONEN: LogPreviewModal (Pratonton Log)
@@ -73,42 +75,55 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         const margin = 14;
         const bottomMargin = 18;
         let currentY = margin;
+        // jspdf-autotable hanya menerima lebar lajur dalam mm (rentetan '20%'
+        // diabaikan), jadi peratus ditukar kepada mm lebar kandungan.
+        const lebar = (peratus) => ((pageWidth - margin * 2) * peratus) / 100;
 
-        // --- Gaya Global ---
+        // --- Gaya Global (rasmi, hitam-putih) ---
         const globalStyles = {
-          font: 'helvetica',
-          fontSize: 8,
+          font: FON,
+          fontSize: 9,
           cellPadding: 1.8,
-          lineColor: [203, 213, 225], // slate-300 — garisan lembut
-          lineWidth: 0.15,
-          textColor: [30, 41, 59], // slate-800
+          lineColor: HITAM,
+          lineWidth: 0.2,
+          textColor: HITAM,
+          fillColor: false,
         };
+        // Tajuk seksyen: teks tebal huruf besar, latar kelabu cair
         const headerStyles = {
-          fillColor: [30, 41, 59], // slate-800 — dark navy formal
-          textColor: [255, 255, 255],
+          fillColor: KELABU_CAIR,
+          textColor: HITAM,
           fontStyle: 'bold',
+          fontSize: 10,
         };
         const subHeaderStyles = {
-          fillColor: [241, 245, 249], // slate-100
+          fillColor: KELABU_CAIR,
           fontStyle: 'bold',
-          textColor: [30, 41, 59], // slate-800
+          textColor: HITAM,
           halign: 'center',
+          valign: 'middle',
+          fontSize: 8,
         };
         const labelStyles = {
-          fillColor: [248, 250, 252], // slate-50
+          fillColor: KELABU_CAIR,
           fontStyle: 'bold',
-          textColor: [51, 65, 85], // slate-700
+          textColor: HITAM,
         };
         const subSectionStyles = {
-          fillColor: [241, 245, 249], // slate-100
+          fillColor: KELABU_CAIR,
           fontStyle: 'bold',
-          textColor: [30, 41, 59], // slate-800
+          textColor: HITAM,
         };
         const logHeaderStyles = {
-          fillColor: [51, 65, 85], // slate-700 — dark formal
-          textColor: [255, 255, 255],
+          fillColor: KELABU_CAIR,
+          textColor: HITAM,
           fontStyle: 'bold',
         };
+        const tarikhJana = new Date().toLocaleDateString('ms-MY', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        });
 
         // =================================================================
         // Helper: formatList
@@ -142,39 +157,38 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         // =================================================================
         if (!range.isLogOnly) {
 
-          // --- Bahagian 1 (Logo + Tajuk) ---
+          // --- Bahagian 1: Pengepala rasmi (logo, tajuk, garisan) ---
           const originalImgWidth = 1811;
           const originalImgHeight = 579;
-          const imgAspectRatio = originalImgWidth / originalImgHeight;
-
-          const logoWidth = 35;
-          const logoHeight = logoWidth / imgAspectRatio;
-
+          const logoWidth = 38;
+          const logoHeight = logoWidth / (originalImgWidth / originalImgHeight);
           pdf.addImage(Ukhmlogo, 'PNG', margin, currentY, logoWidth, logoHeight);
 
-          const logoBlockEndY = currentY + logoHeight + 3;
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7);
-          pdf.setTextColor(100, 116, 139);
-          pdf.text("Pematuhan & Pengurusan Risiko", margin, logoBlockEndY);
+          pdf.setTextColor(...HITAM);
+          pdf.setFont(FON, 'bold');
+          pdf.setFontSize(9);
+          pdf.text(KLASIFIKASI, pageWidth - margin, currentY + 3, { align: 'right' });
 
-          const subtextHeight = (7 / pdf.internal.scaleFactor) * 1.15;
-          const headerBlockEndsY = logoBlockEndY + subtextHeight;
+          const tajukY = currentY + logoHeight + 7;
+          pdf.setFont(FON, 'bold');
+          pdf.setFontSize(14);
+          pdf.text('LAPORAN PENGURUSAN RISIKO', pageWidth / 2, tajukY, { align: 'center' });
+          pdf.setFont(FON, 'normal');
+          pdf.setFontSize(10);
+          pdf.text('Pematuhan & Pengurusan Risiko', pageWidth / 2, tajukY + 5, { align: 'center' });
 
-          const titleY = (currentY + headerBlockEndsY) / 2;
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(13);
-          pdf.setTextColor(15, 23, 42);
-          pdf.text("LAPORAN RISIKO", pageWidth / 2, titleY, { align: 'center' });
+          const garisY = tajukY + 8.5;
+          pdf.setDrawColor(...HITAM);
+          pdf.setLineWidth(0.6);
+          pdf.line(margin, garisY, pageWidth - margin, garisY);
+          pdf.setLineWidth(0.2);
+          pdf.line(margin, garisY + 0.9, pageWidth - margin, garisY + 0.9);
 
-          // Tarikh jana di kanan atas
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7);
-          pdf.setTextColor(100, 116, 139);
-          const tarikhJana = new Date().toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
-          pdf.text(`Dijana: ${tarikhJana}`, pageWidth - margin, titleY, { align: 'right' });
+          pdf.setFontSize(9);
+          pdf.text(`No. Rujukan: ${risk.no_rujukan || '-'}`, margin, garisY + 6);
+          pdf.text(`Tarikh Dijana: ${tarikhJana}`, pageWidth - margin, garisY + 6, { align: 'right' });
 
-          currentY = headerBlockEndsY + 4;
+          currentY = garisY + 10;
 
           // --- 2. JADUAL MAKLUMAT RISIKO ---
           const headerTableBody = [
@@ -207,8 +221,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
             styles: globalStyles,
             margin: { left: margin, right: margin },
             columnStyles: {
-              0: { cellWidth: '18%' }, 1: { cellWidth: '37%' },
-              2: { cellWidth: '18%' }, 3: { cellWidth: '27%' }
+              0: { cellWidth: lebar(18) }, 1: { cellWidth: lebar(37) },
+              2: { cellWidth: lebar(18) }, 3: { cellWidth: lebar(27) }
             }
           });
 
@@ -233,7 +247,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               styles: globalStyles,
               margin: { left: margin, right: margin },
               columnStyles: {
-                  0: { cellWidth: '40%' }, 1: { cellWidth: '38%' }, 2: { cellWidth: '22%' }
+                  0: { cellWidth: lebar(40) }, 1: { cellWidth: lebar(38) }, 2: { cellWidth: lebar(22) }
               }
           });
 
@@ -259,8 +273,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: risk.skor_impak_risiko ?? '-', styles: { halign: 'center' } },
                     { content: risk.impak || '-' },
                     {
-                      content: risk.skor_risiko || '-',
-                      styles: risk.skor_risiko ? getRiskPdfStyles(risk.skor_risiko) : {}
+                      content: teksTahapRisiko(risk.skor_risiko),
+                      styles: gayaTahapRisiko
                     },
                     { content: risk.status_risiko || '-', styles: { halign: 'center' } }
                   ]
@@ -269,8 +283,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               styles: globalStyles,
               margin: { left: margin, right: margin },
               columnStyles: {
-                  0: { cellWidth: '13%' }, 1: { cellWidth: '27%' }, 2: { cellWidth: '11%' },
-                  3: { cellWidth: '21%' }, 4: { cellWidth: '14%' }, 5: { cellWidth: '14%' }
+                  0: { cellWidth: lebar(17) }, 1: { cellWidth: lebar(23) }, 2: { cellWidth: lebar(11) },
+                  3: { cellWidth: lebar(19) }, 4: { cellWidth: lebar(16) }, 5: { cellWidth: lebar(14) }
               }
           });
 
@@ -282,11 +296,11 @@ export default function LogPreviewModal({ risk, range, onClose }) {
             const pindaanLeftMargin = margin + 2;
             const labelText = 'PINDAAN PENILAIAN:';
 
-            pdf.setFont('helvetica', 'bold');
+            pdf.setFont(FON, 'bold');
             pdf.setFontSize(globalStyles.fontSize);
             pdf.text(labelText, pindaanLeftMargin, currentY);
 
-            pdf.setFont('helvetica', 'normal');
+            pdf.setFont(FON, 'normal');
             const labelWidth = pdf.getStringUnitWidth(labelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
             const dataXPosition = pindaanLeftMargin + labelWidth + 2;
 
@@ -327,8 +341,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               styles: globalStyles,
               margin: { left: margin, right: margin },
               columnStyles: {
-                  0: { cellWidth: '45%' }, 1: { cellWidth: '13%' },
-                  2: { cellWidth: '16%' }, 3: { cellWidth: '26%' }
+                  0: { cellWidth: lebar(45) }, 1: { cellWidth: lebar(13) },
+                  2: { cellWidth: lebar(16) }, 3: { cellWidth: lebar(26) }
               },
               didParseCell: (data) => {
                 // Elak header seksyen terpotong sorang diri di bawah page
@@ -386,7 +400,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               theme: 'grid',
               styles: globalStyles,
               margin: { left: margin, right: margin },
-              columnStyles: { 0: { cellWidth: '20%' }, 1: { cellWidth: '80%' } }
+              columnStyles: { 0: { cellWidth: lebar(20) }, 1: { cellWidth: lebar(80) } }
             });
             currentY = pdf.lastAutoTable.finalY;
 
@@ -417,9 +431,9 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               styles: globalStyles,
               margin: { left: margin, right: margin },
               columnStyles: {
-                0: { cellWidth: '50%' },
-                1: { cellWidth: '12%' },
-                2: { cellWidth: '38%' }
+                0: { cellWidth: lebar(48) },
+                1: { cellWidth: lebar(14) },
+                2: { cellWidth: lebar(38) }
               }
             });
             currentY = pdf.lastAutoTable.finalY;
@@ -451,8 +465,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                     { content: k.skor_impak ?? '-', styles: { halign: 'center' } },
                     { content: k.impak || '-' },
                     {
-                      content: logRiskShort || '-',
-                      styles: logRiskShort ? getRiskPdfStyles(logRiskShort) : {}
+                      content: teksTahapRisiko(logRiskShort),
+                      styles: gayaTahapRisiko
                     },
                     { content: k.keberkesanan || '-', styles: { halign: 'center' } },
                     { content: k.status_pemantauan || '-', styles: { halign: 'center' } }
@@ -461,9 +475,9 @@ export default function LogPreviewModal({ risk, range, onClose }) {
                 styles: globalStyles,
                 margin: { left: margin, right: margin },
                 columnStyles: {
-                    0: { cellWidth: '10%' }, 1: { cellWidth: '19%' }, 2: { cellWidth: '9%' },
-                    3: { cellWidth: '19%' }, 4: { cellWidth: '12%' }, 5: { cellWidth: '15%' },
-                    6: { cellWidth: '16%' }
+                    0: { cellWidth: lebar(18) }, 1: { cellWidth: lebar(17) }, 2: { cellWidth: lebar(9) },
+                    3: { cellWidth: lebar(14) }, 4: { cellWidth: lebar(12) }, 5: { cellWidth: lebar(15) },
+                    6: { cellWidth: lebar(15) }
                 }
             });
             currentY = pdf.lastAutoTable.finalY;
@@ -474,11 +488,11 @@ export default function LogPreviewModal({ risk, range, onClose }) {
               const pindaanLeftMargin = margin + 2;
               const logLabelText = 'PINDAAN KEBERKESANAN:';
 
-              pdf.setFont('helvetica', 'bold');
+              pdf.setFont(FON, 'bold');
               pdf.setFontSize(globalStyles.fontSize);
               pdf.text(logLabelText, pindaanLeftMargin, currentY);
 
-              pdf.setFont('helvetica', 'normal');
+              pdf.setFont(FON, 'normal');
 
               const logLabelWidth = pdf.getStringUnitWidth(logLabelText) * globalStyles.fontSize / pdf.internal.scaleFactor;
               const logDataXPosition = pindaanLeftMargin + logLabelWidth + 2;
@@ -497,19 +511,26 @@ export default function LogPreviewModal({ risk, range, onClose }) {
           });
         }
 
-        // --- 5. FOOTER: nombor muka surat pada semua halaman ---
+        // --- 5. KAKI MUKA SURAT (semua halaman) ---
         const totalPages = pdf.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7.5);
-          pdf.setTextColor(148, 163, 184); // slate-400
+          const kakiY = pageHeight - 10;
+          pdf.setDrawColor(...HITAM);
+          pdf.setLineWidth(0.2);
+          pdf.line(margin, kakiY - 4, pageWidth - margin, kakiY - 4);
+          pdf.setTextColor(...HITAM);
+          pdf.setFont(FON, 'bold');
+          pdf.setFontSize(8);
+          pdf.text(KLASIFIKASI, margin, kakiY);
+          pdf.setFont(FON, 'normal');
           pdf.text(
-            `${risk.no_rujukan || ''} — Muka Surat ${i} / ${totalPages}`,
+            `${risk.no_rujukan || ''}  |  Dijana pada ${tarikhJana}`,
             pageWidth / 2,
-            pageHeight - 8,
+            kakiY,
             { align: 'center' }
           );
+          pdf.text(`Muka surat ${i} / ${totalPages}`, pageWidth - margin, kakiY, { align: 'right' });
         }
 
         // --- 6. JANA PREVIEW URL ---
