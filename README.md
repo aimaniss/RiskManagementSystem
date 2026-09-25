@@ -179,7 +179,7 @@ RiskManagementSystem/
 │   ├── middleware/
 │   │   └── authMiddleware.js         # JWT + RBAC middleware
 │   ├── migrations/
-│   │   ├── knex/                     # Migrasi Knex (24 fail)
+│   │   ├── knex/                     # Migrasi Knex (25 fail)
 │   │   └── sql/                      # Migrasi SQL mentah
 │   ├── routes/                       # Daftar endpoint + middleware sahaja
 │   │   ├── auth.js                   # Log masuk / JWT
@@ -356,7 +356,7 @@ RiskManagementSystem/
 |--------|----------|-----------|-------|
 | `POST` | `/api/auth/login` | Log masuk dan terima JWT | Awam |
 | `POST` | `/api/auth/logout` | Log keluar (catat aktiviti) | Semua |
-| `PUT` | `/api/auth/tukar-katalaluan` | Tukar kata laluan (token lama dicabut) | Semua |
+| `PUT` | `/api/auth/tukar-katalaluan` | Tukar kata laluan (polisi; token lama dicabut, token baharu dipulangkan) | Semua |
 | `GET` | `/health` | Semakan hayat server | Awam |
 
 ### Pengguna
@@ -366,8 +366,10 @@ RiskManagementSystem/
 | `GET` | `/api/users/` | Senarai semua pengguna | `pengguna:urus` |
 | `GET` | `/api/users/me` | Dapatkan profil sendiri + `kebenaran` terkini | Semua |
 | `PUT` | `/api/users/me` | Kemaskini profil sendiri | Semua |
-| `POST` | `/api/users/` | Cipta pengguna baru | `pengguna:urus` |
+| `POST` | `/api/users/` | Cipta pengguna baru (kata laluan sementara dijana jika kosong) | `pengguna:urus` |
 | `PUT` | `/api/users/:id` | Kemaskini pengguna | `pengguna:urus` |
+| `POST` | `/api/users/:id/reset-katalaluan` | Jana kata laluan sementara, buka kunci akaun | `pengguna:urus` |
+| `PATCH` | `/api/users/:id/status` | Aktif / nyahaktif akaun (`{ is_aktif }`) | `pengguna:urus` |
 | `DELETE` | `/api/users/:id` | Padam pengguna (soft-delete) | `pengguna:urus` |
 
 ### Risiko
@@ -599,6 +601,7 @@ curl -X POST http://localhost:5001/api/auth/login \
     "peranan_id": 1,
     "pengguna_id": 1,
     "syarikat_id": 1,
+    "perlu_tukar_katalaluan": false,
     "kebenaran": ["risiko:daftar", "risiko:lihat", "..."]
   }
 }
@@ -606,7 +609,15 @@ curl -X POST http://localhost:5001/api/auth/login \
 
 JWT tidak membawa senarai `kebenaran`; klien mendapatkan kebenaran terkini
 melalui `GET /api/users/me`. Token lama dicabut (`401`) apabila kata laluan,
-peranan, ID staf atau syarikat pengguna berubah.
+peranan, ID staf atau syarikat pengguna berubah, atau akaun dinyahaktifkan.
+
+Kitaran hayat akaun: akaun baharu dan akaun yang ditetapkan semula kata
+laluannya menerima **kata laluan sementara** (`perlu_tukar_katalaluan: true`);
+pengguna dihalakan ke `/tukar-katalaluan` dan backend menolak laluan lain
+(`403`, `kod: "PERLU_TUKAR_KATALALUAN"`) sehingga kata laluan ditukar. Lima
+percubaan gagal berturut-turut mengunci akaun selama 15 minit (`423`); akaun
+tidak aktif menerima `403`. Polisi kata laluan: minimum 8 aksara, huruf +
+nombor, tiada ruang kosong.
 
 ### Contoh Daftar Risiko
 

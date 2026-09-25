@@ -259,6 +259,55 @@
   font-weight: 500;
 }
 
+.login-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === INFO (lupa kata laluan) === */
+.login-info {
+  background: rgba(55, 138, 221, 0.1);
+  border: 1px solid rgba(55, 138, 221, 0.3);
+  color: #185fa5;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* === TUKAR KATA LALUAN (panel tunggal) === */
+.login-container-single {
+  max-width: 440px;
+  min-height: 0;
+}
+
+.login-container-single .login-left-icon {
+  margin-bottom: 14px;
+}
+
+.login-policy {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: 11.5px;
+  color: #9ca3af;
+}
+
+.login-policy li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.login-policy li.lulus {
+  color: #15803d;
+}
+
 /* === HELP TEXT === */
 .login-help {
   font-size: 11.5px;

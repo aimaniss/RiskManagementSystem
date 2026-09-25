@@ -1,10 +1,20 @@
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
 
+// Laluan yang masih boleh dicapai semasa pengguna wajib menukar kata laluan
+// (akaun baharu / selepas reset oleh pentadbir).
+const LALUAN_SEMASA_TUKAR_KATALALUAN = new Set([
+  "GET /api/users/me",
+  "PUT /api/auth/tukar-katalaluan",
+  "POST /api/auth/logout",
+]);
+
 /**
  * Middleware untuk mengesahkan token JWT.
  * Jika sah, ia akan menambah data pengguna (termasuk nama_penuh) ke req.user.
  * Pengguna yang ditanda is_deleted = true tidak dibenarkan log masuk.
+ * Pengguna tidak aktif ditolak; pengguna yang wajib menukar kata laluan hanya
+ * boleh mencapai LALUAN_SEMASA_TUKAR_KATALALUAN.
  */
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -25,7 +35,9 @@ const verifyToken = async (req, res, next) => {
          u.peranan_id,
          p.nama_peranan,
          u.syarikat_id,
-         u.token_dikemaskini_at
+         u.token_dikemaskini_at,
+         u.is_aktif,
+         u.perlu_tukar_katalaluan
        FROM pengguna u
        JOIN peranan p ON u.peranan_id = p.peranan_id
        WHERE u.pengguna_id = $1 AND u.is_deleted = false`,
@@ -44,6 +56,22 @@ const verifyToken = async (req, res, next) => {
       const tokenRevisionTime = tokenRevision ? new Date(tokenRevision).getTime() : NaN;
       if (!Number.isFinite(tokenRevisionTime) || tokenRevisionTime !== currentRevision) {
         return res.status(401).json({ error: "Sesi telah tamat. Sila log masuk semula." });
+      }
+    }
+
+    if (!user.is_aktif) {
+      return res
+        .status(401)
+        .json({ error: "Akaun anda telah dinyahaktifkan. Sila hubungi pentadbir sistem." });
+    }
+
+    if (user.perlu_tukar_katalaluan) {
+      const laluan = `${req.method} ${req.baseUrl}${req.path}`.replace(/\/$/, "");
+      if (!LALUAN_SEMASA_TUKAR_KATALALUAN.has(laluan)) {
+        return res.status(403).json({
+          error: "Anda perlu menukar kata laluan sementara sebelum meneruskan.",
+          kod: "PERLU_TUKAR_KATALALUAN",
+        });
       }
     }
 

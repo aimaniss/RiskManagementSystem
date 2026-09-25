@@ -5,7 +5,7 @@ import TambahLogModal from "../PemantauanRisiko/TambahLogModal";
 import KemaskiniPemantauanModal from "./KemaskiniPemantauan";
 import PengenalpastianModal from "./PengenalpastianModal";
 import PenilaianRisikoModal from "./PenilaianRisikoModal";
-import KemaskiniRawatan from "./KemaskiniRawatan";
+import KemaskiniRawatan from "./kemaskinirawatan";
 import { getAuthUser } from "../../utils/auth";
 import { getRiskMatrix, getRiskLevel } from "../../constants/riskMatrix";
 import { parseListData, formatSeparuhTahun } from "../../utils/formatters";

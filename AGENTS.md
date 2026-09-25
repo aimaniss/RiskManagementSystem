@@ -119,6 +119,12 @@ npm run migrate:status
 - **Kata laluan**: bcrypt melalui `utils/katalaluan.js`
   (`hashKatalaluan`, `sahkanKatalaluan` — sokongan fallback legasi +
   rehash-on-login, `perluRehash`). Jangan simpan/banding plain-text.
+  Kata laluan baharu WAJIB lulus `semakPolisiKatalaluan` (min 8, huruf + nombor,
+  tiada ruang; cermin FE `src/constants/katalaluan.js`). Kata laluan yang
+  ditetapkan pentadbir = sementara (`perlu_tukar_katalaluan = true`, jana dengan
+  `janaKatalaluanSementara`). `verifyToken` menolak akaun `is_aktif=false` dan,
+  semasa `perlu_tukar_katalaluan`, hanya membenarkan `GET /api/users/me`,
+  `PUT /api/auth/tukar-katalaluan`, `POST /api/auth/logout`.
 - Log tindakan: `catatAktiviti(pengguna_id, aktiviti, ringkasan, perincian)`
   dari `utils/catatAktiviti.js` — **parameter posisi**, bukan objek.
 - Notifikasi: `hantarNotifikasi`, `hantarNotifikasiBulk`,

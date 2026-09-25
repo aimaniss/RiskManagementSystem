@@ -19,7 +19,7 @@ test.describe("Soft-delete pengguna", () => {
     // 1. Daftar pengguna ujian (peranan Staff = 4, syarikat 1)
     const penciptaan = await request.post(`${API}/users`, {
       headers: admin.auth,
-      data: { staff_id: UNIK, nama_penuh: "Pengguna E2E", katalaluan: "123", peranan_id: 4, syarikat_id: 1 },
+      data: { staff_id: UNIK, nama_penuh: "Pengguna E2E", katalaluan: "Ujian1234", peranan_id: 4, syarikat_id: 1 },
     });
     expect(penciptaan.ok()).toBeTruthy();
 
@@ -29,7 +29,7 @@ test.describe("Soft-delete pengguna", () => {
     idPengguna = pengguna.pengguna_id;
 
     // 2. Pengguna ini boleh log masuk (sebelum padam)
-    const loginSebelum = await apiLogin(request, { staff_id: UNIK, katalaluan: "123" });
+    const loginSebelum = await apiLogin(request, { staff_id: UNIK, katalaluan: "Ujian1234" });
     expect(loginSebelum.token).toBeTruthy();
 
     // 3. Padam (soft-delete)
@@ -43,7 +43,7 @@ test.describe("Soft-delete pengguna", () => {
 
     // 5. Tidak boleh log masuk (401)
     const loginSelepas = await request.post(`${API}/auth/login`, {
-      data: { staff_id: UNIK, katalaluan: "123" },
+      data: { staff_id: UNIK, katalaluan: "Ujian1234" },
     });
     expect(loginSelepas.status()).toBe(401);
 

@@ -29,6 +29,12 @@ api.interceptors.response.use(
       if (window.location.pathname !== "/login") {
         window.location.assign("/login");
       }
+    } else if (
+      error.response?.status === 403 &&
+      error.response?.data?.kod === "PERLU_TUKAR_KATALALUAN" &&
+      window.location.pathname !== "/tukar-katalaluan"
+    ) {
+      window.location.assign("/tukar-katalaluan");
     }
     return Promise.reject(error);
   }

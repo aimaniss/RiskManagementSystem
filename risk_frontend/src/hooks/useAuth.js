@@ -37,6 +37,7 @@ const binaAuthUser = (decoded, data = {}) => {
     namaPenuh: sumber.nama_penuh || "",
     kebenaran,
     kebenaranDimuat: Array.isArray(sumber.kebenaran),
+    perluTukarKatalaluan: Boolean(sumber.perlu_tukar_katalaluan),
     raw: sumber,
   };
 };
@@ -124,6 +125,12 @@ export const refreshAuthSession = async () => {
     throw err;
   }
 };
+
+/**
+ * Pengguna wajib menukar kata laluan sementara (akaun baharu / selepas reset)
+ * sebelum boleh menggunakan sistem. Backend turut menguatkuasakannya.
+ */
+export const perluTukarKatalaluan = () => Boolean(getAuthUser()?.perluTukarKatalaluan);
 
 /**
  * Get user role string (uppercase: ADMIN, EXECUTIVE, etc.)

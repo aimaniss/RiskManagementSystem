@@ -6,7 +6,7 @@
 //     hadSyarikat(["rawatan", (req) => req.params.rawatan_id]), handler);
 import pool from "../config/db.js";
 
-const PERANAN_TERHAD = ["Staff", "Ketua Subsidiari"];
+export const PERANAN_TERHAD = ["Staff", "Ketua Subsidiari"];
 
 // Setiap jenis rekod dipetakan kepada syarikat_id risiko induknya
 const QUERY_SYARIKAT = {

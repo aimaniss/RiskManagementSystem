@@ -13,6 +13,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [tunjukLupa, setTunjukLupa] = useState(false);
+  const [menghantar, setMenghantar] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +30,13 @@ export default function Login() {
   }, [navigate]);
 
   const handleLogin = async () => {
+    if (menghantar) return;
+    if (!staffId.trim() || !password.trim()) {
+      setError("Sila masukkan ID Staf dan kata laluan.");
+      return;
+    }
     setError("");
+    setMenghantar(true);
     try {
       const res = await api.post("/auth/login", {
         staff_id: staffId.trim(),
@@ -36,9 +44,13 @@ export default function Login() {
       });
 
       localStorage.setItem("token", res.data.token);
-      const decoded = jwtDecode(res.data.token);
-      const role = decoded.nama_peranan;
 
+      if (res.data.user?.perlu_tukar_katalaluan) {
+        navigate("/tukar-katalaluan", { replace: true });
+        return;
+      }
+
+      const role = jwtDecode(res.data.token).nama_peranan;
       const validRoles = ["Admin", "Executive", "Ketua Subsidiari", "Staff", "Viewer"];
       if (validRoles.some((r) => r.toLowerCase() === role?.toLowerCase())) {
         navigate("/");
@@ -46,8 +58,10 @@ export default function Login() {
         navigate("/unauthorized");
       }
     } catch (err) {
-      console.error("Login failed:", err.response?.data || err.message);
-      setError("ID Staf atau katalaluan tidak sah. Sila cuba lagi.");
+      // Mesej pelayan membezakan kelayakan salah, akaun dikunci & akaun tidak aktif
+      setError(err.response?.data?.error || "Tidak dapat menghubungi pelayan. Sila cuba lagi.");
+    } finally {
+      setMenghantar(false);
     }
   };
 
@@ -83,6 +97,13 @@ export default function Login() {
           <p className="login-right-sub">Log masuk untuk teruskan ke akaun anda</p>
 
           {error && <div className="login-error">{error}</div>}
+          {tunjukLupa && (
+            <div className="login-info">
+              Kata laluan hanya boleh ditetapkan semula oleh pentadbir sistem. Hubungi Unit
+              Pengurusan Risiko dengan ID Staf anda; anda akan menerima kata laluan sementara
+              yang perlu ditukar semasa log masuk.
+            </div>
+          )}
 
           <label className="login-label">ID Staf</label>
           <div className="login-input-group">
@@ -125,11 +146,18 @@ export default function Login() {
               />
               <span>Ingat saya</span>
             </label>
-            <span className="login-forgot">Lupa kata laluan?</span>
+            <span
+              className="login-forgot"
+              onClick={() => setTunjukLupa((t) => !t)}
+              role="button"
+              tabIndex={0}
+            >
+              Lupa kata laluan?
+            </span>
           </div>
 
-          <button className="login-btn" onClick={handleLogin}>
-            Log masuk
+          <button className="login-btn" onClick={handleLogin} disabled={menghantar}>
+            {menghantar ? "Sedang log masuk..." : "Log masuk"}
           </button>
 
           <p className="login-help">

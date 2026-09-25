@@ -2,6 +2,7 @@
 export {
   getAuthUser,
   refreshAuthSession,
+  perluTukarKatalaluan,
   getUserRole,
   getUserRoleTitle,
   getKebenaran,

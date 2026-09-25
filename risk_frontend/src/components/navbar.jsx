@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { UserCircle, X, Eye, EyeOff, Bell, CheckCheck, Trash2, Sun, Moon } from "lucide-react";
 import api from "../api/api.js";
+import { katalaluanMematuhiPolisi } from "../constants/katalaluan";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
-import "./Navbar.css";
+import "./navbar.css";
 
 function Navbar() {
   const [user, setUser] = useState({
@@ -221,6 +222,10 @@ function Navbar() {
     e.preventDefault();
     if (!passwordOld && passwordNew) {
       setToast({ variant: "warning", title: "Sila masukkan kata laluan lama untuk tukar kata laluan baru." });
+      return;
+    }
+    if (passwordNew && !katalaluanMematuhiPolisi(passwordNew)) {
+      setToast({ variant: "warning", title: "Kata laluan baru tidak mematuhi polisi kata laluan." });
       return;
     }
 
@@ -477,6 +482,9 @@ function Navbar() {
                   {showPasswordNew ? <EyeOff size={18} /> : <Eye size={18} />}
                 </div>
               </div>
+              <p style={{ fontSize: "11.5px", color: "#6b7280", margin: "-4px 0 8px" }}>
+                Sekurang-kurangnya 8 aksara, mengandungi huruf dan nombor, tanpa ruang kosong.
+              </p>
 
               <div className="filter-buttons">
                 <button type="button" onClick={closeModal}>Batal</button>

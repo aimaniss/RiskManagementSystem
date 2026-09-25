@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 // Pages
 import Login from "./pages/Login/Login";
 import Unauthorized from "./pages/Unauthorized/Unauthorized";
+import TukarKatalaluan from "./pages/TukarKatalaluan/TukarKatalaluan";
 import PaparanUtama from "./pages/PaparanUtama/PaparanUtama";
 import SenaraiRisiko from "./pages/SenaraiRisiko/SenaraiRisiko";
 import DaftarRisiko from "./pages/DaftarRisiko/DaftarRisiko";
@@ -33,6 +34,7 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/tukar-katalaluan" element={<TukarKatalaluan />} />
 
         {/* Protected routes */}
         <Route

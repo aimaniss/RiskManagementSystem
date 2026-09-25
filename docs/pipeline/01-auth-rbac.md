@@ -24,11 +24,16 @@ sequenceDiagram
   L->>A: POST /api/auth/login
   A->>C: express route (tanpa middleware - awam)
   C->>D: SELECT pengguna JOIN peranan WHERE staff_id=$1 AND is_deleted=false
+  C->>C: dikunci_hingga > NOW()? → 423
   D-->>C: user (sahkan katalaluan: bcrypt + fallback legasi + rehash-on-login)
+  C->>D: gagal → percubaan_gagal+1 (ke-5: kunci 15 minit, 423) → 401
+  C->>C: is_aktif = false? → 403
+  C->>D: berjaya → reset kaunter, log_masuk_terakhir = NOW()
   C->>K: kebenaran = dapatkanKebenaranPeranan(user.peranan_id)
-  C->>C: jwt.sign({ ..., token_dikemaskini_at }, JWT_SECRET)
-  C-->>L: { token, user: { ..., kebenaran } }
+  C->>C: jwt.sign({ ..., token_dikemaskini_at, perlu_tukar_katalaluan }, JWT_SECRET)
+  C-->>L: { token, user: { ..., perlu_tukar_katalaluan, kebenaran } }
   L->>L: localStorage.setItem("token", token)
+  L->>L: perlu_tukar_katalaluan? → /tukar-katalaluan (lihat 08)
   L->>L: useAuth()/getAuthUser() → decode peranan
   L->>A: GET /api/users/me (snapshot kebenaran)
   A->>C: verifyToken + profilSemasa
@@ -47,7 +52,8 @@ sequenceDiagram
 - `src/api/api.js` — satu instans axios `baseURL: VITE_API_URL || http://localhost:5001/api`;
   interceptor permintaan menambah `Authorization: Bearer <localStorage.token>`.
   Interceptor respons: `401` → padam `localStorage.token` dan redirect ke `/login`
-  (kecuali sudah di `/login`, supaya ralat log masuk tidak menyebabkan redirect).
+  (kecuali sudah di `/login`, supaya ralat log masuk tidak menyebabkan redirect);
+  `403` dengan `kod: "PERLU_TUKAR_KATALALUAN"` → redirect ke `/tukar-katalaluan`.
 - `src/hooks/useAuth.js` —
   - `getAuthUser()` decode JWT (jwt-decode), semak `exp`, dan menyimpan snapshot
     auth semasa; `refreshAuthSession()` memuat `GET /api/users/me` untuk peranan,
@@ -62,7 +68,8 @@ sequenceDiagram
 - `src/utils/auth.js` — re-export penuh (termasuk `hasKebenaran`/`getKebenaran`/
   `refreshAuthSession`) untuk keserasian import lama.
 - `components/ProtectedRoute.jsx` — bungkus semua laluan kecuali `/login`
-  dan `/unauthorized`; periksa `allowedRoles`.
+  dan `/unauthorized`; periksa `allowedRoles`, dan halakan ke `/tukar-katalaluan`
+  jika claim `perlu_tukar_katalaluan` dalam token.
 - `components/AppLayout.jsx` — sidebar/navbar mengikut peranan & kebenaran;
   memuat `/users/me` pada mount, focus semula, dan setiap 60 saat. Navbar memuatkan
   notifikasi (`/notifikasi/*`).
@@ -77,6 +84,8 @@ flowchart LR
   B -->|verify ok| C["Query ulang pengguna JOIN peranan<br/>(is_deleted = false)"]
   C -->|pengguna padam/tiada| Z["404"]
   C -->|token_dikemaskini_at tidak sepadan| Z2["401"]
+  C -->|is_aktif = false| Z3["401"]
+  C -->|perlu_tukar_katalaluan & laluan bukan senarai benar| Z4["403 PERLU_TUKAR_KATALALUAN"]
   C -->|ok| D["req.user + token_dikemaskini_at"]
   D --> E["authorizeKebenaran('risiko:daftar', ...) atau ('risiko:nilai','rawatan:urus')"]
   E -->|kebenaran tak mencukupi| W["403"]
