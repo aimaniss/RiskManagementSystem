@@ -35,8 +35,10 @@ services:
       PORT: "5001"
       JWT_SECRET: ${JWT_SECRET:?Tetapkan JWT_SECRET dalam .env}
       CORS_ORIGIN: ${APP_URL:-http://localhost:8080}
-      # Di belakang nginx: had kadar menggunakan IP klien sebenar
-      TRUST_PROXY: "1"
+      # Bilangan proxy di hadapan backend: 1 = nginx kontena sahaja;
+      # 2 = reverse proxy hos (nginx/Caddy/Traefik pada VPS) + nginx kontena.
+      # Salah nilai menyebabkan had kadar mengira semua pengguna sebagai satu IP.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       HAD_LOG_MASUK_IP: ${HAD_LOG_MASUK_IP:-30}
       HAD_API_IP: ${HAD_API_IP:-3000}
     # Tidak didedahkan ke hos: hanya dicapai melalui nginx
