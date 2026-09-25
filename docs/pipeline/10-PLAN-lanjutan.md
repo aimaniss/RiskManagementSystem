@@ -101,12 +101,22 @@ Soft-delete menyebabkan jadual membesar tanpa had. Cadangkan:
   `permohonan_pindaan`, `pengguna`.
 - Log audit ke `log_aktiviti` sebelum purge supaya jejak kekal.
 
-### 2.2 Notifikasi terhadap pengguna yang dipadam (Selesai + P2)
+### 2.2 Notifikasi terhadap pengguna yang dipadam — **Selesai**
 
 `dapatkanPenggunaIdByPeranan` kini menapis `is_deleted=false`. Skenario:
 kelulusan pindaan menunggu pelulus yang dipadam → notifikasi tiada. Cadang
 fallback ke Admin (atau penanda "pelulus tidak aktif") bila senarai kosong.
 **(P2 — tingkah laku semasa: senyap.)**
+
+**Pelaksanaan (2026-09-25)**: `dapatkanPenggunaIdByPeranan` diganti dengan
+`dapatkanPenerimaIkutKebenaran(kebenaran, { kecuali })`:
+- Penerima dipilih ikut **kebenaran** (`pindaan:lulus`, `risiko:lulus`), bukan
+  nama peranan. Ini membetulkan bug: notifikasi pindaan baru dahulu hanya ke
+  Admin walaupun Executive juga memegang `pindaan:lulus`.
+- Pelaku dikecualikan (`kecuali`).
+- Tiada pemegang aktif → fallback kepada pentadbir (`pengguna:urus`) +
+  `console.warn`; pentadbir juga tiada → `[]` + amaran (tiada ralat).
+- Spec `e2e/tests/06-penerima-notifikasi.spec.mjs`.
 
 ### 2.3 JWT masih sah selepas ubah kata laluan/role — **Selesai (P1)**
 
@@ -169,6 +179,6 @@ awam khusus (hanya id+nama). **(P1-diperiksa)**
 2. **[x] [P1] §2.6** — audit klien `GET /api/roles` sebelum login selesai; tiada
    penggunaan pra-login yang memerlukan endpoint awam.
 3. **[x] [P1] §2.5** — ralat `{ error }`, berjaya `{ message }`.
-4. **[ ] [P2] §2.2** — fallback notifikasi pelulus dipadam → Admin.
+4. **[x] [P2] §2.2** — penerima ikut kebenaran + fallback pentadbir.
 5. **[ ] [P2] §1.5 / §2.1** — flush-cache kebenaran & toolbar purge.
 6. **[ ] [P3] §2.4** — nibble penamaan jadual serentak dengan spec E2E.

@@ -68,17 +68,18 @@ export const DB = {
   },
 };
 
-// Muatkan helper 'dalamTransaksi' terus dari risk_backend (ESM)
-export async function muatDalamTransaksi() {
+// Muatkan modul utils/<fail> terus dari risk_backend (ESM) dengan env DB backend
+export async function muatUtilBackend(fail) {
   for (const key of ["DB_USER", "DB_HOST", "DB_NAME", "DB_PASS", "DB_PORT", "JWT_SECRET"]) {
     const value = bacaEnv(key);
     if (value !== undefined) process.env[key] = value;
   }
 
-  const mod = await import(
-    pathToFileURL(path.join(BACKEND_DIR, "utils", "transaksi.js"))
-  );
-  return mod.dalamTransaksi;
+  return import(pathToFileURL(path.join(BACKEND_DIR, "utils", fail)));
+}
+
+export async function muatDalamTransaksi() {
+  return (await muatUtilBackend("transaksi.js")).dalamTransaksi;
 }
 
 export function tutupDB() {

@@ -16,10 +16,10 @@
 | MCP `rms-boost` (imbas codebase) | ✅ Siap & didaftar |
 | Agent `rms-architect` | ✅ Siap & didaftar |
 | Playwright MCP (E2E) | ✅ Didaftar |
-| Ujian E2E Playwright | ✅ 21/21 lulus |
+| Ujian E2E Playwright | ✅ 25/25 lulus |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
-| Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5) + Fasa 5 controllers; P2–P3 berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
+| Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5), §2.2 selesai, Fasa 5 controllers; §1.5/§2.1 (P2) & §2.4 (P3) berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
 
 📄 Pelan revamp: `docs/pipeline/09-PLAN-revamp.md` (status pelaksanaan di atas).
 📄 Cadangan lanjutan: `docs/pipeline/10-PLAN-lanjutan.md`.
@@ -83,6 +83,7 @@
 - [x] Spec rollback transaksi — `e2e/tests/03-rollback-transaksi.spec.mjs`
 - [x] Spec soft-delete — `e2e/tests/04-soft-delete.spec.mjs`
 - [x] Spec P1 auth/session — `e2e/tests/05-p1-auth-session.spec.mjs`
+- [x] Spec penerima notifikasi (§2.2) — `e2e/tests/06-penerima-notifikasi.spec.mjs`
 - [x] Config + README + root `package.json` scripts (`npm run test:e2e`)
 - [x] **Jalankan** suite end-to-end penuh — 21/21 lulus pada 2026-09-25
 
@@ -116,6 +117,7 @@
 | 2026-09-25 | 6 | Jalankan suite E2E penuh: **21/21 lulus**; tambah `/health`, betulkan kontrak respons login, env transaksi, lifecycle pool DB, dan fixture FK log aktiviti |
 | 2026-09-25 | P1 | Tambah migration 022 `token_dikemaskini_at`; `/users/me` kini sumber kebenaran UI; session refresh pada mount/focus/60s; token lama dicabut selepas role/password/staff/syarikat berubah; spec P1 E2E — suite **21/21 lulus** |
 | 2026-09-25 | 5 / §2.5 | **Ralat seragam** `{ error }` (±80 respons BE + 7 halaman FE). **Refactor BE**: 48 handler dari 11 `routes/*.js` dipindah ke `controllers/*Controller.js` (salinan AST), matriks risiko 4 salinan → `utils/matriksRisiko.js`, buang kod mati. Pengesahan: 180/180 respons GET identik vs HEAD (5 peranan), lint `no-undef` bersih, E2E 21/21, build FE lulus |
+| 2026-09-25 | §2.2 | Penerima notifikasi ikut **kebenaran** (`dapatkanPenerimaIkutKebenaran`) + fallback pentadbir; betulkan bug Executive (`pindaan:lulus`) tidak dimaklumkan permohonan pindaan baru; buang 9 komen sejarah yang tertinggal; spec 06 — E2E **25/25** |
 | 2026-09-25 | 5 | **Kemas kod BE**: buang semua emoji (±110 baris) & nota "DIKEMASKINI/Kekal Sama", buang SQL mati dikomen di dashboard; pasang Prettier 3 + `.prettierrc.json` + skrip `format`/`format:check`, format semua fail `.js`. Pengesahan: 180/180 respons GET identik vs HEAD, E2E 21/21 |
 | 2026-09-25 | 7 | Audit docs selepas revamp/P1: kemas kini `00-general.md` (authorizeKebenaran, `/health`, controllers), `08-pengguna-notifikasi-log.md` (kebenaran per route, soft-delete, `/users/me` + pencabutan token), `01-auth-rbac.md` (interceptor 401, nota `NULL` revision), `09` (migrasi 022), root `README.md` (respons login, endpoint auth, 22 migrasi) |
 
@@ -135,10 +137,10 @@
 - `verifyToken` menolak pengguna `is_deleted=true` dan token lama melalui
   `token_dikemaskini_at`.
 - Kredensial ujian E2E: `e2e/tests/helpers.mjs` (Admin UKMH001/1234, dsb.).
-- Suite E2E Playwright: **21/21 lulus** pada 2026-09-25.
+- Suite E2E Playwright: **25/25 lulus** pada 2026-09-25.
 - `npm run build` frontend lulus; `npm run lint` masih melaporkan 49 error
   dan 9 warning sedia ada pada fail frontend yang tidak disentuh.
 - Dikenal pasti & difailkan untuk lanjutan: invalidasi cache kebenaran (§1.5),
-  purging soft-delete (§2.1), notifikasi pelulus dipadam (§2.2), penamaan
+  purging soft-delete (§2.1), penamaan
   jadual (§2.4) — rujuk
   `docs/pipeline/10-PLAN-lanjutan.md`.

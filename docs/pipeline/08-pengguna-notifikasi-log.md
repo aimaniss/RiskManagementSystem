@@ -69,7 +69,8 @@ sequenceDiagram
 - **Utiliti**: `utils/notifikasi.js` →
   `hantarNotifikasi(pengguna_id, tajuk, mesej, jenis, entiti_id)`,
   `hantarNotifikasiBulk(pengguna_ids[], ...)`,
-  `dapatkanPenggunaIdByPeranan("Admin", ...)`.
+  `dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], { kecuali: [pelaku] })` —
+  penerima ikut kebenaran; fallback `pengguna:urus` bila tiada pemegang.
 - **UI**: `navbar.jsx` — badge unread (`/notifikasi/unread-count`), senarai
   drop-down (`/notifikasi?limit=15`), tandai baca, baca-semua, padam.
 - Digunakan dalam pindaan (kepada pelulus & pemohon), kelulusan risiko,

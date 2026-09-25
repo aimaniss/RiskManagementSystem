@@ -117,8 +117,10 @@ npm run migrate:status
 - Log tindakan: `catatAktiviti(pengguna_id, aktiviti, ringkasan, perincian)`
   dari `utils/catatAktiviti.js` — **parameter posisi**, bukan objek.
 - Notifikasi: `hantarNotifikasi`, `hantarNotifikasiBulk`,
-  `dapatkanPenggunaIdByPeranan` dari `utils/notifikasi.js` (menapis pengguna
-  `is_deleted=false`).
+  `dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], { kecuali: [pelaku] })` dari
+  `utils/notifikasi.js`. Pilih penerima ikut **kebenaran**, bukan nama peranan;
+  hanya pengguna `is_deleted=false`; fallback kepada pentadbir (`pengguna:urus`)
+  bila tiada pemegang kebenaran.
 - Migrasi knex dalam `risk_backend/migrations/knex/` (config: `knexfile.js`).
 - Mesej ralat API & respons pengguna dalam **Bahasa Melayu**. Ralat (4xx/5xx)
   SENTIASA `{ error: "..." }`; `{ message }` hanya untuk respons berjaya.

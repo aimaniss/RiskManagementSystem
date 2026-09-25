@@ -10,12 +10,10 @@ import pool from "../config/db.js";
  * @param {string} perincian - Perincian penuh tindakan untuk modal.
  */
 const catatAktiviti = async (pengguna_id, aktiviti, ringkasan, perincian) => {
-  // DIUBAH: Tambah 'ringkasan' dan $4
   const sql = `
         INSERT INTO log_aktiviti (pengguna_id, aktiviti, ringkasan, perincian, tarikh_masa)
         VALUES ($1, $2, $3, $4, NOW())
     `;
-  // DIUBAH: Tambah 'ringkasan'
   const values = [pengguna_id, aktiviti, ringkasan, perincian];
 
   try {

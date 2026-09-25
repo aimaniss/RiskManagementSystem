@@ -85,7 +85,8 @@ timestamps + soft-delete), `risiko` (dikemas kini bila approve), `notifikasi`,
 
 - `data_sebelum` ialah snapshot risiko semasa ketika permohonan dibuat (JSONB),
   jadi bandingan tidak bergantung pada perubahan semasa.
-- Approve hanya untuk Admin (`authorizeRoles("Admin")`); reject turut menerima
-  body `{ komen_pelulus }`.
-- Notifikasi dihantar kepada pelulus (semasa mohon) dan kepada pemohon
-  (semasa keputusan) — guna `dapatkanPenggunaIdByPeranan("Admin", ...)`.
+- Approve/reject perlu `pindaan:lulus` (Admin & Executive); reject turut
+  menerima body `{ komen_pelulus }`. Permohonan oleh Admin diluluskan terus.
+- Notifikasi "Permohonan Pindaan Baru" dihantar kepada **semua pemegang
+  `pindaan:lulus`** kecuali pemohon — `dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], { kecuali })`
+  (fallback pentadbir bila tiada). Keputusan dimaklumkan kepada pemohon.

@@ -3,7 +3,7 @@ import { kiraTahapRisiko } from "../utils/matriksRisiko.js";
 import {
   hantarNotifikasi,
   hantarNotifikasiBulk,
-  dapatkanPenggunaIdByPeranan,
+  dapatkanPenerimaIkutKebenaran,
 } from "../utils/notifikasi.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 
@@ -18,7 +18,6 @@ export const senaraiRisikoUntukPindaan = async (req, res) => {
     const user = req.user;
 
     // =================================================================
-    // DIKEMASKINI: CTE 'RisikoAdaRawatan' dibuang
     // =================================================================
     let query = `WITH
       PemantauanTerkini AS (
@@ -90,7 +89,6 @@ export const senaraiRisikoUntukPindaan = async (req, res) => {
 
       FROM Risiko r
       -- =================================================================
-      -- DIKEMASKINI: 'JOIN RisikoAdaRawatan' dibuang
       -- =================================================================
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
       LEFT JOIN PemantauanTerkini pt ON pt.risiko_id = r.risiko_id AND pt.rn = 1
@@ -98,7 +96,6 @@ export const senaraiRisikoUntukPindaan = async (req, res) => {
     `;
 
     // =================================================================
-    // DIKEMASKINI: Logik 'WHERE' diubah
     // =================================================================
     const params = [];
     let whereClause = ["r.skor_risiko IS NOT NULL"]; // Syarat baharu
@@ -340,8 +337,10 @@ export const mohonPindaan = async (req, res) => {
 
     try {
       if (nama_peranan !== "Admin") {
-        const adminIds = await dapatkanPenggunaIdByPeranan("Admin");
-        if (adminIds.length > 0) {
+        const pelulusIds = await dapatkanPenerimaIkutKebenaran(["pindaan:lulus"], {
+          kecuali: [userIntegerId],
+        });
+        if (pelulusIds.length > 0) {
           const { rows: risikoRow } = await pool.query(
             `SELECT no_rujukan FROM risiko WHERE risiko_id = $1`,
             [risk_id]
@@ -350,7 +349,7 @@ export const mohonPindaan = async (req, res) => {
           const tajuk = "Permohonan Pindaan Baru";
           const mesej = `${req.user.nama_penuh} telah memohon pindaan untuk risiko ${noRujukan}.`;
           await hantarNotifikasiBulk(
-            adminIds,
+            pelulusIds,
             tajuk,
             mesej,
             "pindaan_baru",

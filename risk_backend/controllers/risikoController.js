@@ -4,7 +4,7 @@ import { catatAktiviti } from "../utils/catatAktiviti.js";
 import {
   hantarNotifikasi,
   hantarNotifikasiBulk,
-  dapatkanPenggunaIdByPeranan,
+  dapatkanPenerimaIkutKebenaran,
 } from "../utils/notifikasi.js";
 
 // ------------------- POST: Tambah Risiko -------------------
@@ -120,12 +120,13 @@ export const tambahRisiko = async (req, res) => {
     }
 
     try {
-      const adminExecutiveIds = await dapatkanPenggunaIdByPeranan("Admin", "Executive");
-      const filteredIds = adminExecutiveIds.filter((id) => id !== user.pengguna_id);
-      if (filteredIds.length > 0) {
+      const pelulusIds = await dapatkanPenerimaIkutKebenaran(["risiko:lulus"], {
+        kecuali: [user.pengguna_id],
+      });
+      if (pelulusIds.length > 0) {
         const tajuk = "Risiko Baru Didaftarkan";
         const mesej = `${user.nama_penuh} telah mendaftarkan risiko baru: ${noRujukan}.`;
-        await hantarNotifikasiBulk(filteredIds, tajuk, mesej, "risiko_baru", risikoId);
+        await hantarNotifikasiBulk(pelulusIds, tajuk, mesej, "risiko_baru", risikoId);
       }
     } catch (notifErr) {
       console.error("Gagal menghantar notifikasi risiko baru:", notifErr);

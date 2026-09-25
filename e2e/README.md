@@ -11,6 +11,7 @@ Suite ujian akhir-ke-akhir untuk Sistem Pengurusan Risiko UKM Holdings.
 | `03-rollback-transaksi.spec.mjs` | `dalamTransaksi` (utils/transaksi.js): ROLLBACK bila gagal / kena kekangan, COMMIT bila berjaya |
 | `04-soft-delete.spec.mjs` | DELETE pengguna & log_aktiviti = soft-delete (baris kekal `is_deleted=true`, hilang dari API, pengguna padam gagal log masuk) |
 | `05-p1-auth-session.spec.mjs` | `/users/me` memulangkan kebenaran segar; token lama ditolak selepas perubahan role/password; login semula mendapat snapshot baru |
+| `06-penerima-notifikasi.spec.mjs` | `dapatkanPenerimaIkutKebenaran`: penerima ikut kebenaran (Executive termasuk untuk `pindaan:lulus`), pelaku dikecualikan, fallback pentadbir, `[]` tanpa ralat |
 
 ## Prasyarat
 
@@ -39,7 +40,7 @@ npm run test:e2e:report # = npx playwright show-report
 - Kredensial ujian diambil dari data seed sebenar (rujukan
   `e2e/tests/helpers.mjs`). Kata laluan legasi `123` akan ditukar ke bcrypt
   secara automatik (rehash-on-login).
-- Suite semasa: **21/21 ujian lulus** (termasuk spec P1 auth session).
+- Suite semasa: **25/25 ujian lulus** (termasuk spec P1 auth session & penerima notifikasi).
 - Spec soft-delete & rollback menulis data ujian terus ke DB (`bahagian`,
   `log_aktiviti`, `pengguna`) tetapi **membersihkan semula** artefak selepas
   ujian; rollback difailkan oleh transaksi itu sendiri.

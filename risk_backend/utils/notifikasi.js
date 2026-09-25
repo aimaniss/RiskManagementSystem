@@ -45,22 +45,48 @@ const hantarNotifikasiBulk = async (
   }
 };
 
+const cariPenggunaAktifDenganKebenaran = async (namaKebenaran) => {
+  const { rows } = await pool.query(
+    `SELECT DISTINCT u.pengguna_id
+       FROM pengguna u
+       JOIN peranan_kebenaran pk ON pk.peranan_id = u.peranan_id
+       JOIN kebenaran k ON k.kebenaran_id = pk.kebenaran_id
+      WHERE u.is_deleted = false AND k.nama_kebenaran = ANY($1)`,
+    [namaKebenaran]
+  );
+  return rows.map((r) => r.pengguna_id);
+};
+
 /**
- * Dapatkan semua ID pengguna berdasarkan peranan.
+ * Dapatkan ID pengguna aktif yang memiliki sekurang-kurangnya satu kebenaran
+ * (cth. "pindaan:lulus"), tidak termasuk `kecuali` (biasanya pelaku sendiri).
+ *
+ * Jika tiada penerima (semua pelulus dipadam / matriks berubah), jatuh balik
+ * kepada pentadbir ("pengguna:urus") supaya notifikasi kelulusan tidak hilang
+ * tanpa jejak. Jika pentadbir juga tiada, amaran dicatat dan [] dipulangkan.
  */
-const dapatkanPenggunaIdByPeranan = async (...nama_peranan) => {
+const dapatkanPenerimaIkutKebenaran = async (namaKebenaran, { kecuali = [] } = {}) => {
+  const tapis = (ids) => ids.filter((id) => !kecuali.includes(id));
   try {
-    const { rows } = await pool.query(
-      `SELECT pengguna_id FROM pengguna WHERE is_deleted = false AND peranan_id IN (
-         SELECT peranan_id FROM peranan WHERE nama_peranan = ANY($1)
-       )`,
-      [nama_peranan]
+    const penerima = tapis(await cariPenggunaAktifDenganKebenaran(namaKebenaran));
+    if (penerima.length > 0) return penerima;
+
+    const pentadbir = tapis(await cariPenggunaAktifDenganKebenaran(["pengguna:urus"]));
+    if (pentadbir.length > 0) {
+      console.warn(
+        `Tiada pengguna aktif dengan ${namaKebenaran.join("/")}; notifikasi dihantar kepada pentadbir.`
+      );
+      return pentadbir;
+    }
+
+    console.warn(
+      `Tiada penerima notifikasi untuk ${namaKebenaran.join("/")} (termasuk pentadbir).`
     );
-    return rows.map((r) => r.pengguna_id);
+    return [];
   } catch (error) {
-    console.error("Ralat dapatkan pengguna by peranan:", error);
+    console.error("Ralat dapatkan penerima notifikasi:", error);
     return [];
   }
 };
 
-export { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenggunaIdByPeranan };
+export { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenerimaIkutKebenaran };

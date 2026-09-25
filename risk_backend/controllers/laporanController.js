@@ -144,7 +144,6 @@ export const dataPenuhLaporan = async (req, res) => {
               -- 'tindakan' kini adalah ARRAY (dari pelan_tindakan_rawatan)
               'tindakan', (
                 -- =================================================================
-                -- PERUBAHAN DI SINI: Membuang "ORDER BY"
                 -- =================================================================
                 SELECT ARRAY_AGG(ptr.pelan_tindakan)
                 FROM pelan_tindakan_rawatan ptr
@@ -157,7 +156,6 @@ export const dataPenuhLaporan = async (req, res) => {
               -- 'kakitangan_bertanggungjawab' kini adalah ARRAY (dari kakitangan_rawatan)
               'kakitangan_bertanggungjawab', (
                 -- =================================================================
-                -- PERUBAHAN DI SINI: Membuang "ORDER BY"
                 -- =================================================================
                 SELECT ARRAY_AGG(krr.nama_kakitangan)
                 FROM kakitangan_rawatan krr
@@ -191,7 +189,6 @@ export const dataPenuhLaporan = async (req, res) => {
 
               'pelan_tindakan', (
                 -- =================================================================
-                -- DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
                 -- =================================================================
                 SELECT ARRAY_AGG(ptp.butiran_aktiviti)
                 FROM PelanTindakanPemantauan ptp
@@ -202,7 +199,6 @@ export const dataPenuhLaporan = async (req, res) => {
 
               'kakitangan_bertanggungjawab', (
                 -- =================================================================
-                -- DIKEMASKINI DI SINI: Menggunakan ARRAY_AGG
                 -- =================================================================
                 SELECT ARRAY_AGG(kp.butiran_kakitangan)
                 FROM KakitanganPemantauan kp

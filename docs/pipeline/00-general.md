@@ -104,7 +104,7 @@ sequenceDiagram
 ### Notifikasi
 
 - `hantarNotifikasi(pengguna_id, tajuk, mesej, jenis, entiti_id)`,
-  `hantarNotifikasiBulk(...)`, `dapatkanPenggunaIdByPeranan(...)` dari
+  `hantarNotifikasiBulk(...)`, `dapatkanPenerimaIkutKebenaran([...kebenaran], { kecuali })` dari
   `utils/notifikasi.js`. Menulis ke jadual `notifikasi`.
 
 ### Skor Risiko (R/S/T/ST)
