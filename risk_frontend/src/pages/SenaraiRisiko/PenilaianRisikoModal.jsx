@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, BookOpen, Save, ClipboardCheck, Loader2 } from "lucide-react";
 import api from "../../api/api";
-import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
-import { riskMatrix, getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
+import { canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
+import { getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
 import Toast from "@/components/ui/toast";
 import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
@@ -12,7 +12,6 @@ import { Select } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
 function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
-    if (!isOpen) return null;
 
     // Hanya ambil data Penilaian Risiko yang BOLEH DIUBAH (serta data display minimal)
     const [formData, setFormData] = useState({
@@ -30,8 +29,6 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan(); 
     
     // Auth Check
-    const authUser = getAuthUser();
-    const userRole = authUser?.role || "";
     const canEditPenilaian = checkCanEditPenilaian();
 
     // Effect untuk mengira skor Risiko berdasarkan K & I
@@ -114,6 +111,8 @@ function PenilaianRisikoModal({ isOpen, onClose, initialData = {} }) {
     };
 
     const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

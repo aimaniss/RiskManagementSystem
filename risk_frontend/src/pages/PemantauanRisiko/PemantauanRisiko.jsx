@@ -25,7 +25,7 @@ import {
     SheetDescription,
 } from "@/components/ui/sheet";
 import EditPemantauan from "./EditPemantauan";
-import { riskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
+import { riskMatrix } from "../../constants/riskMatrix";
 import RiskLevelProgress from "@/components/ui/risk-level-progress";
 
 // =======================================================

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Save, Loader2, BookOpen, Plus, Trash2, Eye } from "lucide-react"; 
 import api from "../../api/api";
-import { riskMatrix, getRiskMatrix, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING, SKOR_KEBARANGKALIAN_DESC, SKOR_IMPAK_DESC } from "../../constants/riskMatrix";
+import { getRiskMatrix, TAHAP_RISIKO_ORDER, KEBERKESANAN_MAPPING, SKOR_KEBARANGKALIAN_DESC, SKOR_IMPAK_DESC } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
 import Toast from "@/components/ui/toast";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -37,7 +37,7 @@ export default function KemaskiniPemantauanModal({
 
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
-    const [risikoInfo, setRisikoInfo] = useState(null); 
+    const [, setRisikoInfo] = useState(null); 
     const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data");
 
     const getInitialFormData = useCallback(() => ({

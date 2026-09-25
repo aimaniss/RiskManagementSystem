@@ -19,6 +19,8 @@
 | Ujian E2E Playwright | ✅ 61/61 lulus |
 | Dokumentasi pipeline (00–09) | ✅ Lengkap |
 | Revamp seni bina v2 (Fasa 1–4, 6-7) | ✅ **Selesai & disahkan** |
+| Revamp UI (penilaian/rawatan/pemantauan) | 📋 Dirancang — lih. `docs/pipeline/11-PLAN-ui-revamp.md` (tunggu keputusan reka bentuk U0) |
+| Lint frontend | ✅ 0 ralat (dahulu 49); 9 amaran `exhaustive-deps` berbaki |
 | Work lanjutan P1–P3 | ✅ P1 selesai (auth, §2.5), §2.2, §1.5 & §2.1 selesai, Fasa 5 controllers; §2.4 (P3) berbaki — lih. `docs/pipeline/10-PLAN-lanjutan.md` |
 
 📄 Pelan revamp: `docs/pipeline/09-PLAN-revamp.md` (status pelaksanaan di atas).
@@ -109,6 +111,18 @@
 
 ---
 
+## To-Do Revamp UI (📋 dirancang — `docs/pipeline/11-PLAN-ui-revamp.md`)
+
+- [ ] U0 — Setuju keputusan reka bentuk D1–D5 (bentuk paparan butiran, tab, stepper aliran, garis masa pemantauan, sunting dalam tab)
+- [ ] U1 — Satukan borang penilaian / rawatan / log pemantauan (7 fail → 3 komponen)
+- [ ] U2 — Paparan butiran risiko bertab + pengepala ringkasan (ganti skrol panjang)
+- [ ] U3 — Stepper aliran + tindakan seterusnya
+- [ ] U4 — Garis masa pemantauan + sunting dalam tab (tiada modal bersarang)
+- [ ] U5 — Halaman Rawatan & Pemantauan guna paparan butiran yang sama
+- [ ] U6 — Ujian UI Playwright aliran nilai → rawat → pantau + semakan telefon
+
+---
+
 ## Log Kemajuan
 
 | Tarikh | Fasa | Apa yang dilakukan |
@@ -119,6 +133,7 @@
 | 2026-09-25 | 6 | Jalankan suite E2E penuh: **21/21 lulus**; tambah `/health`, betulkan kontrak respons login, env transaksi, lifecycle pool DB, dan fixture FK log aktiviti |
 | 2026-09-25 | P1 | Tambah migration 022 `token_dikemaskini_at`; `/users/me` kini sumber kebenaran UI; session refresh pada mount/focus/60s; token lama dicabut selepas role/password/staff/syarikat berubah; spec P1 E2E — suite **21/21 lulus** |
 | 2026-09-25 | 5 / §2.5 | **Ralat seragam** `{ error }` (±80 respons BE + 7 halaman FE). **Refactor BE**: 48 handler dari 11 `routes/*.js` dipindah ke `controllers/*Controller.js` (salinan AST), matriks risiko 4 salinan → `utils/matriksRisiko.js`, buang kod mati. Pengesahan: 180/180 respons GET identik vs HEAD (5 peranan), lint `no-undef` bersih, E2E 21/21, build FE lulus |
+| 2026-09-25 | FE | **Lint frontend 49 → 0 ralat**: 3 modal (penilaian ×2, pengenalpastian) memanggil hook selepas `if (!isOpen) return null` (pepijat terpendam — crash jika dirender tanpa syarat) → dipindah selepas hook; buang import/pemboleh ubah tidak digunakan, fungsi mati `ComparisonView`, NBSP `StatusBadge`; `vite.config.js` guna globals Node. Build + E2E 61/61. **Rancang revamp UI** → `docs/pipeline/11-PLAN-ui-revamp.md` |
 | 2026-09-25 | Keselamatan | **Audit bacaan**: `laporan/:id/data-penuh` (semakan controller rosak — guna `req.user.nama_syarikat` yang tiada) → `hadSyarikat`; `log_aktiviti` ditapis syarikat untuk Staff/Ketua Subsidiari (dahulu nampak 4 syarikat); `check-no-rujukan` hanya `{ exists }` (dahulu rekod penuh). Notifikasi, dashboard & senarai disemak selamat. Spec 12 +3 ujian — E2E **61/61** |
 | 2026-09-25 | Keselamatan | **IDOR syarikat ditutup**: 11 endpoint tulis + 7 bacaan ikut ID tiada semakan syarikat (Ketua Subsidiari boleh padam risiko syarikat lain, dsb.) → middleware `hadSyarikat` (`middleware/aksesSyarikat.js`) pada route. Spec 11 (aliran tulis penuh, 17 ujian) & spec 12 (isolasi, 4 ujian). Turut: tambah log pemantauan kini terima item string/objek & langkau baris kosong (dahulu 500 / simpan baris kosong); mesej audit padam log kini No. Rujukan (dahulu UUID dilabel "Risiko ID") — E2E **58/58** |
 | 2026-09-25 | Dasar | **Executive = Admin** (kecuali `pengguna:urus`/`log:padam`): migration 024 beri `rujukan:urus` kepada Executive, Ketua Subsidiari & Staff (15/12/10) — sebelum ini butang "Tambah Bahagian" dipapar kepada mereka tetapi API tolak 403; pindaan lulus-terus & notifikasi ikut kebenaran `pindaan:lulus` (bukan `"Admin"`); Executive boleh tapis pindaan ikut syarikat; UI Pindaan (statistik, tapisan, lajur Pemohon) & 4 butang edit dalam `ViewRisikoModal` kini untuk Admin & Executive; matriks `01-auth-rbac.md` dijana semula dari DB (baris `rujukan:urus` salah); spec 10 — E2E **37/37** |

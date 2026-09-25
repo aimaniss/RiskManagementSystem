@@ -72,7 +72,6 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         const pageHeight = pdf.internal.pageSize.height; // 297
         const margin = 14;
         const bottomMargin = 18;
-        const contentWidth = pageWidth - margin * 2;
         let currentY = margin;
 
         // --- Gaya Global ---
@@ -304,7 +303,7 @@ export default function LogPreviewModal({ risk, range, onClose }) {
 
           // --- SEKSYEN 3: RAWATAN ---
           const pelanTindakanBody = Array.isArray(risk.pelan_tindakan) && risk.pelan_tindakan.length > 0
-            ? risk.pelan_tindakan.map((pelan, idx) => [
+            ? risk.pelan_tindakan.map((pelan) => [
                 formatList(pelan.tindakan),
                 pelan.jenis_kawalan || '-',
                 pelan.tempoh_jangkaan || '-',

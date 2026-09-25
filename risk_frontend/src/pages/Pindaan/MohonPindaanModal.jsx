@@ -3,7 +3,7 @@ import { X, CheckSquare, FilePenLine } from "lucide-react";
 
 // Import CSS KHUSUS for this modal
 import './MohonPindaanModal.css';
-import { riskMatrix, getRiskMatrix } from "../../constants/riskMatrix";
+import { riskMatrix } from "../../constants/riskMatrix";
 
 // UI Komponen
 import EmptyState from "@/components/ui/empty-state";

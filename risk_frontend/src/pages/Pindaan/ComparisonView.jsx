@@ -1,17 +1,9 @@
 import React from 'react';
 
 // --- Import shared risk matrix ---
-import { riskMatrix, getRiskMatrix } from "../../constants/riskMatrix";
+import { riskMatrix } from "../../constants/riskMatrix";
 
 const riskMatrixDetails = riskMatrix;
-const getRiskStylingFromMatrix = (likelihood, impact, matrix) => {
-    const k_val = parseInt(likelihood, 10);
-    const i_val = parseInt(impact, 10);
-    if (!isNaN(k_val) && !isNaN(i_val) && k_val >= 1 && k_val <= 5 && i_val >= 1 && i_val <= 5 && matrix[k_val] && matrix[k_val][i_val]) {
-        return matrix[k_val][i_val];
-    }
-    return { label: "Tiada", shortLabel: "-", color: "#f1f5f9", textColor: "#334155" };
-};
 
 
 // Pemetaan Nama Medan

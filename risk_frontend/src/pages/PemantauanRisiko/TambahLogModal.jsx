@@ -55,7 +55,7 @@ export default function TambahLogModal({
 
     const [risikoTeks, setRisikoTeks] = useState("");
     const [risikoNoRujukan, setRisikoNoRujukan] = useState("-");
-    const [risikoInfo, setRisikoInfo] = useState(null);
+    const [, setRisikoInfo] = useState(null);
     const [validationMessage, setValidationMessage] = useState("");
 
     const [tahapRisikoRujukan, setTahapRisikoRujukan] = useState("Tiada Data");

@@ -22,6 +22,7 @@ termasuk RBAC, notifikasi, dan jejak audit.
 | `08-pengguna-notifikasi-log.md` | Pengguna / Notifikasi / Log | CRUD pengguna, roles, syarikat, bahagian, notifikasi, log aktiviti |
 | `09-PLAN-revamp.md` | PLAN Revamp v2 | Status pelaksanaan + transaksi, role matrix `kebenaran`, soft-delete, E2E |
 | `10-PLAN-lanjutan.md` | PLAN Lanjutan | Aliran baharu (advisory lock, rehash, pindaan:lihat), senario P1–P3 |
+| `11-PLAN-ui-revamp.md` | PLAN Revamp UI | Penilaian, rawatan & pemantauan: modal butiran sesak, borang bertindih, fasa U0–U6 (📋 dirancang) |
 
 ## Cara Baca
 

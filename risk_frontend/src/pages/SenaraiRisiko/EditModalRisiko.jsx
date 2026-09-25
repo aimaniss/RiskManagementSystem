@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X, FilePenLine } from "lucide-react";
-import { riskMatrix, getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
+import { getRiskMatrix, getRiskAbbreviation } from "../../constants/riskMatrix";
 import RiskMatrixVisual from "@/components/ui/risk-matrix-visual";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, userSyarikatId, onClose, onSave }) {
+export default function EditModalRisiko({ isOpen, risk, syarikatList, userRole, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...risk });
   const [puncaList, setPuncaList] = useState(risk.punca || [""]);
   const [kesanList, setKesanList] = useState(risk.kesan || [""]);

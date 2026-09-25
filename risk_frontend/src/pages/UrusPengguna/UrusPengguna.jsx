@@ -26,7 +26,7 @@ function UrusPengguna() {
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState("");
+  const [, setModalType] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [formData, setFormData] = useState({

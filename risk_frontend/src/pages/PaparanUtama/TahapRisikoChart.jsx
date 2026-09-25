@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { useDarkMode } from "../../hooks/useDarkMode";
 
-export const RISK_COLORS = {
+const RISK_COLORS = {
   "Sangat Tinggi": "#ef4444",
   "Tinggi": "#f97316",
   "Sederhana": "#eab308",

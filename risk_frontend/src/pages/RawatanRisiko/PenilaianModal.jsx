@@ -7,13 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
+import { canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
 import { riskMatrix, getRiskMatrix, getRiskAbbreviation, KebarangkalianData, ImpakData } from "../../constants/riskMatrix";
 import { useSyarikats } from "../../hooks/useSyarikats";
 import { usePanduan } from "../../hooks/usePanduan";
 
 function PenilaianModal({ isOpen, onClose, initialData = {} }) {
-    if (!isOpen) return null;
 
     const [formData, setFormData] = useState({
         noRujukan: initialData.no_rujukan || "",
@@ -39,8 +38,6 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
     const [toast, setToast] = useState(null);
     const { openPanduan, PanduanTrigger, PanduanRenderer } = usePanduan(); 
 
-    const authUser = getAuthUser();
-    const userRole = authUser?.role || "";
     const canEditPenilaian = checkCanEditPenilaian();
 
     useEffect(() => {
@@ -124,6 +121,8 @@ function PenilaianModal({ isOpen, onClose, initialData = {} }) {
 
     const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat_id)?.nama_syarikat || "Memuat...";
     const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
+
+    if (!isOpen) return null;
 
     return (
         <>

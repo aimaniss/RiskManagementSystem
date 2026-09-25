@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Save, FilePenLine, Plus, Trash2, Loader2 } from "lucide-react";
 import api from "../../api/api";
-import { getAuthUser, canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
+import { canEditPenilaian as checkCanEditPenilaian } from "../../utils/auth";
 import Toast from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
-    if (!isOpen) return null;
 
     const [formData, setFormData] = useState({
         noRujukan: initialData.no_rujukan || "",
@@ -28,8 +27,6 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
     
-    const authUser = getAuthUser();
-    const userRole = authUser?.role || "";
     const canEditPengenalpastian = checkCanEditPenilaian();
 
     useEffect(() => {
@@ -99,6 +96,8 @@ function PengenalpastianModal({ isOpen, onClose, initialData = {} }) {
 
     const syarikatName = syarikatList.find(s => s.syarikat_id == formData.syarikat)?.nama_syarikat || "Memuat...";
     const readOnlyFieldCls = "cursor-default bg-muted/50 text-muted-foreground";
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

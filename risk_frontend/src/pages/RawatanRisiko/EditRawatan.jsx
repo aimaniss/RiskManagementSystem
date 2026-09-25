@@ -3,7 +3,7 @@ import { X, Trash2, Plus, BookOpen, Save, Loader2 } from "lucide-react";
 import api from "../../api/api"; 
 import Toast from "@/components/ui/toast";
 import ListDisplay from "../../components/ListDisplay";
-import { riskMatrix, getRiskMatrix, getRiskAbbreviation, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
+import { getRiskMatrix, TAHAP_RISIKO_ORDER } from "../../constants/riskMatrix";
 import { usePanduan } from "../../hooks/usePanduan";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

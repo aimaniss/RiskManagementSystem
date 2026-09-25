@@ -55,7 +55,7 @@ function RiskLevelBadge({ level }) {
   );
 }
 
-function SenaraiRisiko({ refreshTrigger }) {
+function SenaraiRisiko() {
   const { risks, loading, refetch } = useRisks();
   const { syarikatList } = useSyarikats();
   const [search, setSearch] = useState("");

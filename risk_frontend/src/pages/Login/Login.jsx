@@ -6,7 +6,6 @@ import { jwtDecode } from "jwt-decode";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FiShield } from "react-icons/fi";
 import "./Login.css";
-import ukmhLogo from "../../assets/images/Dark Background/UKMH_dark.png";
 
 export default function Login() {
   const [staffId, setStaffId] = useState("");

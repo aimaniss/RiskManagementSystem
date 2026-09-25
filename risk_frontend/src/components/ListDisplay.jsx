@@ -4,7 +4,7 @@ import { parseListData } from "../utils/formatters";
  * Shared ListDisplay component
  * Renders semicolon-separated or array data as a numbered list
  */
-const ListDisplay = ({ data, isLogContext = false }) => {
+const ListDisplay = ({ data }) => {
   const getItemText = (item) => {
     if (typeof item === "string") return item;
     if (item?.punca) return item.punca;
