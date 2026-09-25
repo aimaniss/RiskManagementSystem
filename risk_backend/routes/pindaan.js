@@ -5,7 +5,7 @@
 
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 import { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenggunaIdByPeranan } from "../utils/notifikasi.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 
@@ -45,7 +45,7 @@ const getRiskShortLabelFromMatrix = (likelihood, impact, matrix) => {
  * ENDPOINT: /api/pindaan/risks-for-amendment
  * -------------------------------------------------------
  */
-router.get("/risks-for-amendment", verifyToken, async (req, res) => {
+router.get("/risks-for-amendment", verifyToken, authorizeKebenaran("pindaan:urus"), async (req, res) => {
   try {
     const user = req.user;
     
@@ -161,7 +161,7 @@ router.get("/risks-for-amendment", verifyToken, async (req, res) => {
  * ENDPOINT: /api/pindaan/:risk_id
  * -------------------------------------------------------
  */
-router.post("/:risk_id", verifyToken, async (req, res) => {
+router.post("/:risk_id", verifyToken, authorizeKebenaran("pindaan:urus"), async (req, res) => {
   const { risk_id } = req.params;
   const { justifikasi, perubahan } = req.body;
   // Ambil ID INTEGER dari req.user. Pastikan nama 'pengguna_id' betul
@@ -370,7 +370,7 @@ router.post("/:risk_id", verifyToken, async (req, res) => {
  * ENDPOINT: /api/pindaan/stats
  * -------------------------------------------------------
  */
-router.get("/stats", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+router.get("/stats", verifyToken, authorizeKebenaran("pindaan:lulus"), async (req, res) => {
     try {
         const query = `
             SELECT
@@ -412,7 +412,7 @@ router.get("/stats", verifyToken, authorizeRoles("Admin"), async (req, res) => {
  * ENDPOINT: /api/pindaan/
  * -------------------------------------------------------
  */
-router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("pindaan:lihat"), async (req, res) => {
   try {
     const { status, syarikat_id } = req.query;
     const user = req.user;
@@ -494,7 +494,7 @@ router.get("/", verifyToken, authorizeRoles("Admin", "Executive"), async (req, r
  * ENDPOINT: /api/pindaan/:pindaan_id/approve
  * -------------------------------------------------------
  */
-router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+router.put("/:pindaan_id/approve", verifyToken, authorizeKebenaran("pindaan:lulus"), async (req, res) => {
   const { pindaan_id } = req.params;
   // Ambil ID INTEGER Admin dari req.user
   const { pengguna_id: adminIntegerId } = req.user;
@@ -630,7 +630,7 @@ router.put("/:pindaan_id/approve", verifyToken, authorizeRoles("Admin"), async (
  * ENDPOINT: /api/pindaan/:pindaan_id/reject
  * -------------------------------------------------------
  */
-router.put("/:pindaan_id/reject", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+router.put("/:pindaan_id/reject", verifyToken, authorizeKebenaran("pindaan:lulus"), async (req, res) => {
   const { pindaan_id } = req.params;
   const { komen_pelulus } = req.body;
   // Ambil ID INTEGER Admin dari req.user

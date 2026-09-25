@@ -43,7 +43,7 @@ const hantarNotifikasiBulk = async (pengguna_ids, tajuk, mesej, jenis_notifikasi
 const dapatkanPenggunaIdByPeranan = async (...nama_peranan) => {
   try {
     const { rows } = await pool.query(
-      `SELECT pengguna_id FROM pengguna WHERE peranan_id IN (
+      `SELECT pengguna_id FROM pengguna WHERE is_deleted = false AND peranan_id IN (
          SELECT peranan_id FROM peranan WHERE nama_peranan = ANY($1)
        )`,
       [nama_peranan]

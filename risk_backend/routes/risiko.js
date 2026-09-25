@@ -1,6 +1,6 @@
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 import { hantarNotifikasi, hantarNotifikasiBulk, dapatkanPenggunaIdByPeranan } from "../utils/notifikasi.js";
 
@@ -27,7 +27,7 @@ const getRiskLevel = (k, i) => {
 };
 
 // ------------------- POST: Tambah Risiko -------------------
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, authorizeKebenaran("risiko:daftar"), async (req, res) => {
   const client = await pool.connect();
   
   const user = req.user; 
@@ -39,16 +39,10 @@ router.post("/", verifyToken, async (req, res) => {
   } = req.body;
 
   try {
-    const allowedRoles = ["Admin", "Executive", "Staff", "Ketua Subsidiari"];
-    if (!allowedRoles.includes(user.nama_peranan)) {
-      client.release(); 
-      return res.status(403).json({ error: "No permission to add risiko" });
-    }
-
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       if (parseInt(syarikatId) !== user.syarikat_id) {
         client.release(); 
-        return res.status(403).json({ error: "No permission for other subsidiari" });
+        return res.status(403).json({ error: "Anda tidak dibenarkan mendaftar risiko untuk subsidiari lain." });
       }
     }
 
@@ -151,7 +145,7 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 // ------------------- GET: Semua Risiko -------------------
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("risiko:lihat"), async (req, res) => {
   try {
     const user = req.user;
     let query = `
@@ -242,8 +236,8 @@ router.get("/", verifyToken, async (req, res) => {
         pt.status_pemantauan,
         pt.justifikasi_pindaan_pemantauan AS pindaan_keberkesanan,
         pt.catatan,
-        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id) AS punca,
-        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan
+        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS punca,
+        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS kesan
 
       FROM risiko r
       LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
@@ -348,7 +342,7 @@ router.get("/:risiko_id/rawatan", verifyToken, async (req, res) => {
 // ===============================================================
 // ✅ PUT Update Rawatan by Risiko ID
 // ===============================================================
-router.put("/:risiko_id/rawatan", verifyToken, async (req, res) => {
+router.put("/:risiko_id/rawatan", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, res) => {
   const client = await pool.connect();
   const user = req.user;
   const { risiko_id } = req.params;
@@ -376,8 +370,8 @@ router.put("/:risiko_id/rawatan", verifyToken, async (req, res) => {
     const rawatan_id = checkRows[0].rawatan_id;
     const noRujukanUntukLog = checkRows[0].no_rujukan;
 
-    await client.query(`DELETE FROM pelan_tindakan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
-    await client.query(`DELETE FROM kakitangan_rawatan WHERE rawatan_id = $1`, [rawatan_id]);
+    await client.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+    await client.query(`UPDATE kakitangan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
 
     if (Array.isArray(plan_tindakan)) {
       for (const pelan of plan_tindakan) {
@@ -440,7 +434,7 @@ router.put("/:risiko_id/rawatan", verifyToken, async (req, res) => {
 // ===============================================================
 // ✅ PUT Update Log Pemantauan by Risiko ID
 // ===============================================================
-router.put("/:risiko_id/pemantauan/log/:log_id", verifyToken, async (req, res) => {
+router.put("/:risiko_id/pemantauan/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), async (req, res) => {
   const client = await pool.connect();
   const { risiko_id, log_id } = req.params;
   const user = req.user;
@@ -527,8 +521,8 @@ router.put("/:risiko_id/pemantauan/log/:log_id", verifyToken, async (req, res) =
       return res.status(404).json({ message: "Gagal mengemaskini log." });
     }
 
-    await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
-    await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
+    await client.query("UPDATE PelanTindakanPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
+    await client.query("UPDATE KakitanganPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
 
     if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
       for (const item of finalPelanList) {
@@ -580,7 +574,7 @@ router.put("/:risiko_id/pemantauan/log/:log_id", verifyToken, async (req, res) =
 });
 
 // ------------------- PUT: Update Risiko -------------------
-router.put("/:risiko_id", verifyToken, async (req, res) => {
+router.put("/:risiko_id", verifyToken, authorizeKebenaran("risiko:daftar"), async (req, res) => {
   const client = await pool.connect();
   const risikoId = req.params.risiko_id;
   const user = req.user;
@@ -595,7 +589,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       if (parseInt(syarikatId) !== user.syarikat_id) {
         client.release();
-        return res.status(403).json({ error: "No permission to update other subsidiari" });
+        return res.status(403).json({ error: "Anda tidak dibenarkan mengemaskini risiko untuk subsidiari lain." });
       }
     }
 
@@ -623,7 +617,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
     );
 
     if (Array.isArray(punca)) {
-      await client.query('DELETE FROM punca_risiko WHERE risiko_id = $1', [risikoId]);
+      await client.query('UPDATE punca_risiko SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
       for (let p of punca) {
         if (p && p.trim() !== "") {
           await client.query(
@@ -635,7 +629,7 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
     }
 
     if (Array.isArray(kesan)) {
-      await client.query('DELETE FROM kesan_risiko WHERE risiko_id = $1', [risikoId]);
+      await client.query('UPDATE kesan_risiko SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
       for (let k of kesan) {
         if (k && k.trim() !== "") {
           await client.query(
@@ -670,8 +664,8 @@ router.put("/:risiko_id", verifyToken, async (req, res) => {
   }
 });
 
-// ------------------- DELETE: Risiko -------------------
-router.delete("/:risiko_id", verifyToken, async (req, res) => {
+// ------------------- DELETE: Risiko (soft-delete) -------------------
+router.delete("/:risiko_id", verifyToken, authorizeKebenaran("risiko:padam"), async (req, res) => {
   const risikoId = parseInt(req.params.risiko_id, 10); 
   const user = req.user;
   const client = await pool.connect(); 
@@ -682,11 +676,6 @@ router.delete("/:risiko_id", verifyToken, async (req, res) => {
   }
 
   try {
-    if (user.nama_peranan !== "Admin") {
-      await client.release();
-      return res.status(403).json({ error: "Hanya Admin dibenarkan untuk memadam data ini." });
-    }
-    
     const { rows } = await client.query(
       `SELECT no_rujukan FROM risiko WHERE risiko_id = $1 AND is_deleted = false`, 
       [risikoId]
@@ -707,20 +696,20 @@ router.delete("/:risiko_id", verifyToken, async (req, res) => {
     const logIds = logIdsRes.rows.map(l => l.log_id);
 
     if (rawatanIds.length > 0) {
-      await client.query('UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
-      await client.query('UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = ANY($1::integer[])', [rawatanIds]);
+      await client.query('UPDATE pelan_tindakan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = ANY($1::integer[]) AND is_deleted = false', [rawatanIds]);
+      await client.query('UPDATE kakitangan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = ANY($1::integer[]) AND is_deleted = false', [rawatanIds]);
     }
     if (logIds.length > 0) {
-      await client.query('UPDATE PelanTindakanPemantauan SET is_deleted = true WHERE log_id = ANY($1::uuid[])', [logIds]);
-      await client.query('UPDATE KakitanganPemantauan SET is_deleted = true WHERE log_id = ANY($1::uuid[])', [logIds]);
+      await client.query('UPDATE PelanTindakanPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = ANY($1::uuid[]) AND is_deleted = false', [logIds]);
+      await client.query('UPDATE KakitanganPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = ANY($1::uuid[]) AND is_deleted = false', [logIds]);
     }
 
-    await client.query('UPDATE rawatan_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
-    await client.query('UPDATE LogPemantauan SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
-    await client.query('UPDATE punca_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
-    await client.query('UPDATE kesan_risiko SET is_deleted = true WHERE risiko_id = $1', [risikoId]);
+    await client.query('UPDATE rawatan_risiko SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
+    await client.query('UPDATE LogPemantauan SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
+    await client.query('UPDATE punca_risiko SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
+    await client.query('UPDATE kesan_risiko SET is_deleted = true, deleted_at = NOW() WHERE risiko_id = $1 AND is_deleted = false', [risikoId]);
 
-    await client.query("UPDATE risiko SET is_deleted = true, updated_at = NOW() WHERE risiko_id = $1 AND is_deleted = false", [risikoId]);
+    await client.query("UPDATE risiko SET is_deleted = true, deleted_at = NOW(), updated_at = NOW() WHERE risiko_id = $1 AND is_deleted = false", [risikoId]);
 
     await client.query('COMMIT');
 
@@ -804,8 +793,8 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
   }
 });
 
-// ------------------- PUT: Luluskan Risiko (Admin/Executive) -------------------
-router.put("/:risiko_id/approve", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
+// ------------------- PUT: Luluskan Risiko (kebenaran risiko:lulus) -------------------
+router.put("/:risiko_id/approve", verifyToken, authorizeKebenaran("risiko:lulus"), async (req, res) => {
   const client = await pool.connect();
   try {
     const { risiko_id } = req.params;
@@ -870,8 +859,8 @@ router.put("/:risiko_id/approve", verifyToken, authorizeRoles("Admin", "Executiv
   }
 });
 
-// ------------------- PUT: Tolak Risiko (Admin/Executive) -------------------
-router.put("/:risiko_id/reject", verifyToken, authorizeRoles("Admin", "Executive"), async (req, res) => {
+// ------------------- PUT: Tolak Risiko (kebenaran risiko:lulus) -------------------
+router.put("/:risiko_id/reject", verifyToken, authorizeKebenaran("risiko:lulus"), async (req, res) => {
   try {
     const { risiko_id } = req.params;
     const { sebab } = req.body;

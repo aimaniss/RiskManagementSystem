@@ -1,10 +1,10 @@
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("pengguna:urus"), async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM peranan ORDER BY peranan_id");
     res.json(rows);

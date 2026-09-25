@@ -3,6 +3,8 @@ export {
   getAuthUser,
   getUserRole,
   getUserRoleTitle,
+  getKebenaran,
+  hasKebenaran,
   isAdmin,
   canEditPenilaian,
   canEdit,

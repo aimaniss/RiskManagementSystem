@@ -1,0 +1,10 @@
+{
+  "name": "risk-mcp-boost",
+  "version": "1.0.0",
+  "description": "MCP server 'rms-boost' untuk mengimbas codebase Sistem Pengurusan Risiko UKM Holdings (struktur, endpoint, skema DB, frontend, pipeline flow). Tiada kebergantungan luaran.",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  }
+}

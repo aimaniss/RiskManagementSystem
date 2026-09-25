@@ -1,6 +1,6 @@
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ const getSkorRisikoLabel = (shortCode) => {
 };
 
 // GET /api/dashboard?syarikat_id=Semua OR ?syarikat_id=<id>
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, res) => {
   try {
     const { syarikat_id } = req.query;
     const user = req.user;
@@ -29,6 +29,9 @@ router.get("/", verifyToken, async (req, res) => {
     let whereConditions = []; 
     let params = [];
     let paramIndex = 1;
+
+    // Syarat asas: jangan kira risiko yang di-soft-delete
+    whereConditions.push(`r.is_deleted = false`);
 
     // Syarat 1: Tapisan Syarikat
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
@@ -58,6 +61,7 @@ router.get("/", verifyToken, async (req, res) => {
                      pm.tarikh_pemantauan DESC NULLS LAST
           ) AS rn
         FROM LogPemantauan pm
+        WHERE pm.is_deleted = false
       ),
       RawatanTerkini AS (
         SELECT
@@ -68,6 +72,7 @@ router.get("/", verifyToken, async (req, res) => {
             ORDER BY rr.rawatan_id DESC
           ) AS rn
         FROM rawatan_risiko rr
+        WHERE rr.is_deleted = false
       )
       SELECT
         r.risiko_id,
@@ -232,6 +237,7 @@ router.get("/", verifyToken, async (req, res) => {
                      pm.tarikh_pemantauan DESC NULLS LAST
           ) AS rn
         FROM LogPemantauan pm
+        WHERE pm.is_deleted = false
       )
       SELECT
         r.no_rujukan AS "noRujukan",
@@ -287,6 +293,7 @@ router.get("/", verifyToken, async (req, res) => {
                        pm.tarikh_pemantauan DESC NULLS LAST
             ) AS rn
           FROM LogPemantauan pm
+          WHERE pm.is_deleted = false
         )
         SELECT
           s.syarikat_id,
@@ -296,7 +303,7 @@ router.get("/", verifyToken, async (req, res) => {
           COUNT(DISTINCT CASE WHEN COALESCE(lt.status_pemantauan, 'Buka') <> 'Tutup' THEN r.risiko_id END)::int AS aktif,
           COUNT(DISTINCT CASE WHEN COALESCE(lt.status_pemantauan, 'Buka') = 'Tutup' THEN r.risiko_id END)::int AS tutup
         FROM syarikat s
-        LEFT JOIN risiko r ON r.syarikat_id::integer = s.syarikat_id
+        LEFT JOIN risiko r ON r.syarikat_id::integer = s.syarikat_id AND r.is_deleted = false
         LEFT JOIN LogTerkini lt ON lt.risiko_id = r.risiko_id AND lt.rn = 1
         GROUP BY s.syarikat_id, s.nama_syarikat, label
         ORDER BY jumlah DESC

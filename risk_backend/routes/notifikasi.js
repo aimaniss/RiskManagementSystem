@@ -16,7 +16,7 @@ router.get("/", verifyToken, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT notifikasi_id, tajuk, mesej, jenis_notifikasi, entiti_id, telah_dibaca, created_at
        FROM notifikasi
-       WHERE pengguna_id = $1
+       WHERE pengguna_id = $1 AND is_deleted = false
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
       [pengguna_id, parseInt(limit), parseInt(offset)]
@@ -37,7 +37,7 @@ router.get("/unread-count", verifyToken, async (req, res) => {
   try {
     const { pengguna_id } = req.user;
     const { rows } = await pool.query(
-      `SELECT COUNT(*) AS count FROM notifikasi WHERE pengguna_id = $1 AND telah_dibaca = false`,
+      `SELECT COUNT(*) AS count FROM notifikasi WHERE pengguna_id = $1 AND telah_dibaca = false AND is_deleted = false`,
       [pengguna_id]
     );
     res.json({ count: parseInt(rows[0].count) || 0 });
@@ -57,7 +57,7 @@ router.put("/:notifikasi_id/baca", verifyToken, async (req, res) => {
     const { pengguna_id } = req.user;
 
     await pool.query(
-      `UPDATE notifikasi SET telah_dibaca = true WHERE notifikasi_id = $1 AND pengguna_id = $2`,
+      `UPDATE notifikasi SET telah_dibaca = true WHERE notifikasi_id = $1 AND pengguna_id = $2 AND is_deleted = false`,
       [notifikasi_id, pengguna_id]
     );
 
@@ -77,7 +77,7 @@ router.put("/baca-semua", verifyToken, async (req, res) => {
     const { pengguna_id } = req.user;
 
     await pool.query(
-      `UPDATE notifikasi SET telah_dibaca = true WHERE pengguna_id = $1 AND telah_dibaca = false`,
+      `UPDATE notifikasi SET telah_dibaca = true WHERE pengguna_id = $1 AND telah_dibaca = false AND is_deleted = false`,
       [pengguna_id]
     );
 
@@ -89,7 +89,7 @@ router.put("/baca-semua", verifyToken, async (req, res) => {
 });
 
 /**
- * DELETE: Padam satu notifikasi
+ * DELETE: Padam (soft-delete) satu notifikasi
  * Endpoint: /api/notifikasi/:notifikasi_id
  */
 router.delete("/:notifikasi_id", verifyToken, async (req, res) => {
@@ -97,10 +97,14 @@ router.delete("/:notifikasi_id", verifyToken, async (req, res) => {
     const { notifikasi_id } = req.params;
     const { pengguna_id } = req.user;
 
-    await pool.query(
-      `DELETE FROM notifikasi WHERE notifikasi_id = $1 AND pengguna_id = $2`,
+    const { rowCount } = await pool.query(
+      `UPDATE notifikasi SET is_deleted = true, deleted_at = NOW() WHERE notifikasi_id = $1 AND pengguna_id = $2 AND is_deleted = false`,
       [notifikasi_id, pengguna_id]
     );
+
+    if (rowCount === 0) {
+      return res.status(404).json({ message: "Notifikasi tidak dijumpai." });
+    }
 
     res.json({ message: "Notifikasi berjaya dipadam." });
   } catch (err) {

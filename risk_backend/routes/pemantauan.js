@@ -5,7 +5,7 @@
 
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
 
 const router = express.Router();
@@ -41,7 +41,7 @@ const getRiskLevel = (k, i) => {
   🟢 GET: Semua Risiko + Pemantauan Terkini (DIKEMASKINI)
   ENDPOINT: /pemantauan-risiko
 ======================================================= */
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("risiko:lihat"), async (req, res) => {
   try {
     const user = req.user;
 
@@ -75,7 +75,7 @@ router.get("/", verifyToken, async (req, res) => {
             ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
           ) AS rn
         FROM LogPemantauan pm
-        JOIN Risiko r ON pm.risiko_id = r.risiko_id
+        JOIN Risiko r ON pm.risiko_id = r.risiko_id AND r.is_deleted = false
         WHERE pm.is_deleted = false
       ),
       ButiranTerkini AS (
@@ -122,10 +122,12 @@ router.get("/", verifyToken, async (req, res) => {
     `;
 
     const params = [];
+    let whereClause = " WHERE r.is_deleted = false";
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
-      query += ` WHERE CAST(r.syarikat_id AS INTEGER) = $1`;
+      whereClause += ` AND CAST(r.syarikat_id AS INTEGER) = $1`;
       params.push(user.syarikat_id);
     }
+    query += whereClause;
 
     query += ` ORDER BY r.tahun DESC, r.separuh_tahun DESC, r.no_rujukan ASC`;
 
@@ -455,7 +457,7 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
   ➕ POST: Tambah Log Pemantauan Baru (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/log
 ======================================================= */
-router.post("/log", verifyToken, async (req, res) => {
+router.post("/log", verifyToken, authorizeKebenaran("pemantauan:urus"), async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -555,7 +557,7 @@ router.post("/log", verifyToken, async (req, res) => {
   ❌ DELETE: Padam Log Pemantauan (⭐️ DIKEMASKINI ⭐️)
   ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
-router.delete("/log/:log_id", verifyToken, async (req, res) => {
+router.delete("/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), async (req, res) => {
   // ⭐️ BARU: Guna 'client' untuk transaksi
   const client = await pool.connect(); 
   const { log_id } = req.params;
@@ -570,11 +572,11 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
     await client.query("BEGIN");
 
     // ⭐️ BARU: 1. Padam 'children' dahulu (SOFT DELETE)
-    await client.query("UPDATE PelanTindakanPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
-    await client.query("UPDATE KakitanganPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
+    await client.query("UPDATE PelanTindakanPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
+    await client.query("UPDATE KakitanganPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
     
     // ⭐️ BARU: 2. Padam 'parent' (SOFT DELETE)
-    await client.query("UPDATE LogPemantauan SET is_deleted = true WHERE log_id = $1", [log_id]);
+    await client.query("UPDATE LogPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
 
     // ⭐️ BARU: Tamat transaksi
     await client.query("COMMIT");
@@ -610,7 +612,7 @@ router.delete("/log/:log_id", verifyToken, async (req, res) => {
   PUT: Kemaskini Log Pemantauan (Kekal Sama)
   ENDPOINT: /pemantauan-risiko/log/:log_id
 ======================================================= */
-router.put("/log/:log_id", verifyToken, async (req, res) => {
+router.put("/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), async (req, res) => {
   const client = await pool.connect();
   const { log_id } = req.params;
 
@@ -686,8 +688,8 @@ router.put("/log/:log_id", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Log tidak dijumpai" });
     }
 
-    await client.query("DELETE FROM PelanTindakanPemantauan WHERE log_id = $1", [log_id]);
-    await client.query("DELETE FROM KakitanganPemantauan WHERE log_id = $1", [log_id]);
+    await client.query("UPDATE PelanTindakanPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
+    await client.query("UPDATE KakitanganPemantauan SET is_deleted = true, deleted_at = NOW() WHERE log_id = $1 AND is_deleted = false", [log_id]);
     
     if (Array.isArray(finalPelanList) && finalPelanList.length > 0) {
       for (const item of finalPelanList) {

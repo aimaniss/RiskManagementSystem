@@ -1,0 +1,14 @@
+{
+  "name": "risk-management-system-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Ujian E2E (Playwright) untuk Sistem Pengurusan Risiko UKM Holdings",
+  "scripts": {
+    "test:e2e": "npx playwright test --config e2e/playwright.config.mjs",
+    "test:e2e:report": "npx playwright show-report",
+    "test:e2e:headed": "npx playwright test --config e2e/playwright.config.mjs --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

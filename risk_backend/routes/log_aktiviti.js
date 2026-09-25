@@ -3,16 +3,14 @@
 // =======================================================
 import express from "express";
 import pool from "../config/db.js";
-// ⭐️ DIUBAH: 'catatAktiviti' tidak lagi diimport kerana tidak digunakan
-import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
-// import { catatAktiviti } from "../utils/catatAktiviti.js"; // <- DIBUANG
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // =======================================================
 // 🟢 GET /api/log_aktiviti - (Kekal Sama)
 // =======================================================
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("log:baca"), async (req, res) => {
   const {
     tarikhMula,
     tarikhAkhir,
@@ -24,6 +22,9 @@ router.get("/", verifyToken, async (req, res) => {
   const queryParams = [];
   const whereClauses = [];
   let paramIndex = 1;
+
+  // Dasar: jangan papar log yang di-soft-delete
+  whereClauses.push(`la.is_deleted = false`);
 
   // ... (Logik filter anda kekal sama) ...
   if (tarikhMula) {
@@ -83,34 +84,25 @@ router.get("/", verifyToken, async (req, res) => {
 });
 
 // =======================================================
-// 🔴 DELETE /api/log_aktiviti/:id - (⭐️ DIKEMASKINI ⭐️)
+// 🔴 DELETE /api/log_aktiviti/:id - (⭐️ Soft-delete ⭐️)
 // =======================================================
-// Hanya 'Admin' boleh memadam log
-router.delete("/:id", verifyToken, authorizeRoles("Admin"), async (req, res) => {
-  const { id } = req.params; 
+// Kebenaran 'log:padam' (Admin sahaja dalam matriks)
+router.delete("/:id", verifyToken, authorizeKebenaran("log:padam"), async (req, res) => {
+  const { id } = req.params;
 
   try {
-    
     const { rowCount } = await pool.query(
-      "DELETE FROM log_aktiviti WHERE id = $1",
+      `UPDATE log_aktiviti SET is_deleted = true, deleted_at = NOW() WHERE id = $1 AND is_deleted = false`,
       [id]
     );
 
-    // 2. Semak jika log wujud
     if (rowCount === 0) {
       return res.status(404).json({ error: "Log tidak dijumpai." });
     }
 
-  
-
     res.status(200).json({ message: "Log berjaya dipadam." });
 
   } catch (err) {
-    
-    if (err.code === '23503') { 
-        console.error("❌ Ralat FK semasa memadam log:", err.detail);
-        return res.status(400).json({ error: "Log ini tidak boleh dipadam kerana ia mempunyai rekod berkaitan." });
-    }
     console.error("❌ Ralat semasa memadam log:", err);
     res.status(500).json({ error: "Gagal memadam log dari server." });
   }
@@ -118,9 +110,9 @@ router.delete("/:id", verifyToken, authorizeRoles("Admin"), async (req, res) => 
 
 
 // =======================================================
-// 🔴 DELETE /api/log_aktiviti/ (⭐️ ROUTE BARU - Padam Julat Tarikh ⭐️)
+// 🔴 DELETE /api/log_aktiviti/ (⭐️ Soft-delete Julat Tarikh ⭐️)
 // =======================================================
-router.delete("/", verifyToken, authorizeRoles("Admin"), async (req, res) => {
+router.delete("/", verifyToken, authorizeKebenaran("log:padam"), async (req, res) => {
   // Ambil dari 'query parameters'
   const { tarikhMula, tarikhAkhir } = req.query;
 
@@ -132,9 +124,9 @@ router.delete("/", verifyToken, authorizeRoles("Admin"), async (req, res) => {
     // Sediakan tarikh akhir (+1 hari)
     const endDay = new Date(tarikhAkhir);
     endDay.setDate(endDay.getDate() + 1);
-    
+
     const { rowCount } = await pool.query(
-      "DELETE FROM log_aktiviti WHERE tarikh_masa >= $1 AND tarikh_masa < $2",
+      `UPDATE log_aktiviti SET is_deleted = true, deleted_at = NOW() WHERE tarikh_masa >= $1 AND tarikh_masa < $2 AND is_deleted = false`,
       [tarikhMula, endDay.toISOString()]
     );
 

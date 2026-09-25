@@ -5,7 +5,7 @@
 
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ const getRiskLevel = (k, i) => {
 // ⭐️ 1. GET: Senarai Risiko untuk Jadual Utama (LaporanRisiko.jsx)
 // ENDPOINT: /api/laporan/
 // =======================================================
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res) => {
   try {
     const user = req.user;
     const { subsidiary, tahun, separuhTahun } = req.query;
@@ -42,6 +42,7 @@ router.get("/", verifyToken, async (req, res) => {
       WITH RisikoAdaRawatan AS (
         SELECT DISTINCT risiko_id
         FROM rawatan_risiko
+        WHERE is_deleted = false
       ),
       PemantauanTerkini AS (
         SELECT
@@ -71,7 +72,8 @@ router.get("/", verifyToken, async (req, res) => {
             ORDER BY pm.tahun_pemantauan DESC, pm.tarikh_pemantauan DESC
           ) AS rn
         FROM LogPemantauan pm
-        JOIN Risiko r ON pm.risiko_id = r.risiko_id
+        JOIN Risiko r ON pm.risiko_id = r.risiko_id AND r.is_deleted = false
+        WHERE pm.is_deleted = false
       ),
       ButiranTerkini AS (
         SELECT 
@@ -79,7 +81,8 @@ router.get("/", verifyToken, async (req, res) => {
           ARRAY_AGG(DISTINCT pt.butiran_aktiviti) AS pelan_tindakan_terkini,
           ARRAY_AGG(DISTINCT kp.butiran_kakitangan) AS kakitangan_terkini
         FROM PelanTindakanPemantauan pt
-        LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id
+        LEFT JOIN KakitanganPemantauan kp ON kp.log_id = pt.log_id AND kp.is_deleted = false
+        WHERE pt.is_deleted = false
         GROUP BY pt.log_id
       )
       SELECT 
@@ -117,7 +120,7 @@ router.get("/", verifyToken, async (req, res) => {
     `;
 
     const params = [];
-    let whereClause = [];
+    let whereClause = ["r.is_deleted = false"];
 
     if (["Staff", "Ketua Subsidiari"].includes(user.nama_peranan)) {
       params.push(user.syarikat_id);
@@ -153,7 +156,7 @@ router.get("/", verifyToken, async (req, res) => {
 // ENDPOINT: /api/laporan/:risiko_id/data-penuh
 // (⭐️ INI YANG DIKEMASKINI ⭐️)
 // =======================================================
-router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
+router.get("/:risiko_id/data-penuh", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res) => {
   const { risiko_id } = req.params;
   const user = req.user;
 
@@ -175,7 +178,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                 -- =================================================================
                 SELECT ARRAY_AGG(ptr.pelan_tindakan) 
                 FROM pelan_tindakan_rawatan ptr
-                WHERE ptr.rawatan_id = rr.rawatan_id
+                WHERE ptr.rawatan_id = rr.rawatan_id AND ptr.is_deleted = false
               ), 
               
               'jenis_kawalan', rr.jenis_kawalan,
@@ -188,14 +191,14 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                 -- =================================================================
                 SELECT ARRAY_AGG(krr.nama_kakitangan) 
                 FROM kakitangan_rawatan krr
-                WHERE krr.rawatan_id = rr.rawatan_id 
+                WHERE krr.rawatan_id = rr.rawatan_id AND krr.is_deleted = false
               )
             )
             ORDER BY rr.rawatan_id ASC 
           ) AS pelan_tindakan
           
         FROM rawatan_risiko rr
-        WHERE rr.risiko_id = $1
+        WHERE rr.risiko_id = $1 AND rr.is_deleted = false
         GROUP BY rr.risiko_id
       ),
 
@@ -222,7 +225,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                 -- =================================================================
                 SELECT ARRAY_AGG(ptp.butiran_aktiviti) 
                 FROM PelanTindakanPemantauan ptp 
-                WHERE ptp.log_id = lp.log_id
+                WHERE ptp.log_id = lp.log_id AND ptp.is_deleted = false
               ),
               
               'kekerapan', lp.kekerapan_pemantauan,
@@ -233,7 +236,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
                 -- =================================================================
                 SELECT ARRAY_AGG(kp.butiran_kakitangan) 
                 FROM KakitanganPemantauan kp 
-                WHERE kp.log_id = lp.log_id
+                WHERE kp.log_id = lp.log_id AND kp.is_deleted = false
               ),
               
               'keberkesanan_tindakan', json_build_object(
@@ -263,7 +266,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
           ORDER BY lp.tahun_pemantauan ASC, lp.separuh_tahun_pemantauan ASC
           ) AS logs
         FROM LogPemantauan lp
-        WHERE lp.risiko_id = $1
+        WHERE lp.risiko_id = $1 AND lp.is_deleted = false
         GROUP BY lp.risiko_id
       )
 
@@ -277,8 +280,8 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
         r.no_rujukan,
         r.kategori AS kategori_risiko,
         r.risiko AS title,
-        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id) AS punca,
-        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id) AS kesan,
+        ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS punca,
+        ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id=r.risiko_id AND is_deleted = false) AS kesan,
         
         r.skor_kebarangkalian AS skor_kebarangkalian_n,
         CASE r.skor_kebarangkalian
@@ -313,7 +316,7 @@ router.get("/:risiko_id/data-penuh", verifyToken, async (req, res) => {
       LEFT JOIN RawatanAsal ra ON ra.risiko_id = r.risiko_id
       LEFT JOIN LogsTerkumpul lt ON lt.risiko_id = r.risiko_id
       
-      WHERE r.risiko_id = $1
+      WHERE r.risiko_id = $1 AND r.is_deleted = false
     `;
 
     const { rows } = await pool.query(query, [risiko_id]);

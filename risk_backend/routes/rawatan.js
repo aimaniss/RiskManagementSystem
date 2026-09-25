@@ -1,7 +1,8 @@
 import express from "express";
 import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
 import { catatAktiviti } from "../utils/catatAktiviti.js";
+import { dalamTransaksi } from "../utils/transaksi.js";
 
 const router = express.Router();
 
@@ -24,8 +25,8 @@ SELECT
         FROM pelan_tindakan_rawatan 
         WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id AND pelan_tindakan_rawatan.is_deleted = false
     ) AS plan_tindakan,
-    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
-    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
+    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id AND punca_risiko.is_deleted = false) AS punca,
+    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id AND kesan_risiko.is_deleted = false) AS kesan,
     ARRAY(
         SELECT nama_kakitangan 
         FROM kakitangan_rawatan 
@@ -72,8 +73,8 @@ SELECT
         FROM pelan_tindakan_rawatan 
         WHERE pelan_tindakan_rawatan.rawatan_id = rr.rawatan_id AND pelan_tindakan_rawatan.is_deleted = false
     ) AS plan_tindakan,
-    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id) AS punca,
-    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id) AS kesan,
+    ARRAY(SELECT punca FROM punca_risiko WHERE punca_risiko.risiko_id = r.risiko_id AND punca_risiko.is_deleted = false) AS punca,
+    ARRAY(SELECT kesan FROM kesan_risiko WHERE kesan_risiko.risiko_id = r.risiko_id AND kesan_risiko.is_deleted = false) AS kesan,
     ARRAY(
         SELECT nama_kakitangan 
         FROM kakitangan_rawatan 
@@ -107,7 +108,7 @@ LEFT JOIN LogPemantauan lp
 /* =======================================================
    🆕 PUT: UPDATE PENILAIAN + STATUS PEMANTAUAN (FIXED!)
    ======================================================= */
-router.put("/penilaian/:risiko_id", verifyToken, async (req, res) => {
+router.put("/penilaian/:risiko_id", verifyToken, authorizeKebenaran("risiko:nilai", "rawatan:urus"), async (req, res) => {
     const client = await pool.connect();
     const user = req.user;
 
@@ -191,7 +192,7 @@ router.put("/penilaian/:risiko_id", verifyToken, async (req, res) => {
 /* =======================================================
    🟢 POST: Tambah Rawatan + Update Status (SEDIKIT MODIFY)
    ======================================================= */
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, res) => {
     const client = await pool.connect();
     const user = req.user;
 
@@ -301,7 +302,7 @@ router.post("/", verifyToken, async (req, res) => {
 /* =======================================================
    🟡 PUT, DELETE, GET/:risiko_id - KEKAL SAMA (EXISTING CODE)
    ======================================================= */
-router.put("/:rawatan_id", verifyToken, async (req, res) => {
+router.put("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, res) => {
     const client = await pool.connect();
     const user = req.user;
 
@@ -322,8 +323,8 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
         }
         const noRujukanUntukLog = riskRows[0].no_rujukan;
 
-        await client.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
-        await client.query(`UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+        await client.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+        await client.query(`UPDATE kakitangan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
 
         if (Array.isArray(plan_tindakan)) {
             for (const pelan of plan_tindakan) {
@@ -390,25 +391,31 @@ router.put("/:rawatan_id", verifyToken, async (req, res) => {
     }
 });
 
-router.delete("/:rawatan_id", verifyToken, async (req, res) => {
+router.delete("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, res) => {
     const user = req.user;
     
     try {
         const { rawatan_id } = req.params;
 
-        const { rows: riskRows } = await pool.query(
-            "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1 AND rr.is_deleted = false",
-            [rawatan_id]
-        );
+        // Soft-delete tiga jadual dalam SATU transaksi — tiada data separa
+        const { noRujukanUntukLog } = await dalamTransaksi(async (client) => {
+            const { rows: riskRows } = await client.query(
+                "SELECT r.no_rujukan FROM risiko r JOIN rawatan_risiko rr ON r.risiko_id = rr.risiko_id WHERE rr.rawatan_id = $1 AND rr.is_deleted = false",
+                [rawatan_id]
+            );
 
-        if (riskRows.length === 0) {
-            return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
-        }
-        const noRujukanUntukLog = riskRows[0].no_rujukan;
+            if (riskRows.length === 0) {
+                const err = new Error("Rekod rawatan tidak ditemui.");
+                err.statusCode = 404;
+                throw err;
+            }
 
-        await pool.query(`UPDATE rawatan_risiko SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
-        await pool.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
-        await pool.query(`UPDATE kakitangan_rawatan SET is_deleted = true WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+            await client.query(`UPDATE rawatan_risiko SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+            await client.query(`UPDATE pelan_tindakan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+            await client.query(`UPDATE kakitangan_rawatan SET is_deleted = true, deleted_at = NOW() WHERE rawatan_id = $1 AND is_deleted = false`, [rawatan_id]);
+
+            return { noRujukanUntukLog: riskRows[0].no_rujukan };
+        });
 
         try {
             const logRingkasan = `Memadam rawatan untuk risiko: ${noRujukanUntukLog}.`;
@@ -426,6 +433,9 @@ router.delete("/:rawatan_id", verifyToken, async (req, res) => {
         res.json({ message: "Rawatan risiko berjaya dipadam" });
     } catch (err) {
         console.error("❌ Ralat DELETE /rawatan/:rawatan_id:", err);
+        if (err.statusCode === 404) {
+            return res.status(404).json({ message: err.message });
+        }
         res.status(500).json({ message: err.message });
     }
 });
@@ -453,8 +463,8 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
                 rr.tempoh_siap AS tempoh_jangkaan_siap,
                 ARRAY(SELECT pelan_tindakan FROM pelan_tindakan_rawatan WHERE rawatan_id = rr.rawatan_id AND is_deleted = false) AS plan_tindakan,
                 ARRAY(SELECT nama_kakitangan FROM kakitangan_rawatan WHERE rawatan_id = rr.rawatan_id AND is_deleted = false) AS kakitangan_bertanggungjawab,
-                ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id = r.risiko_id) AS punca,
-                ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id) AS kesan
+                ARRAY(SELECT punca FROM punca_risiko WHERE risiko_id = r.risiko_id AND is_deleted = false) AS punca,
+                ARRAY(SELECT kesan FROM kesan_risiko WHERE risiko_id = r.risiko_id AND is_deleted = false) AS kesan
             FROM risiko r
             LEFT JOIN rawatan_risiko rr ON rr.risiko_id = r.risiko_id AND rr.is_deleted = false
             LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)
