@@ -203,7 +203,7 @@ export default function EditPemantauan({ isOpen, risk, onClose }) {
         setToast({ variant: "success", title: "Berjaya", message: "Rekod log berjaya dipadam!" });
       } catch (err) {
         console.error("❌ Gagal memadam log:", err);
-        setToast({ variant: "error", title: "Gagal", message: `Gagal memadam log. ${err.response?.data?.message || "Sila cuba lagi."}` });
+        setToast({ variant: "error", title: "Gagal", message: `Gagal memadam log. ${err.response?.data?.error || "Sila cuba lagi."}` });
       } finally {
         setIsLoadingLog(false);
       }

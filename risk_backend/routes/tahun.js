@@ -13,7 +13,7 @@ router.get("/", verifyToken, async (req, res) => {
     res.json(rows.map((r) => r.tahun));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Ralat pelayan. Sila cuba sebentar lagi." });
+    res.status(500).json({ error: "Ralat pelayan. Sila cuba sebentar lagi." });
   }
 });
 

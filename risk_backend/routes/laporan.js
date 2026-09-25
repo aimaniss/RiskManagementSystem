@@ -176,7 +176,7 @@ router.get("/", verifyToken, authorizeKebenaran("laporan:jana"), async (req, res
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /laporan:", err);
-    res.status(500).json({ message: "Gagal memuatkan data laporan: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data laporan: " + err.message });
   }
 });
 
@@ -355,7 +355,7 @@ router.get(
       const { rows } = await pool.query(query, [risiko_id]);
 
       if (rows.length === 0) {
-        return res.status(404).json({ message: "Risiko tidak dijumpai." });
+        return res.status(404).json({ error: "Risiko tidak dijumpai." });
       }
 
       const riskData = rows[0];
@@ -366,13 +366,13 @@ router.get(
         ["Staff", "Ketua Subsidiari"].includes(user.nama_peranan) &&
         riskData.subsidiary !== user.nama_syarikat
       ) {
-        return res.status(403).json({ message: "Akses tidak dibenarkan." });
+        return res.status(403).json({ error: "Akses tidak dibenarkan." });
       }
 
       res.json(riskData);
     } catch (err) {
       console.error(`Ralat GET /laporan/${risiko_id}/data-penuh:`, err);
-      res.status(500).json({ message: "Gagal memuatkan data laporan penuh: " + err.message });
+      res.status(500).json({ error: "Gagal memuatkan data laporan penuh: " + err.message });
     }
   }
 );

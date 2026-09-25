@@ -284,7 +284,7 @@ export default function KemaskiniPemantauanModal({
             onClose?.();
         } catch (err) {
             console.error(`❌ Ralat mengemaskini log:`, err);
-            setToast({ variant: "error", title: "Gagal Mengemaskini", message: `Gagal mengemaskini log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}` });
+            setToast({ variant: "error", title: "Gagal Mengemaskini", message: `Gagal mengemaskini log. ${err.response?.data?.error || err.message || "Sila cuba lagi."}` });
         } finally {
             setIsLoading(false);
         }

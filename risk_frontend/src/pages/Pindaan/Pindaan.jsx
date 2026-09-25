@@ -194,7 +194,7 @@ function PindaanRisiko() {
       setToast({
         variant: "error",
         title: "Gagal Menghantar",
-        message: err.response?.data?.message || "Sila cuba lagi."
+        message: err.response?.data?.error || "Sila cuba lagi."
       });
     }
   };
@@ -225,7 +225,7 @@ function PindaanRisiko() {
       setToast({
         variant: "error",
         title: `Gagal ${action}`,
-        message: err.response?.data?.message || "Sila cuba lagi."
+        message: err.response?.data?.error || "Sila cuba lagi."
       });
     }
   };

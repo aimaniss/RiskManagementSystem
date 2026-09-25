@@ -49,7 +49,7 @@ LEFT JOIN syarikat s ON s.syarikat_id = CAST(r.syarikat_id AS INTEGER)`;
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /rawatan:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -101,7 +101,7 @@ LEFT JOIN LogPemantauan lp
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /rawatan/with-status:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -137,7 +137,7 @@ router.put(
       if (riskRows.length === 0) {
         await client.query("ROLLBACK");
         client.release();
-        return res.status(404).json({ message: "Risiko tidak ditemui." });
+        return res.status(404).json({ error: "Risiko tidak ditemui." });
       }
 
       const { no_rujukan, tahun, separuh_tahun } = riskRows[0];
@@ -187,7 +187,7 @@ router.put(
     } catch (err) {
       await client.query("ROLLBACK");
       console.error("Ralat PUT /rawatan/penilaian/:risiko_id:", err);
-      res.status(500).json({ message: "Gagal mengemaskini penilaian: " + err.message });
+      res.status(500).json({ error: "Gagal mengemaskini penilaian: " + err.message });
     } finally {
       client.release();
     }
@@ -214,7 +214,7 @@ router.post("/", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, re
       client.release();
       return res
         .status(400)
-        .json({ message: "Maklumat risiko (risiko_id) dan Jenis Kawalan diperlukan." });
+        .json({ error: "Maklumat risiko (risiko_id) dan Jenis Kawalan diperlukan." });
     }
 
     await client.query("BEGIN");
@@ -227,7 +227,7 @@ router.post("/", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, re
     if (riskRows.length === 0) {
       await client.query("ROLLBACK");
       client.release();
-      return res.status(404).json({ message: "Risiko induk tidak ditemui." });
+      return res.status(404).json({ error: "Risiko induk tidak ditemui." });
     }
     const { no_rujukan, tahun, separuh_tahun } = riskRows[0];
 
@@ -300,7 +300,7 @@ router.post("/", verifyToken, authorizeKebenaran("rawatan:urus"), async (req, re
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /rawatan:", err);
-    res.status(500).json({ message: "Gagal menambah rawatan: " + err.message });
+    res.status(500).json({ error: "Gagal menambah rawatan: " + err.message });
   } finally {
     client.release();
   }
@@ -327,7 +327,7 @@ router.put("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), asyn
     if (riskRows.length === 0) {
       await client.query("ROLLBACK");
       client.release();
-      return res.status(404).json({ message: "Rekod rawatan tidak ditemui." });
+      return res.status(404).json({ error: "Rekod rawatan tidak ditemui." });
     }
     const noRujukanUntukLog = riskRows[0].no_rujukan;
 
@@ -377,7 +377,7 @@ router.put("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), asyn
     if (updateResult.rowCount === 0) {
       await client.query("ROLLBACK");
       client.release();
-      return res.status(404).json({ message: "Rekod rawatan tidak ditemui untuk dikemaskini." });
+      return res.status(404).json({ error: "Rekod rawatan tidak ditemui untuk dikemaskini." });
     }
 
     await client.query("COMMIT");
@@ -394,7 +394,7 @@ router.put("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), asyn
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT /rawatan/:rawatan_id:", err);
-    res.status(500).json({ message: "Gagal mengemaskini rawatan: " + err.message });
+    res.status(500).json({ error: "Gagal mengemaskini rawatan: " + err.message });
   } finally {
     client.release();
   }
@@ -447,9 +447,9 @@ router.delete("/:rawatan_id", verifyToken, authorizeKebenaran("rawatan:urus"), a
   } catch (err) {
     console.error("Ralat DELETE /rawatan/:rawatan_id:", err);
     if (err.statusCode === 404) {
-      return res.status(404).json({ message: err.message });
+      return res.status(404).json({ error: err.message });
     }
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -488,13 +488,13 @@ router.get("/:risiko_id", verifyToken, async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak ditemui" });
+      return res.status(404).json({ error: "Risiko tidak ditemui" });
     }
 
     res.json(rows[0]);
   } catch (err) {
     console.error("Ralat GET /rawatan/:risiko_id:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 

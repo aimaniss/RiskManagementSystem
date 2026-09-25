@@ -159,8 +159,8 @@ export default function EditRawatan({ isOpen, risk, onClose, onSave }) {
                 : "ditambah! Status pemantauan dikemaskini kepada: Pemantauan";
             setToast({ variant: "success", title: "Berjaya", message: `Rawatan risiko berjaya ${statusMsg}!` });
         } catch (err) {
-            console.error("❌ Gagal menyimpan rawatan:", err.response?.data?.message || err.message);
-            setToast({ variant: "error", title: "Ralat", message: `Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}` });
+            console.error("❌ Gagal menyimpan rawatan:", err.response?.data?.error || err.message);
+            setToast({ variant: "error", title: "Ralat", message: `Gagal menyimpan perubahan. ${err.response?.data?.error || 'Sila cuba lagi.'}` });
         } finally {
             setSaving(false);
         }

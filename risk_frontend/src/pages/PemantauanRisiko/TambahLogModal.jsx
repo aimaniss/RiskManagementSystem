@@ -354,7 +354,7 @@ export default function TambahLogModal({
             onClose?.();
         } catch (err) {
             console.error(`❌ Ralat ${isEdit ? "mengedit" : "menambah"} log:`, err);
-            setToast({ variant: "error", title: "Gagal", message: `Gagal ${isEdit ? "mengedit" : "menambah"} log. ${err.response?.data?.message || err.message || "Sila cuba lagi."}` });
+            setToast({ variant: "error", title: "Gagal", message: `Gagal ${isEdit ? "mengedit" : "menambah"} log. ${err.response?.data?.error || err.message || "Sila cuba lagi."}` });
         } finally {
             setIsLoading(false);
         }

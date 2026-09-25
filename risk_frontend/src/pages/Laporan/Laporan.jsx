@@ -88,7 +88,7 @@ export default function LaporanRisiko() {
     } catch (err) {
       console.error("❌ Gagal fetch risiko:", err);
       setRisks([]); 
-      setToast({ variant: "error", title: "Ralat", message: err.response?.data?.message || err.message || 'Gagal memuatkan senarai risiko' });
+      setToast({ variant: "error", title: "Ralat", message: err.response?.data?.error || err.message || 'Gagal memuatkan senarai risiko' });
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export default function LaporanRisiko() {
       
     } catch (err) {
       console.error("❌ Gagal fetch data penuh laporan:", err);
-      setToast({ variant: "error", title: "Ralat", message: err.response?.data?.message || err.message || 'Gagal memuatkan data penuh risiko' });
+      setToast({ variant: "error", title: "Ralat", message: err.response?.data?.error || err.message || 'Gagal memuatkan data penuh risiko' });
     } finally {
       setLoadingModal(false); 
     }

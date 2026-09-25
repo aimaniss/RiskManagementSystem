@@ -116,7 +116,7 @@ export default function KemaskiniRawatan({ isOpen, risk, onClose }) {
             
         } catch (err) {
             console.error("❌ Gagal menyimpan rawatan:", err.response?.data || err.message);
-            setToast({ variant: "error", title: "Gagal Menyimpan", message: `Gagal menyimpan perubahan. ${err.response?.data?.message || 'Sila cuba lagi.'}` });
+            setToast({ variant: "error", title: "Gagal Menyimpan", message: `Gagal menyimpan perubahan. ${err.response?.data?.error || 'Sila cuba lagi.'}` });
         } finally {
             setSaving(false);
         }

@@ -370,7 +370,7 @@ router.get("/", verifyToken, authorizeKebenaran("dashboard:lihat"), async (req, 
     });
   } catch (err) {
     console.error("Ralat GET /api/dashboard:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 

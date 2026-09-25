@@ -191,9 +191,7 @@ router.get(
       res.json(rows);
     } catch (err) {
       console.error("Ralat GET /pindaan/risks-for-amendment:", err);
-      res
-        .status(500)
-        .json({ message: "Gagal memuatkan data risiko untuk pindaan: " + err.message });
+      res.status(500).json({ error: "Gagal memuatkan data risiko untuk pindaan: " + err.message });
     }
   }
 );
@@ -469,10 +467,10 @@ router.post("/:risk_id", verifyToken, authorizeKebenaran("pindaan:urus"), async 
     console.error("Ralat POST /pindaan/:risk_id:", err);
     if (err.code === "42804") {
       res.status(500).json({
-        message: `Gagal memproses permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
+        error: `Gagal memproses permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
       });
     } else {
-      res.status(500).json({ message: "Gagal memproses permohonan: " + err.message });
+      res.status(500).json({ error: "Gagal memproses permohonan: " + err.message });
     }
   } finally {
     client.release();
@@ -513,7 +511,7 @@ router.get("/stats", verifyToken, authorizeKebenaran("pindaan:lulus"), async (re
   } catch (err) {
     console.error("Ralat GET /pindaan/stats:", err);
     // Sila pastikan anda mengembalikan format ralat yang boleh ditangani jika perlu
-    res.status(500).json({ message: "Gagal memuatkan statistik pindaan." });
+    res.status(500).json({ error: "Gagal memuatkan statistik pindaan." });
   }
 });
 
@@ -593,15 +591,15 @@ router.get("/", verifyToken, authorizeKebenaran("pindaan:lihat"), async (req, re
   } catch (err) {
     console.error("Ralat GET /pindaan:", err);
     if (err.code === "42601") {
-      return res.status(500).json({ message: "Ralat Sintaks SQL (42601) di BE." });
+      return res.status(500).json({ error: "Ralat Sintaks SQL (42601) di BE." });
     } else if (err.code === "42P01") {
-      return res.status(500).json({ message: `Ralat Pangkalan Data (42P01): ${err.message}.` });
+      return res.status(500).json({ error: `Ralat Pangkalan Data (42P01): ${err.message}.` });
     } else if (err.code === "42703") {
       return res
         .status(500)
-        .json({ message: `Ralat Pangkalan Data (42703): Lajur tidak dikenali - ${err.message}.` });
+        .json({ error: `Ralat Pangkalan Data (42703): Lajur tidak dikenali - ${err.message}.` });
     }
-    res.status(500).json({ message: "Gagal memuatkan senarai permohonan." });
+    res.status(500).json({ error: "Gagal memuatkan senarai permohonan." });
   }
 });
 
@@ -632,7 +630,7 @@ router.put(
       if (permohonanRes.rowCount === 0) {
         /* ... error handling ... */
         await client.query("ROLLBACK");
-        return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
+        return res.status(404).json({ error: "Permohonan tidak dijumpai atau telah diproses." });
       }
 
       const permohonan = permohonanRes.rows[0];
@@ -795,10 +793,10 @@ router.put(
       console.error("Ralat PUT /pindaan/:pindaan_id/approve:", err);
       if (err.code === "42804") {
         res.status(500).json({
-          message: `Gagal meluluskan permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
+          error: `Gagal meluluskan permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
         });
       } else {
-        res.status(500).json({ message: "Gagal meluluskan permohonan: " + err.message });
+        res.status(500).json({ error: "Gagal meluluskan permohonan: " + err.message });
       }
     } finally {
       client.release();
@@ -836,7 +834,7 @@ router.put(
         komen_pelulus || null,
       ]); // Guna ID INTEGER Admin
       if (rows.length === 0) {
-        return res.status(404).json({ message: "Permohonan tidak dijumpai atau telah diproses." });
+        return res.status(404).json({ error: "Permohonan tidak dijumpai atau telah diproses." });
       }
 
       try {
@@ -885,10 +883,10 @@ router.put(
       console.error("Ralat PUT /pindaan/:pindaan_id/reject:", err);
       if (err.code === "42804") {
         res.status(500).json({
-          message: `Gagal menolak permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
+          error: `Gagal menolak permohonan: Ralat jenis data (${err.message}). Semak ID pengguna.`,
         });
       } else {
-        res.status(500).json({ message: "Gagal menolak permohonan: " + err.message });
+        res.status(500).json({ error: "Gagal menolak permohonan: " + err.message });
       }
     }
   }

@@ -165,7 +165,7 @@ router.get("/", verifyToken, authorizeKebenaran("risiko:lihat"), async (req, res
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /pemantauan-risiko:", err);
-    res.status(500).json({ message: "Gagal memuatkan data pemantauan: " + err.message });
+    res.status(500).json({ error: "Gagal memuatkan data pemantauan: " + err.message });
   }
 });
 
@@ -195,13 +195,13 @@ router.get("/:risiko_id/info", verifyToken, async (req, res) => {
     const { rows } = await pool.query(query, [risikoIdInt]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+      return res.status(404).json({ error: "Risiko tidak dijumpai." });
     }
 
     res.json(rows[0]);
   } catch (err) {
     console.error("Ralat GET /:risiko_id/info:", err);
-    res.status(500).json({ message: "Gagal memuatkan maklumat risiko." });
+    res.status(500).json({ error: "Gagal memuatkan maklumat risiko." });
   }
 });
 
@@ -241,7 +241,7 @@ router.get("/:risiko_id/sejarah", verifyToken, async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Ralat GET /:risiko_id/sejarah:", err);
-    res.status(500).json({ message: "Gagal memuatkan sejarah pemantauan." });
+    res.status(500).json({ error: "Gagal memuatkan sejarah pemantauan." });
   }
 });
 
@@ -254,7 +254,7 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     const { risiko_id, tahun, separuh } = req.query;
 
     if (!risiko_id || !tahun || !separuh) {
-      return res.status(400).json({ message: "Parameter tidak lengkap." });
+      return res.status(400).json({ error: "Parameter tidak lengkap." });
     }
 
     const tahunPemantauan = parseInt(tahun, 10);
@@ -264,7 +264,7 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     const risikoResult = await pool.query(risikoQuery, [risiko_id]);
 
     if (risikoResult.rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+      return res.status(404).json({ error: "Risiko tidak dijumpai." });
     }
 
     const risikoTahun = parseInt(risikoResult.rows[0].tahun, 10);
@@ -308,7 +308,7 @@ router.get("/check-duplicate", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("Ralat GET /check-duplicate:", err);
-    res.status(500).json({ message: "Gagal menyemak data duplicate: " + err.message });
+    res.status(500).json({ error: "Gagal menyemak data duplicate: " + err.message });
   }
 });
 
@@ -411,7 +411,7 @@ router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
       );
 
       if (risikoRes.rows.length === 0) {
-        return res.status(404).json({ message: "Risiko tidak dijumpai" });
+        return res.status(404).json({ error: "Risiko tidak dijumpai" });
       }
 
       k = risikoRes.rows[0].k;
@@ -430,7 +430,7 @@ router.get("/:risiko_id/tahap-rujukan", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("Ralat GET /:risiko_id/tahap-rujukan:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -447,7 +447,7 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
     const risikoResult = await pool.query(risikoQuery, [risikoIdInt]);
 
     if (risikoResult.rows.length === 0) {
-      return res.status(404).json({ message: "Risiko tidak dijumpai." });
+      return res.status(404).json({ error: "Risiko tidak dijumpai." });
     }
 
     const { k_asal, i_asal } = risikoResult.rows[0];
@@ -495,7 +495,7 @@ router.get("/:risiko_id/sejarah-baru", verifyToken, async (req, res) => {
     res.json(sejarahLogTerbalik);
   } catch (err) {
     console.error("Ralat GET /:risiko_id/sejarah-baru:", err);
-    res.status(500).json({ message: "Gagal memuatkan sejarah pemantauan." });
+    res.status(500).json({ error: "Gagal memuatkan sejarah pemantauan." });
   }
 });
 
@@ -523,9 +523,7 @@ router.post("/log", verifyToken, authorizeKebenaran("pemantauan:urus"), async (r
     } = req.body;
 
     if (!risiko_id || !tahun_pemantauan || !status_pemantauan) {
-      return res
-        .status(400)
-        .json({ message: "Sila isi semua medan wajib (risiko, tahun, status)." });
+      return res.status(400).json({ error: "Sila isi semua medan wajib (risiko, tahun, status)." });
     }
 
     const skor_risiko_pemantauan = getRiskLevel(skor_kebarangkalian_selepas, skor_impak_selepas);
@@ -602,7 +600,7 @@ router.post("/log", verifyToken, authorizeKebenaran("pemantauan:urus"), async (r
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat POST /pemantauan-risiko/log:", err);
-    res.status(500).json({ message: "Gagal menambah log pemantauan: " + err.message });
+    res.status(500).json({ error: "Gagal menambah log pemantauan: " + err.message });
   } finally {
     client.release();
   }
@@ -627,7 +625,7 @@ router.delete(
         [log_id]
       );
       if (check.rowCount === 0) {
-        return res.status(404).json({ message: "Rekod pemantauan tidak dijumpai." });
+        return res.status(404).json({ error: "Rekod pemantauan tidak dijumpai." });
       }
 
       // BARU: Mula transaksi
@@ -670,7 +668,7 @@ router.delete(
       // BARU: Rollback jika gagal
       await client.query("ROLLBACK");
       console.error("Ralat DELETE /log/:log_id:", err);
-      res.status(500).json({ message: "Gagal memadam log pemantauan: " + err.message });
+      res.status(500).json({ error: "Gagal memadam log pemantauan: " + err.message });
     } finally {
       // BARU: Lepaskan client
       client.release();
@@ -711,7 +709,7 @@ router.put("/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), a
   const finalKakitanganList = (kakitangan_list?.length ? kakitangan_list : kakitangan_log) || [];
 
   if (!log_id || !risiko_id) {
-    return res.status(400).json({ message: "Log ID dan Risiko ID diperlukan" });
+    return res.status(400).json({ error: "Log ID dan Risiko ID diperlukan" });
   }
 
   try {
@@ -756,7 +754,7 @@ router.put("/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), a
     const logResult = await client.query(logUpdateQuery, logValues);
     if (logResult.rowCount === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Log tidak dijumpai" });
+      return res.status(404).json({ error: "Log tidak dijumpai" });
     }
 
     await client.query(
@@ -815,10 +813,7 @@ router.put("/log/:log_id", verifyToken, authorizeKebenaran("pemantauan:urus"), a
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Ralat PUT log:", err);
-    res.status(500).json({
-      message: "Ralat server semasa mengemaskini log.",
-      error: err.message,
-    });
+    res.status(500).json({ error: "Ralat server semasa mengemaskini log." });
   } finally {
     client.release();
   }
