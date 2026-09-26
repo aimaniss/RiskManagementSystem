@@ -23,6 +23,7 @@ termasuk RBAC, notifikasi, dan jejak audit.
 | `09-PLAN-revamp.md` | PLAN Revamp v2 | Status pelaksanaan + transaksi, role matrix `kebenaran`, soft-delete, E2E |
 | `10-PLAN-lanjutan.md` | PLAN Lanjutan | Aliran baharu (advisory lock, rehash, pindaan:lihat), senario P1–P3 |
 | `11-PLAN-ui-revamp.md` | PLAN Revamp UI | Penilaian, rawatan & pemantauan: modal butiran sesak, borang bertindih, fasa U0–U6 (📋 dirancang) |
+| `12-PLAN-profil-drawer.md` | PLAN Profil & Drawer | Menu profil, modal Kemaskini Profil & Tambah/Edit Pengguna, drawer seragam, had muat naik gambar — fasa P1–P7 |
 
 ## Cara Baca
 
