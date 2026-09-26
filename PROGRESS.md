@@ -164,7 +164,7 @@
 ## Profil, Urus Pengguna & Drawer (`docs/pipeline/12-PLAN-profil-drawer.md`)
 
 - [x] P1 — Had muat naik gambar profil (2 MB, imej sahaja) + ralat 400 BM
-- [ ] P2 — Komponen Avatar & PemilihGambar dikongsi
+- [x] P2 — Komponen Avatar & PemilihGambar dikongsi
 - [ ] P3 — Menu profil navbar (avatar, maklumat, Kemaskini profil, Log keluar)
 - [ ] P4 — Modal Kemaskini Profil guna Dialog, bahagian tersusun, semakan polisi langsung
 - [ ] P5 — Modal Tambah/Edit Pengguna dua lajur + PemilihGambar

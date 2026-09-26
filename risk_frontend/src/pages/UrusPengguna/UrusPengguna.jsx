@@ -39,6 +39,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { Avatar } from "@/components/ui/avatar";
 import { getAuthUser } from "@/utils/auth";
 import { formatDate } from "@/utils/formatters";
 import { SYARAT_KATALALUAN, katalaluanMematuhiPolisi } from "@/constants/katalaluan";
@@ -511,15 +512,10 @@ function UrusPengguna() {
                     <TableCell className="text-muted-foreground">{i + 1}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        {u.profile_pic ? (
-                          <img
-                            src={`data:image/png;base64,${u.profile_pic}`}
-                            alt=""
-                            className="h-9 w-9 shrink-0 rounded-full border object-cover"
-                          />
-                        ) : (
-                          <UserCircle className="h-9 w-9 shrink-0 text-muted-foreground" />
-                        )}
+                        <Avatar
+                          src={u.profile_pic ? `data:image/png;base64,${u.profile_pic}` : ""}
+                          nama={u.nama_penuh}
+                        />
                         <div>
                           <div className="font-medium text-foreground">
                             {u.nama_penuh}

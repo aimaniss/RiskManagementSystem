@@ -23,11 +23,11 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
 - [x] Ralat multer dipulangkan sebagai `400 { error: "..." }` (BM), bukan 500
 - [x] E2E: muat naik fail bukan imej / > 2 MB ditolak (spec 13)
 
-### P2 — Komponen dikongsi: Avatar & PemilihGambar — `feat(ui)`
-- [ ] `components/ui/avatar.jsx`: gambar atau inisial nama (bukan ikon lalai), saiz sm/md/lg
-- [ ] `components/PemilihGambar.jsx`: pratonton bulat + butang "Pilih gambar"/"Tukar" & "Buang"
+### P2 — Komponen dikongsi: Avatar & PemilihGambar — `feat(ui)` ✅
+- [x] `components/ui/avatar.jsx`: gambar atau inisial nama (bukan ikon lalai), saiz sm/md/lg
+- [x] `components/PemilihGambar.jsx`: pratonton bulat + butang "Pilih gambar"/"Tukar" & "Buang"
       (input fail tersembunyi, teks BM), semakan jenis & saiz ≤ 2 MB di klien
-- [ ] Guna Avatar dalam senarai Urus Pengguna
+- [x] Guna Avatar dalam senarai Urus Pengguna
 
 ### P3 — Menu profil navbar — `feat(navbar)`
 - [ ] Pencetus: Avatar + nama/peranan (butang sebenar, `aria-haspopup`, `aria-expanded`)
