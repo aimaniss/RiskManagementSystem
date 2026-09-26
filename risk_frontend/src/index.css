@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/* Mod gelap dikawal kelas .dark pada <html> (togol navbar), bukan tetapan OS */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* === RISK MANAGEMENT SYSTEM - UNIFIED DESIGN TOKENS === */
   /* Guna token ini di mana-mana. JANGAN hardcode warna hex dalam CSS page. */

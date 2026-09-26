@@ -140,7 +140,8 @@ stateDiagram-v2
   jumlah_halaman }` (had lalai 25, maks. 200). Tapisan: `tarikhMula`/`tarikhAkhir`
   (YYYY-MM-DD, zon Asia/Kuala_Lumpur, akhir termasuk sepanjang hari), `aktiviti`
   (padanan tepat), `peranan_id`, `syarikat_id`, `carian` (nama, ID staf,
-  ringkasan, perincian). Staff/Ketua Subsidiari sentiasa dihadkan kepada syarikat
+  ringkasan, perincian), `sorokSesi=true` (kecualikan Log Masuk/Log Keluar;
+  UI mengaktifkannya secara lalai kecuali jenis aktiviti dipilih). Staff/Ketua Subsidiari sentiasa dihadkan kepada syarikat
   sendiri (tapisan `syarikat_id` diabaikan) — termasuk `/jenis` & `/eksport`.
   Eksport CSV: BOM UTF-8, sel bermula `= + - @` dilindungi (suntikan formula).
 - **UI**: `LogAktiviti/LogAktiviti.jsx` — tapisan (carian bertangguh 400ms,

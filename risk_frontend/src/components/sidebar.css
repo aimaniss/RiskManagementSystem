@@ -1,4 +1,5 @@
-/* src/components/sidebar.css — LIGHT SIDEBAR (guna design tokens dari index.css) */
+/* src/components/sidebar.css — latar kelabu-biru lembut supaya terpisah daripada
+   kandungan putih tanpa warna berat; mod gelap guna token zinc. */
 
 .sidebar {
   --sb-w: 220px;
@@ -10,74 +11,99 @@
   z-index: 30;
   display: flex;
   flex-direction: column;
-  background: var(--color-card);
-  border-right: 1px solid var(--color-border);
+  background: #f3f6fb;
+  border-right: 1px solid #e2e8f0;
+  color: #475569;
   font-family: var(--font-sans);
-  overflow-y: auto;
 }
 
 /* Header */
 .sidebar-header {
-  padding: 16px 14px;
-  background: var(--color-card);
-  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  padding: 18px 14px 14px;
+  border-bottom: 1px solid #e2e8f0;
   text-align: center;
 }
 
 .sidebar-header img {
-  max-width: 140px;
+  max-width: 132px;
   height: auto;
-  margin-bottom: 6px;
+  margin: 0 auto 6px;
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Menu (boleh skrol; header & bahagian bawah kekal) */
+.sidebar-menu {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 10px 12px;
+}
+
+.sidebar-kumpulan + .sidebar-kumpulan {
+  margin-top: 6px;
+}
+
+.sidebar-tajuk {
+  margin: 12px 0 4px;
+  padding: 0 10px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted-foreground);
-}
-
-/* Menu */
-.sidebar-menu {
-  flex: 1;
-  padding: 14px 12px;
+  color: #94a3b8;
 }
 
 .sidebar-menu ul {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.sidebar-menu li {
-  margin-bottom: 4px;
+  display: grid;
+  gap: 2px;
 }
 
 .sidebar-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   font-size: 13.5px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease-in-out;
-  color: var(--color-muted-foreground);
-  border: 1px solid transparent;
+  color: #475569;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-link:hover {
-  background: var(--color-muted);
-  color: var(--color-foreground);
+  background: #e6ecf5;
+  color: #0f172a;
 }
 
+/* Aktif: biru padu */
 .sidebar-link.active {
   background: var(--color-primary);
   color: var(--color-primary-foreground);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-link.active .sidebar-lencana {
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
+.sidebar-link:focus-visible {
+  outline: 2px solid var(--color-ring, var(--color-primary));
+  outline-offset: 1px;
 }
 
 .sidebar-icon {
@@ -86,24 +112,45 @@
   flex-shrink: 0;
 }
 
-/* Logout */
-.sidebar-logout {
-  margin: auto 12px 10px 12px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-destructive);
-  background: transparent;
-  border: 1px solid rgba(220, 38, 38, 0.25);
+.sidebar-label {
+  flex: 1;
+  min-width: 0;
+}
 
+/* Bilangan tugasan menunggu */
+.sidebar-lencana {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-destructive);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* Bahagian bawah: log keluar & versi */
+.sidebar-bawah {
+  flex-shrink: 0;
+  padding: 10px 10px 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sidebar-logout {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-destructive);
+  border: 1px solid rgba(220, 38, 38, 0.25);
   text-decoration: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .sidebar-logout svg {
@@ -124,8 +171,29 @@
 }
 
 .dark .sidebar-header {
-  background: var(--color-sidebar);
   border-bottom-color: var(--color-border);
+}
+
+.dark .sidebar-bawah {
+  border-top-color: var(--color-border);
+}
+
+.dark .sidebar-header h2,
+.dark .sidebar-link {
+  color: #a1a1aa;
+}
+
+.dark .sidebar-tajuk {
+  color: #71717a;
+}
+
+.dark .sidebar-link:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+.dark .sidebar-link.active {
+  color: var(--color-primary-foreground);
 }
 
 /* Skrin kecil: sidebar menjadi menu luncur (dibuka melalui butang menu) */

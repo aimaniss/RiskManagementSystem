@@ -1,30 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import api from "../../api/api";
-import {
-  Search,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  X,
-} from "lucide-react";
+import { Search, Download, ChevronLeft, ChevronRight, ClipboardList, X } from "lucide-react";
 import { formatDate } from "../../utils/formatters";
 import PageHeader from "@/components/ui/page-header";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +16,9 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { BarisMedan } from "@/components/risiko/umum";
+import { jenisAktiviti, labelHari, masaSahaja } from "@/constants/jenisAktiviti";
+import { cn } from "@/lib/utils";
 
 const SAIZ_HALAMAN = [25, 50, 100];
 
@@ -52,28 +38,55 @@ const tarikhTempatan = (tarikh) => {
   return t.toISOString().slice(0, 10);
 };
 
-const JULAT_PANTAS = [
-  { label: "Hari ini", hari: 0 },
-  { label: "7 hari", hari: 6 },
-  { label: "30 hari", hari: 29 },
+// Julat masa; "julat" memaparkan input tarikh tersuai
+const JULAT = [
+  { id: "semua", label: "Semua masa" },
+  { id: "0", label: "Hari ini", hari: 0 },
+  { id: "6", label: "7 hari", hari: 6 },
+  { id: "29", label: "30 hari", hari: 29 },
+  { id: "julat", label: "Julat tersuai" },
 ];
 
-// Warna lencana ikut sifat tindakan (bukan senarai tetap, kerana jenis
-// aktiviti datang terus dari log)
-const varianAktiviti = (aktiviti = "") => {
-  const a = aktiviti.toLowerCase();
-  if (/padam|tolak|nyahaktif|dikunci|gagal/.test(a)) return "destructive";
-  if (/lulus|tambah|daftar|aktifkan/.test(a)) return "success";
-  if (/kemaskini|tukar|reset|pinda|tetapan/.test(a)) return "warning";
-  if (/log masuk|log keluar/.test(a)) return "secondary";
-  return "outline";
+const buangKosong = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== ""));
+
+// Ringkasan log biasanya bermula dengan nama pengguna ("Ali telah ..."),
+// yang sudah dipaparkan dalam lajur Pengguna
+const keterangan = (log) => {
+  let teks = String(log.ringkasan || "").trim();
+  const nama = log.nama_pengguna || "";
+  if (nama && teks.toLowerCase().startsWith(nama.toLowerCase())) {
+    teks = teks.slice(nama.length).replace(/^\s*(telah\s+)?/i, "");
+    teks = teks.charAt(0).toUpperCase() + teks.slice(1);
+  }
+  return teks || "-";
 };
 
-const buangKosong = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== ""));
+// Kelompok rekod mengikut hari (data sudah tersusun terkini dahulu)
+const kelompokHari = (data) => {
+  const kumpulan = [];
+  for (const log of data) {
+    const label = labelHari(log.tarikh_masa);
+    const akhir = kumpulan[kumpulan.length - 1];
+    if (akhir?.label === label) akhir.item.push(log);
+    else kumpulan.push({ label, item: [log] });
+  }
+  return kumpulan;
+};
+
+function LencanaAktiviti({ aktiviti }) {
+  const { ikon: Ikon, warna } = jenisAktiviti(aktiviti);
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium", warna)}>
+      <Ikon size={13} /> {aktiviti}
+    </span>
+  );
+}
 
 function LogAktiviti() {
   const [tapisan, setTapisan] = useState(TAPISAN_KOSONG);
   const [carianTertunda, setCarianTertunda] = useState("");
+  const [julat, setJulat] = useState("semua");
+  const [sorokSesi, setSorokSesi] = useState(true);
   const [halaman, setHalaman] = useState(1);
   const [had, setHad] = useState(SAIZ_HALAMAN[0]);
 
@@ -83,7 +96,7 @@ function LogAktiviti() {
   const [toast, setToast] = useState(null);
   const [dipilih, setDipilih] = useState(null);
 
-  const [jenisAktiviti, setJenisAktiviti] = useState([]);
+  const [senaraiJenis, setSenaraiJenis] = useState([]);
   const [senaraiPeranan, setSenaraiPeranan] = useState([]);
   const [senaraiSyarikat, setSenaraiSyarikat] = useState([]);
 
@@ -92,7 +105,7 @@ function LogAktiviti() {
   useEffect(() => {
     api
       .get("/log_aktiviti/jenis")
-      .then((r) => setJenisAktiviti(r.data))
+      .then((r) => setSenaraiJenis(r.data))
       .catch(() => {});
     api
       .get("/roles")
@@ -113,12 +126,19 @@ function LogAktiviti() {
     return () => clearTimeout(t);
   }, [carianTertunda]);
 
+  // Tapisan dihantar ke API; log masuk/keluar disorok melainkan jenis itu dipilih
+  const paramTapisan = useCallback(
+    () => ({
+      ...buangKosong(tapisan),
+      ...(sorokSesi && !tapisan.aktiviti ? { sorokSesi: "true" } : {}),
+    }),
+    [tapisan, sorokSesi]
+  );
+
   const muat = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/log_aktiviti", {
-        params: { ...buangKosong(tapisan), halaman, had },
-      });
+      const res = await api.get("/log_aktiviti", { params: { ...paramTapisan(), halaman, had } });
       setHasil(res.data);
     } catch (err) {
       setToast({
@@ -128,7 +148,7 @@ function LogAktiviti() {
     } finally {
       setLoading(false);
     }
-  }, [tapisan, halaman, had]);
+  }, [paramTapisan, halaman, had]);
 
   useEffect(() => {
     muat();
@@ -139,27 +159,34 @@ function LogAktiviti() {
     setHalaman(1);
   };
 
-  const julatPantas = (hari) => {
-    const hariIni = new Date();
-    const mula = new Date();
-    mula.setDate(hariIni.getDate() - hari);
-    setTapisan((f) => ({ ...f, tarikhMula: tarikhTempatan(mula), tarikhAkhir: tarikhTempatan(hariIni) }));
+  const pilihJulat = (id) => {
+    setJulat(id);
     setHalaman(1);
+    const pilihan = JULAT.find((j) => j.id === id);
+    if (pilihan?.hari !== undefined) {
+      const mula = new Date();
+      mula.setDate(mula.getDate() - pilihan.hari);
+      setTapisan((f) => ({ ...f, tarikhMula: tarikhTempatan(mula), tarikhAkhir: tarikhTempatan(new Date()) }));
+    } else if (id === "semua") {
+      setTapisan((f) => ({ ...f, tarikhMula: "", tarikhAkhir: "" }));
+    }
   };
 
   const setSemula = () => {
     setTapisan(TAPISAN_KOSONG);
     setCarianTertunda("");
+    setJulat("semua");
+    setSorokSesi(true);
     setHalaman(1);
   };
 
-  const adaTapisan = Object.values(tapisan).some((v) => v !== "");
+  const adaTapisan = Object.values(tapisan).some((v) => v !== "") || !sorokSesi;
 
   const eksport = async () => {
     setMengeksport(true);
     try {
       const res = await api.get("/log_aktiviti/eksport", {
-        params: buangKosong(tapisan),
+        params: paramTapisan(),
         responseType: "blob",
       });
       const url = URL.createObjectURL(res.data);
@@ -184,6 +211,7 @@ function LogAktiviti() {
 
   const mula = hasil.jumlah === 0 ? 0 : (halaman - 1) * had + 1;
   const akhir = Math.min(halaman * had, hasil.jumlah);
+  const kumpulan = kelompokHari(hasil.data);
 
   return (
     <div>
@@ -202,170 +230,199 @@ function LogAktiviti() {
         }
       />
 
-      {/* Tapisan */}
-      <div className="mb-4 grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
-        <div className="grid gap-1.5 md:col-span-2">
-          <Label htmlFor="carian">Carian</Label>
-          <div className="relative">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
+      {/* Tapisan: satu bar alat */}
+      <div className="mb-4 grid gap-3 rounded-xl border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative min-w-[220px] flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="carian"
-              placeholder="Nama, ID Staf, ringkasan atau perincian"
+              type="search"
+              aria-label="Carian"
+              placeholder="Cari nama, ID staf atau keterangan"
               value={carianTertunda}
               onChange={(e) => setCarianTertunda(e.target.value)}
-              className="pl-9"
+              className="h-9 pl-9"
             />
           </div>
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="tarikhMula">Dari</Label>
-          <Input
-            id="tarikhMula"
-            type="date"
-            value={tapisan.tarikhMula}
-            max={tapisan.tarikhAkhir || undefined}
-            onChange={(e) => ubahTapisan("tarikhMula", e.target.value)}
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="tarikhAkhir">Hingga</Label>
-          <Input
-            id="tarikhAkhir"
-            type="date"
-            value={tapisan.tarikhAkhir}
-            min={tapisan.tarikhMula || undefined}
-            onChange={(e) => ubahTapisan("tarikhAkhir", e.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="aktiviti">Jenis Aktiviti</Label>
           <Select
             id="aktiviti"
+            aria-label="Jenis Aktiviti"
+            className="h-9 w-full sm:w-52"
             value={tapisan.aktiviti}
             onChange={(e) => ubahTapisan("aktiviti", e.target.value)}
           >
-            <option value="">Semua Aktiviti</option>
-            {jenisAktiviti.map((j) => (
+            <option value="">Semua aktiviti</option>
+            {senaraiJenis.map((j) => (
               <option key={j.aktiviti} value={j.aktiviti}>
                 {j.aktiviti} ({j.bilangan})
               </option>
             ))}
           </Select>
-        </div>
-
-        {senaraiPeranan.length > 0 && (
-          <div className="grid gap-1.5">
-            <Label htmlFor="peranan">Peranan</Label>
+          {senaraiPeranan.length > 0 && (
             <Select
               id="peranan"
+              aria-label="Peranan"
+              className="h-9 w-full sm:w-40"
               value={tapisan.peranan_id}
               onChange={(e) => ubahTapisan("peranan_id", e.target.value)}
             >
-              <option value="">Semua Peranan</option>
+              <option value="">Semua peranan</option>
               {senaraiPeranan.map((r) => (
                 <option key={r.peranan_id} value={r.peranan_id}>
                   {r.nama_peranan}
                 </option>
               ))}
             </Select>
-          </div>
-        )}
-
-        {senaraiSyarikat.length > 1 && (
-          <div className="grid gap-1.5">
-            <Label htmlFor="syarikat">Syarikat</Label>
+          )}
+          {senaraiSyarikat.length > 1 && (
             <Select
               id="syarikat"
+              aria-label="Syarikat"
+              className="h-9 w-full sm:w-52"
               value={tapisan.syarikat_id}
               onChange={(e) => ubahTapisan("syarikat_id", e.target.value)}
             >
-              <option value="">Semua Syarikat</option>
+              <option value="">Semua syarikat</option>
               {senaraiSyarikat.map((s) => (
                 <option key={s.syarikat_id} value={s.syarikat_id}>
                   {s.nama_syarikat}
                 </option>
               ))}
             </Select>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="flex flex-wrap items-end gap-2 md:col-span-2 xl:col-span-2">
-          {JULAT_PANTAS.map((j) => (
-            <Button key={j.label} variant="outline" size="sm" onClick={() => julatPantas(j.hari)}>
-              {j.label}
-            </Button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap rounded-lg border bg-muted/40 p-0.5" role="group" aria-label="Julat masa">
+            {JULAT.map((j) => (
+              <button
+                key={j.id}
+                type="button"
+                aria-pressed={julat === j.id}
+                onClick={() => pilihJulat(j.id)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  julat === j.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {j.label}
+              </button>
+            ))}
+          </div>
+          {julat === "julat" && (
+            <div className="flex items-center gap-1.5">
+              <Input
+                id="tarikhMula"
+                type="date"
+                aria-label="Dari"
+                className="h-8 w-[150px] text-xs"
+                value={tapisan.tarikhMula}
+                max={tapisan.tarikhAkhir || undefined}
+                onChange={(e) => ubahTapisan("tarikhMula", e.target.value)}
+              />
+              <span className="text-xs text-muted-foreground">hingga</span>
+              <Input
+                id="tarikhAkhir"
+                type="date"
+                aria-label="Hingga"
+                className="h-8 w-[150px] text-xs"
+                value={tapisan.tarikhAkhir}
+                min={tapisan.tarikhMula || undefined}
+                onChange={(e) => ubahTapisan("tarikhAkhir", e.target.value)}
+              />
+            </div>
+          )}
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 accent-primary"
+              checked={sorokSesi}
+              disabled={Boolean(tapisan.aktiviti)}
+              onChange={(e) => {
+                setSorokSesi(e.target.checked);
+                setHalaman(1);
+              }}
+            />
+            Sembunyikan log masuk/keluar
+          </label>
           {adaTapisan && (
-            <Button variant="ghost" size="sm" onClick={setSemula}>
+            <Button variant="ghost" size="sm" className="h-8" onClick={setSemula}>
               <X size={14} /> Set semula
             </Button>
           )}
         </div>
       </div>
 
-      {/* Jadual */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[170px]">Tarikh & Masa</TableHead>
-              <TableHead>Pengguna</TableHead>
-              <TableHead>Aktiviti</TableHead>
-              <TableHead>Ringkasan</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {hasil.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-32">
-                  <EmptyState
-                    icon={ClipboardList}
-                    title={loading ? "Memuatkan log..." : "Tiada log dijumpai"}
-                    description={loading ? "" : "Tiada rekod sepadan dengan tapisan anda."}
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              hasil.data.map((log) => (
-                <TableRow
-                  key={log.log_id}
-                  className={`cursor-pointer ${loading ? "opacity-50" : ""}`}
-                  onClick={() => setDipilih(log)}
-                >
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                    {formatDate(log.tarikh_masa)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium text-foreground">{log.nama_pengguna}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {log.staff_id} · {log.peranan_pengguna}
-                      {log.syarikat ? ` · ${log.syarikat}` : ""}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={varianAktiviti(log.aktiviti)} className="whitespace-nowrap">
-                      {log.aktiviti}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[420px] text-sm">
-                    <span className="line-clamp-2">{log.ringkasan}</span>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* Senarai dikelompok ikut hari */}
+      <div className={cn("overflow-hidden rounded-xl border bg-card shadow-sm", loading && "opacity-60")}>
+        {hasil.data.length === 0 ? (
+          <div className="py-10">
+            <EmptyState
+              icon={ClipboardList}
+              title={loading ? "Memuatkan log..." : "Tiada log dijumpai"}
+              description={loading ? "" : "Tiada rekod sepadan dengan tapisan anda."}
+            />
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="hidden border-b bg-muted/40 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground md:table-header-group">
+              <tr>
+                <th className="w-28 px-4 py-2.5 font-medium">Masa</th>
+                <th className="w-56 px-4 py-2.5 font-medium">Aktiviti</th>
+                <th className="w-64 px-4 py-2.5 font-medium">Pengguna</th>
+                <th className="px-4 py-2.5 font-medium">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kumpulan.map((k) => (
+                <Fragment key={k.label}>
+                  <tr className="border-b bg-muted/30">
+                    <th
+                      colSpan={4}
+                      scope="colgroup"
+                      className="px-4 py-2 text-left text-xs font-semibold text-foreground"
+                    >
+                      {k.label}
+                      <span className="ml-2 font-normal text-muted-foreground">{k.item.length} rekod</span>
+                    </th>
+                  </tr>
+                  {k.item.map((log) => (
+                    <tr
+                      key={log.log_id}
+                      onClick={() => setDipilih(log)}
+                      className="grid cursor-pointer grid-cols-[auto_1fr] gap-x-3 gap-y-1 border-b px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/40 md:table-row md:p-0"
+                    >
+                      <td className="whitespace-nowrap text-xs tabular-nums text-muted-foreground md:px-4 md:py-3 md:text-sm">
+                        {masaSahaja(log.tarikh_masa)}
+                      </td>
+                      <td className="md:px-4 md:py-3">
+                        <LencanaAktiviti aktiviti={log.aktiviti} />
+                      </td>
+                      <td className="col-span-2 md:px-4 md:py-3">
+                        <div className="font-medium text-foreground">{log.nama_pengguna}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {[log.staff_id, log.peranan_pengguna, log.syarikat].filter(Boolean).join(" · ")}
+                        </div>
+                      </td>
+                      <td className="col-span-2 text-muted-foreground md:px-4 md:py-3">
+                        <span className="line-clamp-2">{keterangan(log)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         {/* Paging */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
           <div className="text-muted-foreground">
             {hasil.jumlah > 0
-              ? `Memaparkan ${mula}–${akhir} daripada ${hasil.jumlah.toLocaleString("ms-MY")} rekod`
+              ? `${mula}–${akhir} daripada ${hasil.jumlah.toLocaleString("ms-MY")} rekod`
               : "0 rekod"}
           </div>
           <div className="flex items-center gap-2">
@@ -375,7 +432,7 @@ function LogAktiviti() {
                 setHad(Number(e.target.value));
                 setHalaman(1);
               }}
-              className="h-8 w-[110px]"
+              className="h-8 w-[140px]"
               aria-label="Rekod setiap halaman"
             >
               {SAIZ_HALAMAN.map((n) => (
@@ -390,7 +447,7 @@ function LogAktiviti() {
               className="h-8 w-8"
               onClick={() => setHalaman((h) => h - 1)}
               disabled={halaman <= 1 || loading}
-              title="Halaman sebelum"
+              aria-label="Halaman sebelum"
             >
               <ChevronLeft size={16} />
             </Button>
@@ -403,7 +460,7 @@ function LogAktiviti() {
               className="h-8 w-8"
               onClick={() => setHalaman((h) => h + 1)}
               disabled={halaman >= hasil.jumlah_halaman || loading}
-              title="Halaman seterusnya"
+              aria-label="Halaman seterusnya"
             >
               <ChevronRight size={16} />
             </Button>
@@ -417,29 +474,27 @@ function LogAktiviti() {
           {dipilih && (
             <>
               <SheetHeader>
-                <SheetTitle>{dipilih.aktiviti}</SheetTitle>
+                <div className="mb-1">
+                  <LencanaAktiviti aktiviti={dipilih.aktiviti} />
+                </div>
+                <SheetTitle>{keterangan(dipilih)}</SheetTitle>
                 <SheetDescription>{formatDate(dipilih.tarikh_masa)}</SheetDescription>
               </SheetHeader>
-              <SheetBody>
-                <dl className="grid gap-4 text-sm">
-                  {[
-                    ["Pengguna", `${dipilih.nama_pengguna} (${dipilih.staff_id})`],
-                    ["Peranan", dipilih.peranan_pengguna],
-                    ["Syarikat", dipilih.syarikat || "-"],
-                    ["Ringkasan", dipilih.ringkasan],
-                  ].map(([label, nilai]) => (
-                    <div key={label}>
-                      <dt className="text-xs text-muted-foreground">{label}</dt>
-                      <dd className="font-medium text-foreground">{nilai}</dd>
-                    </div>
-                  ))}
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Perincian</dt>
-                    <dd className="mt-1 whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-foreground">
-                      {dipilih.perincian || "-"}
-                    </dd>
-                  </div>
+              <SheetBody className="grid content-start gap-5">
+                <dl>
+                  <BarisMedan label="Pengguna">{dipilih.nama_pengguna}</BarisMedan>
+                  <BarisMedan label="ID Staf">{dipilih.staff_id}</BarisMedan>
+                  <BarisMedan label="Peranan">{dipilih.peranan_pengguna}</BarisMedan>
+                  <BarisMedan label="Syarikat">{dipilih.syarikat}</BarisMedan>
                 </dl>
+                <div>
+                  <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Perincian
+                  </h3>
+                  <p className="whitespace-pre-wrap rounded-lg bg-muted/40 px-4 py-3 text-sm text-foreground">
+                    {dipilih.perincian || dipilih.ringkasan || "-"}
+                  </p>
+                </div>
               </SheetBody>
             </>
           )}

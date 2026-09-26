@@ -17,7 +17,8 @@ const TARIKH_ISO = /^\d{4}-\d{2}-\d{2}$/;
  * melihat log pengguna syarikat sendiri tanpa mengira tapisan yang dihantar.
  */
 const binaTapisan = (req) => {
-  const { tarikhMula, tarikhAkhir, peranan_id, syarikat_id, aktiviti, carian } = req.query;
+  const { tarikhMula, tarikhAkhir, peranan_id, syarikat_id, aktiviti, carian, sorokSesi } =
+    req.query;
   const syarat = ["la.is_deleted = false"];
   const params = [];
   const tambah = (klausa, nilai) => {
@@ -45,6 +46,8 @@ const binaTapisan = (req) => {
   }
   if (peranan_id) tambah("p.peranan_id = ?", parseInt(peranan_id, 10));
   if (aktiviti) tambah("la.aktiviti = ?", aktiviti);
+  // Log masuk/keluar mendominasi jejak audit; boleh disorok untuk melihat tindakan sebenar
+  if (sorokSesi === "true") syarat.push("la.aktiviti NOT IN ('Log Masuk', 'Log Keluar')");
   if (carian && carian.trim()) {
     params.push(`%${carian.trim()}%`);
     const i = `$${params.length}`;
@@ -76,7 +79,7 @@ const LAJUR_LOG = `
 
 // =======================================================
 // GET /api/log_aktiviti?halaman=&had=&tarikhMula=&tarikhAkhir=&peranan_id=
-//     &syarikat_id=&aktiviti=&carian=
+//     &syarikat_id=&aktiviti=&carian=&sorokSesi=true
 // =======================================================
 export const senaraiLogAktiviti = async (req, res) => {
   try {
