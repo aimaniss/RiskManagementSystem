@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { FiShield, FiCheck, FiX } from "react-icons/fi";
+import { FiCheck, FiX } from "react-icons/fi";
 import api from "../../api/api";
 import { getAuthUser } from "../../utils/auth";
 import { SYARAT_KATALALUAN, katalaluanMematuhiPolisi } from "../../constants/katalaluan";
 import { useTemaCerah } from "../../hooks/useTemaCerah";
+import logoUkmh from "../../assets/images/Light Background/UKMH_light.png";
+import KakiHalaman from "../../components/KakiHalaman";
 import "../Login/Login.css";
 
 function MedanKatalaluan({ label, value, onChange, autoComplete, placeholder }) {
@@ -81,9 +83,7 @@ export default function TukarKatalaluan() {
     <div className="login-page">
       <form className="login-container login-container-single" onSubmit={handleHantar}>
         <div className="login-right">
-          <div className="login-left-icon">
-            <FiShield size={28} color="#fff" />
-          </div>
+          <img src={logoUkmh} alt="UKM Holdings" className="login-logo login-logo-kecil" />
           <p className="login-right-greeting">
             {wajib ? "Tetapkan kata laluan baharu" : "Tukar kata laluan"}
           </p>
@@ -137,12 +137,13 @@ export default function TukarKatalaluan() {
 
           <p className="login-help">
             {wajib ? "Bukan anda? " : ""}
-            <span className="login-forgot" onClick={wajib ? handleLogKeluar : () => navigate(-1)}>
+            <button type="button" className="login-pautan" onClick={wajib ? handleLogKeluar : () => navigate(-1)}>
               {wajib ? "Log keluar" : "Kembali"}
-            </span>
+            </button>
           </p>
         </div>
       </form>
+      <KakiHalaman className="login-footer" />
     </div>
   );
 }

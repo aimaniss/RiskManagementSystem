@@ -195,6 +195,12 @@ npm run migrate:status
 - Teks UI dalam **Bahasa Melayu**. Guna `src/constants/riskMatrix.js` untuk
   matriks skor R/S/T/ST dan `src/utils/formatters.js` untuk pemformatan.
 - Styling: Tailwind CSS 4 + class `shadcn/ui` (cva, clsx, tailwind-merge).
+- **Versi aplikasi**: satu sumber = `"version"` dalam `risk_frontend/package.json`
+  (disuntik oleh `vite.config.js` sebagai `import.meta.env.VITE_VERSI_APLIKASI`,
+  dibaca `src/constants/aplikasi.js`, dipapar `components/KakiHalaman.jsx` di log
+  masuk & sidebar). Naikkan dengan `npm version patch|minor|major --no-git-tag-version`
+  dalam `risk_frontend/` (SemVer: patch = pembetulan, minor = ciri baharu, major =
+  perubahan besar/tidak serasi). Mulakan semula `npm run dev` selepas menukar versi.
 
 ## Peranan & Data Isolation
 

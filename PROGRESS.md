@@ -192,6 +192,7 @@ Aksesibiliti & telefon:
 
 | Tarikh | Fasa | Apa yang dilakukan |
 |--------|------|--------------------|
+| 2026-09-26 | Log masuk | Halaman log masuk direka semula: panel jenama biru dengan logo UKM Holdings (putih) & "Unit Pematuhan dan Pengurusan Risiko", panel borang putih; "Lupa kata laluan?" & titik slaid palsu dibuang; halaman Tukar Kata Laluan berlogo. **Kaki halaman** versi & hak cipta (`KakiHalaman`, log masuk + sidebar); versi **2.0.0** daripada `package.json` (lihat AGENTS.md). E2E **99/99** |
 | 2026-09-26 | Laporan UI | Modal Jana Laporan & Pratonton guna komponen Dialog (tema & mod gelap, Escape); pratonton hampir penuh skrin dengan PDF muat lebar (Chrome `view=FitH,0`, Edge `zoom=page-width`), butang Muat Turun (`Laporan_<no>.pdf`) & Buka di Tab Baharu, paparan khas telefon; kebocoran URL blob dibetulkan; CSS lama dibuang. Spec 16 + aliran modal — E2E **99/99** |
 | 2026-09-26 | Laporan PDF | Fon ikut surat rasmi kerajaan (Helvetica, setara Arial) dengan satu skala saiz; jadual petunjuk tahap risiko dibuang; "Unit Pematuhan dan Pengurusan Risiko" di bawah logo, selebar logo; sesi "Separuh Tahun Pertama/Kedua" |
 | 2026-09-26 | Tema | Tema lalai **cerah** (tidak lagi mengikut mod gelap peranti); mod gelap hanya jika dipilih pengguna. Halaman Log Masuk & Tukar Kata Laluan sentiasa cerah (`hooks/useTemaCerah.js`, skrip `index.html`); pilihan pengguna dipulihkan selepas log masuk |

@@ -4,8 +4,9 @@ import api from "../../api/api";
 import { getUserRole } from "../../utils/auth";
 import { jwtDecode } from "jwt-decode";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import { FiShield } from "react-icons/fi";
 import { useTemaCerah } from "../../hooks/useTemaCerah";
+import logoUkmh from "../../assets/images/Dark Background/UKMH_dark.png";
+import KakiHalaman from "../../components/KakiHalaman";
 import "./Login.css";
 
 export default function Login() {
@@ -15,7 +16,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
-  const [tunjukLupa, setTunjukLupa] = useState(false);
   const [menghantar, setMenghantar] = useState(false);
   const navigate = useNavigate();
 
@@ -76,21 +76,12 @@ export default function Login() {
       <div className="login-container">
         {/* Left panel - branding */}
         <div className="login-left">
-          <div className="login-left-icon">
-            <FiShield size={28} color="#fff" />
-          </div>
+          <img src={logoUkmh} alt="UKM Holdings" className="login-logo" />
           <h2 className="login-left-title">Risk Management System</h2>
-          <p className="login-left-subtitle">
-            UKM Holdings Berhad
-          </p>
+          <p className="login-left-subtitle">Unit Pematuhan dan Pengurusan Risiko</p>
           <p className="login-left-desc">
             Urus, jejak dan kawal risiko organisasi anda dalam satu platform yang berpusat
           </p>
-          <div className="login-left-dots">
-            <span className="dot dot-active"></span>
-            <span className="dot"></span>
-            <span className="dot"></span>
-          </div>
         </div>
 
         {/* Right panel - form */}
@@ -99,13 +90,6 @@ export default function Login() {
           <p className="login-right-sub">Log masuk untuk teruskan ke akaun anda</p>
 
           {error && <div className="login-error">{error}</div>}
-          {tunjukLupa && (
-            <div className="login-info">
-              Kata laluan hanya boleh ditetapkan semula oleh pentadbir sistem. Hubungi Unit
-              Pengurusan Risiko dengan ID Staf anda; anda akan menerima kata laluan sementara
-              yang perlu ditukar semasa log masuk.
-            </div>
-          )}
 
           <label className="login-label" htmlFor="login-staff-id">ID Staf</label>
           <div className="login-input-group">
@@ -153,14 +137,6 @@ export default function Login() {
               />
               <span>Ingat saya</span>
             </label>
-            <span
-              className="login-forgot"
-              onClick={() => setTunjukLupa((t) => !t)}
-              role="button"
-              tabIndex={0}
-            >
-              Lupa kata laluan?
-            </span>
           </div>
 
           <button className="login-btn" onClick={handleLogin} disabled={menghantar}>
@@ -169,10 +145,11 @@ export default function Login() {
 
           <p className="login-help">
             Masalah log masuk? Hubungi{" "}
-            <span className="login-help-highlight">Unit Pengurusan Risiko</span>
+            <span className="login-help-highlight">Unit Pematuhan dan Pengurusan Risiko</span>
           </p>
         </div>
       </div>
+      <KakiHalaman className="login-footer" />
     </div>
   );
 }

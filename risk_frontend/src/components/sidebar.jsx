@@ -1,5 +1,6 @@
 // src/components/Sidebar.jsx
 import { useState, useEffect } from "react";
+import KakiHalaman from "./KakiHalaman";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -105,6 +106,7 @@ function Sidebar({ terbuka = false }) {
           Log Keluar
         </>
       </Link>
+      <KakiHalaman ringkas className="px-3 pb-3" />
     </div>
   );
 }
