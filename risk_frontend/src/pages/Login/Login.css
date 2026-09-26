@@ -26,7 +26,14 @@
   width: 240px;
   max-width: 70%;
   height: auto;
-  margin-bottom: 32px;
+}
+
+.login-jenama-garis {
+  width: 48px;
+  height: 2px;
+  margin: 28px 0 24px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .login-jenama-tajuk {
@@ -48,17 +55,27 @@
   flex-direction: column;
   align-items: center;
   padding: 40px 24px 20px;
+  background: #f4f6f9;
 }
 
 .login-kad {
   width: 100%;
-  max-width: 360px;
-  margin: auto 0;
+  max-width: 400px;
+  margin: auto 0 0;
+  padding: 40px 36px 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.15);
 }
 
 /* Logo berwarna hanya bila panel kiri disembunyikan (skrin kecil) */
 .login-kad-logo {
   display: none;
+}
+
+.login-tengah > .login-help {
+  margin: 20px 0 auto;
 }
 
 .login-tengah > .login-footer {
@@ -305,6 +322,10 @@
 
   .login-jenama {
     display: none;
+  }
+
+  .login-kad {
+    padding: 28px 22px 22px;
   }
 
   .login-kad-logo {

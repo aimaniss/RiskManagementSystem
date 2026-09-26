@@ -72,6 +72,7 @@ export default function Login() {
     <div className="login-skrin">
       <aside className="login-jenama">
         <img src={logoPutih} alt="UKM Holdings" className="login-jenama-logo" />
+        <span className="login-jenama-garis" aria-hidden="true" />
         <p className="login-jenama-tajuk">Sistem Pengurusan Risiko</p>
         <p className="login-jenama-unit">Unit Pematuhan dan Pengurusan Risiko</p>
       </aside>
@@ -129,11 +130,11 @@ export default function Login() {
           <button type="submit" className="login-btn" disabled={menghantar}>
             {menghantar ? "Sedang log masuk..." : "Log masuk"}
           </button>
-
-          <p className="login-help">
-            Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
-          </p>
         </form>
+
+        <p className="login-help">
+          Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
+        </p>
 
         <KakiHalaman className="login-footer" />
       </main>
