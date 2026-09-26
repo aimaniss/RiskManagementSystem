@@ -9,11 +9,11 @@ export default function PageHeader({ title, description, actions, className }) {
       )}
     >
       <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="font-heading text-[26px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
           {title}
         </h1>
         {description && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{description}</p>
         )}
       </div>
       {actions && (
