@@ -53,7 +53,7 @@ test.afterAll(async () => {
 
 const barisJadual = (kad, nama) => kad.getByRole("row").filter({ hasText: nama });
 
-test("Analitik: perbandingan separuh tahun & syarikat, tapisan, jadual dan skrin penuh", async ({
+test("Analisis: perbandingan separuh tahun & syarikat, tapisan, jadual dan skrin penuh", async ({
   page,
   request,
 }) => {
@@ -61,7 +61,7 @@ test("Analitik: perbandingan separuh tahun & syarikat, tapisan, jadual dan skrin
   await sealSession(page, sesi.token);
   await page.goto("/laporan");
 
-  const analitik = page.getByTestId("analitik-laporan");
+  const analitik = page.getByTestId("analisis-risiko");
   await expect(analitik).toBeVisible();
   await analitik.getByLabel("Kategori", { exact: true }).selectOption(TANDA);
   await analitik.getByLabel("Dari", { exact: true }).selectOption({ label: "Jan–Jun 2025" });
@@ -91,9 +91,9 @@ test("Analitik: perbandingan separuh tahun & syarikat, tapisan, jadual dan skrin
 
   // Skrin penuh dan keluar semula
   await analitik.getByRole("button", { name: "Skrin Penuh" }).click();
-  await expect(page.getByText("Analitik Laporan Risiko")).toBeVisible();
+  await expect(page.getByText("Analisis Risiko", { exact: true })).toBeVisible();
   await analitik.getByRole("button", { name: "Keluar Skrin Penuh" }).click();
-  await expect(page.getByText("Analitik Laporan Risiko")).toHaveCount(0);
+  await expect(page.getByText("Analisis Risiko", { exact: true })).toHaveCount(0);
 
   // Tab Jana Laporan PDF: jadual risiko dengan lencana tahap berwarna
   await page.getByRole("tab", { name: "Jana Laporan PDF" }).click();

@@ -1,4 +1,4 @@
-// Agregasi dashboard analitik Laporan (data dari GET /laporan/analitik).
+// Agregasi paparan Analisis Risiko di halaman Laporan (data dari GET /laporan/analitik).
 // Tempoh = separuh tahun; kunci = tahun * 2 + (separuh - 1) supaya boleh
 // dibandingkan secara berangka.
 
@@ -204,3 +204,31 @@ export function ringkasan(risiko, kDari, kHingga) {
     dinilai,
   };
 }
+
+// Donut: taburan tahap pada satu baris profil (biasanya tempoh akhir)
+export const taburanTahap = (baris) =>
+  baris
+    ? SIRI_TAHAP.map((s) => ({ nama: s.label, kunci: s.kunci, nilai: baris[s.kunci] || 0, fill: s.warna })).filter(
+        (x) => x.nilai > 0
+      )
+    : [];
+
+export const TREND_AKTIF = "Risiko aktif";
+export const TREND_TINGGI = "Tinggi & Sangat Tinggi";
+
+// Kawasan: jumlah risiko aktif & bilangan Tinggi/Sangat Tinggi setiap tempoh
+export const trendRisiko = (profil) =>
+  profil.map((b) => ({
+    nama: b.nama,
+    [TREND_AKTIF]: SIRI_TAHAP.reduce((s, x) => s + (b[x.kunci] || 0), 0),
+    [TREND_TINGGI]: (b.Tinggi || 0) + (b["Sangat Tinggi"] || 0),
+  }));
+
+export const BILANGAN = "Bilangan risiko";
+
+// Radar: jumlah risiko setiap kategori
+export const jumlahIkutKategori = (profilKategori) =>
+  profilKategori.map((b) => ({
+    nama: b.nama,
+    [BILANGAN]: SIRI_TAHAP.reduce((s, x) => s + (b[x.kunci] || 0), 0),
+  }));

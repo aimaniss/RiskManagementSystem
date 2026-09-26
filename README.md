@@ -33,7 +33,7 @@ dan meluluskan risiko korporat merentasi subsidiari.
 | **Penilaian & Rawatan** | Penilaian skor risiko dan rekod rawatan / pelan tindakan |
 | **Pemantauan Risiko** | Log pemantauan berkala dan keberkesanan rawatan |
 | **Pindaan** | Permohonan pindaan dengan kelulusan |
-| **Laporan** | Dashboard analitik perbandingan (separuh tahun, syarikat, kategori) dan laporan PDF rasmi |
+| **Laporan** | Analisis risiko bercarta (separuh tahun, syarikat, kategori, keberkesanan) dan laporan PDF rasmi |
 | **Urus Pengguna** | Akaun pengguna, peranan dan akses log masuk |
 | **Tetapan Sistem** | Data rujukan (syarikat, bahagian, kategori risiko) tanpa mengubah pangkalan data secara terus |
 | **Log Aktiviti** | Jejak audit (baca & eksport sahaja) |

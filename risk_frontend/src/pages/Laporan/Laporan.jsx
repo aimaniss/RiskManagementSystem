@@ -3,11 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { BarChart3, FileText, Search } from "lucide-react";
 import ReportOptionsModal from "./ReportOptionsModal";
 import LogPreviewModal from "./LogPreviewModal";
-import AnalitikLaporan from "./AnalitikLaporan";
+import AnalisisRisiko from "./AnalisisRisiko";
 
 import api from "../../api/api";
 import { getRiskColor } from "../../constants/riskMatrix";
-import { TAHAP } from "./analitik";
+import { TAHAP } from "./analisis";
 
 import PageHeader from "@/components/ui/page-header";
 import Toast from "@/components/ui/toast";
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 const PAPARAN = [
-  { id: "analitik", label: "Analitik", ikon: BarChart3 },
+  { id: "analisis", label: "Analisis", ikon: BarChart3 },
   { id: "pdf", label: "Jana Laporan PDF", ikon: FileText },
 ];
 
@@ -46,7 +46,7 @@ const labelSeparuh = (s) => (Number(s) === 2 ? "Jul–Dis" : "Jan–Jun");
 
 export default function LaporanRisiko() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const paparan = searchParams.get("paparan") === "pdf" ? "pdf" : "analitik";
+  const paparan = searchParams.get("paparan") === "pdf" ? "pdf" : "analisis";
 
   const [loading, setLoading] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
@@ -148,7 +148,7 @@ export default function LaporanRisiko() {
 
   return (
     <div>
-      <PageHeader title="Laporan" description="Analitik perbandingan risiko dan penjanaan laporan PDF" />
+      <PageHeader title="Laporan" description="Analisis perbandingan risiko dan penjanaan laporan PDF" />
 
       <div role="tablist" aria-label="Paparan laporan" className="mb-5 inline-flex rounded-lg border bg-card p-1">
         {PAPARAN.map(({ id, label, ikon }) => (
@@ -157,7 +157,7 @@ export default function LaporanRisiko() {
             type="button"
             role="tab"
             aria-selected={paparan === id}
-            onClick={() => setSearchParams(id === "analitik" ? {} : { paparan: id }, { replace: true })}
+            onClick={() => setSearchParams(id === "analisis" ? {} : { paparan: id }, { replace: true })}
             className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               paparan === id
                 ? "bg-primary text-primary-foreground shadow-sm"
@@ -170,8 +170,8 @@ export default function LaporanRisiko() {
         ))}
       </div>
 
-      {paparan === "analitik" ? (
-        <AnalitikLaporan />
+      {paparan === "analisis" ? (
+        <AnalisisRisiko />
       ) : (
         <>
           {loadingModal && (

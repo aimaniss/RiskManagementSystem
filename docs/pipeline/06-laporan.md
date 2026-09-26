@@ -4,8 +4,10 @@
 
 Halaman Laporan mempunyai dua tab (`?paparan=pdf` untuk tab kedua):
 
-1. **Analitik** (lalai) — dashboard perbandingan separuh tahun, syarikat,
-   kategori dan keberkesanan rawatan, dengan tapisan dan mod skrin penuh.
+1. **Analisis** (lalai) — paparan Analisis Risiko: perbandingan separuh tahun,
+   syarikat, kategori dan keberkesanan rawatan, dengan tapisan dan mod skrin penuh.
+   ("Analisis" = kata nama BM; "analitik" ialah kata sifat, dikekalkan hanya pada
+   nama endpoint `/laporan/analitik`.)
 2. **Jana Laporan PDF** — senarai risiko yang telah mempunyai rawatan dan
    eksport laporan penuh per risiko ke PDF di sisi klien (**jsPDF**).
 
@@ -50,20 +52,24 @@ sequenceDiagram
 
 | Komponen | API |
 |----------|-----|
-| `Laporan.jsx` | Tab Analitik / Jana Laporan PDF; GET `/syarikat`, GET `/laporan` (params), GET `/laporan/:id/data-penuh` |
-| `AnalitikLaporan.jsx` | GET `/laporan/analitik`; carta Recharts, tapisan, jadual, skrin penuh |
-| `analitik.js` | Agregasi di klien (tahap pada akhir separuh tahun, perbandingan syarikat/kategori, keberkesanan) |
+| `Laporan.jsx` | Tab Analisis / Jana Laporan PDF; GET `/syarikat`, GET `/laporan` (params), GET `/laporan/:id/data-penuh` |
+| `AnalisisRisiko.jsx` | GET `/laporan/analitik`; carta gaya shadcn/ui (`components/ui/chart.jsx` atas Recharts), tapisan, jadual, skrin penuh |
+| `analisis.js` | Agregasi di klien (tahap pada akhir separuh tahun, perbandingan syarikat/kategori, keberkesanan) |
 | `ReportOptionsModal.jsx` | Pemilihan penapis & jenis laporan |
 | `LogPreviewModal.jsx` | Pratinjau log pemantauan dalam laporan |
 
-## Analitik
+## Analisis Risiko
 
 - **Tahap pada akhir separuh tahun** = skor log pemantauan terkini sehingga
   tempoh itu; jika tiada log, penilaian awal (`risiko.skor_risiko`); tiada
   kedua-duanya = "Belum Dinilai". Risiko dikira mulai tempoh ia didaftar.
-- Carta: profil tahap ikut separuh tahun, profil tahap ikut syarikat, risiko
-  baharu ikut syarikat (garis), keberkesanan (Berkesan/Tidak), kategori ikut
-  tahap. Setiap carta ada petunjuk warna, tooltip dan paparan jadual.
+- Carta (komponen `ChartContainer`/`ChartTooltipContent`/`ChartLegendContent`
+  gaya shadcn/ui; warna paksi/grid ikut tema): donut taburan tahap (tempoh
+  akhir), bar bertindan tahap ikut separuh tahun, kawasan trend risiko aktif vs
+  Tinggi & Sangat Tinggi, radial kadar rawatan berkesan, bar mendatar tahap ikut
+  syarikat, garis risiko baharu ikut syarikat, radar profil kategori (bar jika
+  < 3 kategori), bar keberkesanan, bar mendatar kategori ikut tahap. Setiap
+  carta ada petunjuk (turutan tahap, `itemSorter={null}`), tooltip dan paparan jadual.
 - Warna tahap risiko = warna domain sistem (`getRiskColor`); warna syarikat =
   palet kategori tetap 8 slot (warna ikut syarikat, bukan kedudukan; slot ke-9+
   dilipat ke "Lain-lain"). Tiada paksi berganda.
