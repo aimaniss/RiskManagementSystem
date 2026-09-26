@@ -236,6 +236,26 @@
   outline: 2px solid #0f3d7a;
 }
 
+/* === INGAT SAYA === */
+.login-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 20px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.login-checkbox input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #0f3d7a;
+  cursor: pointer;
+}
+
 /* === BUTANG (dikongsi) === */
 .login-btn {
   width: 100%;

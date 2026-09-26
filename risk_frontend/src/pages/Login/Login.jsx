@@ -10,9 +10,20 @@ import logoWarna from "../../assets/images/Light Background/UKMH_light.png";
 import KakiHalaman from "../../components/KakiHalaman";
 import "./Login.css";
 
+// "Ingat saya" hanya menyimpan ID Staf (bukan kata laluan) dalam pelayar ini
+const KUNCI_INGAT = "ingat_staff_id";
+const bacaIngat = () => {
+  try {
+    return localStorage.getItem(KUNCI_INGAT) || "";
+  } catch {
+    return "";
+  }
+};
+
 export default function Login() {
   useTemaCerah();
-  const [staffId, setStaffId] = useState("");
+  const [staffId, setStaffId] = useState(bacaIngat);
+  const [ingatSaya, setIngatSaya] = useState(() => Boolean(bacaIngat()));
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +58,8 @@ export default function Login() {
       });
 
       localStorage.setItem("token", res.data.token);
+      if (ingatSaya) localStorage.setItem(KUNCI_INGAT, staffId.trim());
+      else localStorage.removeItem(KUNCI_INGAT);
 
       if (res.data.user?.perlu_tukar_katalaluan) {
         navigate("/tukar-katalaluan", { replace: true });
@@ -126,6 +139,15 @@ export default function Login() {
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+
+          <label className="login-checkbox">
+            <input
+              type="checkbox"
+              checked={ingatSaya}
+              onChange={(e) => setIngatSaya(e.target.checked)}
+            />
+            Ingat saya
+          </label>
 
           <button type="submit" className="login-btn" disabled={menghantar}>
             {menghantar ? "Sedang log masuk..." : "Log masuk"}
