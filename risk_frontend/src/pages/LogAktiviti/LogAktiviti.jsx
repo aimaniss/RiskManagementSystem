@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { formatDate } from "../../utils/formatters";
@@ -190,19 +189,18 @@ function LogAktiviti() {
     <div>
       <PageHeader
         title="Log Aktiviti"
-        description="Jejak audit semua tindakan pengguna dalam sistem"
+        description="Jejak audit semua tindakan pengguna. Rekod tidak boleh diubah atau dipadam."
         actions={
-          <Button variant="outline" onClick={eksport} disabled={mengeksport || hasil.jumlah === 0}>
+          <Button
+            variant="outline"
+            onClick={eksport}
+            disabled={mengeksport || hasil.jumlah === 0}
+            title="Eksport rekod mengikut tapisan semasa (maksimum 10,000 rekod)"
+          >
             <Download size={16} /> {mengeksport ? "Mengeksport..." : "Eksport CSV"}
           </Button>
         }
       />
-
-      <div className="mb-4 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
-        <ShieldCheck size={16} className="mt-0.5 shrink-0" />
-        Log aktiviti ialah jejak audit dan tidak boleh diubah atau dipadam. Eksport CSV mengikut
-        tapisan semasa (maksimum 10,000 rekod).
-      </div>
 
       {/* Tapisan */}
       <div className="mb-4 grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
