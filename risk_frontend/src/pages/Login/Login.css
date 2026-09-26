@@ -1,70 +1,68 @@
 /* Log masuk (skrin penuh dua panel) & Tukar Kata Laluan (kad tunggal).
    Sentiasa tema cerah (useTemaCerah), jadi warna ditulis terus. */
 
-/* === LOG MASUK === */
+/* === LOG MASUK: dua panel === */
 .login-skrin {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f4f6f9;
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  background: #ffffff;
   font-family: var(--font-sans);
 }
 
-/* Bar atas: identiti organisasi, gaya portal rasmi */
-.login-atas {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 32px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.login-atas-logo {
-  height: 38px;
-  width: auto;
-}
-
-.login-atas-teks {
-  display: grid;
-  padding-left: 16px;
-  border-left: 1px solid #e2e8f0;
-  line-height: 1.3;
-}
-
-.login-atas-sistem {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.login-atas-unit {
-  font-size: 12.5px;
-  color: #64748b;
-}
-
-.login-tengah {
-  flex: 1;
+/* Panel kiri: biru padu jenama, hanya logo & nama sistem */
+.login-jenama {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 48px 40px;
+  background: #0f3d7a;
+  color: #ffffff;
+  text-align: center;
+}
+
+.login-jenama-logo {
+  width: 240px;
+  max-width: 70%;
+  height: auto;
+  margin-bottom: 32px;
+}
+
+.login-jenama-tajuk {
+  margin: 0 0 6px;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.login-jenama-unit {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Panel kanan: borang */
+.login-tengah {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 20px;
 }
 
 .login-kad {
   width: 100%;
-  max-width: 400px;
-  padding: 32px;
-  border: 1px solid #e2e8f0;
-  border-top: 3px solid #0f3d7a;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  max-width: 360px;
+  margin: auto 0;
 }
 
-.login-skrin > .login-footer {
-  padding: 16px 20px 20px;
+/* Logo berwarna hanya bila panel kiri disembunyikan (skrin kecil) */
+.login-kad-logo {
+  display: none;
+}
+
+.login-tengah > .login-footer {
+  padding-top: 24px;
 }
 
 /* === TUKAR KATA LALUAN: KAD TUNGGAL === */
@@ -117,7 +115,7 @@
 .login-right-greeting {
   margin: 0 0 4px;
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: #0f172a;
@@ -300,33 +298,24 @@
 }
 
 /* === RESPONSIF === */
-@media (max-width: 600px) {
-  .login-atas {
-    padding: 12px 16px;
-    gap: 12px;
+@media (max-width: 860px) {
+  .login-skrin {
+    grid-template-columns: 1fr;
   }
 
-  .login-atas-logo {
-    height: 30px;
-  }
-
-  .login-atas-teks {
-    padding-left: 12px;
-  }
-
-  .login-atas-unit {
+  .login-jenama {
     display: none;
   }
 
-  .login-tengah {
-    justify-content: flex-start;
-    padding: 28px 16px;
+  .login-kad-logo {
+    display: block;
+    width: 150px;
+    height: auto;
+    margin-bottom: 28px;
   }
+}
 
-  .login-kad {
-    padding: 24px 20px;
-  }
-
+@media (max-width: 480px) {
   .login-right {
     padding: 2rem 1.5rem;
   }

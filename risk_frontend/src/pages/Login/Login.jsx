@@ -5,7 +5,8 @@ import { getUserRole } from "../../utils/auth";
 import { jwtDecode } from "jwt-decode";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { useTemaCerah } from "../../hooks/useTemaCerah";
-import logoUkmh from "../../assets/images/Light Background/UKMH_light.png";
+import logoPutih from "../../assets/images/Dark Background/UKMH_dark.png";
+import logoWarna from "../../assets/images/Light Background/UKMH_light.png";
 import KakiHalaman from "../../components/KakiHalaman";
 import "./Login.css";
 
@@ -69,16 +70,15 @@ export default function Login() {
 
   return (
     <div className="login-skrin">
-      <header className="login-atas">
-        <img src={logoUkmh} alt="UKM Holdings" className="login-atas-logo" />
-        <div className="login-atas-teks">
-          <span className="login-atas-sistem">Sistem Pengurusan Risiko</span>
-          <span className="login-atas-unit">Unit Pematuhan dan Pengurusan Risiko</span>
-        </div>
-      </header>
+      <aside className="login-jenama">
+        <img src={logoPutih} alt="UKM Holdings" className="login-jenama-logo" />
+        <p className="login-jenama-tajuk">Sistem Pengurusan Risiko</p>
+        <p className="login-jenama-unit">Unit Pematuhan dan Pengurusan Risiko</p>
+      </aside>
 
       <main className="login-tengah">
         <form className="login-kad" onSubmit={handleLogin} noValidate>
+          <img src={logoWarna} alt="UKM Holdings" className="login-kad-logo" />
           <h1 className="login-right-greeting">Log masuk</h1>
           <p className="login-right-sub">Gunakan ID Staf dan kata laluan anda.</p>
 
@@ -129,14 +129,14 @@ export default function Login() {
           <button type="submit" className="login-btn" disabled={menghantar}>
             {menghantar ? "Sedang log masuk..." : "Log masuk"}
           </button>
+
+          <p className="login-help">
+            Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
+          </p>
         </form>
 
-        <p className="login-help">
-          Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
-        </p>
+        <KakiHalaman className="login-footer" />
       </main>
-
-      <KakiHalaman className="login-footer" />
     </div>
   );
 }
