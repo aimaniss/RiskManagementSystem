@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  UserCircle,
-  X,
+  Check,
   Eye,
   EyeOff,
   Bell,
@@ -15,10 +14,22 @@ import {
   LogOut,
 } from "lucide-react";
 import api from "../api/api.js";
-import { katalaluanMematuhiPolisi } from "../constants/katalaluan";
+import { SYARAT_KATALALUAN, katalaluanMematuhiPolisi } from "../constants/katalaluan";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
 import { Avatar } from "@/components/ui/avatar";
+import PemilihGambar from "@/components/PemilihGambar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { hasKebenaran } from "@/utils/auth";
 import { stateLatar } from "@/hooks/useBukaRisiko";
 import "./navbar.css";
@@ -39,6 +50,43 @@ function laluanNotifikasi(notif) {
   return `/risiko/${notif.risiko_id}${tab}`;
 }
 
+function MedanKatalaluan({ id, label, value, onChange, autoComplete, placeholder }) {
+  const [tunjuk, setTunjuk] = useState(false);
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={tunjuk ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          className="pr-10"
+        />
+        <button
+          type="button"
+          onClick={() => setTunjuk((t) => !t)}
+          aria-label={tunjuk ? "Sembunyi kata laluan" : "Papar kata laluan"}
+          className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          {tunjuk ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BarisAkaun({ label, children }) {
+  return (
+    <div className="grid grid-cols-[110px_1fr] gap-3 px-4 py-2.5">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-foreground">{children || "-"}</dd>
+    </div>
+  );
+}
+
 function Navbar() {
   const navigate = useNavigate();
   const lokasi = useLocation();
@@ -55,8 +103,8 @@ function Navbar() {
   const [modalOpen, setModalOpen] = useState(false);
   const [passwordOld, setPasswordOld] = useState("");
   const [passwordNew, setPasswordNew] = useState("");
-  const [showPasswordOld, setShowPasswordOld] = useState(false);
-  const [showPasswordNew, setShowPasswordNew] = useState(false);
+  const [ralatGambar, setRalatGambar] = useState("");
+  const [menyimpan, setMenyimpan] = useState(false);
   const [newProfile, setNewProfile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
@@ -248,13 +296,10 @@ function Navbar() {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setNewProfile(file);
-      setPreview(URL.createObjectURL(file));
-      setRemoveProfileFlag(false);
-    }
+  const handleFileChange = (file) => {
+    setNewProfile(file);
+    setPreview(URL.createObjectURL(file));
+    setRemoveProfileFlag(false);
   };
 
   const handleRemoveProfile = () => {
@@ -276,6 +321,7 @@ function Navbar() {
 
     const passwordChanged = Boolean(passwordNew && passwordNew.trim() !== "");
 
+    setMenyimpan(true);
     try {
       const formData = new FormData();
       if (passwordOld) formData.append("katalaluan_lama", passwordOld);
@@ -301,8 +347,6 @@ function Navbar() {
       setNewProfile(null);
       setPreview(null);
       setRemoveProfileFlag(false);
-      setShowPasswordOld(false);
-      setShowPasswordNew(false);
       setModalOpen(false);
 
       if (passwordChanged) {
@@ -319,6 +363,8 @@ function Navbar() {
         variant: "error",
         title: err.response?.data?.error || "Gagal kemaskini profil. Sila cuba semula.",
       });
+    } finally {
+      setMenyimpan(false);
     }
   };
 
@@ -339,13 +385,12 @@ function Navbar() {
     setNewProfile(null);
     setPreview(null);
     setRemoveProfileFlag(false);
-    setShowPasswordOld(false);
-    setShowPasswordNew(false);
+    setRalatGambar("");
   };
   
   return (
     <>
-      <div className={`navbar ${modalOpen ? "blurred" : ""}`}>
+      <div className="navbar">
         <div className="navbar-actions">
           <button className="navbar-theme-toggle" onClick={toggleDarkMode} title={darkMode ? "Mod Cahaya" : "Mod Gelap"}>
             {darkMode ? <Sun size={19} /> : <Moon size={19} />}
@@ -477,94 +522,91 @@ function Navbar() {
         </div>
       </div>
 
-      {modalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Kemaskini Profil</h2>
-              <X size={20} className="close-icon" onClick={closeModal} />
-            </div>
+      <Dialog open={modalOpen} onOpenChange={(buka) => !buka && closeModal()}>
+        <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[480px]">
+          <DialogHeader className="border-b px-6 py-4 pr-12 text-left">
+            <DialogTitle>Kemaskini profil</DialogTitle>
+            <DialogDescription>Tukar gambar profil atau kata laluan anda.</DialogDescription>
+          </DialogHeader>
 
-            <form className="modal-form" onSubmit={handleUpdateProfile}>
-              <div className="profile-upload-wrapper">
-                {preview ? (
-                  <>
-                    <img src={preview} alt="Preview" className="profile-preview" />
-                    <button type="button" className="remove-profile-btn" onClick={handleRemoveProfile}>
-                      Buang
-                    </button>
-                  </>
-                ) : user.profileImage && !removeProfileFlag ? (
-                  <>
-                    <img src={user.profileImage} alt="Current" className="profile-preview" />
-                    <button type="button" className="remove-profile-btn" onClick={handleRemoveProfile}>
-                      Buang
-                    </button>
-                  </>
-                ) : (
-                  <UserCircle className="profile-placeholder" size={100} />
-                )}
-                <input type="file" accept="image/*" onChange={handleFileChange} className="profile-input" />
-              </div>
+          <form id="borang-profil" onSubmit={handleUpdateProfile} className="grid gap-6 px-6 py-5">
+            <section className="grid gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Gambar profil</h3>
+              <PemilihGambar
+                src={preview || (removeProfileFlag ? "" : user.profileImage)}
+                nama={user.fullName}
+                onPilih={handleFileChange}
+                onBuang={handleRemoveProfile}
+                onRalat={setRalatGambar}
+                disabled={menyimpan}
+              />
+              {ralatGambar && <p className="text-xs text-destructive">{ralatGambar}</p>}
+            </section>
 
-              <label>Nama Penuh</label>
-              <input type="text" value={user.fullName} readOnly />
-
-              <label>Syarikat</label>
-              <input type="text" value={user.syarikatPenuh} readOnly />
-
-              <label>Staff ID</label>
-              <input type="text" value={user.staffId} readOnly />
-
-              <label>Kata Laluan Lama</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  key={modalOpen + "-old"} 
-                  type={showPasswordOld ? "text" : "password"}
-                  placeholder="Masukkan kata laluan lama"
-                  value={passwordOld}
-                  onChange={(e) => setPasswordOld(e.target.value)}
-                  style={{ paddingRight: "40px" }}
-                  autoComplete="current-password"
-                />
-                <div
-                  style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
-                  onClick={() => setShowPasswordOld((prev) => !prev)}
-                >
-                  {showPasswordOld ? <EyeOff size={18} /> : <Eye size={18} />}
-                </div>
-              </div>
-
-              <label>Kata Laluan Baru</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  key={modalOpen + "-new"} 
-                  type={showPasswordNew ? "text" : "password"}
-                  placeholder="Masukkan kata laluan baru"
-                  value={passwordNew}
-                  onChange={(e) => setPasswordNew(e.target.value)}
-                  style={{ paddingRight: "40px" }}
-                  autoComplete="new-password"
-                />
-                <div
-                  style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
-                  onClick={() => setShowPasswordNew((prev) => !prev)}
-                >
-                  {showPasswordNew ? <EyeOff size={18} /> : <Eye size={18} />}
-                </div>
-              </div>
-              <p style={{ fontSize: "11.5px", color: "#6b7280", margin: "-4px 0 8px" }}>
-                Sekurang-kurangnya 8 aksara, mengandungi huruf dan nombor, tanpa ruang kosong.
+            <section className="grid gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Maklumat akaun</h3>
+              <dl className="divide-y rounded-lg border text-sm">
+                <BarisAkaun label="Nama penuh">{user.fullName}</BarisAkaun>
+                <BarisAkaun label="ID Staf">{user.staffId}</BarisAkaun>
+                <BarisAkaun label="Peranan">{user.namaPeranan}</BarisAkaun>
+                <BarisAkaun label="Syarikat">{user.syarikatPenuh}</BarisAkaun>
+              </dl>
+              <p className="text-xs text-muted-foreground">
+                Maklumat ini diurus oleh pentadbir sistem.
               </p>
+            </section>
 
-              <div className="filter-buttons">
-                <button type="button" onClick={closeModal}>Batal</button>
-                <button type="submit">Simpan</button>
+            <section className="grid gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Tukar kata laluan</h3>
+                <p className="text-xs text-muted-foreground">
+                  Pilihan. Biarkan kosong jika tidak mahu menukar. Anda akan diminta log masuk semula.
+                </p>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <MedanKatalaluan
+                id="profil-katalaluan-lama"
+                label="Kata laluan semasa"
+                placeholder="Masukkan kata laluan semasa"
+                value={passwordOld}
+                onChange={setPasswordOld}
+                autoComplete="current-password"
+              />
+              <MedanKatalaluan
+                id="profil-katalaluan-baru"
+                label="Kata laluan baharu"
+                placeholder="Masukkan kata laluan baharu"
+                value={passwordNew}
+                onChange={setPasswordNew}
+                autoComplete="new-password"
+              />
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                {SYARAT_KATALALUAN.map((syarat) => {
+                  const lulus = Boolean(passwordNew) && syarat.uji(passwordNew);
+                  return (
+                    <li
+                      key={syarat.label}
+                      className={`flex items-center gap-1.5 ${lulus ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+                    >
+                      {lulus ? <Check size={13} /> : <span className="h-1 w-1 rounded-full bg-current" />}
+                      {syarat.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          </form>
+
+          <DialogFooter className="gap-2 border-t px-6 py-4 sm:gap-2">
+            <Button type="button" variant="outline" onClick={closeModal} disabled={menyimpan}>
+              Batal
+            </Button>
+            <Button type="submit" form="borang-profil" disabled={menyimpan}>
+              {menyimpan ? "Menyimpan..." : "Simpan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {toast && (
         <div className="fixed top-[64px] right-4 z-[9999] w-[320px]">
           <Toast

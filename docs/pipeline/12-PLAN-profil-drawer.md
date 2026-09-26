@@ -34,11 +34,11 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
 - [x] Panel: Avatar, nama, ID staf, lencana peranan · syarikat; item menu
       "Kemaskini profil" & "Log keluar" (merah); tutup dengan Escape / klik luar
 
-### P4 — Modal Kemaskini Profil — `feat(profil)`
-- [ ] Tukar kepada komponen `Dialog` (tema cerah/gelap, Escape, fokus)
-- [ ] Bahagian: Gambar profil (PemilihGambar) · Maklumat akaun (senarai label:nilai, bukan input) ·
+### P4 — Modal Kemaskini Profil — `feat(profil)` ✅
+- [x] Tukar kepada komponen `Dialog` (tema cerah/gelap, Escape, fokus)
+- [x] Bahagian: Gambar profil (PemilihGambar) · Maklumat akaun (senarai label:nilai, bukan input) ·
       Tukar kata laluan (pilihan) dengan ikon mata dalam medan & senarai semak polisi langsung
-- [ ] Buang CSS modal lama dalam `navbar.css`
+- [x] Buang CSS modal lama dalam `navbar.css`
 
 ### P5 — Modal Tambah/Edit Pengguna — `feat(pengguna)`
 - [ ] PemilihGambar menggantikan input fail pelayar
