@@ -9,6 +9,7 @@ import {
   Sheet,
   SheetContent,
   SheetBody,
+  SheetSection,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -19,7 +20,7 @@ import { formatSeparuhTahun } from "@/utils/formatters";
 import { KEBERKESANAN_MAPPING } from "@/constants/riskMatrix";
 import BorangLogPemantauan from "@/components/risiko/BorangLogPemantauan";
 import { bolehPindaTerus, keSenarai } from "@/components/risiko/data";
-import { LencanaTahap, Medan, SenaraiCip } from "@/components/risiko/umum";
+import { BarisMedan, LencanaTahap, SenaraiCip, SenaraiMedan } from "@/components/risiko/umum";
 
 const WARNA_STATUS = {
   Buka: "secondary",
@@ -145,34 +146,40 @@ export default function TabPemantauan({ risiko, logs, bolehTambah, bukaTambah, o
                 <SheetTitle>Log pemantauan {labelSesi(panel.log)}</SheetTitle>
                 <SheetDescription>{risiko.no_rujukan}</SheetDescription>
               </SheetHeader>
-              <SheetBody>
-                <dl className="grid grid-cols-2 gap-4">
-                  <Medan label="Tahap selepas">
-                    <LencanaTahap
-                      k={panel.log.skor_kebarangkalian_selepas}
-                      i={panel.log.skor_impak_selepas}
-                      tunjukSkor
-                    />
-                  </Medan>
-                  <Medan label="Status">{panel.log.status_pemantauan}</Medan>
-                  <Medan label="Keberkesanan">
-                    {panel.log.keberkesanan
-                      ? `${panel.log.keberkesanan} (${KEBERKESANAN_MAPPING[panel.log.keberkesanan] || ""})`
-                      : "-"}
-                  </Medan>
-                  <Medan label="Kekerapan">{panel.log.kekerapan_pemantauan}</Medan>
-                  <Medan label="No. Bil Kelulusan">{panel.log.no_bil_kelulusan}</Medan>
-                  <Medan label="Justifikasi Pindaan">{panel.log.justifikasi_pindaan_pemantauan}</Medan>
-                  <Medan label="Pelan Tindakan" className="col-span-2">
-                    <SenaraiCip items={keSenarai(panel.log.pelan_tindakan_log)} />
-                  </Medan>
-                  <Medan label="Kakitangan Bertanggungjawab" className="col-span-2">
-                    <SenaraiCip items={keSenarai(panel.log.kakitangan_log)} />
-                  </Medan>
-                  <Medan label="Catatan" className="col-span-2">
-                    <span className="whitespace-pre-wrap">{panel.log.catatan}</span>
-                  </Medan>
-                </dl>
+              <SheetBody className="grid content-start gap-6">
+                <SheetSection tajuk="Keputusan pemantauan">
+                  <SenaraiMedan>
+                    <BarisMedan label="Tahap selepas">
+                      <LencanaTahap
+                        k={panel.log.skor_kebarangkalian_selepas}
+                        i={panel.log.skor_impak_selepas}
+                        tunjukSkor
+                      />
+                    </BarisMedan>
+                    <BarisMedan label="Status">{panel.log.status_pemantauan}</BarisMedan>
+                    <BarisMedan label="Keberkesanan">
+                      {panel.log.keberkesanan
+                        ? `${panel.log.keberkesanan} (${KEBERKESANAN_MAPPING[panel.log.keberkesanan] || ""})`
+                        : "-"}
+                    </BarisMedan>
+                    <BarisMedan label="Kekerapan">{panel.log.kekerapan_pemantauan}</BarisMedan>
+                    <BarisMedan label="No. Bil Kelulusan">{panel.log.no_bil_kelulusan}</BarisMedan>
+                    <BarisMedan label="Justifikasi Pindaan">
+                      {panel.log.justifikasi_pindaan_pemantauan}
+                    </BarisMedan>
+                  </SenaraiMedan>
+                </SheetSection>
+                <SheetSection tajuk="Pelan tindakan">
+                  <SenaraiCip items={keSenarai(panel.log.pelan_tindakan_log)} />
+                </SheetSection>
+                <SheetSection tajuk="Kakitangan bertanggungjawab">
+                  <SenaraiCip items={keSenarai(panel.log.kakitangan_log)} />
+                </SheetSection>
+                <SheetSection tajuk="Catatan">
+                  <p className="whitespace-pre-wrap text-sm text-foreground">
+                    {panel.log.catatan || "-"}
+                  </p>
+                </SheetSection>
               </SheetBody>
               {(penuh || bolehSunting(panel.log)) && (
                 <SheetFooter>

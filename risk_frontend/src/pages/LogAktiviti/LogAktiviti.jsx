@@ -12,11 +12,12 @@ import {
   Sheet,
   SheetContent,
   SheetBody,
+  SheetSection,
   SheetHeader,
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { BarisMedan } from "@/components/risiko/umum";
+import { BarisMedan, SenaraiMedan } from "@/components/risiko/umum";
 import { jenisAktiviti, labelHari, masaSahaja } from "@/constants/jenisAktiviti";
 import { cn } from "@/lib/utils";
 
@@ -480,21 +481,20 @@ function LogAktiviti() {
                 <SheetTitle>{keterangan(dipilih)}</SheetTitle>
                 <SheetDescription>{formatDate(dipilih.tarikh_masa)}</SheetDescription>
               </SheetHeader>
-              <SheetBody className="grid content-start gap-5">
-                <dl>
-                  <BarisMedan label="Pengguna">{dipilih.nama_pengguna}</BarisMedan>
-                  <BarisMedan label="ID Staf">{dipilih.staff_id}</BarisMedan>
-                  <BarisMedan label="Peranan">{dipilih.peranan_pengguna}</BarisMedan>
-                  <BarisMedan label="Syarikat">{dipilih.syarikat}</BarisMedan>
-                </dl>
-                <div>
-                  <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Perincian
-                  </h3>
-                  <p className="whitespace-pre-wrap rounded-lg bg-muted/40 px-4 py-3 text-sm text-foreground">
+              <SheetBody className="grid content-start gap-6">
+                <SheetSection tajuk="Pengguna">
+                  <SenaraiMedan>
+                    <BarisMedan label="Nama">{dipilih.nama_pengguna}</BarisMedan>
+                    <BarisMedan label="ID Staf">{dipilih.staff_id}</BarisMedan>
+                    <BarisMedan label="Peranan">{dipilih.peranan_pengguna}</BarisMedan>
+                    <BarisMedan label="Syarikat">{dipilih.syarikat}</BarisMedan>
+                  </SenaraiMedan>
+                </SheetSection>
+                <SheetSection tajuk="Perincian">
+                  <p className="whitespace-pre-wrap rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed text-foreground">
                     {dipilih.perincian || dipilih.ringkasan || "-"}
                   </p>
-                </div>
+                </SheetSection>
               </SheetBody>
             </>
           )}

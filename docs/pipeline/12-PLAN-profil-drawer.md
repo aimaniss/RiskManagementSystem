@@ -45,11 +45,11 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
 - [x] Susun atur dua lajur (ID Staf + Nama; Peranan + Syarikat) pada skrin ≥ sm, satu lajur pada telefon
 - [x] Bahagian bertajuk (Gambar profil · Maklumat pengguna · Akses · Kata laluan sementara) & ralat seragam; Avatar tanpa nama papar ikon pengguna
 
-### P6 — Drawer (`Sheet`) seragam — `style(ui)`
-- [ ] `sheet.jsx`: ruang tajuk tidak bertindih butang tutup, tiada cincin fokus automatik ketika dibuka,
+### P6 — Drawer (`Sheet`) seragam — `style(ui)` ✅
+- [x] `sheet.jsx`: pengepala berlatar lembut, ruang tajuk tidak bertindih butang tutup, tiada cincin fokus automatik ketika dibuka,
       `SheetSection` (tajuk bahagian seragam)
-- [ ] Komponen `SenaraiMedan`/`BarisMedan` dikongsi untuk pasangan label:nilai
-- [ ] Guna dalam drawer Log Aktiviti, Log Pemantauan (TabPemantauan) & Panel Kelulusan
+- [x] `SenaraiMedan` (kotak berbingkai) + `BarisMedan` sedia ada dalam `components/risiko/umum.jsx` untuk pasangan label:nilai
+- [x] Guna dalam drawer Log Aktiviti, Log Pemantauan (TabPemantauan) & Panel Kelulusan
 
 ### P7 — Ujian & dokumentasi — `docs`
 - [ ] E2E penuh lulus; kemas kini `PROGRESS.md`, `08-pengguna-notifikasi-log.md`

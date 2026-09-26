@@ -4,8 +4,8 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Susun atur drawer seragam: SheetHeader (tetap, bergaris) + SheetBody (skrol)
-// + SheetFooter (tetap di bawah). Penuh lebar pada telefon.
+// Susun atur drawer seragam: SheetHeader (tetap, bergaris) + SheetBody (skrol,
+// dibahagi dengan SheetSection) + SheetFooter (tetap di bawah). Penuh lebar pada telefon.
 
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -43,23 +43,39 @@ const sheetVariants = cva(
   }
 );
 
-const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => (
+const SheetContent = React.forwardRef(
+  ({ side = "right", className, children, onOpenAutoFocus, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
-    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+    <SheetPrimitive.Content
+      ref={ref}
+      className={cn(sheetVariants({ side }), "outline-none", className)}
+      // Fokus pada panel (bukan butang tutup) supaya tiada cincin fokus ketika dibuka
+      onOpenAutoFocus={(e) => {
+        onOpenAutoFocus?.(e);
+        if (e.defaultPrevented) return;
+        e.preventDefault();
+        e.currentTarget?.focus?.();
+      }}
+      {...props}
+    >
       {children}
-      <SheetPrimitive.Close className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
+      <SheetPrimitive.Close className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Tutup</span>
       </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>
-));
+  )
+);
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }) => (
   <div
-    className={cn("flex shrink-0 flex-col gap-1 border-b px-5 py-4 pr-12 text-left sm:px-6", className)}
+    className={cn(
+      "flex shrink-0 flex-col gap-1 border-b bg-muted/40 px-5 py-4 pr-14 text-left sm:px-6",
+      className
+    )}
     {...props}
   />
 );
@@ -70,6 +86,19 @@ const SheetBody = ({ className, ...props }) => (
   <div className={cn("min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6", className)} {...props} />
 );
 SheetBody.displayName = "SheetBody";
+
+/** Satu bahagian dalam SheetBody dengan tajuk kecil seragam */
+const SheetSection = ({ tajuk, className, children }) => (
+  <section className={cn("min-w-0", className)}>
+    {tajuk && (
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {tajuk}
+      </h3>
+    )}
+    {children}
+  </section>
+);
+SheetSection.displayName = "SheetSection";
 
 const SheetFooter = ({ className, ...props }) => (
   <div
@@ -109,6 +138,7 @@ export {
   SheetContent,
   SheetHeader,
   SheetBody,
+  SheetSection,
   SheetFooter,
   SheetTitle,
   SheetDescription,

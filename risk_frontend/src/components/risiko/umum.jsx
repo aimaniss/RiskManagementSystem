@@ -46,6 +46,11 @@ export function BarisMedan({ label, children }) {
   );
 }
 
+/** Kotak berbingkai untuk beberapa BarisMedan (drawer & panel butiran) */
+export function SenaraiMedan({ children, className }) {
+  return <dl className={cn("rounded-lg border bg-card px-4", className)}>{children}</dl>;
+}
+
 /** Senarai bernombor (punca, kesan) dengan tajuk kecil */
 export function SenaraiBernombor({ tajuk, items }) {
   const bersih = (items || []).filter((t) => t && String(t).trim() && t !== "-");

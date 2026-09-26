@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetBody,
+  SheetSection,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -18,34 +19,35 @@ import { hasKebenaran } from "@/utils/auth";
 import { stateLatar } from "@/hooks/useBukaRisiko";
 import { formatDate, formatSeparuhTahun } from "@/utils/formatters";
 import { keSenarai } from "./data";
-import { Medan, SenaraiCip } from "./umum";
+import { BarisMedan, SenaraiCip, SenaraiMedan } from "./umum";
 import KadPindaan from "./KadPindaan";
 
 const MENUNGGU = "Menunggu Kelulusan";
 
 function ButiranRisikoBaharu({ r }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2">
-      <Medan label="Syarikat">{r.nama_syarikat || r.syarikat}</Medan>
-      <Medan label="Sesi">
-        {r.tahun} · {formatSeparuhTahun(r.separuh_tahun)}
-      </Medan>
-      <Medan label="Kategori">{r.kategori}</Medan>
-      <Medan label="Bahagian / Unit">{r.bahagian}</Medan>
-      <Medan label="Didaftarkan oleh">{r.didaftarkan_oleh}</Medan>
-      <Medan label="Tarikh daftar">
-        {r.created_at ? formatDate(r.created_at) : "-"}
-      </Medan>
-      <Medan label="Risiko" className="sm:col-span-2">
-        <span className="whitespace-pre-wrap">{r.risiko}</span>
-      </Medan>
-      <Medan label="Punca" className="sm:col-span-2">
+    <>
+      <SheetSection tajuk="Maklumat risiko">
+        <SenaraiMedan>
+          <BarisMedan label="Syarikat">{r.nama_syarikat || r.syarikat}</BarisMedan>
+          <BarisMedan label="Sesi">
+            {r.tahun} · {formatSeparuhTahun(r.separuh_tahun)}
+          </BarisMedan>
+          <BarisMedan label="Kategori">{r.kategori}</BarisMedan>
+          <BarisMedan label="Bahagian / Unit">{r.bahagian}</BarisMedan>
+          <BarisMedan label="Didaftarkan oleh">{r.didaftarkan_oleh}</BarisMedan>
+          <BarisMedan label="Tarikh daftar">
+            {r.created_at ? formatDate(r.created_at) : "-"}
+          </BarisMedan>
+        </SenaraiMedan>
+      </SheetSection>
+      <SheetSection tajuk="Punca">
         <SenaraiCip items={keSenarai(r.punca)} />
-      </Medan>
-      <Medan label="Kesan" className="sm:col-span-2">
+      </SheetSection>
+      <SheetSection tajuk="Kesan">
         <SenaraiCip items={keSenarai(r.kesan)} />
-      </Medan>
-    </dl>
+      </SheetSection>
+    </>
   );
 }
 
@@ -127,8 +129,8 @@ export default function PanelKelulusan({ item, onTutup, onSelesai }) {
               </SheetDescription>
             </SheetHeader>
 
-            <SheetBody className="grid content-start gap-5">
-              <div className="grid gap-1 rounded-lg bg-muted/40 p-3">
+            <SheetBody className="grid content-start gap-6">
+              <div className="grid gap-1.5 rounded-lg border bg-card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono text-sm font-semibold text-foreground">
                     {d.no_rujukan}
@@ -155,11 +157,13 @@ export default function PanelKelulusan({ item, onTutup, onSelesai }) {
               {risikoBaharu ? (
                 <ButiranRisikoBaharu r={d} />
               ) : (
-                <KadPindaan p={d} bingkai={false} />
+                <SheetSection tajuk="Butiran pindaan">
+                  <KadPindaan p={d} bingkai={false} />
+                </SheetSection>
               )}
 
               {bolehProses && (
-                <div className="grid gap-1.5">
+                <SheetSection tajuk="Keputusan" className="grid gap-1.5">
                   <Label htmlFor="sebab-penolakan">Sebab Penolakan</Label>
                   <Textarea
                     id="sebab-penolakan"
@@ -168,11 +172,14 @@ export default function PanelKelulusan({ item, onTutup, onSelesai }) {
                     onChange={(e) => setSebab(e.target.value)}
                     placeholder="Wajib diisi jika menolak. Tidak diperlukan untuk meluluskan."
                   />
-                </div>
+                </SheetSection>
               )}
 
               {ralat && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div
+                  role="alert"
+                  className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                >
                   {ralat}
                 </div>
               )}

@@ -168,7 +168,7 @@
 - [x] P3 — Menu profil navbar (avatar, maklumat, Kemaskini profil, Log keluar)
 - [x] P4 — Modal Kemaskini Profil guna Dialog, bahagian tersusun, semakan polisi langsung
 - [x] P5 — Modal Tambah/Edit Pengguna dua lajur + PemilihGambar
-- [ ] P6 — Drawer (Sheet) seragam: pengepala, SheetSection, BarisMedan dikongsi
+- [x] P6 — Drawer (Sheet) seragam: pengepala, SheetSection, BarisMedan dikongsi
 - [ ] P7 — Ujian E2E & dokumentasi
 
 ---
