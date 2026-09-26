@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../api/api";
 import {
-  UserCircle,
   Pencil,
   Trash2,
   Users,
@@ -40,6 +39,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Avatar } from "@/components/ui/avatar";
+import PemilihGambar from "@/components/PemilihGambar";
 import { getAuthUser } from "@/utils/auth";
 import { formatDate } from "@/utils/formatters";
 import { SYARAT_KATALALUAN, katalaluanMematuhiPolisi } from "@/constants/katalaluan";
@@ -124,6 +124,7 @@ function UrusPengguna() {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState("");
   const [removeProfileFlag, setRemoveProfileFlag] = useState(false);
+  const [ralatGambar, setRalatGambar] = useState("");
 
   // Pengesahan tindakan (padam / reset / aktif-nyahaktif)
   const [tindakan, setTindakan] = useState(null); // { jenis, user }
@@ -218,15 +219,13 @@ function UrusPengguna() {
     setFormError("");
     setPreview("");
     setRemoveProfileFlag(false);
+    setRalatGambar("");
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((f) => ({ ...f, profile_pic: file }));
-      setPreview(URL.createObjectURL(file));
-      setRemoveProfileFlag(false);
-    }
+  const handleFileChange = (file) => {
+    setFormData((f) => ({ ...f, profile_pic: file }));
+    setPreview(URL.createObjectURL(file));
+    setRemoveProfileFlag(false);
   };
 
   const handleRoleChange = (roleId) => {
@@ -598,156 +597,159 @@ function UrusPengguna() {
 
       {/* Borang tambah / edit */}
       <Dialog open={modalOpen} onOpenChange={(buka) => !buka && closeModal()}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[440px]">
-          <DialogHeader>
-            <DialogTitle>{selectedUser ? "Edit Pengguna" : "Tambah Pengguna"}</DialogTitle>
+        <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[560px]">
+          <DialogHeader className="border-b px-6 py-4 pr-12 text-left">
+            <DialogTitle>{selectedUser ? "Edit pengguna" : "Tambah pengguna"}</DialogTitle>
             <DialogDescription>
               {selectedUser
-                ? "Kemas kini maklumat pengguna. Untuk kata laluan, gunakan butang Tetapkan Semula Kata Laluan di senarai."
-                : "Pengguna baharu akan diminta menukar kata laluan sementara semasa log masuk pertama."}
+                ? "Kemas kini maklumat & akses pengguna. Kata laluan ditetapkan semula melalui senarai."
+                : "Pengguna baharu perlu menukar kata laluan sementara semasa log masuk pertama."}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="relative inline-block">
-              {preview ? (
-                <img
-                  src={preview}
-                  alt=""
-                  className="h-24 w-24 rounded-full border-[3px] border-primary object-cover"
-                />
-              ) : (
-                <UserCircle className="h-24 w-24 text-muted-foreground" />
-              )}
-              {preview && (
-                <button
-                  type="button"
-                  title="Buang gambar profil"
-                  className="absolute -right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border bg-card p-0.5 text-destructive shadow-sm transition-transform hover:scale-110"
-                  onClick={() => {
-                    setFormData((f) => ({ ...f, profile_pic: null }));
-                    setPreview("");
-                    setRemoveProfileFlag(true);
-                  }}
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground"
-            />
-          </div>
-
-          <div className="grid gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="staff_id">ID Staf *</Label>
-              <Input
-                id="staff_id"
-                placeholder="cth. UKMH001"
-                value={formData.staff_id}
-                onChange={(e) => setFormData({ ...formData, staff_id: e.target.value })}
+          <div className="grid gap-6 px-6 py-5">
+            <section className="grid gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Gambar profil</h3>
+              <PemilihGambar
+                src={preview}
+                nama={formData.nama_penuh}
+                onPilih={handleFileChange}
+                onBuang={() => {
+                  setFormData((f) => ({ ...f, profile_pic: null }));
+                  setPreview("");
+                  setRemoveProfileFlag(true);
+                }}
+                onRalat={setRalatGambar}
+                disabled={saving}
               />
-            </div>
+              {ralatGambar && <p className="text-xs text-destructive">{ralatGambar}</p>}
+            </section>
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="nama_penuh">Nama Penuh *</Label>
-              <Input
-                id="nama_penuh"
-                value={formData.nama_penuh}
-                onChange={(e) => setFormData({ ...formData, nama_penuh: e.target.value })}
-              />
-            </div>
+            <section className="grid gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Maklumat pengguna</h3>
+              <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="staff_id">ID Staf *</Label>
+                  <Input
+                    id="staff_id"
+                    placeholder="cth. UKMH001"
+                    value={formData.staff_id}
+                    onChange={(e) => setFormData({ ...formData, staff_id: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="nama_penuh">Nama Penuh *</Label>
+                  <Input
+                    id="nama_penuh"
+                    value={formData.nama_penuh}
+                    onChange={(e) => setFormData({ ...formData, nama_penuh: e.target.value })}
+                  />
+                </div>
+              </div>
+            </section>
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="peranan_id">Peranan *</Label>
-              <Select
-                id="peranan_id"
-                value={formData.peranan_id}
-                onChange={(e) => handleRoleChange(e.target.value)}
-                disabled={suntingDiriSendiri}
-              >
-                <option value="">Pilih Peranan</option>
-                {roles.map((r) => (
-                  <option key={r.peranan_id} value={r.peranan_id}>
-                    {r.nama_peranan}
-                  </option>
-                ))}
-              </Select>
-              {suntingDiriSendiri && (
-                <p className="text-xs text-muted-foreground">
-                  Anda tidak boleh menukar peranan akaun sendiri.
+            <section className="grid gap-3">
+              <h3 className="text-sm font-semibold text-foreground">Akses</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid content-start gap-1.5">
+                  <Label htmlFor="peranan_id">Peranan *</Label>
+                  <Select
+                    id="peranan_id"
+                    value={formData.peranan_id}
+                    onChange={(e) => handleRoleChange(e.target.value)}
+                    disabled={suntingDiriSendiri}
+                  >
+                    <option value="">Pilih Peranan</option>
+                    {roles.map((r) => (
+                      <option key={r.peranan_id} value={r.peranan_id}>
+                        {r.nama_peranan}
+                      </option>
+                    ))}
+                  </Select>
+                  {suntingDiriSendiri && (
+                    <p className="text-xs text-muted-foreground">
+                      Anda tidak boleh menukar peranan akaun sendiri.
+                    </p>
+                  )}
+                </div>
+                <div className="grid content-start gap-1.5">
+                  <Label htmlFor="syarikat_id">Syarikat {syarikatWajib ? "*" : ""}</Label>
+                  <Select
+                    id="syarikat_id"
+                    value={formData.syarikat_id}
+                    onChange={(e) => setFormData({ ...formData, syarikat_id: e.target.value })}
+                    disabled={syarikatDikunci}
+                  >
+                    <option value="">Pilih Syarikat</option>
+                    {subsidiaries.map((s) => (
+                      <option key={s.syarikat_id} value={s.syarikat_id}>
+                        {s.nama_syarikat}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+              {(syarikatDikunci || syarikatWajib) && (
+                <p className="rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                  {syarikatDikunci
+                    ? `${perananDipilih} melihat semua syarikat; syarikat ditetapkan kepada UKM Holdings.`
+                    : `${perananDipilih} hanya boleh melihat risiko syarikat yang dipilih.`}
                 </p>
               )}
-            </div>
-
-            <div className="grid gap-1.5">
-              <Label htmlFor="syarikat_id">Syarikat {syarikatWajib ? "*" : ""}</Label>
-              <Select
-                id="syarikat_id"
-                value={formData.syarikat_id}
-                onChange={(e) => setFormData({ ...formData, syarikat_id: e.target.value })}
-                disabled={syarikatDikunci}
-              >
-                <option value="">Pilih Syarikat</option>
-                {subsidiaries.map((s) => (
-                  <option key={s.syarikat_id} value={s.syarikat_id}>
-                    {s.nama_syarikat}
-                  </option>
-                ))}
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {syarikatDikunci
-                  ? `${perananDipilih} melihat semua syarikat; ditetapkan kepada UKM Holdings.`
-                  : syarikatWajib
-                    ? `${perananDipilih} hanya boleh melihat risiko syarikat ini.`
-                    : ""}
-              </p>
-            </div>
+            </section>
 
             {!selectedUser && (
-              <div className="grid gap-1.5">
-                <Label htmlFor="katalaluan">Kata Laluan Sementara (pilihan)</Label>
-                <Input
-                  id="katalaluan"
-                  type="text"
-                  autoComplete="off"
-                  placeholder="Biarkan kosong untuk dijana automatik"
-                  value={formData.katalaluan}
-                  onChange={(e) => setFormData({ ...formData, katalaluan: e.target.value })}
-                />
-                {formData.katalaluan ? (
-                  <ul className="grid grid-cols-2 gap-x-3 text-xs">
-                    {SYARAT_KATALALUAN.map((s) => (
-                      <li
-                        key={s.label}
-                        className={
-                          s.uji(formData.katalaluan) ? "text-green-600" : "text-muted-foreground"
-                        }
-                      >
-                        {s.uji(formData.katalaluan) ? "✓" : "•"} {s.label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
+              <section className="grid gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Kata laluan sementara</h3>
                   <p className="text-xs text-muted-foreground">
-                    Sistem akan menjana kata laluan rawak dan memaparkannya sekali selepas simpan.
+                    Pilihan. Biarkan kosong dan sistem akan menjana kata laluan rawak yang dipaparkan
+                    sekali selepas simpan.
                   </p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="katalaluan" className="sr-only">
+                    Kata laluan sementara
+                  </Label>
+                  <Input
+                    id="katalaluan"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="Biarkan kosong untuk dijana automatik"
+                    value={formData.katalaluan}
+                    onChange={(e) => setFormData({ ...formData, katalaluan: e.target.value })}
+                  />
+                </div>
+                {formData.katalaluan && (
+                  <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                    {SYARAT_KATALALUAN.map((syarat) => {
+                      const lulus = syarat.uji(formData.katalaluan);
+                      return (
+                        <li
+                          key={syarat.label}
+                          className={`flex items-center gap-1.5 ${lulus ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+                        >
+                          {lulus ? <Check size={13} /> : <span className="h-1 w-1 rounded-full bg-current" />}
+                          {syarat.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 )}
-              </div>
+              </section>
             )}
 
             {formError && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div
+                role="alert"
+                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+              >
                 {formError}
               </div>
             )}
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 border-t px-6 py-4 sm:gap-2">
             <Button variant="outline" onClick={closeModal} disabled={saving}>
               Batal
             </Button>

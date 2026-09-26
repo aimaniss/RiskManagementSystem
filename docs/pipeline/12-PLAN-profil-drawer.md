@@ -40,10 +40,10 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
       Tukar kata laluan (pilihan) dengan ikon mata dalam medan & senarai semak polisi langsung
 - [x] Buang CSS modal lama dalam `navbar.css`
 
-### P5 — Modal Tambah/Edit Pengguna — `feat(pengguna)`
-- [ ] PemilihGambar menggantikan input fail pelayar
-- [ ] Susun atur dua lajur (ID Staf + Nama; Peranan + Syarikat) pada skrin ≥ sm, satu lajur pada telefon
-- [ ] Bahagian bertajuk & ralat seragam
+### P5 — Modal Tambah/Edit Pengguna — `feat(pengguna)` ✅
+- [x] PemilihGambar menggantikan input fail pelayar
+- [x] Susun atur dua lajur (ID Staf + Nama; Peranan + Syarikat) pada skrin ≥ sm, satu lajur pada telefon
+- [x] Bahagian bertajuk (Gambar profil · Maklumat pengguna · Akses · Kata laluan sementara) & ralat seragam; Avatar tanpa nama papar ikon pengguna
 
 ### P6 — Drawer (`Sheet`) seragam — `style(ui)`
 - [ ] `sheet.jsx`: ruang tajuk tidak bertindih butang tutup, tiada cincin fokus automatik ketika dibuka,

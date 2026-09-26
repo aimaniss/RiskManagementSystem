@@ -167,7 +167,7 @@
 - [x] P2 — Komponen Avatar & PemilihGambar dikongsi
 - [x] P3 — Menu profil navbar (avatar, maklumat, Kemaskini profil, Log keluar)
 - [x] P4 — Modal Kemaskini Profil guna Dialog, bahagian tersusun, semakan polisi langsung
-- [ ] P5 — Modal Tambah/Edit Pengguna dua lajur + PemilihGambar
+- [x] P5 — Modal Tambah/Edit Pengguna dua lajur + PemilihGambar
 - [ ] P6 — Drawer (Sheet) seragam: pengepala, SheetSection, BarisMedan dikongsi
 - [ ] P7 — Ujian E2E & dokumentasi
 

@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SAIZ = {
@@ -15,7 +16,7 @@ const inisial = (nama) =>
     .filter(Boolean)
     .slice(0, 2)
     .map((b) => b[0].toUpperCase())
-    .join("") || "?";
+    .join("");
 
 /** Gambar profil bulat; tanpa gambar, papar inisial nama */
 export function Avatar({ src, nama, saiz = "md", className }) {
@@ -31,7 +32,7 @@ export function Avatar({ src, nama, saiz = "md", className }) {
         "inline-flex select-none items-center justify-center bg-primary/10 font-semibold text-primary dark:bg-primary/20 dark:text-blue-200"
       )}
     >
-      {inisial(nama)}
+      {inisial(nama) || <User className="h-1/2 w-1/2" />}
     </span>
   );
 }
