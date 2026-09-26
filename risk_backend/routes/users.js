@@ -1,6 +1,6 @@
 import express from "express";
-import multer from "multer";
 import { verifyToken, authorizeKebenaran } from "../middleware/authMiddleware.js";
+import { muatNaikGambarProfil } from "../middleware/muatNaikGambar.js";
 import {
   senaraiPengguna,
   profilSemasa,
@@ -13,7 +13,6 @@ import {
 } from "../controllers/userController.js";
 
 const router = express.Router();
-const upload = multer(); // memory storage
 
 // GET all users (Admin sahaja — kebenaran `pengguna:urus`)
 router.get("/", verifyToken, authorizeKebenaran("pengguna:urus"), senaraiPengguna);
@@ -22,14 +21,14 @@ router.get("/", verifyToken, authorizeKebenaran("pengguna:urus"), senaraiPenggun
 router.get("/me", verifyToken, profilSemasa);
 
 // PUT update current user profile
-router.put("/me", verifyToken, upload.single("gambar_profil"), kemaskiniProfilSendiri);
+router.put("/me", verifyToken, muatNaikGambarProfil, kemaskiniProfilSendiri);
 
 // POST add new user (Admin sahaja)
 router.post(
   "/",
   verifyToken,
   authorizeKebenaran("pengguna:urus"),
-  upload.single("gambar_profil"),
+  muatNaikGambarProfil,
   tambahPengguna
 );
 
@@ -38,7 +37,7 @@ router.put(
   "/:id",
   verifyToken,
   authorizeKebenaran("pengguna:urus"),
-  upload.single("gambar_profil"),
+  muatNaikGambarProfil,
   kemaskiniPengguna
 );
 

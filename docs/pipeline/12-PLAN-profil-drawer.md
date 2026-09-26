@@ -18,10 +18,10 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
 
 ## Fasa
 
-### P1 — Had muat naik gambar profil (backend) — `fix(pengguna)`
-- [ ] `routes/users.js`: `multer({ limits: { fileSize: 2 MB }, fileFilter: image/png|jpeg|webp })`
-- [ ] Ralat multer dipulangkan sebagai `400 { error: "..." }` (BM), bukan 500
-- [ ] E2E: muat naik fail bukan imej / > 2 MB ditolak (spec 13)
+### P1 — Had muat naik gambar profil (backend) — `fix(pengguna)` ✅
+- [x] `middleware/muatNaikGambar.js` (`muatNaikGambarProfil`): `multer({ limits: { fileSize: 2 MB }, fileFilter: image/png|jpeg|webp })`, dipakai 3 route dalam `routes/users.js`
+- [x] Ralat multer dipulangkan sebagai `400 { error: "..." }` (BM), bukan 500
+- [x] E2E: muat naik fail bukan imej / > 2 MB ditolak (spec 13)
 
 ### P2 — Komponen dikongsi: Avatar & PemilihGambar — `feat(ui)`
 - [ ] `components/ui/avatar.jsx`: gambar atau inisial nama (bukan ikon lalai), saiz sm/md/lg

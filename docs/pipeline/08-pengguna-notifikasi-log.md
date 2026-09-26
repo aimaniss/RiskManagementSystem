@@ -69,7 +69,7 @@ stateDiagram-v2
 ### Profil Sendiri
 
 - `navbar.jsx` menarik `GET /users/me`; kemaskini profil menerusi
-  `PUT /users/me` dengan `upload.single("gambar_profil")` (multer).
+  `PUT /users/me` dengan `muatNaikGambarProfil` (multer; PNG/JPEG/WebP, maks. 2 MB).
 - `GET /users/me` & `PUT /users/me` — dibuka kepada semua (verifyToken sahaja).
 - `GET /users/me` memulangkan profil + **array `kebenaran` terkini** (sumber
   kebenaran UI; dimuat semula oleh `AppLayout` pada mount/focus/60s).
@@ -181,7 +181,8 @@ disekat selagi ada pengguna aktif), **Bahagian / Unit** dan **Kategori Risiko**
 
 ## Nota / Gotcha
 
-- **Multer**: muat naik gambar profil guna `upload.single("gambar_profil")` —
-  endpoint users memerlukan `multipart/form-data`.
+- **Multer**: muat naik gambar profil melalui `middleware/muatNaikGambar.js`
+  (`muatNaikGambarProfil`) — PNG/JPEG/WebP sahaja, maks. 2 MB; fail lain / terlalu
+  besar = `400 { error }` BM. Endpoint users memerlukan `multipart/form-data`.
 - Roles/syarikat dipakai sebagai penapis di LogAktiviti — pastikan senarai
   sentiasa dimuat sebelum paparan.

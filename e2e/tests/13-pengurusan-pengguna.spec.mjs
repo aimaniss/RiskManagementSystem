@@ -276,4 +276,42 @@ test.describe("Pengurusan pengguna", () => {
     await expect(page.getByText(/dinyahaktifkan/)).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
   });
+
+  test("Gambar profil: hanya imej <= 2 MB diterima (400 dengan mesej BM)", async ({ request }) => {
+    const hantar = (gambar) =>
+      request.put(`${API}/users/me`, {
+        headers: admin.auth,
+        multipart: { gambar_profil: gambar },
+      });
+
+    const bukanImej = await hantar({
+      name: "skrip.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("bukan gambar"),
+    });
+    expect(bukanImej.status()).toBe(400);
+    expect((await bukanImej.json()).error).toMatch(/PNG, JPEG atau WebP/);
+
+    const besar = await hantar({
+      name: "besar.png",
+      mimeType: "image/png",
+      buffer: Buffer.alloc(2 * 1024 * 1024 + 1),
+    });
+    expect(besar.status()).toBe(400);
+    expect((await besar.json()).error).toMatch(/melebihi 2 MB/);
+
+    // PNG 1x1 sah diterima, kemudian dibuang semula
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
+      "base64"
+    );
+    expect((await hantar({ name: "kecil.png", mimeType: "image/png", buffer: png })).status()).toBe(
+      200
+    );
+    const buang = await request.put(`${API}/users/me`, {
+      headers: admin.auth,
+      multipart: { hapus_gambar: "true" },
+    });
+    expect(buang.status()).toBe(200);
+  });
 });
