@@ -161,7 +161,7 @@
 
 ---
 
-## Profil, Urus Pengguna & Drawer (`docs/pipeline/12-PLAN-profil-drawer.md`)
+## Profil, Urus Pengguna & Drawer (selesai — `docs/pipeline/12-PLAN-profil-drawer.md`)
 
 - [x] P1 — Had muat naik gambar profil (2 MB, imej sahaja) + ralat 400 BM
 - [x] P2 — Komponen Avatar & PemilihGambar dikongsi
@@ -169,7 +169,7 @@
 - [x] P4 — Modal Kemaskini Profil guna Dialog, bahagian tersusun, semakan polisi langsung
 - [x] P5 — Modal Tambah/Edit Pengguna dua lajur + PemilihGambar
 - [x] P6 — Drawer (Sheet) seragam: pengepala, SheetSection, BarisMedan dikongsi
-- [ ] P7 — Ujian E2E & dokumentasi
+- [x] P7 — Ujian E2E & dokumentasi
 
 ---
 

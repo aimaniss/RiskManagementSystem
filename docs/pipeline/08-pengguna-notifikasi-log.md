@@ -70,6 +70,11 @@ stateDiagram-v2
 
 - `navbar.jsx` menarik `GET /users/me`; kemaskini profil menerusi
   `PUT /users/me` dengan `muatNaikGambarProfil` (multer; PNG/JPEG/WebP, maks. 2 MB).
+- **UI**: klik avatar di navbar → menu profil (nama, ID staf, peranan, syarikat,
+  "Kemaskini profil", "Log keluar"; Escape/klik luar menutup). Modal Kemaskini Profil guna
+  `Dialog`: gambar (`components/PemilihGambar.jsx`, semakan jenis/2 MB di klien), maklumat
+  akaun baca sahaja, tukar kata laluan pilihan dengan senarai semak `SYARAT_KATALALUAN`.
+  `components/ui/avatar.jsx` papar gambar atau inisial nama (navbar, menu, Urus Pengguna).
 - `GET /users/me` & `PUT /users/me` — dibuka kepada semua (verifyToken sahaja).
 - `GET /users/me` memulangkan profil + **array `kebenaran` terkini** (sumber
   kebenaran UI; dimuat semula oleh `AppLayout` pada mount/focus/60s).

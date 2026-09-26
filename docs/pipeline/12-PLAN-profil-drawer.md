@@ -4,7 +4,7 @@ Kemas kini UI bagi menu profil (klik gambar di navbar), modal **Kemaskini Profil
 modal **Tambah/Edit Pengguna**, dan semua kandungan drawer (`Sheet`). Setiap fasa
 = satu commit (`feat:` / `fix:` / `style:`), diuji E2E penuh pada `rms_test`.
 
-Status: 📋 dirancang → 🔄 sedang → ✅ siap
+Status: ✅ siap (P1–P7, 2026-09-26) — E2E 100/100
 
 ## Masalah semasa (semakan 2026-09-26)
 
@@ -51,5 +51,5 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
 - [x] `SenaraiMedan` (kotak berbingkai) + `BarisMedan` sedia ada dalam `components/risiko/umum.jsx` untuk pasangan label:nilai
 - [x] Guna dalam drawer Log Aktiviti, Log Pemantauan (TabPemantauan) & Panel Kelulusan
 
-### P7 — Ujian & dokumentasi — `docs`
-- [ ] E2E penuh lulus; kemas kini `PROGRESS.md`, `08-pengguna-notifikasi-log.md`
+### P7 — Ujian & dokumentasi — `docs` ✅
+- [x] E2E penuh lulus (100/100); kemas kini `PROGRESS.md`, `08-pengguna-notifikasi-log.md`
