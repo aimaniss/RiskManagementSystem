@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { X, FileText } from 'lucide-react';
+import { Download, ExternalLink, FileText } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import Toast from "@/components/ui/toast";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AlertBanner from "@/components/ui/alert-banner";
@@ -46,6 +47,13 @@ const gayaTahapRisiko = (shortCode) => ({
 // =================================================================
 // KOMPONEN: LogPreviewModal (Pratonton Log)
 // =================================================================
+// Pelayar mudah alih tidak memaparkan PDF dalam halaman (<embed>)
+const MUDAH_ALIH = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+// Buka PDF muat lebar supaya mudah dibaca. Pembaca PDF Edge melebihkan zum
+// dengan view=FitH, jadi Edge menggunakan zoom=page-width.
+const ZUM_PDF =
+  typeof navigator !== 'undefined' && /Edg\//.test(navigator.userAgent) ? 'zoom=page-width' : 'view=FitH,0';
+
 export default function LogPreviewModal({ risk, range, onClose }) {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
@@ -79,6 +87,9 @@ export default function LogPreviewModal({ risk, range, onClose }) {
   // --- useEffect menjana PDF dengan jsPDF ---
   // =================================================================
   useEffect(() => {
+    // URL blob semasa untuk dibebaskan apabila modal ditutup atau dijana semula
+    let urlBlob = null;
+
     async function generateNativePreview() {
       setIsLoading(true);
       try {
@@ -481,8 +492,8 @@ export default function LogPreviewModal({ risk, range, onClose }) {
         }
 
         // --- 6. JANA PREVIEW URL ---
-        const pdfBlobUrl = pdf.output('bloburl');
-        setPdfPreviewUrl(pdfBlobUrl);
+        urlBlob = URL.createObjectURL(pdf.output('blob'));
+        setPdfPreviewUrl(urlBlob);
 
       } catch (err) {
         console.error("Gagal menjana PDF:", err);
@@ -495,70 +506,95 @@ export default function LogPreviewModal({ risk, range, onClose }) {
     generateNativePreview();
 
     return () => {
-      if (pdfPreviewUrl) {
-        URL.revokeObjectURL(pdfPreviewUrl);
-      }
+      if (urlBlob) URL.revokeObjectURL(urlBlob);
     };
   }, [risk, range]);
 
-  // Render komponen modal
+  const namaFail = `Laporan_${String(risk?.no_rujukan || 'Risiko').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
+  const muatTurun = () => {
+    const pautan = document.createElement('a');
+    pautan.href = pdfPreviewUrl;
+    pautan.download = namaFail;
+    pautan.click();
+  };
+  const julat = range?.reportType === 'all'
+    ? 'Keseluruhan laporan'
+    : range?.isSingleLog
+      ? range?.fromLabel
+      : `${range?.fromLabel || ''} hingga ${range?.toLabel || ''}`;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div
-        className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-card shadow-xl"
-        onClick={e => e.stopPropagation()}
+    <Dialog open onOpenChange={(b) => !b && onClose()}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex h-[100dvh] max-h-none w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-[94vh] sm:w-[96vw] sm:max-w-6xl sm:rounded-xl"
       >
-        {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3.5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        {/* Pengepala: tajuk + tindakan (ruang kanan untuk butang tutup) */}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b py-3 pl-4 pr-14 sm:pl-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <FileText size={16} className="text-primary" />
-            </div>
-            <div>
-              <h3 className="text-[15px] font-semibold">Pratonton Laporan</h3>
-              <p className="text-xs text-muted-foreground">
-                {risk?.no_rujukan} &middot; {risk?.subsidiary}
-              </p>
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-base">Pratonton Laporan</DialogTitle>
+              <DialogDescription className="truncate text-xs">
+                {risk?.no_rujukan} · {risk?.subsidiary} · {julat}
+              </DialogDescription>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
-            <X size={16} />
-          </Button>
-        </div>
-
-        {/* Body */}
-        <div className="min-h-0 flex-1 bg-muted/60 p-4">
-          {isLoading ? (
-            <LoadingSpinner text="Menjana Laporan..." />
-          ) : pdfPreviewUrl ? (
-            <embed
-              src={pdfPreviewUrl}
-              type="application/pdf"
-              width="100%"
-              height="100%"
-              className="h-full min-h-[500px] w-full rounded-lg border border-border bg-card"
-            />
-          ) : (
-            <AlertBanner variant="error" title="Ralat" description="Gagal memuatkan laporan." />
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3">
-          <Button variant="outline" onClick={onClose}>Tutup</Button>
           {pdfPreviewUrl && (
-            <Button onClick={() => window.open(pdfPreviewUrl, '_blank')}>
-              Buka di Tab Baharu
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.open(pdfPreviewUrl, '_blank')}>
+                <ExternalLink size={14} /> Buka di Tab Baharu
+              </Button>
+              <Button size="sm" onClick={muatTurun}>
+                <Download size={14} /> Muat Turun
+              </Button>
+            </div>
           )}
         </div>
-      </div>
 
-      {toast && (
-        <div className="fixed top-[64px] right-4 z-50 w-80">
-          <Toast {...toast} onClose={() => setToast(null)} />
+        {/* PDF memenuhi ruang modal, dibuka muat lebar supaya mudah dibaca */}
+        <div className="min-h-0 flex-1 bg-muted">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <LoadingSpinner text="Menjana laporan..." />
+            </div>
+          ) : !pdfPreviewUrl ? (
+            <div className="p-4">
+              <AlertBanner variant="error" title="Ralat" description="Gagal memuatkan laporan." />
+            </div>
+          ) : MUDAH_ALIH ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+              <FileText size={40} className="text-muted-foreground" />
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Pratonton PDF tidak disokong dalam pelayar telefon. Buka atau muat turun laporan untuk membacanya.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => window.open(pdfPreviewUrl, '_blank')}>
+                  <ExternalLink size={14} /> Buka
+                </Button>
+                <Button onClick={muatTurun}>
+                  <Download size={14} /> Muat Turun
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <embed
+              src={`${pdfPreviewUrl}#${ZUM_PDF}&toolbar=1`}
+              type="application/pdf"
+              title={`Laporan ${risk?.no_rujukan || ''}`}
+              className="block h-full w-full"
+            />
+          )}
         </div>
-      )}
-    </div>
+
+        {toast && (
+          <div className="fixed right-4 top-[64px] z-[60] w-80">
+            <Toast {...toast} onClose={() => setToast(null)} />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

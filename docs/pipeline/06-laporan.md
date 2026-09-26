@@ -82,6 +82,11 @@ sequenceDiagram
   (saiz fon dikira supaya selebar logo). **Satu-satunya warna ialah sel tahap
   risiko** (warna sistem, sentiasa berlabel "Tinggi (T)"); tiada jadual petunjuk.
   Sesi ditulis "Separuh Tahun Pertama/Kedua".
+- UI: `ReportOptionsModal` (Dialog; keseluruhan / khusus: satu sesi, julat,
+  pemantauan sahaja) -> `LogPreviewModal` (Dialog hampir penuh skrin; PDF dibuka
+  muat lebar: `#view=FitH,0`, Edge `#zoom=page-width`; butang Buka di Tab Baharu
+  & Muat Turun `Laporan_<no_rujukan>.pdf`; telefon memaparkan butang buka/muat
+  turun kerana pelayar mudah alih tidak memaparkan PDF dalam halaman).
 - Setiap log pemantauan = satu jadual 7 lajur (`rowPageBreak: 'avoid'`);
   pindaan penilaian/keberkesanan menjadi baris dalam jadual. Lebar lajur mesti
   dalam mm (`lebar(peratus)`), rentetan peratus diabaikan jspdf-autotable.

@@ -101,5 +101,24 @@ test("Analitik: perbandingan separuh tahun & syarikat, tapisan, jadual dan skrin
   await page.getByLabel("Cari").fill(`${TANDA}-1`);
   const baris = page.getByRole("row", { name: new RegExp(`${TANDA}-1`) });
   await expect(baris.getByText("Sederhana (S)")).toBeVisible();
-  await expect(baris.getByRole("button", { name: "Jana PDF" })).toBeVisible();
+
+  // Pilihan laporan -> pratonton besar -> muat turun dengan nama fail rujukan
+  await baris.getByRole("button", { name: "Jana PDF" }).click();
+  const pilihan = page.getByRole("dialog");
+  await expect(pilihan.getByRole("heading", { name: "Jana Laporan" })).toBeVisible();
+  await expect(pilihan.getByLabel("Keseluruhan laporan")).toBeChecked();
+  await pilihan.getByRole("button", { name: "Jana Laporan" }).click();
+
+  const pratonton = page.getByRole("dialog");
+  await expect(pratonton.getByRole("heading", { name: "Pratonton Laporan" })).toBeVisible();
+  await expect(pratonton.locator('embed[type="application/pdf"]')).toBeAttached();
+  const saiz = await pratonton.evaluate((el) => el.getBoundingClientRect());
+  expect(saiz.height).toBeGreaterThan(page.viewportSize().height * 0.85);
+  const [muat] = await Promise.all([
+    page.waitForEvent("download"),
+    pratonton.getByRole("button", { name: "Muat Turun" }).click(),
+  ]);
+  expect(muat.suggestedFilename()).toMatch(/^Laporan_.+\.pdf$/);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

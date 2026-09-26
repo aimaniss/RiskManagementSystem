@@ -243,12 +243,16 @@ test("Paparan telefon: modal butiran penuh skrin tanpa skrol mendatar", async ({
   for (const tab of ["ringkasan", "penilaian", "rawatan", "pemantauan", "pindaan", "sejarah"]) {
     await page.goto(`/risiko/${ctx.risikoId}?tab=${tab}`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const ukuran = await page.getByRole("dialog").evaluate((el) => {
+    const dialog = page.getByRole("dialog");
+    // Tunggu animasi pembukaan (skala 95% -> 100%) selesai sebelum mengukur
+    await expect
+      .poll(() => dialog.evaluate((el) => el.getBoundingClientRect().width), { message: `tab ${tab}` })
+      .toBeGreaterThanOrEqual(389);
+    const lebih = await dialog.evaluate((el) => {
       const isi = el.querySelector(".overflow-y-auto");
-      return { lebar: el.getBoundingClientRect().width, lebih: isi.scrollWidth - isi.clientWidth };
+      return isi.scrollWidth - isi.clientWidth;
     });
-    expect(ukuran.lebar, `tab ${tab}`).toBeGreaterThanOrEqual(389);
-    expect(ukuran.lebih, `tab ${tab}`).toBeLessThanOrEqual(1);
+    expect(lebih, `tab ${tab}`).toBeLessThanOrEqual(1);
   }
 });
 
