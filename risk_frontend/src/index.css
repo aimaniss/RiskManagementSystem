@@ -77,11 +77,19 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Komputer riba: saiz asas 14px (~88%) supaya kandungan muat tanpa zum keluar;
+     utiliti Tailwind berasaskan rem jadi semua skala bersama. Skrin besar kekal 16px. */
+  @media (min-width: 1024px) and (max-width: 1680px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 0.9375rem;
     line-height: 1.5;
   }
 

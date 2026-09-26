@@ -1,5 +1,5 @@
-/* src/components/sidebar.css — latar kelabu-biru lembut supaya terpisah daripada
-   kandungan putih tanpa warna berat; mod gelap guna token zinc. */
+/* src/components/sidebar.css — sidebar putih di atas latar halaman kelabu cerah
+   (AppLayout); mod gelap guna token zinc. */
 
 .sidebar {
   --sb-w: 220px;
@@ -11,7 +11,7 @@
   z-index: 30;
   display: flex;
   flex-direction: column;
-  background: #f3f6fb;
+  background: var(--color-card);
   border-right: 1px solid #e2e8f0;
   color: #475569;
   font-family: var(--font-sans);
@@ -21,7 +21,6 @@
 .sidebar-header {
   flex-shrink: 0;
   padding: 18px 14px 14px;
-  border-bottom: 1px solid #e2e8f0;
   text-align: center;
 }
 
@@ -85,7 +84,7 @@
 }
 
 .sidebar-link:hover {
-  background: #e6ecf5;
+  background: #f1f5f9;
   color: #0f172a;
 }
 
@@ -170,9 +169,6 @@
   border-right-color: var(--color-border);
 }
 
-.dark .sidebar-header {
-  border-bottom-color: var(--color-border);
-}
 
 .dark .sidebar-bawah {
   border-top-color: var(--color-border);
@@ -194,6 +190,17 @@
 
 .dark .sidebar-link.active {
   color: var(--color-primary-foreground);
+}
+
+/* Komputer riba: menu lebih padat, selaras saiz asas 14px (index.css) */
+@media (min-width: 1024px) and (max-width: 1680px) {
+  .sidebar-link {
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+  .sidebar-tajuk {
+    margin-top: 10px;
+  }
 }
 
 /* Skrin kecil: sidebar menjadi menu luncur (dibuka melalui butang menu) */

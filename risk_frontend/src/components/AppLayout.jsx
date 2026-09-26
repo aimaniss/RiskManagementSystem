@@ -58,8 +58,9 @@ export default function AppLayout({ children }) {
 
   const handleModalToggle = (isOpen) => setModalOpen(isOpen);
 
+  // Latar kelabu sangat cerah supaya kad & sidebar putih terpisah; hanya susun atur utama
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f6f8fb] dark:bg-background">
       <Sidebar terbuka={menuBuka} />
       <button
         type="button"
