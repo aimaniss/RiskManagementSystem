@@ -1,6 +1,17 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, Search, Eye, X, Filter, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import {
+  Trash2,
+  Search,
+  Eye,
+  X,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  ListChecks,
+} from "lucide-react";
 import { getAuthUser } from "../../utils/auth";
 import { getRiskAbbreviation, getRiskColor } from "../../constants/riskMatrix";
 import { formatSeparuhTahun } from "../../utils/formatters";
@@ -18,14 +29,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
-const RISK_LEVEL_CHIPS = [
-  { key: "Rendah", color: "#22c55e" },
-  { key: "Sederhana", color: "#eab308" },
-  { key: "Tinggi", color: "#f97316" },
-  { key: "Sangat Tinggi", color: "#ef4444" },
-];
+const TAHAP = ["Rendah", "Sederhana", "Tinggi", "Sangat Tinggi"];
+const SAIZ_HALAMAN = [10, 25, 50];
+
+const tahapSemasa = (r) =>
+  r.tahap_risiko_semasa && r.tahap_risiko_semasa !== "Tiada Data" ? r.tahap_risiko_semasa : r.tahap_risiko;
 
 function sortRisks(risks, sortKey, sortDir) {
   if (!sortKey) return risks;
@@ -64,9 +74,13 @@ function SenaraiRisiko() {
   const [separuhFilter, setSeparuhFilter] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [tahapFilter, setTahapFilter] = useState("");
   const [sortKey, setSortKey] = useState("no_rujukan");
   const [sortDir, setSortDir] = useState("asc");
+  const [had, setHad] = useState(SAIZ_HALAMAN[0]);
+  // Halaman diikat pada tapisan & susunan semasa: bila berubah, kembali ke halaman 1
+  const kunciPaparan = JSON.stringify([search, syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter, tahapFilter, sortKey, sortDir, had]);
+  const [paging, setPaging] = useState({ kunci: kunciPaparan, halaman: 1 });
 
   const bukaRisiko = useBukaRisiko();
   useRisikoBerubah(refetch);
@@ -78,7 +92,8 @@ function SenaraiRisiko() {
   const userSyarikatId = authUser?.syarikatId || "";
   const isRestricted = ["STAFF", "KETUA SUBSIDIARI"].includes(userRole);
 
-  const filteredRisks = useMemo(() => risks.filter(r => {
+  // Kiraan tahap dikira sebelum tapisan tahap supaya kad lain tidak jadi sifar bila satu dipilih
+  const risikoAsas = useMemo(() => risks.filter(r => {
     const matchSearch = !search ||
       (r.no_rujukan || "").toLowerCase().includes(search.toLowerCase()) ||
       (r.risiko || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -93,18 +108,29 @@ function SenaraiRisiko() {
     return matchSearch && matchSyarikat && matchTahun && matchSeparuh && matchKategori && matchStatus;
   }), [risks, search, syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter, isRestricted, userSyarikatId]);
 
+  const filteredRisks = useMemo(
+    () => (tahapFilter ? risikoAsas.filter((r) => tahapSemasa(r) === tahapFilter) : risikoAsas),
+    [risikoAsas, tahapFilter]
+  );
+
   const sortedRisks = useMemo(() => sortRisks(filteredRisks, sortKey, sortDir), [filteredRisks, sortKey, sortDir]);
+
+  const bilHalaman = Math.max(1, Math.ceil(sortedRisks.length / had));
+  const halaman = paging.kunci === kunciPaparan ? Math.min(paging.halaman, bilHalaman) : 1;
+  const tukarHalaman = (h) => setPaging({ kunci: kunciPaparan, halaman: h });
+  const mulaIndeks = (halaman - 1) * had;
+  const risikoHalaman = sortedRisks.slice(mulaIndeks, mulaIndeks + had);
 
   const stats = useMemo(() => {
     const total = risks.length;
     const displayed = filteredRisks.length;
     const byLevel = { "Rendah": 0, "Sederhana": 0, "Tinggi": 0, "Sangat Tinggi": 0 };
-    filteredRisks.forEach(r => {
-      const level = r.tahap_risiko_semasa && r.tahap_risiko_semasa !== "Tiada Data" ? r.tahap_risiko_semasa : r.tahap_risiko;
+    risikoAsas.forEach(r => {
+      const level = tahapSemasa(r);
       if (level && byLevel[level] !== undefined) byLevel[level]++;
     });
     return { total, displayed, byLevel };
-  }, [risks, filteredRisks]);
+  }, [risks, risikoAsas, filteredRisks]);
 
   const handleDelete = id => {
     setConfirmAction(() => async () => {
@@ -124,6 +150,7 @@ function SenaraiRisiko() {
     setSeparuhFilter("");
     setKategoriFilter("");
     setStatusFilter("");
+    setTahapFilter("");
   };
 
   const handleSort = (key) => {
@@ -131,8 +158,8 @@ function SenaraiRisiko() {
     else { setSortKey(key); setSortDir("asc"); }
   };
 
-  const activeFilterCount = [syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter].filter(Boolean).length;
-  const hasFilters = activeFilterCount > 0 || !!search;
+  const hasFilters =
+    !!search || [syarikatFilter, tahunFilter, separuhFilter, kategoriFilter, statusFilter, tahapFilter].some(Boolean);
   const uniqueYears = [...new Set(risks.map(r => r.tahun).filter(Boolean))].sort((a, b) => b - a);
   const uniqueKategori = [...new Set(risks.map(r => r.kategori).filter(Boolean))].sort();
   const uniqueStatuses = [...new Set(risks.map(r => r.status_pemantauan).filter(Boolean))].sort();
@@ -152,102 +179,98 @@ function SenaraiRisiko() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
+      {/* Ringkasan: jumlah + kiraan ikut tahap (klik untuk tapis) */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="col-span-2 flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm sm:col-span-1">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <ListChecks size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {hasFilters ? "Dipaparkan" : "Jumlah Risiko"}
+            </p>
+            <p className="mt-0.5 text-xl font-bold tracking-tight text-foreground">
+              {loading ? "..." : stats.displayed}
+              {!loading && stats.displayed !== stats.total && (
+                <span className="text-sm font-medium text-muted-foreground"> / {stats.total}</span>
+              )}
+            </p>
+          </div>
+        </div>
+        {TAHAP.map((tahap) => {
+          const dipilih = tahapFilter === tahap;
+          return (
+            <button
+              key={tahap}
+              type="button"
+              aria-pressed={dipilih}
+              title={dipilih ? "Klik untuk buang tapisan tahap" : `Tapis risiko ${tahap}`}
+              onClick={() => setTahapFilter(dipilih ? "" : tahap)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50",
+                dipilih && "border-primary ring-1 ring-primary"
+              )}
+            >
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+                style={{ backgroundColor: getRiskColor(tahap) }}
+              >
+                {getRiskAbbreviation(tahap)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {tahap}
+                </span>
+                <span className="mt-0.5 block text-xl font-bold tracking-tight text-foreground">
+                  {loading ? "..." : stats.byLevel[tahap]}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tapisan: satu bar alat, sentiasa kelihatan */}
+      <div className="grid grid-cols-2 items-center gap-2 rounded-xl border bg-card p-3 shadow-sm sm:flex sm:flex-wrap">
+        <div className="relative col-span-2 min-w-[220px] flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="pl-9 pr-9"
+            type="search"
+            aria-label="Carian"
+            className="h-9 pl-9"
             placeholder="Cari no rujukan, risiko, syarikat..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          {search && (
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSearch("")}>
-              <X size={14} />
-            </button>
-          )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className={`gap-1.5 ${showFilters ? "border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary" : "text-muted-foreground"}`}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={14} />
-          Tapisan
-          {hasFilters && (
-            <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
-              {activeFilterCount || 1}
-            </span>
-          )}
-        </Button>
-      </div>
-
-      {showFilters && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 rounded-xl border bg-muted/30 p-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Syarikat</Label>
-            <Select value={isRestricted ? userSyarikatId : syarikatFilter} onChange={e => setSyarikatFilter(e.target.value)} disabled={isRestricted}>
-              <option value="">Semua Syarikat</option>
-              {syarikatList.map(s => <option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)}
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Tahun</Label>
-            <Select value={tahunFilter} onChange={e => setTahunFilter(e.target.value)}>
-              <option value="">Semua Tahun</option>
-              {uniqueYears.map(t => <option key={t} value={t}>{t}</option>)}
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Term</Label>
-            <Select value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)}>
-              <option value="">Semua Term</option>
-              <option value="1">Pertama (T1)</option>
-              <option value="2">Kedua (T2)</option>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Kategori</Label>
-            <Select value={kategoriFilter} onChange={e => setKategoriFilter(e.target.value)}>
-              <option value="">Semua Kategori</option>
-              {uniqueKategori.map(k => <option key={k} value={k}>{k}</option>)}
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Status</Label>
-            <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="">Semua Status</option>
-              {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-            </Select>
-          </div>
-          {hasFilters && (
-            <Button variant="ghost" size="sm" className="mt-auto gap-1 self-end text-xs text-muted-foreground hover:text-foreground" onClick={clearFilters}>
-              <X size={12} /> Set Semula
-            </Button>
-          )}
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-3">
-        <div className="rounded-xl border bg-card px-4 py-3 min-w-[110px]">
-          <p className="text-lg font-bold leading-tight text-foreground">
-            {stats.displayed}
-            {stats.displayed !== stats.total && (
-              <span className="text-sm font-medium text-muted-foreground"> / {stats.total}</span>
-            )}
-          </p>
-          <p className="text-xs text-muted-foreground">Jumlah Ditapis</p>
-        </div>
-        {RISK_LEVEL_CHIPS.map(chip => (
-          <div key={chip.key} className="flex items-center gap-2.5 rounded-xl border bg-card px-4 py-3">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: chip.color }} />
-            <div>
-              <p className="text-lg font-bold leading-tight text-foreground">{stats.byLevel[chip.key]}</p>
-              <p className="text-xs text-muted-foreground">{chip.key}</p>
-            </div>
-          </div>
-        ))}
+        {!isRestricted && (
+          <Select aria-label="Syarikat" className="h-9 sm:w-48" value={syarikatFilter} onChange={e => setSyarikatFilter(e.target.value)}>
+            <option value="">Semua syarikat</option>
+            {syarikatList.map(s => <option key={s.syarikat_id} value={s.syarikat_id}>{s.nama_syarikat}</option>)}
+          </Select>
+        )}
+        <Select aria-label="Tahun" className="h-9 sm:w-36" value={tahunFilter} onChange={e => setTahunFilter(e.target.value)}>
+          <option value="">Semua tahun</option>
+          {uniqueYears.map(t => <option key={t} value={t}>{t}</option>)}
+        </Select>
+        <Select aria-label="Separuh tahun" className="h-9 sm:w-48" value={separuhFilter} onChange={e => setSeparuhFilter(e.target.value)}>
+          <option value="">Semua separuh tahun</option>
+          <option value="1">Separuh Pertama</option>
+          <option value="2">Separuh Kedua</option>
+        </Select>
+        <Select aria-label="Kategori" className="h-9 sm:w-44" value={kategoriFilter} onChange={e => setKategoriFilter(e.target.value)}>
+          <option value="">Semua kategori</option>
+          {uniqueKategori.map(k => <option key={k} value={k}>{k}</option>)}
+        </Select>
+        <Select aria-label="Status" className="h-9 sm:w-40" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <option value="">Semua status</option>
+          {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+        </Select>
+        {hasFilters && (
+          <Button variant="ghost" size="sm" className="h-9 gap-1 text-muted-foreground hover:text-foreground" onClick={clearFilters}>
+            <X size={14} /> Set semula
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -257,6 +280,7 @@ function SenaraiRisiko() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12 text-center">Bil</TableHead>
                 {[
                   { key: "no_rujukan", label: "No. Rujukan" },
                   { key: "risiko", label: "Penerangan Risiko" },
@@ -281,7 +305,7 @@ function SenaraiRisiko() {
             <TableBody>
               {sortedRisks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="h-32">
+                  <TableCell colSpan={11} className="h-32">
                     <EmptyState
                       icon={Search}
                       title="Tiada data risiko ditemui"
@@ -292,18 +316,19 @@ function SenaraiRisiko() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sortedRisks.map((risk) => (
+                risikoHalaman.map((risk, i) => (
                   <TableRow key={risk.id} onClick={() => handleViewRisk(risk)} className="cursor-pointer">
+                    <TableCell className="text-center text-muted-foreground tabular-nums">{mulaIndeks + i + 1}</TableCell>
                     <TableCell className="font-mono text-sm font-semibold whitespace-nowrap">{risk.no_rujukan || "-"}</TableCell>
                     <TableCell className="max-w-[200px] truncate" title={risk.risiko}>{risk.risiko || "-"}</TableCell>
                     <TableCell>{risk.singkatan_syarikat || risk.syarikat || "-"}</TableCell>
                     <TableCell>{risk.kategori || "-"}</TableCell>
                     <TableCell className="text-center font-semibold">{risk.semasa_skor_kebarangkalian || risk.skor_kebarangkalian || "-"}</TableCell>
                     <TableCell className="text-center font-semibold">{risk.semasa_skor_impak || risk.skor_impak || "-"}</TableCell>
-                    <TableCell><RiskLevelBadge level={risk.tahap_risiko_semasa && risk.tahap_risiko_semasa !== "Tiada Data" ? risk.tahap_risiko_semasa : risk.tahap_risiko} /></TableCell>
+                    <TableCell><RiskLevelBadge level={tahapSemasa(risk)} /></TableCell>
                     <TableCell>
                       {(() => {
-                        const latestLevel = risk.tahap_risiko_semasa && risk.tahap_risiko_semasa !== "Tiada Data" ? risk.tahap_risiko_semasa : risk.tahap_risiko;
+                        const latestLevel = tahapSemasa(risk);
                         const status = latestLevel && latestLevel !== "Rendah" && latestLevel !== "Tiada Data" ? "Ya" : "Tidak";
                         return <Badge variant={status === "Ya" ? "default" : "secondary"}>{status}</Badge>;
                       })()}
@@ -338,6 +363,51 @@ function SenaraiRisiko() {
               )}
             </TableBody>
           </Table>
+
+          {sortedRisks.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
+              <div className="text-muted-foreground">
+                {mulaIndeks + 1}–{Math.min(mulaIndeks + had, sortedRisks.length)} daripada {sortedRisks.length} risiko
+              </div>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={had}
+                  onChange={(e) => setHad(Number(e.target.value))}
+                  className="h-8 w-[140px]"
+                  aria-label="Rekod setiap halaman"
+                >
+                  {SAIZ_HALAMAN.map((n) => (
+                    <option key={n} value={n}>
+                      {n} / halaman
+                    </option>
+                  ))}
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => tukarHalaman(halaman - 1)}
+                  disabled={halaman <= 1}
+                  aria-label="Halaman sebelum"
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                <span className="whitespace-nowrap text-muted-foreground">
+                  {halaman} / {bilHalaman}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => tukarHalaman(halaman + 1)}
+                  disabled={halaman >= bilHalaman}
+                  aria-label="Halaman seterusnya"
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
