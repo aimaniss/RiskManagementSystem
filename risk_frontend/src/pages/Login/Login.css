@@ -1,5 +1,73 @@
+/* Log masuk (skrin penuh dua panel) & Tukar Kata Laluan (kad tunggal).
+   Sentiasa tema cerah (useTemaCerah), jadi warna ditulis terus. */
 
-/* === PAGE === */
+/* === LOG MASUK === */
+.login-skrin {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f6f9;
+  font-family: var(--font-sans);
+}
+
+/* Bar atas: identiti organisasi, gaya portal rasmi */
+.login-atas {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.login-atas-logo {
+  height: 38px;
+  width: auto;
+}
+
+.login-atas-teks {
+  display: grid;
+  padding-left: 16px;
+  border-left: 1px solid #e2e8f0;
+  line-height: 1.3;
+}
+
+.login-atas-sistem {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.login-atas-unit {
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.login-tengah {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.login-kad {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid #0f3d7a;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.login-skrin > .login-footer {
+  padding: 16px 20px 20px;
+}
+
+/* === TUKAR KATA LALUAN: KAD TUNGGAL === */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -7,275 +75,175 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.08), transparent 45%),
-    radial-gradient(circle at 85% 85%, rgba(14, 116, 144, 0.08), transparent 45%),
-    #f1f5f9;
-  font-family: "Poppins", sans-serif;
   padding: 24px 20px;
+  background: #f6f8fb;
+  font-family: var(--font-sans);
 }
 
-/* === CONTAINER (split panel) === */
 .login-container {
   display: flex;
-  min-height: 520px;
+  width: 100%;
+  max-width: 880px;
+  overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  overflow: hidden;
   background: #ffffff;
-  box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.18);
-  max-width: 880px;
-  width: 100%;
-  animation: fadeIn 0.8s ease;
+  box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.14);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.login-container-single {
+  max-width: 440px;
 }
 
-/* === LEFT PANEL === */
-.login-left {
+.login-right {
   flex: 1;
-  background: linear-gradient(155deg, #0b3a75 0%, #14539f 55%, #1d6fd1 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
   padding: 2.5rem;
-  position: relative;
-  overflow: hidden;
 }
 
-.login-left::before,
-.login-left::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-}
-
-.login-left::before {
-  width: 360px;
-  height: 360px;
-  top: -140px;
-  right: -140px;
-}
-
-.login-left::after {
-  width: 280px;
-  height: 280px;
-  bottom: -120px;
-  left: -110px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-/* Logo UKM Holdings (versi latar cerah; halaman log masuk sentiasa tema cerah) */
 .login-logo {
   display: block;
-  width: 230px;
-  max-width: 80%;
   height: auto;
-  margin-bottom: 28px;
-  position: relative;
 }
 
 .login-logo-kecil {
   width: 150px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.login-left-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 4px;
-  text-align: center;
-}
-
-.login-left-subtitle {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 16px;
-  text-align: center;
-}
-
-.login-left-desc {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.72);
-  margin: 0;
-  text-align: center;
-  max-width: 270px;
-  line-height: 1.6;
-}
-
-/* === RIGHT PANEL === */
-.login-right {
-  flex: 1;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2.5rem 3rem;
-}
-
+/* === TAJUK BORANG (dikongsi) === */
 .login-right-greeting {
-  font-size: 21px;
-  font-weight: 600;
-  color: #0f172a;
   margin: 0 0 4px;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #0f172a;
 }
 
 .login-right-sub {
-  font-size: 13px;
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.55;
   color: #64748b;
-  margin: 0 0 1.75rem;
 }
 
-/* === LABEL === */
+/* === MEDAN (dikongsi) === */
 .login-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #4b5563;
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
 }
 
-/* === INPUT GROUP === */
 .login-input-group {
   display: flex;
   align-items: center;
-  border: 0.5px solid #d0d5dd;
-  border-radius: 8px;
-  background: var(--color-card);
+  height: 44px;
+  margin-bottom: 18px;
   padding: 0 12px;
-  margin-bottom: 14px;
-  transition: border-color 0.2s;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .login-input-group:focus-within {
-  border-color: #378add;
-  box-shadow: 0 0 0 2px rgba(55, 138, 221, 0.12);
+  border-color: #0f3d7a;
+  box-shadow: 0 0 0 3px rgba(15, 61, 122, 0.12);
 }
 
 .login-input-icon {
-  font-size: 14px;
-  color: #9ca3af;
+  width: 16px;
+  height: 16px;
   margin-right: 10px;
   flex-shrink: 0;
+  color: #94a3b8;
 }
 
 .login-input-group input {
   flex: 1;
-  font-size: 13px;
-  padding: 10px 0;
+  min-width: 0;
+  height: 100%;
   border: none;
-  background: transparent;
   outline: none;
-  box-sizing: border-box;
-  color: #1a1a2e;
-  font-family: "Poppins", sans-serif;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: #0f172a;
 }
 
 .login-input-group input::placeholder {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .login-toggle-pw {
-  cursor: pointer;
-  color: #9ca3af;
-  font-size: 14px;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #94a3b8;
+  font-size: 15px;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .login-toggle-pw:hover {
   color: #334155;
 }
 
-/* === ROW (ingat saya) === */
-.login-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-bottom: 1.4rem;
+.login-toggle-pw:focus-visible {
+  outline: 2px solid #0f3d7a;
 }
 
-.login-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #4b5563;
-  cursor: pointer;
-}
-
-.login-checkbox input[type="checkbox"] {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1.5px solid #d0d5dd;
-  accent-color: #378add;
-  cursor: pointer;
-}
-
-/* === BUTTON === */
+/* === BUTANG (dikongsi) === */
 .login-btn {
   width: 100%;
+  height: 44px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 6px;
+  background: #0f3d7a;
+  color: #ffffff;
+  font: inherit;
   font-size: 14px;
   font-weight: 600;
-  padding: 11px 0;
-  background: linear-gradient(90deg, #1a6bbf, #378add);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: "Poppins", sans-serif;
+  transition: background-color 0.15s ease;
 }
 
 .login-btn:hover {
-  transform: scale(1.02);
-  background: linear-gradient(90deg, #155fa5, #2e7bd4);
+  background: #0b2f60;
 }
 
-.login-btn:active {
-  transform: scale(0.98);
-}
-
-/* === ERROR === */
-.login-error {
-  background: rgba(255, 80, 80, 0.12);
-  border: 1px solid rgba(255, 120, 120, 0.3);
-  color: #dc2626;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 14px;
-  font-weight: 500;
+.login-btn:focus-visible {
+  outline: 2px solid #0f3d7a;
+  outline-offset: 2px;
 }
 
 .login-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* === TUKAR KATA LALUAN (panel tunggal) === */
-.login-container-single {
-  max-width: 440px;
-  min-height: 0;
+/* === RALAT === */
+.login-error {
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
 }
 
+/* === POLISI KATA LALUAN === */
 .login-policy {
   list-style: none;
   padding: 0;
@@ -283,8 +251,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px 12px;
-  font-size: 11.5px;
-  color: #9ca3af;
+  font-size: 12px;
+  color: #94a3b8;
 }
 
 .login-policy li {
@@ -303,7 +271,7 @@
   border: none;
   background: none;
   font: inherit;
-  color: #185fa5;
+  color: #1d4ed8;
   cursor: pointer;
 }
 
@@ -311,45 +279,55 @@
   text-decoration: underline;
 }
 
-/* === HELP TEXT === */
+/* === BANTUAN & KAKI HALAMAN === */
 .login-help {
-  font-size: 11.5px;
-  color: #9ca3af;
+  margin: 20px 0 0;
+  font-size: 12.5px;
+  color: #64748b;
   text-align: center;
-  margin: 1.5rem 0 0;
 }
 
 .login-help-highlight {
-  color: #185fa5;
+  color: #1d4ed8;
   font-weight: 500;
 }
 
-/* === KAKI HALAMAN (versi & hak cipta) === */
 .login-footer {
-  font-size: 11.5px;
-  color: #64748b;
-  text-align: center;
+  font-size: 12px;
   line-height: 1.5;
+  color: #94a3b8;
+  text-align: center;
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 700px) {
-  .login-container {
-    flex-direction: column;
-    max-width: 420px;
+/* === RESPONSIF === */
+@media (max-width: 600px) {
+  .login-atas {
+    padding: 12px 16px;
+    gap: 12px;
   }
 
-  .login-left {
-    padding: 2rem 1.5rem;
-    min-height: auto;
+  .login-atas-logo {
+    height: 30px;
+  }
+
+  .login-atas-teks {
+    padding-left: 12px;
+  }
+
+  .login-atas-unit {
+    display: none;
+  }
+
+  .login-tengah {
+    justify-content: flex-start;
+    padding: 28px 16px;
+  }
+
+  .login-kad {
+    padding: 24px 20px;
   }
 
   .login-right {
     padding: 2rem 1.5rem;
-  }
-
-  .login-logo {
-    width: 170px;
-    margin-bottom: 18px;
   }
 }

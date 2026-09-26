@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import { getUserRole } from "../../utils/auth";
 import { jwtDecode } from "jwt-decode";
-import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { useTemaCerah } from "../../hooks/useTemaCerah";
-import logoUkmh from "../../assets/images/Dark Background/UKMH_dark.png";
+import logoUkmh from "../../assets/images/Light Background/UKMH_light.png";
 import KakiHalaman from "../../components/KakiHalaman";
 import "./Login.css";
 
@@ -14,7 +14,6 @@ export default function Login() {
   const [staffId, setStaffId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [menghantar, setMenghantar] = useState(false);
   const navigate = useNavigate();
@@ -31,7 +30,8 @@ export default function Login() {
     }
   }, [navigate]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e?.preventDefault();
     if (menghantar) return;
     if (!staffId.trim() || !password.trim()) {
       setError("Sila masukkan ID Staf dan kata laluan.");
@@ -67,33 +67,32 @@ export default function Login() {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleLogin();
-  };
-
   return (
-    <div className="login-page">
-      <div className="login-container">
-        {/* Left panel - branding */}
-        <div className="login-left">
-          <img src={logoUkmh} alt="UKM Holdings" className="login-logo" />
-          <h2 className="login-left-title">Risk Management System</h2>
-          <p className="login-left-subtitle">Unit Pematuhan dan Pengurusan Risiko</p>
-          <p className="login-left-desc">
-            Urus, jejak dan kawal risiko organisasi anda dalam satu platform yang berpusat
-          </p>
+    <div className="login-skrin">
+      <header className="login-atas">
+        <img src={logoUkmh} alt="UKM Holdings" className="login-atas-logo" />
+        <div className="login-atas-teks">
+          <span className="login-atas-sistem">Sistem Pengurusan Risiko</span>
+          <span className="login-atas-unit">Unit Pematuhan dan Pengurusan Risiko</span>
         </div>
+      </header>
 
-        {/* Right panel - form */}
-        <div className="login-right">
-          <p className="login-right-greeting">Selamat kembali</p>
-          <p className="login-right-sub">Log masuk untuk teruskan ke akaun anda</p>
+      <main className="login-tengah">
+        <form className="login-kad" onSubmit={handleLogin} noValidate>
+          <h1 className="login-right-greeting">Log masuk</h1>
+          <p className="login-right-sub">Gunakan ID Staf dan kata laluan anda.</p>
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <div className="login-error" role="alert">
+              {error}
+            </div>
+          )}
 
-          <label className="login-label" htmlFor="login-staff-id">ID Staf</label>
+          <label className="login-label" htmlFor="login-staff-id">
+            ID Staf
+          </label>
           <div className="login-input-group">
-            <FaUser className="login-input-icon" />
+            <User className="login-input-icon" />
             <input
               id="login-staff-id"
               type="text"
@@ -101,13 +100,14 @@ export default function Login() {
               placeholder="contoh: UKMH001"
               value={staffId}
               onChange={(e) => setStaffId(e.target.value)}
-              onKeyDown={handleKeyDown}
             />
           </div>
 
-          <label className="login-label" htmlFor="login-katalaluan">Kata laluan</label>
+          <label className="login-label" htmlFor="login-katalaluan">
+            Kata laluan
+          </label>
           <div className="login-input-group">
-            <FaLock className="login-input-icon" />
+            <Lock className="login-input-icon" />
             <input
               id="login-katalaluan"
               type={showPassword ? "text" : "password"}
@@ -115,40 +115,27 @@ export default function Login() {
               placeholder="Masukkan kata laluan"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={handleKeyDown}
             />
-            <span
+            <button
+              type="button"
               className="login-toggle-pw"
               onClick={() => setShowPassword(!showPassword)}
-              role="button"
-              tabIndex={0}
               aria-label={showPassword ? "Sembunyi kata laluan" : "Papar kata laluan"}
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
 
-          <div className="login-row">
-            <label className="login-checkbox">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span>Ingat saya</span>
-            </label>
-          </div>
-
-          <button className="login-btn" onClick={handleLogin} disabled={menghantar}>
+          <button type="submit" className="login-btn" disabled={menghantar}>
             {menghantar ? "Sedang log masuk..." : "Log masuk"}
           </button>
+        </form>
 
-          <p className="login-help">
-            Masalah log masuk? Hubungi{" "}
-            <span className="login-help-highlight">Unit Pematuhan dan Pengurusan Risiko</span>
-          </p>
-        </div>
-      </div>
+        <p className="login-help">
+          Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
+        </p>
+      </main>
+
       <KakiHalaman className="login-footer" />
     </div>
   );
