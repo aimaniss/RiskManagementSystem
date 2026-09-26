@@ -133,7 +133,8 @@ export default function Login() {
         </form>
 
         <p className="login-help">
-          Masalah log masuk? Hubungi Unit Pematuhan dan Pengurusan Risiko.
+          <span className="login-help-tajuk">Masalah log masuk?</span>
+          Hubungi Unit Pematuhan dan Pengurusan Risiko.
         </p>
 
         <KakiHalaman className="login-footer" />
