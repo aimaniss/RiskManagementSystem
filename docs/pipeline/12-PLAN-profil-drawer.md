@@ -29,9 +29,9 @@ Status: 📋 dirancang → 🔄 sedang → ✅ siap
       (input fail tersembunyi, teks BM), semakan jenis & saiz ≤ 2 MB di klien
 - [x] Guna Avatar dalam senarai Urus Pengguna
 
-### P3 — Menu profil navbar — `feat(navbar)`
-- [ ] Pencetus: Avatar + nama/peranan (butang sebenar, `aria-haspopup`, `aria-expanded`)
-- [ ] Panel: Avatar, nama, ID staf, lencana peranan · syarikat; item menu
+### P3 — Menu profil navbar — `feat(navbar)` ✅
+- [x] Pencetus: Avatar + nama/peranan (butang sebenar, `aria-haspopup`, `aria-expanded`)
+- [x] Panel: Avatar, nama, ID staf, lencana peranan · syarikat; item menu
       "Kemaskini profil" & "Log keluar" (merah); tutup dengan Escape / klik luar
 
 ### P4 — Modal Kemaskini Profil — `feat(profil)`

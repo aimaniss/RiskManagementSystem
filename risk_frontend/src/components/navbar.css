@@ -139,115 +139,169 @@
   color: var(--color-muted-foreground);
 }
 
-/* --- PROFIL DAN DROPDOWN --- */
+/* --- PROFIL DAN MENU --- */
 .navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
   position: relative;
 }
+
+.navbar-user-pencetus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.navbar-user-pencetus:hover,
+.navbar-user-pencetus[aria-expanded="true"] {
+  background: var(--color-muted);
+  border-color: var(--color-border);
+}
+
+.navbar-user-pencetus:focus-visible {
+  outline: 2px solid var(--color-ring, var(--color-primary));
+  outline-offset: 1px;
+}
+
 .navbar-user-info {
+  display: grid;
   text-align: right;
   line-height: 1.25;
 }
+
 .user-syarikat-bold {
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: 1px;
 }
+
 .user-role-small {
   font-size: 11px;
   font-weight: 500;
   color: var(--color-muted-foreground);
 }
 
-.navbar-user img,
-.profile-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--color-border);
-  background: var(--color-muted);
+.navbar-user-anak-panah {
   color: var(--color-muted-foreground);
-  transition: 0.2s;
+  transition: transform 0.15s ease;
 }
-.navbar-user img:hover,
-.profile-icon:hover {
-  transform: scale(1.05);
-  border-color: var(--color-primary);
+
+.navbar-user-anak-panah.terbuka {
+  transform: rotate(180deg);
 }
 
 .profile-dropdown {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 250px;
+  width: 280px;
+  overflow: hidden;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 18px 16px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
   z-index: 5000;
 }
 
-.profile-dropdown .profile-big {
+.profile-dropdown-header {
   display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.profile-dropdown .profile-big img,
-.profile-dropdown .dropdown-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  border: 3px solid var(--color-primary-light);
-  background: var(--color-muted);
-  color: var(--color-muted-foreground);
-  object-fit: cover;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
 }
 
 .dropdown-fullname {
-  text-align: center;
-  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 14px;
+  font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: 2px;
 }
-.dropdown-syarikat {
-  text-align: center;
-  font-weight: 500;
-  font-size: 12.5px;
-  color: var(--color-primary);
-}
+
 .dropdown-staffid {
-  text-align: center;
-  font-weight: 400;
+  margin: 1px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   color: var(--color-muted-foreground);
 }
 
-.edit-btn {
-  margin-top: 14px;
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--color-primary);
-  color: #fff;
+.profile-dropdown-maklumat {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-muted);
+  font-size: 12.5px;
+}
+
+.profile-dropdown-maklumat div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+}
+
+.profile-dropdown-maklumat dt {
+  color: var(--color-muted-foreground);
+}
+
+.profile-dropdown-maklumat dd {
+  margin: 0;
   font-weight: 500;
+  color: var(--color-foreground);
+}
+
+.profile-dropdown-menu {
+  display: grid;
+  padding: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.profile-dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
   border: none;
   border-radius: 8px;
+  background: none;
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
   cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
 }
-.edit-btn:hover {
-  background: var(--color-primary-dark);
+
+.profile-dropdown-menu button svg {
+  color: var(--color-muted-foreground);
+}
+
+.profile-dropdown-menu button:hover,
+.profile-dropdown-menu button:focus-visible {
+  background: var(--color-muted);
+  outline: none;
+}
+
+.profile-dropdown-menu button.bahaya,
+.profile-dropdown-menu button.bahaya svg {
+  color: var(--color-destructive);
+}
+
+.profile-dropdown-menu button.bahaya:hover {
+  background: color-mix(in srgb, var(--color-destructive) 10%, transparent);
 }
 
 /* --- MODAL (KEMASKINI PROFIL) --- */
@@ -499,10 +553,8 @@
   border-color: var(--color-border);
 }
 
-.dark .profile-icon,
-.dark .navbar-user img {
-  border-color: var(--color-border);
-  background: var(--color-secondary);
+.dark .profile-dropdown-maklumat {
+  background: var(--color-background);
 }
 
 /* Skrin kecil: navbar penuh lebar; ruang kiri untuk butang menu */

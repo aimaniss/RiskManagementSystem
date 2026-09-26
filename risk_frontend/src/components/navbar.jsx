@@ -1,10 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { UserCircle, X, Eye, EyeOff, Bell, CheckCheck, Trash2, Sun, Moon } from "lucide-react";
+import {
+  UserCircle,
+  X,
+  Eye,
+  EyeOff,
+  Bell,
+  CheckCheck,
+  Trash2,
+  Sun,
+  Moon,
+  ChevronDown,
+  UserCog,
+  LogOut,
+} from "lucide-react";
 import api from "../api/api.js";
 import { katalaluanMematuhiPolisi } from "../constants/katalaluan";
 import Toast from "@/components/ui/toast";
 import EmptyState from "@/components/ui/empty-state";
+import { Avatar } from "@/components/ui/avatar";
 import { hasKebenaran } from "@/utils/auth";
 import { stateLatar } from "@/hooks/useBukaRisiko";
 import "./navbar.css";
@@ -30,6 +44,7 @@ function Navbar() {
   const lokasi = useLocation();
   const [user, setUser] = useState({
     role: "",
+    namaPeranan: "",
     syarikat: "",
     syarikatPenuh: "",
     staffId: "",
@@ -89,6 +104,7 @@ function Navbar() {
         const u = res.data;
         setUser({
           role: (u.nama_peranan || "").toUpperCase(),
+          namaPeranan: u.nama_peranan || "",
           syarikat: u.singkatan_syarikat || "",
           syarikatPenuh: u.nama_syarikat || "",
           staffId: u.staff_id || "",
@@ -141,8 +157,17 @@ function Navbar() {
       if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target))
         setNotifOpen(false);
     };
+    const handleEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      setNotifOpen(false);
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   const handleNotifToggle = async () => {
@@ -297,6 +322,11 @@ function Navbar() {
     }
   };
 
+  const logKeluar = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   const openModal = () => {
     setModalOpen(true);
     setOpen(false); 
@@ -397,38 +427,51 @@ function Navbar() {
         </div>
 
         <div className="navbar-user" ref={dropdownRef}>
-          <div className="navbar-user-info">
-            <div className="user-syarikat-bold">{user.fullName || user.syarikat}</div>
-            <div className="user-role-small">
-              {[getDisplayRoleName(user.role), user.syarikat].filter(Boolean).join(" · ")}
-            </div>
-          </div>
-
-          <div className="profile-wrapper" onClick={() => setOpen((prev) => !prev)}>
-            {user.profileImage ? (
-              <img src={user.profileImage} alt="User" className="profile-pic" />
-            ) : (
-              <UserCircle className="profile-icon" size={42} />
-            )}
-          </div>
+          <button
+            type="button"
+            className="navbar-user-pencetus"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-label="Menu profil"
+          >
+            <span className="navbar-user-info">
+              <span className="user-syarikat-bold">{user.fullName || user.syarikat}</span>
+              <span className="user-role-small">
+                {[getDisplayRoleName(user.role), user.syarikat].filter(Boolean).join(" · ")}
+              </span>
+            </span>
+            <Avatar src={user.profileImage} nama={user.fullName} />
+            <ChevronDown size={15} className={`navbar-user-anak-panah ${open ? "terbuka" : ""}`} />
+          </button>
 
           {open && (
-            <div className="profile-dropdown">
+            <div className="profile-dropdown" role="menu" aria-label="Menu profil">
               <div className="profile-dropdown-header">
-                <div className="profile-big">
-                  {user.profileImage ? (
-                    <img src={user.profileImage} alt="User" className="dropdown-pic" />
-                  ) : (
-                    <UserCircle className="dropdown-icon" size={80} />
-                  )}
+                <Avatar src={user.profileImage} nama={user.fullName} saiz="lg" />
+                <div className="min-w-0">
+                  <p className="dropdown-fullname">{user.fullName || "-"}</p>
+                  <p className="dropdown-staffid">{user.staffId}</p>
                 </div>
-                <p className="dropdown-fullname">{user.fullName || "Nama Penuh"}</p>
-                <p className="dropdown-syarikat">{user.syarikatPenuh || "Syarikat"}</p>
-                <p className="dropdown-staffid">{user.staffId || "ID Staf"}</p>
               </div>
-              <button className="edit-btn" onClick={openModal}>
-                Kemaskini Profil
-              </button>
+              <dl className="profile-dropdown-maklumat">
+                <div>
+                  <dt>Peranan</dt>
+                  <dd>{user.namaPeranan || "-"}</dd>
+                </div>
+                <div>
+                  <dt>Syarikat</dt>
+                  <dd>{user.syarikatPenuh || "-"}</dd>
+                </div>
+              </dl>
+              <div className="profile-dropdown-menu">
+                <button type="button" role="menuitem" onClick={openModal}>
+                  <UserCog size={16} /> Kemaskini profil
+                </button>
+                <button type="button" role="menuitem" className="bahaya" onClick={logKeluar}>
+                  <LogOut size={16} /> Log keluar
+                </button>
+              </div>
             </div>
           )}
         </div>
